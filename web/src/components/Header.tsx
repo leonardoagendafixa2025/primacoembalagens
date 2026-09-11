@@ -73,45 +73,31 @@ export const Header: React.FC<HeaderProps> = ({
         zIndex: 50,
       }}
     >
-      {/* 1. Logotipo e Identificação */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div
+      {/* 1. Logotipo Oficial Primacor */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <img
+          src="/primacor-logo-horizontal.png"
+          alt="Primacor Gráfica e Editora"
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: 'linear-gradient(135deg, #35a89e 0%, #1f6861 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 16px rgba(53, 168, 158, 0.4)',
+            height: 38,
+            objectFit: 'contain',
+            filter: 'drop-shadow(0 2px 8px rgba(53, 168, 158, 0.25))',
+          }}
+        />
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 800,
+            padding: '2px 7px',
+            borderRadius: 4,
+            background: 'rgba(197, 50, 54, 0.15)',
+            color: '#e04a4e',
+            border: '1px solid rgba(197, 50, 54, 0.4)',
+            letterSpacing: 0.5,
           }}
         >
-          <Box size={22} color="#000000" />
-        </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: '#F8FAFC', letterSpacing: -0.3 }}>
-              PRIMACOR
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                padding: '2px 6px',
-                borderRadius: 4,
-                background: 'rgba(197, 50, 54, 0.15)',
-                color: '#e04a4e',
-                border: '1px solid rgba(197, 50, 54, 0.4)',
-              }}
-            >
-              CAD EMBALAGENS
-            </span>
-          </div>
-          <div style={{ fontSize: 11, color: '#94A3B8' }}>
-            Gráfica e Editora
-          </div>
-        </div>
+          CAD EMBALAGENS
+        </span>
       </div>
 
       {/* 2. Seletor de Modelo & Catálogo Completo */}
