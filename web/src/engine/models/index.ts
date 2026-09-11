@@ -5,6 +5,7 @@ import { fefco0200 } from './fefco0200';
 import { fefco0203 } from './fefco0203';
 import { ecmaB10 } from './ecmaCarton';
 import { ecmaA20 } from './ecmaA20';
+import { ecmaB1001 } from './ecmaB1001';
 
 import rawCatalog from '../modelsCatalog.json';
 
@@ -30,6 +31,7 @@ const BUILTIN_MODELS: Record<string, PackagingModel> = {
   fefco_0203: fefco0203,
   ecma_b10: ecmaB10,
   ecma_a20: ecmaA20,
+  ecma_b1001: ecmaB1001,
 };
 
 export const MODELS: PackagingModel[] = [
@@ -39,6 +41,7 @@ export const MODELS: PackagingModel[] = [
   fefco0203,
   ecmaB10,
   ecmaA20,
+  ecmaB1001,
 ];
 
 /**
@@ -62,7 +65,7 @@ export function getModelById(id: string): PackagingModel {
     if (catalogItem.series.includes('Grupo A')) {
       calculateFn = ecmaA20.calculate;
     } else {
-      calculateFn = ecmaB10.calculate;
+      calculateFn = ecmaB1001.calculate;
     }
   } else if (catalogItem.category === 'FEFCO') {
     if (catalogItem.series.includes('0400')) {
