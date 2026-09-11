@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ProductName -->
+<?define ProductName = "PLMPackLib"?>
+<!-- Product manufacturer -->
+<?define ProductManufacturer = "treeDiM"?>
+<!-- Product version -->
+<?define ProductVersion = "8.0.1.0"?>
+<!-- Company URL -->
+<?define CompanyURL = "http://www.picador.fr/" ?>
+<!-- Package_Description -->
+<?define PackageDescription = "PLMPackLib installer" ?>
+<!-- Package_Comments -->
+<?define PackageComments = "Requires .NET 4.0 framework"?>
+<!-- Merge module directory -->
+<?define MergeModuleDir="C:\Program Files (x86)\Common Files\Merge Modules"?>
+<!-- Upgrade code -->
+<?define UpgradeCode="85B2DB64-71DA-437b-BD2F-6A1511265E15"?>
+<Include>
+</Include>

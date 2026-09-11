@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?include $(sys.CURRENTDIR)\..\PicParamMSI\Config.wxi?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Bundle Name="$(var.ProductName)"
+          Version="$(var.ProductVersion)"
+          Manufacturer="$(var.ProductManufacturer)"
+          UpgradeCode="$(var.UpgradeCode)"
+          IconSourceFile="PackLib.ico"
+          Copyright="Copyright© 2014, treeDiM"
+          AboutUrl="http://www.treedim.com"
+          HelpUrl="http://www.treedim.com"
+          Condition="(VersionNT >= v5.0)">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense">
+      <bal:WixStandardBootstrapperApplication
+        SuppressOptionsUI="no"
+        LicenseUrl=""
+        ThemeFile="RtfTheme.xml"/>
+    </BootstrapperApplicationRef>
+    <WixVariable Id="WixStdbaLogo" Value="WixUIBanner.png" />
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]treeDiM\PLMPack\PLMPackLib" />
+    <Variable Name="LaunchTarget" Value="[InstallFolder]\Bin32\PLMPackLib.exe"/>
+    <Chain>
+      <PackageGroupRef Id="Netfx4Full"/>
+      <!-- Note: DisplayInternalUI is set to yes in order to show registration dialog -->
+      <MsiPackage
+        Compressed="yes"
+        SourceFile="..\PicParamMSI\bin\Release\PLMPackLibMSI.msi"
+        Vital="yes"
+        DisplayInternalUI="yes"
+        ForcePerMachine="yes"
+        Visible="yes">
+        <MsiProperty Name="ARPSYSTEMCOMPONENT" Value="1"/>
+        <MsiProperty Name="INSTALLLOCATION" Value="[InstallFolder]" />
+      </MsiPackage>
+    </Chain>
+  </Bundle>
+  <Fragment>
+    <util:RegistrySearch
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
+            Value="Version"
+            Variable="Netfx4FullVersion" />
+    <util:RegistrySearch
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full"
+        Value="Version"
+        Variable="Netfx4x64FullVersion"
+        Win64="yes" />
+    <PackageGroup
+            Id="Netfx4Full">
+      <ExePackage
+          Id="Netfx4Full"
+          Cache="no"
+          Compressed="no"
+          PerMachine="yes"
+          Permanent="yes"
+          Vital="yes"
+          SourceFile="dotNetFx40_Full_x86_x64.exe"
+          InstallCommand="/q /norestart"
+          RepairCommand="/q /norestart"
+          UninstallCommand="/q /norestart"
+          DownloadUrl="http://go.microsoft.com/fwlink/?LinkId=164193"
+          InstallCondition="Netfx4FullVersion AND (NOT VersionNT64 OR Netfx4x64FullVersion)"
+          DetectCondition="Netfx4FullVersion AND (NOT VersionNT64 OR Netfx4x64FullVersion)">
+        <ExitCode Behavior="success" Value="3010"/>
+      </ExePackage>
+    </PackageGroup>
+  </Fragment>
+</Wix>
