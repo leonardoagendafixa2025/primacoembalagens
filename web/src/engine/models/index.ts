@@ -26,12 +26,17 @@ export const CATALOG: CatalogItem[] = rawCatalog as CatalogItem[];
 // Mapa de modelos com calculadora especializada
 const BUILTIN_MODELS: Record<string, PackagingModel> = {
   fefco_0201: fefco0201,
+  fefco_f201: fefco0201,
   fefco_0427: fefco0427,
+  fefco_f427: fefco0427,
+  fefco_f421: fefco0427,
   fefco_0200: fefco0200,
+  fefco_f200: fefco0200,
   fefco_0203: fefco0203,
+  fefco_f203: fefco0203,
   ecma_b10: ecmaB10,
-  ecma_a20: ecmaA20,
   ecma_b1001: ecmaB1001,
+  ecma_a20: ecmaA20,
 };
 
 export const MODELS: PackagingModel[] = [

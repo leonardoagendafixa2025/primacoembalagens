@@ -255,17 +255,28 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
             </div>
           ) : (
             filteredModels.map((item) => {
-              const isSelected = item.id === currentModelId;
+              const isSelected =
+                item.id === currentModelId ||
+                item.code.toLowerCase().replace(/\s+/g, '') === currentModelId.toLowerCase().replace(/\s+/g, '');
               const isFEFCO = item.category === 'FEFCO';
               const isECMA = item.category === 'ECMA';
+
+              const handleCardClick = (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  const resolvedModel = getModelById(item.id);
+                  onSelectModel(resolvedModel);
+                  onClose();
+                } catch (err) {
+                  console.error('Erro ao selecionar modelo da biblioteca:', err);
+                }
+              };
 
               return (
                 <div
                   key={item.id}
-                  onClick={() => {
-                    onSelectModel(getModelById(item.id));
-                    onClose();
-                  }}
+                  onClick={handleCardClick}
                   style={{
                     background: isSelected ? 'rgba(53, 168, 158, 0.12)' : '#101414',
                     border: '1px solid',
@@ -360,25 +371,42 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Botão de Seleção */}
+                  {/* Botão de Seleção com Handler Direto */}
                   <button
+                    type="button"
+                    onClick={handleCardClick}
                     style={{
                       marginTop: 4,
                       width: '100%',
-                      padding: '7px 0',
+                      padding: '8px 0',
                       borderRadius: 6,
-                      background: isSelected ? '#35a89e' : '#141818',
-                      color: isSelected ? '#000000' : '#CBD5E1',
-                      border: '1px solid #242c2c',
-                      fontSize: 11,
-                      fontWeight: isSelected ? 700 : 600,
+                      background: isSelected ? 'linear-gradient(135deg, #35a89e 0%, #1f6e67 100%)' : '#141818',
+                      color: isSelected ? '#FFFFFF' : '#CBD5E1',
+                      border: isSelected ? '1px solid #35a89e' : '1px solid #242c2c',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 4,
+                      gap: 6,
+                      boxShadow: isSelected ? '0 2px 8px rgba(53, 168, 158, 0.3)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = '#35a89e';
+                        e.currentTarget.style.color = '#000000';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = '#141818';
+                        e.currentTarget.style.color = '#CBD5E1';
+                      }
                     }}
                   >
-                    {isSelected ? 'Em Edição' : 'Carregar Faca'} <ArrowRight size={12} />
+                    {isSelected ? 'Em Edição' : 'Carregar Faca'} <ArrowRight size={13} />
                   </button>
                 </div>
               );

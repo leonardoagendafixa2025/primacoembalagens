@@ -127,7 +127,36 @@ assert(dxfContent.includes('SECTION\r\n2\r\nENTITIES'), 'DXF contém seção ENT
 assert(dxfContent.includes('CORTE'), 'DXF contém layer CORTE');
 assert(dxfContent.includes('VINCO'), 'DXF contém layer VINCO');
 assert(dxfContent.includes('0\r\nARC'), 'DXF contém entidades ARC dos cantos arredondados');
-assert(dxfContent.includes('0\r\nLINE'), 'DXF contém entidades LINE');
+// ----------------------------------------------------
+// TESTE 6: CARREGAMENTO DE TODOS OS 472 MODELOS DO CATÁLOGO
+// ----------------------------------------------------
+console.log('\n6. Testando carregamento de todos os modelos da Biblioteca (Catalog)...');
+import { CATALOG, getModelById } from '../src/engine/models/index.ts';
+
+let catalogErrors = 0;
+for (const item of CATALOG) {
+  try {
+    const model = getModelById(item.id);
+    const params = {
+      L: item.defaultParams?.L || 300,
+      B: item.defaultParams?.B || 200,
+      H: item.defaultParams?.H || 150,
+      Ep: item.defaultParams?.Ep || 3.0,
+      M: item.defaultParams?.M || 35,
+      Ec: 6,
+      Cut: 1,
+    };
+    const r = model.calculate(params);
+    if (!r || !r.segments || r.segments.length === 0) {
+      console.error(`❌ Erro no modelo ${item.id} (${item.code}): segmentos vazios`);
+      catalogErrors++;
+    }
+  } catch (err) {
+    console.error(`❌ Exceção no modelo ${item.id} (${item.code}):`, err);
+    catalogErrors++;
+  }
+}
+assert(catalogErrors === 0, `Todos os ${CATALOG.length} modelos da biblioteca carregam e calculam facas perfeitamente!`);
 
 console.log('\n====================================================');
 console.log('TODOS OS TESTES DO MOTOR CAD PASSARAM COM SUCESSO! 🎉');

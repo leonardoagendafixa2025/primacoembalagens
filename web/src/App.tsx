@@ -40,6 +40,12 @@ export const App: React.FC = () => {
   const handleSelectModel = (model: PackagingModel) => {
     setCurrentModel(model);
     setParams({
+      L: model.defaultParams?.L || 300,
+      B: model.defaultParams?.B || 200,
+      H: model.defaultParams?.H || 150,
+      M: model.defaultParams?.M || 35,
+      Ec: model.defaultParams?.Ec || 6,
+      Cut: model.defaultParams?.Cut ?? 1,
       ...model.defaultParams,
       Ep: selectedProfile.thickness,
     });
