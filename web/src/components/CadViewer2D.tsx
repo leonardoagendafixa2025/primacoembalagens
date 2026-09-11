@@ -1,12 +1,13 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import type { DielineResult } from '../engine/types';
-import { ZoomIn, ZoomOut, Maximize2, Eye, Compass } from 'lucide-react';
+import type { DielineResult, PackagingModel } from '../engine/types';
+import { ZoomIn, ZoomOut, Maximize2, Eye, Compass, Terminal } from 'lucide-react';
 
 interface CadViewer2DProps {
   dieline: DielineResult;
+  model?: PackagingModel;
 }
 
-export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline }) => {
+export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -19,6 +20,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline }) => {
   // Opções visuais
   const [showGrid, setShowGrid] = useState(true);
   const [showDimensions, setShowDimensions] = useState(true);
+  const [showDebug, setShowDebug] = useState(true);
   const [mouseMm, setMouseMm] = useState({ x: 0, y: 0 });
 
   // Ajusta a visualização para enquadrar perfeitamente a faca
@@ -311,7 +313,51 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline }) => {
         >
           <Eye size={18} />
         </button>
+        <button
+          onClick={() => setShowDebug((dbg) => !dbg)}
+          title="Alternar Auditoria Forense CAD"
+          style={{ padding: 6, color: showDebug ? '#35a89e' : '#64748B', borderRadius: 4 }}
+        >
+          <Terminal size={18} />
+        </button>
       </div>
+
+      {/* Painel de Auditoria Forense CAD (Debug Mode) */}
+      {showDebug && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            background: 'rgba(5, 8, 15, 0.88)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid #1E293B',
+            borderRadius: 8,
+            padding: '10px 14px',
+            fontSize: 11,
+            fontFamily: 'monospace',
+            color: '#94A3B8',
+            zIndex: 15,
+            lineHeight: 1.5,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            maxWidth: 360,
+          }}
+        >
+          <div style={{ color: '#35a89e', fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#35a89e' }} />
+            AUDITORIA FORENSE CAD
+          </div>
+          <div><strong style={{ color: '#E2E8F0' }}>MODEL ID:</strong> {model?.id || 'fefco_0429'}</div>
+          <div><strong style={{ color: '#E2E8F0' }}>MODEL CODE:</strong> {model?.code || 'FEFCO 0429'}</div>
+          <div><strong style={{ color: '#E2E8F0' }}>ORIGEM C#:</strong> {model?.code?.includes('0429') ? 'PicSharpDb / 4f6f8aee_8fc8.dll' : 'PicSharpDb (PLMPackLib)'}</div>
+          <div><strong style={{ color: '#E2E8F0' }}>IMPL TS:</strong> {model?.id ? `web/src/engine/models/${model.id}.ts` : 'fefco0429.ts'}</div>
+          <div style={{ margin: '4px 0', borderTop: '1px solid #1E293B' }} />
+          <div><strong style={{ color: '#35a89e' }}>ENTIDADES TOTAIS:</strong> {(dieline.segments?.length || 0) + (dieline.arcs?.length || 0)}</div>
+          <div>- Cortes: {dieline.segments?.filter((s) => s.type === 'cut').length || 0} seg + {dieline.arcs?.filter((a) => a.type === 'cut').length || 0} arcos</div>
+          <div>- Vincos: {dieline.segments?.filter((s) => s.type === 'crease').length || 0} seg</div>
+          <div><strong style={{ color: '#E2E8F0' }}>DIMENSÕES FACA:</strong> {dieline.bounds.width.toFixed(2)} x {dieline.bounds.height.toFixed(2)} mm</div>
+        </div>
+      )}
 
       {/* Legenda de Tipos de Linha CAD e Coordenadas */}
       <div

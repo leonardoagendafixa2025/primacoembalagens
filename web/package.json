@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test:cad": "node ../scratch/run_regression.js",
     "deploy": "vercel --prod"
   },
   "dependencies": {
