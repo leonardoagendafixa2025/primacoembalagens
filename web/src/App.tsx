@@ -53,6 +53,7 @@ export const App: React.FC = () => {
 
   // Atualização em tempo real de um parâmetro dimensional
   const handleParamChange = (key: string, value: number) => {
+    console.log(`[UI] ${key} changed`, value);
     setParams((prev) => ({
       ...prev,
       [key]: value,

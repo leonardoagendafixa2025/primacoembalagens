@@ -101,7 +101,11 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 2. Seletor de Modelo & Catálogo Completo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button
-          onClick={onOpenCatalog}
+          type="button"
+          onClick={() => {
+            console.log('[UI] Biblioteca clicked');
+            onOpenCatalog();
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',

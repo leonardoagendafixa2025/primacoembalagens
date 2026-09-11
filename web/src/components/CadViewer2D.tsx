@@ -13,9 +13,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Modo Diagnóstico (TEST E / TEST F):
-  // 'direct' = Bypass total do catálogo (fefco0429.calculate puro L300 B200 H150 Ep3 H7=100)
-  // 'flow'   = Fluxo normal da aplicação (Catálogo -> Registry -> Model -> Params -> calculate)
-  const [diagMode, setDiagMode] = useState<'direct' | 'flow'>('direct');
+  // 'flow'   = Fluxo normal da aplicação (Catálogo -> Registry -> Model -> Params -> calculate) [PADRÃO OPERACIONAL]
+  // 'direct' = Bypass total do catálogo (fefco0429.calculate puro L300 B200 H150 Ep3 H7=100) [DIAGNÓSTICO C#]
+  const [diagMode, setDiagMode] = useState<'flow' | 'direct'>('flow');
 
   // 1. Geometria Direta C#-Parity (Bypass total de catálogo, registry, UI)
   const directDieline = useMemo(() => {
@@ -89,41 +89,20 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     };
   }, [directDieline, dieline]);
 
-  // Logs Forenses no Console (TESTE A & TESTE B)
+  // Logs Forenses no Console (TESTE A & TESTE B) - Apenas quando requisitado ou no modo direto
   useEffect(() => {
-    console.log('==================================================');
-    console.log('[DIRECT TEST]');
-    console.log('model = fefco_f429');
-    console.log('source = fefco0429.calculate');
-    console.log('parameters = L300 B200 H150 Ep3 H7=100');
-    console.log(`segments = ${directDieline.segments.length}`);
-    console.log(`arcs = ${directDieline.arcs.length}`);
-    console.log(`total = ${directDieline.segments.length + directDieline.arcs.length}`);
-    console.log('boundingBox:');
-    console.log(`minX = ${directDieline.bounds.minX.toFixed(3)}`);
-    console.log(`maxX = ${directDieline.bounds.maxX.toFixed(3)}`);
-    console.log(`minY = ${directDieline.bounds.minY.toFixed(3)}`);
-    console.log(`maxY = ${directDieline.bounds.maxY.toFixed(3)}`);
-    console.log(`width = ${directDieline.bounds.width.toFixed(3)}`);
-    console.log(`height = ${directDieline.bounds.height.toFixed(3)}`);
-
-    console.log('==================================================');
-    console.log('[CAD TRACE]');
-    console.log('catalog model id = fefco_f429');
-    console.log('registry model id =', model?.id || 'fefco_0429');
-    console.log('model.code =', model?.code || 'FEFCO 0429');
-    console.log('model.id =', model?.id || 'fefco_0429');
-    console.log('model class = PackagingModel');
-    console.log('generator function = fefco0429.calculate');
-    console.log('parameters =', model?.defaultParams);
-    console.log(`calculate entities = ${dieline.segments.length + (dieline.arcs?.length || 0)}`);
-    console.log(`adapter entities = ${dieline.segments.length + (dieline.arcs?.length || 0)}`);
-    console.log(`viewer entities = ${dieline.segments.length + (dieline.arcs?.length || 0)}`);
-    console.log(`rendered segments = ${activeDieline.segments.length}`);
-    console.log(`rendered arcs = ${activeDieline.arcs?.length || 0}`);
-    console.log(`total rendered = ${activeDieline.segments.length + (activeDieline.arcs?.length || 0)}`);
-    console.log('viewer bounds =', dieline.bounds);
-  }, [diagMode, dieline, directDieline, model, activeDieline]);
+    if (diagMode === 'direct') {
+      console.log('==================================================');
+      console.log('[DIRECT TEST] Modo Bypass Direto Ativado');
+      console.log('model = fefco_f429');
+      console.log('source = fefco0429.calculate');
+      console.log('parameters = L300 B200 H150 Ep3 H7=100');
+      console.log(`segments = ${directDieline.segments.length}`);
+      console.log(`arcs = ${directDieline.arcs.length}`);
+      console.log(`total = ${directDieline.segments.length + directDieline.arcs.length}`);
+      console.log('boundingBox:', directDieline.bounds);
+    }
+  }, [diagMode, directDieline]);
 
   // Ajusta a visualização para enquadrar perfeitamente a faca
   const fitToScreen = useCallback(() => {
@@ -534,9 +513,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
           </div>
 
           {/* Informações Técnicas do Modelo e Origem */}
-          <div><strong style={{ color: '#E2E8F0' }}>MODEL:</strong> {model?.id || 'fefco_f429'} ({model?.code || 'FEFCO 0429'})</div>
-          <div><strong style={{ color: '#E2E8F0' }}>SOURCE:</strong> {diagMode === 'direct' ? 'fefco0429.calculate (Bypass Direto C#)' : 'Catalog -> Registry -> Model.calculate'}</div>
-          <div><strong style={{ color: '#E2E8F0' }}>PARAMETERS:</strong> L=300, B=200, H=150, Ep=3.0, H7=100</div>
+          <div><strong style={{ color: '#E2E8F0' }}>MODEL:</strong> {diagMode === 'direct' ? 'fefco_0429 (FEFCO 0429)' : `${model?.id || 'fefco_0429'} (${model?.code || 'FEFCO 0429'})`}</div>
+          <div><strong style={{ color: '#E2E8F0' }}>SOURCE:</strong> {diagMode === 'direct' ? 'fefco0429.calculate (Bypass Direto C#)' : `Catalog -> Registry -> ${model?.code || 'Model'}`}</div>
+          <div><strong style={{ color: '#E2E8F0' }}>MODO ATIVO:</strong> {diagMode === 'flow' ? 'FLUXO REAL OPERACIONAL' : 'DIAGNÓSTICO ISOLADO C#'}</div>
 
           <div style={{ margin: '6px 0', borderTop: '1px solid #1E293B' }} />
 
@@ -545,15 +524,17 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
             <div><strong style={{ color: '#E2E8F0' }}>SEGMENTS:</strong> {activeDieline.segments.length}</div>
             <div><strong style={{ color: '#E2E8F0' }}>ARCS:</strong> {activeDieline.arcs?.length || 0}</div>
             <div><strong style={{ color: '#35a89e' }}>TOTAL RENDERED:</strong> {activeDieline.segments.length + (activeDieline.arcs?.length || 0)}</div>
-            <div><strong style={{ color: '#E2E8F0' }}>MAX ERROR:</strong> {comparison.maxErrorMm.toFixed(4)} mm</div>
+            <div><strong style={{ color: '#E2E8F0' }}>TIPO:</strong> {diagMode === 'direct' ? '100% C# Parity' : 'Paramétrico Interativo'}</div>
           </div>
 
           <div style={{ margin: '6px 0', borderTop: '1px solid #1E293B' }} />
 
-          {/* Comparativo Forense Direto vs Fluxo */}
-          <div><strong style={{ color: '#E2E8F0' }}>DIRECT GEOMETRY:</strong> {comparison.totalA} entities (109 seg + 6 arcs)</div>
-          <div><strong style={{ color: '#E2E8F0' }}>VIEWER INPUT:</strong> {comparison.totalB} entities ({comparison.segmentsB} seg + {comparison.arcsB} arcs)</div>
-          <div><strong style={{ color: comparison.isMatch ? '#10B981' : '#EF4444' }}>PARIDADE MATEMÁTICA:</strong> {comparison.isMatch ? '100% IDÊNTICA (Erro <= 0.001 mm)' : 'DIVERGÊNCIA DETECTADA'}</div>
+          {/* Comparativo Forense C# Parity (quando FEFCO 0429 ou modo direto) */}
+          <div><strong style={{ color: '#E2E8F0' }}>REF DIRETA 0429:</strong> 115 entities (109 seg + 6 arcs)</div>
+          <div><strong style={{ color: '#E2E8F0' }}>CANVAS ATUAL:</strong> {activeDieline.segments.length + (activeDieline.arcs?.length || 0)} entities ({activeDieline.segments.length} seg + {activeDieline.arcs?.length || 0} arcs)</div>
+          {(model?.code?.includes('0429') || diagMode === 'direct') && (
+            <div><strong style={{ color: comparison.isMatch ? '#10B981' : '#EF4444' }}>PARIDADE C#:</strong> {comparison.isMatch ? '100% IDÊNTICA (Erro <= 0.001 mm)' : 'DIVERGÊNCIA DETECTADA'}</div>
+          )}
 
           <div style={{ margin: '6px 0', borderTop: '1px solid #1E293B' }} />
 
