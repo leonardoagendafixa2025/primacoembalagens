@@ -2,47 +2,47 @@ import type { PackagingModel, DielineResult, Segment2D, Arc2D, DimensionLine } f
 import { computeBoundingBox } from '../geometry';
 
 /**
- * FEFCO 0427 - Caixa E-Commerce / Envio com Paredes Duplas e Orelhas de Travamento
- * Código matemático fiel 1:1 ao PicParam C# original da PLMPackLib (Fefco_427)
+ * FEFCO 0429 - Caixa Postal / Envoltório com Paredes Duplas e Travas Mortise/Tenon
+ * Código matemático fiel 1:1 ao PicParam C# original da PLMPackLib (F_0429)
  * 
  * Componentes originais integrados:
  * 1. Dbl_Wall_v2 (Paredes duplas laterais com 4 furos mortise e abas tenon a 15°)
- * 2. top_cover_427 (Tampa superior articulada com abas laterais e aba frontal com orelhas de trava Ra20)
+ * 2. top_cover_429 (Tampa superior com 2 abas laterais de inserção e aba frontal arredondada R15)
  */
-export const fefco0427: PackagingModel = {
-  id: 'fefco_0427',
-  code: 'FEFCO 0427',
-  name: 'Caixa E-Commerce com Orelhas de Travamento (FEFCO 0427)',
+export const fefco0429: PackagingModel = {
+  id: 'fefco_0429',
+  code: 'FEFCO 0429',
+  name: 'Caixa de Envio com Tampa Integrada e Abas Laterais (FEFCO 0429)',
   category: 'FEFCO',
   description:
-    'Modelo padrão global para e-commerce e envios postais. Possui paredes laterais duplas de alta resistência com travamento por encaixe, tampa articulada com abas laterais e orelhas frontais de pressão que dispensam fita adesiva.',
+    'Modelo oficial FEFCO 0429 com paredes laterais duplas de travamento automático (tenon/mortise), tampa articulada com abas laterais de vedação e aba frontal com cantos arredondados.',
   defaultParams: {
-    L: 260, // Comprimento interior (mm)
-    B: 180, // Largura interior (mm)
-    H: 80,  // Altura interior (mm)
-    Ep: 2.0, // Espessura do papelão (mm)
-    H7: 45,  // Aba frontal com travas (mm)
+    L: 300, // Comprimento interior (mm)
+    B: 200, // Largura interior (mm)
+    H: 100, // Altura interior (mm)
+    Ep: 3.0, // Espessura do papelão (mm)
+    H7: 50,  // Altura das abas da tampa (mm)
   },
   paramDefs: [
-    { key: 'L', label: 'Comprimento (L)', min: 100, max: 800, step: 5, unit: 'mm', description: 'Comprimento interno da base' },
-    { key: 'B', label: 'Largura (B)', min: 80, max: 600, step: 5, unit: 'mm', description: 'Largura interna da base' },
-    { key: 'H', label: 'Altura (H)', min: 30, max: 300, step: 5, unit: 'mm', description: 'Altura interna da caixa montada' },
-    { key: 'Ep', label: 'Espessura (Ep)', min: 0.5, max: 7.0, step: 0.5, unit: 'mm', description: 'Espessura do material (mm)' },
-    { key: 'H7', label: 'Aba Frontal (H7)', min: 25, max: 120, step: 5, unit: 'mm', description: 'Comprimento da aba frontal com orelhas' },
+    { key: 'L', label: 'Comprimento (L)', min: 100, max: 1200, step: 5, unit: 'mm', description: 'Comprimento interno da caixa' },
+    { key: 'B', label: 'Largura (B)', min: 80, max: 800, step: 5, unit: 'mm', description: 'Largura interna da caixa' },
+    { key: 'H', label: 'Altura (H)', min: 30, max: 400, step: 5, unit: 'mm', description: 'Altura interna da caixa' },
+    { key: 'Ep', label: 'Espessura (Ep)', min: 0.5, max: 8.0, step: 0.5, unit: 'mm', description: 'Espessura do material (mm)' },
+    { key: 'H7', label: 'Abas da Tampa (H7)', min: 20, max: 150, step: 5, unit: 'mm', description: 'Largura das abas laterais e frontal da tampa' },
   ],
   calculate(params: Record<string, number>): DielineResult {
-    const L = params.L || 260;
-    const B = params.B || 180;
-    const H = params.H || 80;
-    const ep1 = params.Ep || 2.0;
-    let H7 = params.H7 !== undefined ? params.H7 : Math.min(H * 0.6, 50);
+    const L = params.L || 300;
+    const B = params.B || 200;
+    const H = params.H || 100;
+    const ep1 = params.Ep || 3.0;
+    let H7 = params.H7 !== undefined ? params.H7 : Math.min(H, 100);
     if (H7 > H) H7 = H;
 
-    // Fórmulas de compensação C# do Fefco_427.cs original
+    // Fórmulas de compensação C# do Fefco_429.cs original
     const PP = (2 * ep1) / 3;
     const GE = ep1 - PP;
 
-    const m1 = 6 * ep1 + GE;
+    const m1 = 5 * ep1;
     const m2 = 3 * ep1;
     const m3 = 2 * ep1 + GE;
     const m4 = 3 * ep1 + GE;
@@ -51,12 +51,12 @@ export const fefco0427: PackagingModel = {
     const m7 = 0;
     const m8 = GE;
     const m9 = GE;
-    const m11 = 20; // largura do furo mortise
-    const m12 = 8;  // altura do tenon
-    const m13 = 4;
-    const m14 = 20;
-    const m15 = 20;
-    const m17 = 2;
+    const m11 = m3;
+    const m12 = ep1;
+    const m13 = 0;
+    const m15 = ep1 + GE;
+    const m16 = m4;
+    const m17 = GE;
 
     const L1_2 = (L + m1) / 2;
     const L2_2 = (L + m2) / 2;
@@ -74,31 +74,32 @@ export const fefco0427: PackagingModel = {
     const H4 = H + m9;
     const dbw = 2 * ep1 + m13;
 
-    // Tenon / Mortise
+    // Parâmetros de Tenon / Mortise
     const Pos = 40;
     const mtl = 33;
     const tml = 33;
-    const mth = m11;
-    const T1 = m12;
-    const agT1 = 15;
+    const mth = m11; // 6 mm
+    const T1 = m12;  // 3 mm (aba do tenon)
+    const agT1 = 15; // ângulo do tenon em graus
     const aT1 = T1 * Math.tan((agT1 * Math.PI) / 180);
 
     const v5 = B2_2 - mtl - Pos;
     const v6 = v5 + mtl / 2 - tml / 2;
 
-    const ChFlap = 10;
+    const ChFlap = 10; // chanfro das abas
 
     const segments: Segment2D[] = [];
     const arcs: Arc2D[] = [];
 
     // =========================================================================
-    // 1. CORPO PRINCIPAL E PAREDES DUPLAS (Dbl_Wall_v2)
+    // 1. CORPO PRINCIPAL E PAREDES DUPLAS (Dbl_Wall_v2 simétrico nos 4 quadrantes)
     // =========================================================================
 
-    // Vincos horizontais do fundo
+    // Vinco horizontal superior e inferior do fundo
     segments.push({ x0: -L2_2, y0: B1_2, x1: L2_2, y1: B1_2, type: 'crease' });
     segments.push({ x0: -L2_2, y0: -B1_2, x1: L2_2, y1: -B1_2, type: 'crease' });
 
+    // Função para gerar cada um dos 2 lados (Direita e Esquerda)
     const signs = [1, -1];
     for (const sx of signs) {
       const xL2 = sx * L2_2;
@@ -108,11 +109,14 @@ export const fefco0427: PackagingModel = {
       const xWall2 = sx * (L1_2 + H4 + dbw + H3);
       const xTenonTip = sx * (L1_2 + H4 + dbw + H3 + T1);
 
-      // Vincos verticais da parede lateral
+      // Vincos verticais das paredes duplas
+      // Vinco raiz da parede lateral (fundo -> parede 1)
       segments.push({ x0: xL1, y0: B2_2 - ChFlap, x1: xL1, y1: -B2_2 + ChFlap, type: 'crease' });
+      // Dobra dupla de retorno (dbw)
       segments.push({ x0: xWall1, y0: B2_2, x1: xWall1, y1: -B2_2, type: 'crease' });
       segments.push({ x0: xWallCrease, y0: B4_2, x1: xWallCrease, y1: -B4_2, type: 'crease' });
 
+      // Lados superior e inferior (Y positivo e negativo)
       for (const sy of signs) {
         const yB1 = sy * B1_2;
         const yB2 = sy * B2_2;
@@ -122,18 +126,24 @@ export const fefco0427: PackagingModel = {
         // Vinco vertical da aba de canto
         segments.push({ x0: xL2, y0: yB1, x1: xL2, y1: yFlapTop, type: 'crease' });
 
-        // Cortes do contorno
+        // Corte de alívio entre fundo e aba lateral
         segments.push({ x0: xL2, y0: yB1, x1: xL1, y1: yB2, type: 'cut' });
+
+        // Borda superior/inferior da aba lateral
         segments.push({ x0: xL1, y0: yB2, x1: xWall1, y1: yB2, type: 'cut' });
+        // Chanfro entre parede 1 e parede 2
         segments.push({ x0: xWall1, y0: yB2, x1: xWallCrease, y1: yB4, type: 'cut' });
+        // Borda superior/inferior da parede 2 (roll-over)
         segments.push({ x0: xWallCrease, y0: yB4, x1: xWall2, y1: yB4, type: 'cut' });
 
-        // Aba de canto com chanfro
+        // Abas de canto (flaps articulados no topo/base)
+        // Borda horizontal externa da aba de canto
         segments.push({ x0: xL2, y0: yFlapTop, x1: sx * (L2_2 + H2), y1: yFlapTop, type: 'cut' });
+        // Chanfro a 45° da aba de canto
         segments.push({ x0: sx * (L2_2 + H2), y0: yFlapTop, x1: sx * (L2_2 + H2), y1: sy * (B2_2 + ChFlap), type: 'cut' });
         segments.push({ x0: sx * (L2_2 + H2), y0: sy * (B2_2 + ChFlap), x1: xL1, y1: yB2, type: 'cut' });
 
-        // Mortise (furo de encaixe da trava)
+        // Mortise (Furo retangular no fundo próximo ao vinco para travar a orelha)
         const yM0 = sy * v5;
         const yM1 = sy * (v5 + mtl);
         const xM0 = sx * L1_2;
@@ -143,92 +153,129 @@ export const fefco0427: PackagingModel = {
         segments.push({ x0: xM1, y0: yM1, x1: xM0, y1: yM1, type: 'cut' });
         segments.push({ x0: xM0, y0: yM1, x1: xM0, y1: yM0, type: 'cut' });
 
-        // Tenon (aba de trava)
+        // Tenon (Orelha de travamento na extremidade da parede interna)
         const yT0 = sy * v6;
         const yT1 = sy * (v6 + tml);
         const yTTip0 = sy * (v6 + aT1);
         const yTTip1 = sy * (v6 + tml - aT1);
+        // Base do corte até a aba
         segments.push({ x0: xWall2, y0: yB4, x1: xWall2, y1: yT1, type: 'cut' });
+        // Rampa angular de 15°
         segments.push({ x0: xWall2, y0: yT1, x1: xTenonTip, y1: yTTip1, type: 'cut' });
+        // Ponta reta da aba
         segments.push({ x0: xTenonTip, y0: yTTip1, x1: xTenonTip, y1: yTTip0, type: 'cut' });
+        // Rampa de volta
         segments.push({ x0: xTenonTip, y0: yTTip0, x1: xWall2, y1: yT0, type: 'cut' });
       }
 
+      // Trecho reto intermediário entre as duas abas Tenon na borda extrema
       segments.push({ x0: xWall2, y0: v6, x1: xWall2, y1: -v6, type: 'cut' });
     }
 
-    // Fechamento da borda inferior
+    // Fechamento da borda inferior da caixa (Y negativo)
     const yBottomFlapEdge = -(B1_2 + H2);
     segments.push({ x0: -L2_2, y0: yBottomFlapEdge, x1: L2_2, y1: yBottomFlapEdge, type: 'cut' });
 
     // =========================================================================
-    // 2. TAMPA SUPERIOR COM ORELHAS DE TRAVA (top_cover_427)
+    // 2. TAMPA SUPERIOR ARTICULADA E ABAS LATERAIS (top_cover_429)
     // =========================================================================
-    const Ltop = L2_2 * 2 + m14;
-    const cw = (Ltop - L2_2 * 2) / 2;
+    const L3 = L2_2 * 2; // L2
     const B2top = B + m15;
+    const cw = m16;
     const cs = m17;
+    const Rp = 15; // Raio dos cantos da aba frontal
 
-    const yCoverBase = B1_2 + H2;
+    const yCoverBase = B1_2 + H2; // início da tampa articulada
     // Vinco entre parede traseira e tampa
     segments.push({ x0: -L2_2, y0: yCoverBase, x1: L2_2, y1: yCoverBase, type: 'crease' });
 
+    // Abas laterais da tampa (Lid lateral dust flaps)
     const yLidCreaseBottom = yCoverBase + cs;
     const yLidCreaseTop = yCoverBase + cs + B2top - cs;
     const yLidFrontCrease = yCoverBase + cs + B2top;
     const yLidFrontEdge = yLidFrontCrease + H7;
 
-    const xLidLeft = -(L2_2 - cw);
-    const xLidRight = L2_2 - cw;
-    const flapW = Math.min(H, 60);
+    const xLidLeft = -(L3 / 2 - cw);
+    const xLidRight = L3 / 2 - cw;
+    const xLidFlapLeft = xLidLeft - H7;
+    const xLidFlapRight = xLidRight + H7;
 
-    // Vincos laterais da tampa
+    // Vincos laterais da tampa (para dobrar as abas laterais para dentro)
     segments.push({ x0: xLidLeft, y0: yLidCreaseBottom + cs, x1: xLidLeft, y1: yLidCreaseTop, type: 'crease' });
     segments.push({ x0: xLidRight, y0: yLidCreaseBottom + cs, x1: xLidRight, y1: yLidCreaseTop, type: 'crease' });
 
-    // Vinco frontal da tampa
+    // Vinco frontal da tampa (para a aba de encaixe)
     segments.push({ x0: xLidLeft, y0: yLidFrontCrease, x1: xLidRight, y1: yLidFrontCrease, type: 'crease' });
 
-    // Abas laterais da tampa com chanfro
-    // Direita
+    // Cortes da aba lateral DIREITA da tampa
     segments.push({ x0: L2_2, y0: yCoverBase, x1: xLidRight, y1: yLidCreaseBottom, type: 'cut' });
     segments.push({ x0: xLidRight, y0: yLidCreaseBottom, x1: xLidRight, y1: yLidCreaseBottom + cs, type: 'cut' });
-    segments.push({ x0: xLidRight, y0: yLidCreaseBottom + cs, x1: xLidRight + flapW, y1: yLidCreaseBottom + cs + 15, type: 'cut' });
-    segments.push({ x0: xLidRight + flapW, y0: yLidCreaseBottom + cs + 15, x1: xLidRight + flapW, y1: yLidCreaseTop - 15, type: 'cut' });
-    segments.push({ x0: xLidRight + flapW, y0: yLidCreaseTop - 15, x1: xLidRight, y1: yLidCreaseTop, type: 'cut' });
+    segments.push({ x0: xLidRight, y0: yLidCreaseBottom + cs, x1: xLidFlapRight, y1: yLidCreaseBottom + cs + H7 / 3, type: 'cut' });
+    segments.push({ x0: xLidFlapRight, y0: yLidCreaseBottom + cs + H7 / 3, x1: xLidFlapRight, y1: yLidCreaseTop - H7 / 3, type: 'cut' });
+    segments.push({ x0: xLidFlapRight, y0: yLidCreaseTop - H7 / 3, x1: xLidRight, y1: yLidCreaseTop, type: 'cut' });
     segments.push({ x0: xLidRight, y0: yLidCreaseTop, x1: xLidRight, y1: yLidFrontCrease, type: 'cut' });
 
-    // Esquerda
+    // Cortes da aba lateral ESQUERDA da tampa
     segments.push({ x0: -L2_2, y0: yCoverBase, x1: xLidLeft, y1: yLidCreaseBottom, type: 'cut' });
     segments.push({ x0: xLidLeft, y0: yLidCreaseBottom, x1: xLidLeft, y1: yLidCreaseBottom + cs, type: 'cut' });
-    segments.push({ x0: xLidLeft, y0: yLidCreaseBottom + cs, x1: xLidLeft - flapW, y1: yLidCreaseBottom + cs + 15, type: 'cut' });
-    segments.push({ x0: xLidLeft - flapW, y0: yLidCreaseBottom + cs + 15, x1: xLidLeft - flapW, y1: yLidCreaseTop - 15, type: 'cut' });
-    segments.push({ x0: xLidLeft - flapW, y0: yLidCreaseTop - 15, x1: xLidLeft, y1: yLidCreaseTop, type: 'cut' });
+    segments.push({ x0: xLidLeft, y0: yLidCreaseBottom + cs, x1: xLidFlapLeft, y1: yLidCreaseBottom + cs + H7 / 3, type: 'cut' });
+    segments.push({ x0: xLidFlapLeft, y0: yLidCreaseBottom + cs + H7 / 3, x1: xLidFlapLeft, y1: yLidCreaseTop - H7 / 3, type: 'cut' });
+    segments.push({ x0: xLidFlapLeft, y0: yLidCreaseTop - H7 / 3, x1: xLidLeft, y1: yLidCreaseTop, type: 'cut' });
     segments.push({ x0: xLidLeft, y0: yLidCreaseTop, x1: xLidLeft, y1: yLidFrontCrease, type: 'cut' });
 
-    // Orelhas de travamento (Ears) da aba frontal
-    const earW = Math.min(22, H * 0.35);
-    const earH = H7 * 0.6;
-    // Orelha direita
-    segments.push({ x0: xLidRight, y0: yLidFrontCrease, x1: xLidRight + earW, y1: yLidFrontCrease, type: 'cut' });
-    segments.push({ x0: xLidRight + earW, y0: yLidFrontCrease, x1: xLidRight + earW, y1: yLidFrontCrease + earH, type: 'cut' });
-    segments.push({ x0: xLidRight + earW, y0: yLidFrontCrease + earH, x1: xLidRight, y1: yLidFrontEdge, type: 'cut' });
+    // Aba de inserção frontal (Tuck flap com cantos arredondados R15)
+    segments.push({ x0: xLidLeft, y0: yLidFrontCrease, x1: xLidLeft, y1: yLidFrontEdge - Rp, type: 'cut' });
+    segments.push({ x0: xLidRight, y0: yLidFrontCrease, x1: xLidRight, y1: yLidFrontEdge - Rp, type: 'cut' });
 
-    // Orelha esquerda
-    segments.push({ x0: xLidLeft, y0: yLidFrontCrease, x1: xLidLeft - earW, y1: yLidFrontCrease, type: 'cut' });
-    segments.push({ x0: xLidLeft - earW, y0: yLidFrontCrease, x1: xLidLeft - earW, y1: yLidFrontCrease + earH, type: 'cut' });
-    segments.push({ x0: xLidLeft - earW, y0: yLidFrontCrease + earH, x1: xLidLeft, y1: yLidFrontEdge, type: 'cut' });
-
-    // Borda superior da aba frontal
-    segments.push({ x0: xLidLeft, y0: yLidFrontEdge, x1: xLidRight, y1: yLidFrontEdge, type: 'cut' });
+    // Cantos arredondados R15
+    arcs.push({
+      cx: xLidLeft + Rp,
+      cy: yLidFrontEdge - Rp,
+      r: Rp,
+      startAngle: 90,
+      endAngle: 180,
+      type: 'cut',
+    });
+    arcs.push({
+      cx: xLidRight - Rp,
+      cy: yLidFrontEdge - Rp,
+      r: Rp,
+      startAngle: 0,
+      endAngle: 90,
+      type: 'cut',
+    });
+    // Borda horizontal superior da aba frontal
+    segments.push({ x0: xLidLeft + Rp, y0: yLidFrontEdge, x1: xLidRight - Rp, y1: yLidFrontEdge, type: 'cut' });
 
     // =========================================================================
-    // 3. COTAS TÉCNICAS
+    // 3. COTAS TÉCNICAS (DIMENSION LINES)
     // =========================================================================
     const dimensions: DimensionLine[] = [
-      { x0: -L2_2, y0: -B1_2 - 20, x1: L2_2, y1: -B1_2 - 20, text: `L = ${L} mm`, offset: -20 },
-      { x0: L2_2 + 25, y0: -B1_2, x1: L2_2 + 25, y1: B1_2, text: `B = ${B} mm`, offset: 20, isVertical: true },
-      { x0: L1_2, y0: B2_2 + 20, x1: L1_2 + H4, y1: B2_2 + 20, text: `H = ${H} mm`, offset: 20 },
+      {
+        x0: -L2_2,
+        y0: -B1_2 - 20,
+        x1: L2_2,
+        y1: -B1_2 - 20,
+        text: `L = ${L} mm`,
+        offset: -20,
+      },
+      {
+        x0: L2_2 + 25,
+        y0: -B1_2,
+        x1: L2_2 + 25,
+        y1: B1_2,
+        text: `B = ${B} mm`,
+        offset: 20,
+        isVertical: true,
+      },
+      {
+        x0: L1_2,
+        y0: B2_2 + 20,
+        x1: L1_2 + H4,
+        y1: B2_2 + 20,
+        text: `H = ${H} mm`,
+        offset: 20,
+      },
     ];
 
     const bounds = computeBoundingBox({ segments, arcs });
