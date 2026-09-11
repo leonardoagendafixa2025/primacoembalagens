@@ -1,6 +1,7 @@
 import type { PackagingModel } from '../types';
 import { fefco0201 } from './fefco0201';
 import { fefco0427 } from './fefco0427';
+import { fefco0420 } from './fefco0420';
 import { fefco0200 } from './fefco0200';
 import { fefco0203 } from './fefco0203';
 import { ecmaB10 } from './ecmaCarton';
@@ -29,7 +30,8 @@ const BUILTIN_MODELS: Record<string, PackagingModel> = {
   fefco_f201: fefco0201,
   fefco_0427: fefco0427,
   fefco_f427: fefco0427,
-  fefco_f421: fefco0427,
+  fefco_0420: fefco0420,
+  fefco_f420: fefco0420,
   fefco_0200: fefco0200,
   fefco_f200: fefco0200,
   fefco_0203: fefco0203,
@@ -41,6 +43,7 @@ const BUILTIN_MODELS: Record<string, PackagingModel> = {
 
 export const MODELS: PackagingModel[] = [
   fefco0201,
+  fefco0420,
   fefco0427,
   fefco0200,
   fefco0203,
@@ -74,7 +77,11 @@ export function getModelById(id: string): PackagingModel {
     }
   } else if (catalogItem.category === 'FEFCO') {
     if (catalogItem.series.includes('0400')) {
-      calculateFn = fefco0427.calculate;
+      if (catalogItem.code.includes('0420') || catalogItem.id.includes('420')) {
+        calculateFn = fefco0420.calculate;
+      } else {
+        calculateFn = fefco0427.calculate;
+      }
     } else if (catalogItem.series.includes('0200')) {
       if (catalogItem.code.includes('0200')) calculateFn = fefco0200.calculate;
       else if (catalogItem.code.includes('0203')) calculateFn = fefco0203.calculate;
