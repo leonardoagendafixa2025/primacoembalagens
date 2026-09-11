@@ -1,0 +1,8026 @@
+[
+  {
+    "id": "fefco_f200",
+    "rawName": "F200",
+    "code": "FEFCO 0200",
+    "name": "F200",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F200",
+    "thumbnail": "/thumbnails/fefco_f200.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f201",
+    "rawName": "F201",
+    "code": "FEFCO 0201",
+    "name": "F201",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F201",
+    "thumbnail": "/thumbnails/fefco_f201.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f202",
+    "rawName": "F202",
+    "code": "FEFCO 0202",
+    "name": "F202",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F202",
+    "thumbnail": "/thumbnails/fefco_f202.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f203",
+    "rawName": "F203",
+    "code": "FEFCO 0203",
+    "name": "F203",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F203",
+    "thumbnail": "/thumbnails/fefco_f203.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f204",
+    "rawName": "F204",
+    "code": "FEFCO 0204",
+    "name": "F204",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F204",
+    "thumbnail": "/thumbnails/fefco_f204.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f205",
+    "rawName": "F205",
+    "code": "FEFCO 0205",
+    "name": "F205",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F205",
+    "thumbnail": "/thumbnails/fefco_f205.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f206",
+    "rawName": "F206",
+    "code": "FEFCO 0206",
+    "name": "F206",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F206",
+    "thumbnail": "/thumbnails/fefco_f206.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f207",
+    "rawName": "F207",
+    "code": "FEFCO 0207",
+    "name": "F207",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F207",
+    "thumbnail": "/thumbnails/fefco_f207.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f208",
+    "rawName": "F208",
+    "code": "FEFCO 0208",
+    "name": "F208",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F208",
+    "thumbnail": "/thumbnails/fefco_f208.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f209",
+    "rawName": "F209",
+    "code": "FEFCO 0209",
+    "name": "F209",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F209",
+    "thumbnail": "/thumbnails/fefco_f209.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f210",
+    "rawName": "F210",
+    "code": "FEFCO 0210",
+    "name": "F210",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F210",
+    "thumbnail": "/thumbnails/fefco_f210.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f211",
+    "rawName": "F211",
+    "code": "FEFCO 0211",
+    "name": "F211",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F211",
+    "thumbnail": "/thumbnails/fefco_f211.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f212",
+    "rawName": "F212",
+    "code": "FEFCO 0212",
+    "name": "F212",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F212",
+    "thumbnail": "/thumbnails/fefco_f212.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f214",
+    "rawName": "F214",
+    "code": "FEFCO 0214",
+    "name": "F214",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F214",
+    "thumbnail": "/thumbnails/fefco_f214.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f215",
+    "rawName": "F215",
+    "code": "FEFCO 0215",
+    "name": "F215",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F215",
+    "thumbnail": "/thumbnails/fefco_f215.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f216",
+    "rawName": "F216",
+    "code": "FEFCO 0216",
+    "name": "F216",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F216",
+    "thumbnail": "/thumbnails/fefco_f216.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f217",
+    "rawName": "F217",
+    "code": "FEFCO 0217",
+    "name": "F217",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F217",
+    "thumbnail": "/thumbnails/fefco_f217.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f218",
+    "rawName": "F218",
+    "code": "FEFCO 0218",
+    "name": "F218",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F218",
+    "thumbnail": "/thumbnails/fefco_f218.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f225",
+    "rawName": "F225",
+    "code": "FEFCO 0225",
+    "name": "F225",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F225",
+    "thumbnail": "/thumbnails/fefco_f225.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f226",
+    "rawName": "F226",
+    "code": "FEFCO 0226",
+    "name": "F226",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F226",
+    "thumbnail": "/thumbnails/fefco_f226.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f227",
+    "rawName": "F227",
+    "code": "FEFCO 0227",
+    "name": "F227",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F227",
+    "thumbnail": "/thumbnails/fefco_f227.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f228",
+    "rawName": "F228",
+    "code": "FEFCO 0228",
+    "name": "F228",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F228",
+    "thumbnail": "/thumbnails/fefco_f228.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f229",
+    "rawName": "F229",
+    "code": "FEFCO 0229",
+    "name": "F229",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F229",
+    "thumbnail": "/thumbnails/fefco_f229.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f230",
+    "rawName": "F230",
+    "code": "FEFCO 0230",
+    "name": "F230",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F230",
+    "thumbnail": "/thumbnails/fefco_f230.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f231",
+    "rawName": "F231",
+    "code": "FEFCO 0231",
+    "name": "F231",
+    "category": "FEFCO",
+    "series": "Série 0200 - Maletas com Abas (Slotted boxes)",
+    "description": "F231",
+    "thumbnail": "/thumbnails/fefco_f231.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f300",
+    "rawName": "F300",
+    "code": "FEFCO 0300",
+    "name": "F300",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F300",
+    "thumbnail": "/thumbnails/fefco_f300.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f301",
+    "rawName": "F301",
+    "code": "FEFCO 0301",
+    "name": "F301",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F301",
+    "thumbnail": "/thumbnails/fefco_f301.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f302",
+    "rawName": "F302",
+    "code": "FEFCO 0302",
+    "name": "F302",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F302",
+    "thumbnail": "/thumbnails/fefco_f302.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f303",
+    "rawName": "F303",
+    "code": "FEFCO 0303",
+    "name": "F303",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F303",
+    "thumbnail": "/thumbnails/fefco_f303.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f304",
+    "rawName": "F304",
+    "code": "FEFCO 0304",
+    "name": "F304",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F304",
+    "thumbnail": "/thumbnails/fefco_f304.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f306",
+    "rawName": "F306",
+    "code": "FEFCO 0306",
+    "name": "F306",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F306",
+    "thumbnail": "/thumbnails/fefco_f306.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f307",
+    "rawName": "F307",
+    "code": "FEFCO 0307",
+    "name": "F307",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F307",
+    "thumbnail": "/thumbnails/fefco_f307.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f308",
+    "rawName": "F308",
+    "code": "FEFCO 0308",
+    "name": "F308",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F308",
+    "thumbnail": "/thumbnails/fefco_f308.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f309",
+    "rawName": "F309",
+    "code": "FEFCO 0309",
+    "name": "F309",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F309",
+    "thumbnail": "/thumbnails/fefco_f309.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f310",
+    "rawName": "F310",
+    "code": "FEFCO 0310",
+    "name": "F310",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F310",
+    "thumbnail": "/thumbnails/fefco_f310.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f312",
+    "rawName": "F312",
+    "code": "FEFCO 0312",
+    "name": "F312",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F312",
+    "thumbnail": "/thumbnails/fefco_f312.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f313",
+    "rawName": "F313",
+    "code": "FEFCO 0313",
+    "name": "F313",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F313",
+    "thumbnail": "/thumbnails/fefco_f313.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f314",
+    "rawName": "F314",
+    "code": "FEFCO 0314",
+    "name": "F314",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F314",
+    "thumbnail": "/thumbnails/fefco_f314.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f320",
+    "rawName": "F320",
+    "code": "FEFCO 0320",
+    "name": "F320",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F320",
+    "thumbnail": "/thumbnails/fefco_f320.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f321",
+    "rawName": "F321",
+    "code": "FEFCO 0321",
+    "name": "F321",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F321",
+    "thumbnail": "/thumbnails/fefco_f321.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f322",
+    "rawName": "F322",
+    "code": "FEFCO 0322",
+    "name": "F322",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F322",
+    "thumbnail": "/thumbnails/fefco_f322.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f323",
+    "rawName": "F323",
+    "code": "FEFCO 0323",
+    "name": "F323",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F323",
+    "thumbnail": "/thumbnails/fefco_f323.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f325",
+    "rawName": "F325",
+    "code": "FEFCO 0325",
+    "name": "F325",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F325",
+    "thumbnail": "/thumbnails/fefco_f325.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f330",
+    "rawName": "F330",
+    "code": "FEFCO 0330",
+    "name": "F330",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F330",
+    "thumbnail": "/thumbnails/fefco_f330.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f331",
+    "rawName": "F331",
+    "code": "FEFCO 0331",
+    "name": "F331",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F331",
+    "thumbnail": "/thumbnails/fefco_f331.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f350",
+    "rawName": "F350",
+    "code": "FEFCO 0350",
+    "name": "F350",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F350",
+    "thumbnail": "/thumbnails/fefco_f350.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f351",
+    "rawName": "F351",
+    "code": "FEFCO 0351",
+    "name": "F351",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F351",
+    "thumbnail": "/thumbnails/fefco_f351.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f352",
+    "rawName": "F352",
+    "code": "FEFCO 0352",
+    "name": "F352",
+    "category": "FEFCO",
+    "series": "Série 0300 - Caixas Telescópicas / Tampas e Fundos",
+    "description": "F352",
+    "thumbnail": "/thumbnails/fefco_f352.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f400",
+    "rawName": "F400",
+    "code": "FEFCO 0400",
+    "name": "F400",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F400",
+    "thumbnail": "/thumbnails/fefco_f400.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f401",
+    "rawName": "F401",
+    "code": "FEFCO 0401",
+    "name": "F401",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F401",
+    "thumbnail": "/thumbnails/fefco_f401.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f402",
+    "rawName": "F402",
+    "code": "FEFCO 0402",
+    "name": "F402",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F402",
+    "thumbnail": "/thumbnails/fefco_f402.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f403",
+    "rawName": "F403",
+    "code": "FEFCO 0403",
+    "name": "F403",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F403",
+    "thumbnail": "/thumbnails/fefco_f403.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f404",
+    "rawName": "F404",
+    "code": "FEFCO 0404",
+    "name": "F404",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F404",
+    "thumbnail": "/thumbnails/fefco_f404.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f405",
+    "rawName": "F405",
+    "code": "FEFCO 0405",
+    "name": "F405",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F405",
+    "thumbnail": "/thumbnails/fefco_f405.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f406",
+    "rawName": "F406",
+    "code": "FEFCO 0406",
+    "name": "F406",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F406",
+    "thumbnail": "/thumbnails/fefco_f406.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f409",
+    "rawName": "F409",
+    "code": "FEFCO 0409",
+    "name": "F409",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F409",
+    "thumbnail": "/thumbnails/fefco_f409.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f410",
+    "rawName": "F410",
+    "code": "FEFCO 0410",
+    "name": "F410",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F410",
+    "thumbnail": "/thumbnails/fefco_f410.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f411",
+    "rawName": "F411",
+    "code": "FEFCO 0411",
+    "name": "F411",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F411",
+    "thumbnail": "/thumbnails/fefco_f411.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f412",
+    "rawName": "F412",
+    "code": "FEFCO 0412",
+    "name": "F412",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F412",
+    "thumbnail": "/thumbnails/fefco_f412.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f413",
+    "rawName": "F413",
+    "code": "FEFCO 0413",
+    "name": "F413",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F413",
+    "thumbnail": "/thumbnails/fefco_f413.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f415",
+    "rawName": "F415",
+    "code": "FEFCO 0415",
+    "name": "F415",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F415",
+    "thumbnail": "/thumbnails/fefco_f415.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f416",
+    "rawName": "F416",
+    "code": "FEFCO 0416",
+    "name": "F416",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F416",
+    "thumbnail": "/thumbnails/fefco_f416.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f420",
+    "rawName": "F420",
+    "code": "FEFCO 0420",
+    "name": "F420",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F420",
+    "thumbnail": "/thumbnails/fefco_f420.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f421",
+    "rawName": "F421",
+    "code": "FEFCO 0421",
+    "name": "F421",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F421",
+    "thumbnail": "/thumbnails/fefco_f421.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f422",
+    "rawName": "F422",
+    "code": "FEFCO 0422",
+    "name": "F422",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F422",
+    "thumbnail": "/thumbnails/fefco_f422.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f423",
+    "rawName": "F423",
+    "code": "FEFCO 0423",
+    "name": "F423",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F423",
+    "thumbnail": "/thumbnails/fefco_f423.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f424",
+    "rawName": "F424",
+    "code": "FEFCO 0424",
+    "name": "F424",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F424",
+    "thumbnail": "/thumbnails/fefco_f424.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f425",
+    "rawName": "F425",
+    "code": "FEFCO 0425",
+    "name": "F425",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F425",
+    "thumbnail": "/thumbnails/fefco_f425.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f426",
+    "rawName": "F426",
+    "code": "FEFCO 0426",
+    "name": "F426",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F426",
+    "thumbnail": "/thumbnails/fefco_f426.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f427",
+    "rawName": "F427",
+    "code": "FEFCO 0427",
+    "name": "F427",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F427",
+    "thumbnail": "/thumbnails/fefco_f427.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f428",
+    "rawName": "F428",
+    "code": "FEFCO 0428",
+    "name": "F428",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F428",
+    "thumbnail": "/thumbnails/fefco_f428.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f429",
+    "rawName": "F429",
+    "code": "FEFCO 0429",
+    "name": "F429",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F429",
+    "thumbnail": "/thumbnails/fefco_f429.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f430",
+    "rawName": "F430",
+    "code": "FEFCO 0430",
+    "name": "F430",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F430",
+    "thumbnail": "/thumbnails/fefco_f430.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f431",
+    "rawName": "F431",
+    "code": "FEFCO 0431",
+    "name": "F431",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F431",
+    "thumbnail": "/thumbnails/fefco_f431.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f432",
+    "rawName": "F432",
+    "code": "FEFCO 0432",
+    "name": "F432",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F432",
+    "thumbnail": "/thumbnails/fefco_f432.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f433",
+    "rawName": "F433",
+    "code": "FEFCO 0433",
+    "name": "F433",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F433",
+    "thumbnail": "/thumbnails/fefco_f433.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f434",
+    "rawName": "F434",
+    "code": "FEFCO 0434",
+    "name": "F434",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F434",
+    "thumbnail": "/thumbnails/fefco_f434.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f435",
+    "rawName": "F435",
+    "code": "FEFCO 0435",
+    "name": "F435",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F435",
+    "thumbnail": "/thumbnails/fefco_f435.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f436",
+    "rawName": "F436",
+    "code": "FEFCO 0436",
+    "name": "F436 (3D)",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F436 (3D)",
+    "thumbnail": "/thumbnails/fefco_f436.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f437",
+    "rawName": "F437",
+    "code": "FEFCO 0437",
+    "name": "F437",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F437",
+    "thumbnail": "/thumbnails/fefco_f437.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f440",
+    "rawName": "F440",
+    "code": "FEFCO 0440",
+    "name": "F440",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F440",
+    "thumbnail": "/thumbnails/fefco_f440.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f441",
+    "rawName": "F441",
+    "code": "FEFCO 0441",
+    "name": "F441",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F441",
+    "thumbnail": "/thumbnails/fefco_f441.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f442",
+    "rawName": "F442",
+    "code": "FEFCO 0442",
+    "name": "F442",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F442",
+    "thumbnail": "/thumbnails/fefco_f442.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f443",
+    "rawName": "F443",
+    "code": "FEFCO 0443",
+    "name": "F443",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F443",
+    "thumbnail": "/thumbnails/fefco_f443.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f444",
+    "rawName": "F444",
+    "code": "FEFCO 0444",
+    "name": "F444",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F444",
+    "thumbnail": "/thumbnails/fefco_f444.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f445",
+    "rawName": "F445",
+    "code": "FEFCO 0445",
+    "name": "F445",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F445",
+    "thumbnail": "/thumbnails/fefco_f445.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f446",
+    "rawName": "F446",
+    "code": "FEFCO 0446",
+    "name": "F446",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F446",
+    "thumbnail": "/thumbnails/fefco_f446.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f447",
+    "rawName": "F447",
+    "code": "FEFCO 0447",
+    "name": "F447",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F447",
+    "thumbnail": "/thumbnails/fefco_f447.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f448",
+    "rawName": "F448",
+    "code": "FEFCO 0448",
+    "name": "F448  !3d",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F448  !3d",
+    "thumbnail": "/thumbnails/fefco_f448.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f449",
+    "rawName": "F449",
+    "code": "FEFCO 0449",
+    "name": "F449  !3D",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F449  !3D",
+    "thumbnail": "/thumbnails/fefco_f449.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f450",
+    "rawName": "F450",
+    "code": "FEFCO 0450",
+    "name": "F450",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F450",
+    "thumbnail": "/thumbnails/fefco_f450.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f451",
+    "rawName": "F451",
+    "code": "FEFCO 0451",
+    "name": "F451",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F451",
+    "thumbnail": "/thumbnails/fefco_f451.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f452",
+    "rawName": "F452",
+    "code": "FEFCO 0452",
+    "name": "F452",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F452",
+    "thumbnail": "/thumbnails/fefco_f452.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f453",
+    "rawName": "F453",
+    "code": "FEFCO 0453",
+    "name": "F453",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F453",
+    "thumbnail": "/thumbnails/fefco_f453.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f454",
+    "rawName": "F454",
+    "code": "FEFCO 0454",
+    "name": "F454",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F454",
+    "thumbnail": "/thumbnails/fefco_f454.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f455",
+    "rawName": "F455",
+    "code": "FEFCO 0455",
+    "name": "F455",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F455",
+    "thumbnail": "/thumbnails/fefco_f455.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f456",
+    "rawName": "F456",
+    "code": "FEFCO 0456",
+    "name": "F456",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F456",
+    "thumbnail": "/thumbnails/fefco_f456.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f457",
+    "rawName": "F457",
+    "code": "FEFCO 0457",
+    "name": "F457",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F457",
+    "thumbnail": "/thumbnails/fefco_f457.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f458",
+    "rawName": "F458",
+    "code": "FEFCO 0458",
+    "name": "F458",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F458",
+    "thumbnail": "/thumbnails/fefco_f458.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f459",
+    "rawName": "F459",
+    "code": "FEFCO 0459",
+    "name": "F459",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F459",
+    "thumbnail": "/thumbnails/fefco_f459.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f460",
+    "rawName": "F460",
+    "code": "FEFCO 0460",
+    "name": "F460",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F460",
+    "thumbnail": "/thumbnails/fefco_f460.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f470",
+    "rawName": "F470",
+    "code": "FEFCO 0470",
+    "name": "F470",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F470",
+    "thumbnail": "/thumbnails/fefco_f470.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f471",
+    "rawName": "F471",
+    "code": "FEFCO 0471",
+    "name": "F471",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F471",
+    "thumbnail": "/thumbnails/fefco_f471.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f472",
+    "rawName": "F472",
+    "code": "FEFCO 0472",
+    "name": "F472",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F472",
+    "thumbnail": "/thumbnails/fefco_f472.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f473",
+    "rawName": "F473",
+    "code": "FEFCO 0473",
+    "name": "F473",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F473",
+    "thumbnail": "/thumbnails/fefco_f473.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f480",
+    "rawName": "F480",
+    "code": "FEFCO 0480",
+    "name": "F480 EUROPEAN TRAYS",
+    "category": "FEFCO",
+    "series": "Série 0400 - Envoltórios & Caixas Corte-e-Vinco (Folders)",
+    "description": "F480 EUROPEAN TRAYS",
+    "thumbnail": "/thumbnails/fefco_f480.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f501",
+    "rawName": "F501",
+    "code": "FEFCO 0501",
+    "name": "F501",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F501",
+    "thumbnail": "/thumbnails/fefco_f501.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f502",
+    "rawName": "F502",
+    "code": "FEFCO 0502",
+    "name": "F502",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F502",
+    "thumbnail": "/thumbnails/fefco_f502.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f503",
+    "rawName": "F503",
+    "code": "FEFCO 0503",
+    "name": "F503",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F503",
+    "thumbnail": "/thumbnails/fefco_f503.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f504",
+    "rawName": "F504",
+    "code": "FEFCO 0504",
+    "name": "F504",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F504",
+    "thumbnail": "/thumbnails/fefco_f504.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f505",
+    "rawName": "F505",
+    "code": "FEFCO 0505",
+    "name": "F505",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F505",
+    "thumbnail": "/thumbnails/fefco_f505.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f507",
+    "rawName": "F507",
+    "code": "FEFCO 0507",
+    "name": "F507",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F507",
+    "thumbnail": "/thumbnails/fefco_f507.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f509",
+    "rawName": "F509",
+    "code": "FEFCO 0509",
+    "name": "F509",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F509",
+    "thumbnail": "/thumbnails/fefco_f509.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f510",
+    "rawName": "F510",
+    "code": "FEFCO 0510",
+    "name": "F510",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F510",
+    "thumbnail": "/thumbnails/fefco_f510.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f511",
+    "rawName": "F511",
+    "code": "FEFCO 0511",
+    "name": "F511",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F511",
+    "thumbnail": "/thumbnails/fefco_f511.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f512",
+    "rawName": "F512",
+    "code": "FEFCO 0512",
+    "name": "F512",
+    "category": "FEFCO",
+    "series": "Série 0500 - Tubos e Caixas Deslizantes (Slide boxes)",
+    "description": "F512",
+    "thumbnail": "/thumbnails/fefco_f512.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f601",
+    "rawName": "F601",
+    "code": "FEFCO 0601",
+    "name": "F601",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F601",
+    "thumbnail": "/thumbnails/fefco_f601.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f602",
+    "rawName": "F602",
+    "code": "FEFCO 0602",
+    "name": "F602",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F602",
+    "thumbnail": "/thumbnails/fefco_f602.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f605",
+    "rawName": "F605",
+    "code": "FEFCO 0605",
+    "name": "F605",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F605",
+    "thumbnail": "/thumbnails/fefco_f605.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f606",
+    "rawName": "F606",
+    "code": "FEFCO 0606",
+    "name": "F606",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F606",
+    "thumbnail": "/thumbnails/fefco_f606.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f607",
+    "rawName": "F607",
+    "code": "FEFCO 0607",
+    "name": "F607",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F607",
+    "thumbnail": "/thumbnails/fefco_f607.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f608",
+    "rawName": "F608",
+    "code": "FEFCO 0608",
+    "name": "F608",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F608",
+    "thumbnail": "/thumbnails/fefco_f608.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f610",
+    "rawName": "F610",
+    "code": "FEFCO 0610",
+    "name": "F610",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F610",
+    "thumbnail": "/thumbnails/fefco_f610.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f615",
+    "rawName": "F615",
+    "code": "FEFCO 0615",
+    "name": "F615",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F615",
+    "thumbnail": "/thumbnails/fefco_f615.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f616",
+    "rawName": "F616",
+    "code": "FEFCO 0616",
+    "name": "F616",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F616",
+    "thumbnail": "/thumbnails/fefco_f616.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f620",
+    "rawName": "F620",
+    "code": "FEFCO 0620",
+    "name": "F620",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F620",
+    "thumbnail": "/thumbnails/fefco_f620.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f621",
+    "rawName": "F621",
+    "code": "FEFCO 0621",
+    "name": "F621",
+    "category": "FEFCO",
+    "series": "Série 0600 - Caixas Rígidas (Rigid boxes)",
+    "description": "F621",
+    "thumbnail": "/thumbnails/fefco_f621.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f700",
+    "rawName": "F700",
+    "code": "FEFCO 0700",
+    "name": "F700",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F700",
+    "thumbnail": "/thumbnails/fefco_f700.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f701",
+    "rawName": "F701",
+    "code": "FEFCO 0701",
+    "name": "F701",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F701",
+    "thumbnail": "/thumbnails/fefco_f701.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f703",
+    "rawName": "F703",
+    "code": "FEFCO 0703",
+    "name": "F703",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F703",
+    "thumbnail": "/thumbnails/fefco_f703.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f711",
+    "rawName": "F711",
+    "code": "FEFCO 0711",
+    "name": "F711",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F711",
+    "thumbnail": "/thumbnails/fefco_f711.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f712",
+    "rawName": "F712",
+    "code": "FEFCO 0712",
+    "name": "F712",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F712",
+    "thumbnail": "/thumbnails/fefco_f712.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f713",
+    "rawName": "F713",
+    "code": "FEFCO 0713",
+    "name": "F713",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F713",
+    "thumbnail": "/thumbnails/fefco_f713.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f714",
+    "rawName": "F714",
+    "code": "FEFCO 0714",
+    "name": "F714",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F714",
+    "thumbnail": "/thumbnails/fefco_f714.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f715",
+    "rawName": "F715",
+    "code": "FEFCO 0715",
+    "name": "F715",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F715",
+    "thumbnail": "/thumbnails/fefco_f715.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f716",
+    "rawName": "F716",
+    "code": "FEFCO 0716",
+    "name": "F716",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F716",
+    "thumbnail": "/thumbnails/fefco_f716.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f717",
+    "rawName": "F717",
+    "code": "FEFCO 0717",
+    "name": "F717",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F717",
+    "thumbnail": "/thumbnails/fefco_f717.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f718",
+    "rawName": "F718",
+    "code": "FEFCO 0718",
+    "name": "F718",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F718",
+    "thumbnail": "/thumbnails/fefco_f718.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f747",
+    "rawName": "F747",
+    "code": "FEFCO 0747",
+    "name": "F747",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F747",
+    "thumbnail": "/thumbnails/fefco_f747.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f748",
+    "rawName": "F748",
+    "code": "FEFCO 0748",
+    "name": "F748",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F748",
+    "thumbnail": "/thumbnails/fefco_f748.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f751",
+    "rawName": "F751",
+    "code": "FEFCO 0751",
+    "name": "F751",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F751",
+    "thumbnail": "/thumbnails/fefco_f751.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f752",
+    "rawName": "F752",
+    "code": "FEFCO 0752",
+    "name": "F752",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F752",
+    "thumbnail": "/thumbnails/fefco_f752.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f759",
+    "rawName": "F759",
+    "code": "FEFCO 0759",
+    "name": "F759",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F759",
+    "thumbnail": "/thumbnails/fefco_f759.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f761",
+    "rawName": "F761",
+    "code": "FEFCO 0761",
+    "name": "F761",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F761",
+    "thumbnail": "/thumbnails/fefco_f761.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f770",
+    "rawName": "F770",
+    "code": "FEFCO 0770",
+    "name": "F770",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F770",
+    "thumbnail": "/thumbnails/fefco_f770.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f771",
+    "rawName": "F771",
+    "code": "FEFCO 0771",
+    "name": "F771",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F771",
+    "thumbnail": "/thumbnails/fefco_f771.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f772",
+    "rawName": "F772",
+    "code": "FEFCO 0772",
+    "name": "F772",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F772",
+    "thumbnail": "/thumbnails/fefco_f772.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f773",
+    "rawName": "F773",
+    "code": "FEFCO 0773",
+    "name": "F773",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F773",
+    "thumbnail": "/thumbnails/fefco_f773.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f774",
+    "rawName": "F774",
+    "code": "FEFCO 0774",
+    "name": "F774",
+    "category": "FEFCO",
+    "series": "Série 0700 - Fundo Automático & Pré-coladas (Ready-glued)",
+    "description": "F774",
+    "thumbnail": "/thumbnails/fefco_f774.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f900",
+    "rawName": "F900",
+    "code": "FEFCO 0900",
+    "name": "F900",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F900",
+    "thumbnail": "/thumbnails/fefco_f900.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f901",
+    "rawName": "F901",
+    "code": "FEFCO 0901",
+    "name": "F901",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F901",
+    "thumbnail": "/thumbnails/fefco_f901.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f902",
+    "rawName": "F902",
+    "code": "FEFCO 0902",
+    "name": "F902",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F902",
+    "thumbnail": "/thumbnails/fefco_f902.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f903",
+    "rawName": "F903",
+    "code": "FEFCO 0903",
+    "name": "F903",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F903",
+    "thumbnail": "/thumbnails/fefco_f903.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f904",
+    "rawName": "F904",
+    "code": "FEFCO 0904",
+    "name": "F904",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F904",
+    "thumbnail": "/thumbnails/fefco_f904.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f905",
+    "rawName": "F905",
+    "code": "FEFCO 0905",
+    "name": "F905",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F905",
+    "thumbnail": "/thumbnails/fefco_f905.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f906",
+    "rawName": "F906",
+    "code": "FEFCO 0906",
+    "name": "F906",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F906",
+    "thumbnail": "/thumbnails/fefco_f906.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f907",
+    "rawName": "F907",
+    "code": "FEFCO 0907",
+    "name": "F907",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F907",
+    "thumbnail": "/thumbnails/fefco_f907.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f908",
+    "rawName": "F908",
+    "code": "FEFCO 0908",
+    "name": "F908",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F908",
+    "thumbnail": "/thumbnails/fefco_f908.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f909",
+    "rawName": "F909",
+    "code": "FEFCO 0909",
+    "name": "F909",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F909",
+    "thumbnail": "/thumbnails/fefco_f909.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f910",
+    "rawName": "F910",
+    "code": "FEFCO 0910",
+    "name": "F910",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F910",
+    "thumbnail": "/thumbnails/fefco_f910.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f911",
+    "rawName": "F911",
+    "code": "FEFCO 0911",
+    "name": "F911",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F911",
+    "thumbnail": "/thumbnails/fefco_f911.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f913",
+    "rawName": "F913",
+    "code": "FEFCO 0913",
+    "name": "F913",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F913",
+    "thumbnail": "/thumbnails/fefco_f913.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f914",
+    "rawName": "F914",
+    "code": "FEFCO 0914",
+    "name": "F914",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F914",
+    "thumbnail": "/thumbnails/fefco_f914.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f920",
+    "rawName": "F920",
+    "code": "FEFCO 0920",
+    "name": "F920",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F920",
+    "thumbnail": "/thumbnails/fefco_f920.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f921",
+    "rawName": "F921",
+    "code": "FEFCO 0921",
+    "name": "F921",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F921",
+    "thumbnail": "/thumbnails/fefco_f921.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f929",
+    "rawName": "F929",
+    "code": "FEFCO 0929",
+    "name": "F929",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F929",
+    "thumbnail": "/thumbnails/fefco_f929.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f930",
+    "rawName": "F930",
+    "code": "FEFCO 0930",
+    "name": "F930",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F930",
+    "thumbnail": "/thumbnails/fefco_f930.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f931",
+    "rawName": "F931",
+    "code": "FEFCO 0931",
+    "name": "F931",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F931",
+    "thumbnail": "/thumbnails/fefco_f931.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f932",
+    "rawName": "F932",
+    "code": "FEFCO 0932",
+    "name": "F932",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F932",
+    "thumbnail": "/thumbnails/fefco_f932.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f933",
+    "rawName": "F933",
+    "code": "FEFCO 0933",
+    "name": "F933",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F933",
+    "thumbnail": "/thumbnails/fefco_f933.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f934",
+    "rawName": "F934",
+    "code": "FEFCO 0934",
+    "name": "F934",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F934",
+    "thumbnail": "/thumbnails/fefco_f934.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f935",
+    "rawName": "F935",
+    "code": "FEFCO 0935",
+    "name": "F935",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F935",
+    "thumbnail": "/thumbnails/fefco_f935.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f940",
+    "rawName": "F940",
+    "code": "FEFCO 0940",
+    "name": "F940",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F940",
+    "thumbnail": "/thumbnails/fefco_f940.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f941",
+    "rawName": "F941",
+    "code": "FEFCO 0941",
+    "name": "F941",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F941",
+    "thumbnail": "/thumbnails/fefco_f941.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f942",
+    "rawName": "F942",
+    "code": "FEFCO 0942",
+    "name": "F942",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F942",
+    "thumbnail": "/thumbnails/fefco_f942.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f943",
+    "rawName": "F943",
+    "code": "FEFCO 0943",
+    "name": "F943",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F943",
+    "thumbnail": "/thumbnails/fefco_f943.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f944",
+    "rawName": "F944",
+    "code": "FEFCO 0944",
+    "name": "F944",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F944",
+    "thumbnail": "/thumbnails/fefco_f944.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f945",
+    "rawName": "F945",
+    "code": "FEFCO 0945",
+    "name": "F945",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F945",
+    "thumbnail": "/thumbnails/fefco_f945.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f946",
+    "rawName": "F946",
+    "code": "FEFCO 0946",
+    "name": "F946",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F946",
+    "thumbnail": "/thumbnails/fefco_f946.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f947",
+    "rawName": "F947",
+    "code": "FEFCO 0947",
+    "name": "F947",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F947",
+    "thumbnail": "/thumbnails/fefco_f947.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f948",
+    "rawName": "F948",
+    "code": "FEFCO 0948",
+    "name": "F948",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F948",
+    "thumbnail": "/thumbnails/fefco_f948.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f949",
+    "rawName": "F949",
+    "code": "FEFCO 0949",
+    "name": "F949",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F949",
+    "thumbnail": "/thumbnails/fefco_f949.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f950",
+    "rawName": "F950",
+    "code": "FEFCO 0950",
+    "name": "F950",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F950",
+    "thumbnail": "/thumbnails/fefco_f950.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f951",
+    "rawName": "F951",
+    "code": "FEFCO 0951",
+    "name": "F951",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F951",
+    "thumbnail": "/thumbnails/fefco_f951.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f965",
+    "rawName": "F965",
+    "code": "FEFCO 0965",
+    "name": "F965",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F965",
+    "thumbnail": "/thumbnails/fefco_f965.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f966",
+    "rawName": "F966",
+    "code": "FEFCO 0966",
+    "name": "F966",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F966",
+    "thumbnail": "/thumbnails/fefco_f966.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f967",
+    "rawName": "F967",
+    "code": "FEFCO 0967",
+    "name": "F967",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F967",
+    "thumbnail": "/thumbnails/fefco_f967.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f970",
+    "rawName": "F970",
+    "code": "FEFCO 0970",
+    "name": "F970",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F970",
+    "thumbnail": "/thumbnails/fefco_f970.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f971",
+    "rawName": "F971",
+    "code": "FEFCO 0971",
+    "name": "F971",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F971",
+    "thumbnail": "/thumbnails/fefco_f971.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f972",
+    "rawName": "F972",
+    "code": "FEFCO 0972",
+    "name": "F972",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F972",
+    "thumbnail": "/thumbnails/fefco_f972.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f973",
+    "rawName": "F973",
+    "code": "FEFCO 0973",
+    "name": "F973",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F973",
+    "thumbnail": "/thumbnails/fefco_f973.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f974",
+    "rawName": "F974",
+    "code": "FEFCO 0974",
+    "name": "F974",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F974",
+    "thumbnail": "/thumbnails/fefco_f974.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f975",
+    "rawName": "F975",
+    "code": "FEFCO 0975",
+    "name": "F975",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F975",
+    "thumbnail": "/thumbnails/fefco_f975.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "fefco_f976",
+    "rawName": "F976",
+    "code": "FEFCO 0976",
+    "name": "F976",
+    "category": "FEFCO",
+    "series": "Série 0900 - Acessórios e Divisórias Interiores (Fitments)",
+    "description": "F976",
+    "thumbnail": "/thumbnails/fefco_f976.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "ecma_a0101",
+    "rawName": "A0101",
+    "code": "ECMA A0101",
+    "name": "Ecma A0101",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A0101",
+    "thumbnail": "/thumbnails/ecma_a0101.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0110",
+    "rawName": "A0110",
+    "code": "ECMA A0110",
+    "name": "A0110",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A0110",
+    "thumbnail": "/thumbnails/ecma_a0110.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0115",
+    "rawName": "A0115",
+    "code": "ECMA A0115",
+    "name": "Ecma A0115",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A0115",
+    "thumbnail": "/thumbnails/ecma_a0115.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0127",
+    "rawName": "A0127",
+    "code": "ECMA A0127",
+    "name": "A0127",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A0127",
+    "thumbnail": "/thumbnails/ecma_a0127.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0140",
+    "rawName": "A0140",
+    "code": "ECMA A0140",
+    "name": "Winged Flap",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Winged Flap",
+    "thumbnail": "/thumbnails/ecma_a0140.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0145",
+    "rawName": "A0145",
+    "code": "ECMA A0145",
+    "name": "A0145 Winged Flap",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A0145 Winged Flap",
+    "thumbnail": "/thumbnails/ecma_a0145.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0155",
+    "rawName": "A0155",
+    "code": "ECMA A0155",
+    "name": "Ecma A0155",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A0155",
+    "thumbnail": "/thumbnails/ecma_a0155.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0156",
+    "rawName": "A0156",
+    "code": "ECMA A0156",
+    "name": "A0156",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A0156",
+    "thumbnail": "/thumbnails/ecma_a0156.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0160",
+    "rawName": "A0160",
+    "code": "ECMA A0160",
+    "name": "Ecma A0160",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A0160",
+    "thumbnail": "/thumbnails/ecma_a0160.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0161",
+    "rawName": "A0161",
+    "code": "ECMA A0161",
+    "name": "A0161",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A0161",
+    "thumbnail": "/thumbnails/ecma_a0161.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0175",
+    "rawName": "A0175",
+    "code": "ECMA A0175",
+    "name": "Ecma A0175",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A0175",
+    "thumbnail": "/thumbnails/ecma_a0175.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0198",
+    "rawName": "A0198",
+    "code": "ECMA A0198",
+    "name": "A0198",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A0198",
+    "thumbnail": "/thumbnails/ecma_a0198.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a0199",
+    "rawName": "A0199",
+    "code": "ECMA A0199",
+    "name": "A0199",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A0199",
+    "thumbnail": "/thumbnails/ecma_a0199.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a1010",
+    "rawName": "A1010",
+    "code": "ECMA A1010",
+    "name": "A1010",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A1010",
+    "thumbnail": "/thumbnails/ecma_a1010.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a1011",
+    "rawName": "A1011",
+    "code": "ECMA A1011",
+    "name": "A1011",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A1011",
+    "thumbnail": "/thumbnails/ecma_a1011.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a1015",
+    "rawName": "A1015",
+    "code": "ECMA A1015",
+    "name": "A1015",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A1015",
+    "thumbnail": "/thumbnails/ecma_a1015.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a1020",
+    "rawName": "A1020",
+    "code": "ECMA A1020",
+    "name": "A1020",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A1020",
+    "thumbnail": "/thumbnails/ecma_a1020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a1021",
+    "rawName": "A1021",
+    "code": "ECMA A1021",
+    "name": "A1021",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A1021",
+    "thumbnail": "/thumbnails/ecma_a1021.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a1075",
+    "rawName": "A1075",
+    "code": "ECMA A1075",
+    "name": "A1075",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A1075",
+    "thumbnail": "/thumbnails/ecma_a1075.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a1111",
+    "rawName": "A1111",
+    "code": "ECMA A1111",
+    "name": "Ecma A1111",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A1111",
+    "thumbnail": "/thumbnails/ecma_a1111.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a2050",
+    "rawName": "A2050",
+    "code": "ECMA A2050",
+    "name": "Ecma A2050",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A2050",
+    "thumbnail": "/thumbnails/ecma_a2050.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a2082",
+    "rawName": "A2082",
+    "code": "ECMA A2082",
+    "name": "Ecma A2082",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A2082",
+    "thumbnail": "/thumbnails/ecma_a2082.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a2120",
+    "rawName": "A2120",
+    "code": "ECMA A2120",
+    "name": "Ecma A2120",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A2120",
+    "thumbnail": "/thumbnails/ecma_a2120.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a2220",
+    "rawName": "A2220",
+    "code": "ECMA A2220",
+    "name": "Ecma A2220",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A2220",
+    "thumbnail": "/thumbnails/ecma_a2220.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a2320",
+    "rawName": "A2320",
+    "code": "ECMA A2320",
+    "name": "A2320 Ecma",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A2320 Ecma",
+    "thumbnail": "/thumbnails/ecma_a2320.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a2420",
+    "rawName": "A2420",
+    "code": "ECMA A2420",
+    "name": "A2420 Ecma",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A2420 Ecma",
+    "thumbnail": "/thumbnails/ecma_a2420.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a5520",
+    "rawName": "A5520",
+    "code": "ECMA A5520",
+    "name": "A5520 Ecma",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A5520 Ecma",
+    "thumbnail": "/thumbnails/ecma_a5520.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a6020",
+    "rawName": "A6020",
+    "code": "ECMA A6020",
+    "name": "A6020 Ecma",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A6020 Ecma",
+    "thumbnail": "/thumbnails/ecma_a6020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a7070",
+    "rawName": "A7070",
+    "code": "ECMA A7070",
+    "name": "A7070",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A7070",
+    "thumbnail": "/thumbnails/ecma_a7070.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a8020",
+    "rawName": "A8020",
+    "code": "ECMA A8020",
+    "name": "Ecma A8020",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "Ecma A8020",
+    "thumbnail": "/thumbnails/ecma_a8020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_a9999",
+    "rawName": "A9999",
+    "code": "ECMA A9999",
+    "name": "A9999",
+    "category": "ECMA",
+    "series": "Grupo A - Tubos e Luvas sem colagem lateral",
+    "description": "A9999",
+    "thumbnail": "/thumbnails/ecma_a9999.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1001",
+    "rawName": "B1001",
+    "code": "ECMA B1001",
+    "name": "B.10.01.00.00",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B.10.01.00.00",
+    "thumbnail": "/thumbnails/ecma_b1001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1002",
+    "rawName": "B1002",
+    "code": "ECMA B1002",
+    "name": "Ecma B1002",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "Ecma B1002",
+    "thumbnail": "/thumbnails/ecma_b1002.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1004",
+    "rawName": "B1004",
+    "code": "ECMA B1004",
+    "name": "Ecma B1004",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "Ecma B1004",
+    "thumbnail": "/thumbnails/ecma_b1004.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1102",
+    "rawName": "B1102",
+    "code": "ECMA B1102",
+    "name": "ECMA B1102",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "ECMA B1102",
+    "thumbnail": "/thumbnails/ecma_b1102.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1104",
+    "rawName": "B1104",
+    "code": "ECMA B1104",
+    "name": "B.11.04",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B.11.04",
+    "thumbnail": "/thumbnails/ecma_b1104.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1402",
+    "rawName": "B1402",
+    "code": "ECMA B1402",
+    "name": "ECMA B1402",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "ECMA B1402",
+    "thumbnail": "/thumbnails/ecma_b1402.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1506",
+    "rawName": "B1506",
+    "code": "ECMA B1506",
+    "name": "B.15.06",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B.15.06",
+    "thumbnail": "/thumbnails/ecma_b1506.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1506_53",
+    "rawName": "B1506.53",
+    "code": "ECMA B1506.53",
+    "name": "B1506 53",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B1506 53",
+    "thumbnail": "/thumbnails/ecma_b1506_53.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1506_60",
+    "rawName": "B1506.60",
+    "code": "ECMA B1506.60",
+    "name": "ECMA B1506.60",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "ECMA B1506.60",
+    "thumbnail": "/thumbnails/ecma_b1506_60.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1507",
+    "rawName": "B1507",
+    "code": "ECMA B1507",
+    "name": "B1507",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B1507",
+    "thumbnail": "/thumbnails/ecma_b1507.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b1511",
+    "rawName": "B1511",
+    "code": "ECMA B1511",
+    "name": "B1511",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B1511",
+    "thumbnail": "/thumbnails/ecma_b1511.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b2001",
+    "rawName": "B2001",
+    "code": "ECMA B2001",
+    "name": "B.20.01",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B.20.01",
+    "thumbnail": "/thumbnails/ecma_b2001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b2001_50",
+    "rawName": "B2001.50",
+    "code": "ECMA B2001.50",
+    "name": "B2001",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B2001",
+    "thumbnail": "/thumbnails/ecma_b2001_50.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b2004",
+    "rawName": "B2004",
+    "code": "ECMA B2004",
+    "name": "B2004",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B2004",
+    "thumbnail": "/thumbnails/ecma_b2004.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b2005",
+    "rawName": "B2005",
+    "code": "ECMA B2005",
+    "name": "B2005",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B2005",
+    "thumbnail": "/thumbnails/ecma_b2005.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b3002",
+    "rawName": "B3002",
+    "code": "ECMA B3002",
+    "name": "B.30.02.00",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B.30.02.00",
+    "thumbnail": "/thumbnails/ecma_b3002.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b3004",
+    "rawName": "B3004",
+    "code": "ECMA B3004",
+    "name": "B3004",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B3004",
+    "thumbnail": "/thumbnails/ecma_b3004.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b3102",
+    "rawName": "B3102",
+    "code": "ECMA B3102",
+    "name": "B3102",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B3102",
+    "thumbnail": "/thumbnails/ecma_b3102.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b3104",
+    "rawName": "B3104",
+    "code": "ECMA B3104",
+    "name": "B3104",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B3104",
+    "thumbnail": "/thumbnails/ecma_b3104.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b3202",
+    "rawName": "B3202",
+    "code": "ECMA B3202",
+    "name": "B3202",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B3202",
+    "thumbnail": "/thumbnails/ecma_b3202.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4020",
+    "rawName": "B4020",
+    "code": "ECMA B4020",
+    "name": "B4020",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4020",
+    "thumbnail": "/thumbnails/ecma_b4020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4020_50",
+    "rawName": "B4020.50",
+    "code": "ECMA B4020.50",
+    "name": "B4020 50",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4020 50",
+    "thumbnail": "/thumbnails/ecma_b4020_50.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4020_53",
+    "rawName": "B4020.53",
+    "code": "ECMA B4020.53",
+    "name": "B4020 53",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4020 53",
+    "thumbnail": "/thumbnails/ecma_b4020_53.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4020_84",
+    "rawName": "B4020.84",
+    "code": "ECMA B4020.84",
+    "name": "B4020 84",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4020 84",
+    "thumbnail": "/thumbnails/ecma_b4020_84.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4021",
+    "rawName": "B4021",
+    "code": "ECMA B4021",
+    "name": "B4021",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4021",
+    "thumbnail": "/thumbnails/ecma_b4021.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4022",
+    "rawName": "B4022",
+    "code": "ECMA B4022",
+    "name": "B4022",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4022",
+    "thumbnail": "/thumbnails/ecma_b4022.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4022_61",
+    "rawName": "B4022.61",
+    "code": "ECMA B4022.61",
+    "name": "B4022 61",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4022 61",
+    "thumbnail": "/thumbnails/ecma_b4022_61.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4420",
+    "rawName": "B4420",
+    "code": "ECMA B4420",
+    "name": "B4420",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4420",
+    "thumbnail": "/thumbnails/ecma_b4420.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4420_82",
+    "rawName": "B4420.82",
+    "code": "ECMA B4420.82",
+    "name": "B4420 82",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4420 82",
+    "thumbnail": "/thumbnails/ecma_b4420_82.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4423",
+    "rawName": "B4423",
+    "code": "ECMA B4423",
+    "name": "B4423",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4423",
+    "thumbnail": "/thumbnails/ecma_b4423.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4802",
+    "rawName": "B4802",
+    "code": "ECMA B4802",
+    "name": "B4802",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4802",
+    "thumbnail": "/thumbnails/ecma_b4802.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4820",
+    "rawName": "B4820",
+    "code": "ECMA B4820",
+    "name": "B4820",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4820",
+    "thumbnail": "/thumbnails/ecma_b4820.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4821",
+    "rawName": "B4821",
+    "code": "ECMA B4821",
+    "name": "B4821",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4821",
+    "thumbnail": "/thumbnails/ecma_b4821.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4920",
+    "rawName": "B4920",
+    "code": "ECMA B4920",
+    "name": "B4920",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4920",
+    "thumbnail": "/thumbnails/ecma_b4920.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_b4921",
+    "rawName": "B4921",
+    "code": "ECMA B4921",
+    "name": "B4921",
+    "category": "ECMA",
+    "series": "Grupo B - Cartuchos com Colagem Longitudinal (Tuck-in)",
+    "description": "B4921",
+    "thumbnail": "/thumbnails/ecma_b4921.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c1010",
+    "rawName": "C1010",
+    "code": "ECMA C1010",
+    "name": "Ecma C1010",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C1010",
+    "thumbnail": "/thumbnails/ecma_c1010.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c1020",
+    "rawName": "C1020",
+    "code": "ECMA C1020",
+    "name": "Ecma C1020",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C1020",
+    "thumbnail": "/thumbnails/ecma_c1020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c1040",
+    "rawName": "C1040",
+    "code": "ECMA C1040",
+    "name": "Ecma C1040",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C1040",
+    "thumbnail": "/thumbnails/ecma_c1040.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c1040_20",
+    "rawName": "C1040 20",
+    "code": "ECMA C1040 20",
+    "name": "Ecma C1040 20",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C1040 20",
+    "thumbnail": "/thumbnails/ecma_c1040_20.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c1050",
+    "rawName": "C1050",
+    "code": "ECMA C1050",
+    "name": "Ecma C1050",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C1050",
+    "thumbnail": "/thumbnails/ecma_c1050.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c1060",
+    "rawName": "C1060",
+    "code": "ECMA C1060",
+    "name": "Ecma C1060",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C1060",
+    "thumbnail": "/thumbnails/ecma_c1060.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c2010",
+    "rawName": "C2010",
+    "code": "ECMA C2010",
+    "name": "Ecma C2010",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C2010",
+    "thumbnail": "/thumbnails/ecma_c2010.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c2020",
+    "rawName": "C2020",
+    "code": "ECMA C2020",
+    "name": "Ecma C2020",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C2020",
+    "thumbnail": "/thumbnails/ecma_c2020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c2030",
+    "rawName": "C2030",
+    "code": "ECMA C2030",
+    "name": "Ecma C2030",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C2030",
+    "thumbnail": "/thumbnails/ecma_c2030.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c2040",
+    "rawName": "C2040",
+    "code": "ECMA C2040",
+    "name": "Ecma C2040",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C2040",
+    "thumbnail": "/thumbnails/ecma_c2040.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c2050",
+    "rawName": "C2050",
+    "code": "ECMA C2050",
+    "name": "Ecma C2050",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C2050",
+    "thumbnail": "/thumbnails/ecma_c2050.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c2055",
+    "rawName": "C2055",
+    "code": "ECMA C2055",
+    "name": "Ecma C2055",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C2055",
+    "thumbnail": "/thumbnails/ecma_c2055.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c2060",
+    "rawName": "C2060",
+    "code": "ECMA C2060",
+    "name": "Ecma C2060",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C2060",
+    "thumbnail": "/thumbnails/ecma_c2060.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c3010",
+    "rawName": "C3010",
+    "code": "ECMA C3010",
+    "name": "Ecma C3010",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C3010",
+    "thumbnail": "/thumbnails/ecma_c3010.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c3020",
+    "rawName": "C3020",
+    "code": "ECMA C3020",
+    "name": "Ecma C3020",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C3020",
+    "thumbnail": "/thumbnails/ecma_c3020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_c3055",
+    "rawName": "C3055",
+    "code": "ECMA C3055",
+    "name": "Ecma C3055",
+    "category": "ECMA",
+    "series": "Grupo C - Caixas de Fundo e Tampa em Cartão",
+    "description": "Ecma C3055",
+    "thumbnail": "/thumbnails/ecma_c3055.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_d1041",
+    "rawName": "D1041",
+    "code": "ECMA D1041",
+    "name": "Ecma D1041",
+    "category": "ECMA",
+    "series": "Grupo D - Pastas, Envoltórios e Envelopes",
+    "description": "Ecma D1041",
+    "thumbnail": "/thumbnails/ecma_d1041.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_d2020_20",
+    "rawName": "D2020 20",
+    "code": "ECMA D2020 20",
+    "name": "Ecma D2020 20",
+    "category": "ECMA",
+    "series": "Grupo D - Pastas, Envoltórios e Envelopes",
+    "description": "Ecma D2020 20",
+    "thumbnail": "/thumbnails/ecma_d2020_20.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_d2020_21",
+    "rawName": "D2020 21",
+    "code": "ECMA D2020 21",
+    "name": "Ecma D2020 21",
+    "category": "ECMA",
+    "series": "Grupo D - Pastas, Envoltórios e Envelopes",
+    "description": "Ecma D2020 21",
+    "thumbnail": "/thumbnails/ecma_d2020_21.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_d2020_50",
+    "rawName": "D2020 50",
+    "code": "ECMA D2020 50",
+    "name": "Ecma D2020 50",
+    "category": "ECMA",
+    "series": "Grupo D - Pastas, Envoltórios e Envelopes",
+    "description": "Ecma D2020 50",
+    "thumbnail": "/thumbnails/ecma_d2020_50.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_d2021",
+    "rawName": "D2021",
+    "code": "ECMA D2021",
+    "name": "Ecma D2021",
+    "category": "ECMA",
+    "series": "Grupo D - Pastas, Envoltórios e Envelopes",
+    "description": "Ecma D2021",
+    "thumbnail": "/thumbnails/ecma_d2021.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_d2021_62",
+    "rawName": "D2021 62",
+    "code": "ECMA D2021 62",
+    "name": "Ecma D2021 62",
+    "category": "ECMA",
+    "series": "Grupo D - Pastas, Envoltórios e Envelopes",
+    "description": "Ecma D2021 62",
+    "thumbnail": "/thumbnails/ecma_d2021_62.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_d2050_20",
+    "rawName": "D2050 20",
+    "code": "ECMA D2050 20",
+    "name": "D2050 20",
+    "category": "ECMA",
+    "series": "Grupo D - Pastas, Envoltórios e Envelopes",
+    "description": "D2050 20",
+    "thumbnail": "/thumbnails/ecma_d2050_20.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1011",
+    "rawName": "E1011",
+    "code": "ECMA E1011",
+    "name": "E1011",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1011",
+    "thumbnail": "/thumbnails/ecma_e1011.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1020",
+    "rawName": "E1020",
+    "code": "ECMA E1020",
+    "name": "E1020",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1020",
+    "thumbnail": "/thumbnails/ecma_e1020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1021",
+    "rawName": "E1021",
+    "code": "ECMA E1021",
+    "name": "E1021",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1021",
+    "thumbnail": "/thumbnails/ecma_e1021.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1030",
+    "rawName": "E1030",
+    "code": "ECMA E1030",
+    "name": "E1030",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1030",
+    "thumbnail": "/thumbnails/ecma_e1030.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1120",
+    "rawName": "E1120",
+    "code": "ECMA E1120",
+    "name": "E1120",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1120",
+    "thumbnail": "/thumbnails/ecma_e1120.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1220",
+    "rawName": "E1220",
+    "code": "ECMA E1220",
+    "name": "E1220",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1220",
+    "thumbnail": "/thumbnails/ecma_e1220.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1230",
+    "rawName": "E1230",
+    "code": "ECMA E1230",
+    "name": "E1230",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1230",
+    "thumbnail": "/thumbnails/ecma_e1230.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1411",
+    "rawName": "E1411",
+    "code": "ECMA E1411",
+    "name": "E1411",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1411",
+    "thumbnail": "/thumbnails/ecma_e1411.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1420",
+    "rawName": "E1420",
+    "code": "ECMA E1420",
+    "name": "E1420",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1420",
+    "thumbnail": "/thumbnails/ecma_e1420.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1421",
+    "rawName": "E1421",
+    "code": "ECMA E1421",
+    "name": "E1421",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1421",
+    "thumbnail": "/thumbnails/ecma_e1421.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1430",
+    "rawName": "E1430",
+    "code": "ECMA E1430",
+    "name": "E1430",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1430",
+    "thumbnail": "/thumbnails/ecma_e1430.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1520",
+    "rawName": "E1520",
+    "code": "ECMA E1520",
+    "name": "E1520",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1520",
+    "thumbnail": "/thumbnails/ecma_e1520.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e1620",
+    "rawName": "E1620",
+    "code": "ECMA E1620",
+    "name": "E1620",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E1620",
+    "thumbnail": "/thumbnails/ecma_e1620.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e2020",
+    "rawName": "E2020",
+    "code": "ECMA E2020",
+    "name": "E2020",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E2020",
+    "thumbnail": "/thumbnails/ecma_e2020.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e2021",
+    "rawName": "E2021",
+    "code": "ECMA E2021",
+    "name": "E2021",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E2021",
+    "thumbnail": "/thumbnails/ecma_e2021.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e2110",
+    "rawName": "E2110",
+    "code": "ECMA E2110",
+    "name": "E2110",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E2110",
+    "thumbnail": "/thumbnails/ecma_e2110.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e2120",
+    "rawName": "E2120",
+    "code": "ECMA E2120",
+    "name": "E2120",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E2120",
+    "thumbnail": "/thumbnails/ecma_e2120.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_e2210",
+    "rawName": "E2210",
+    "code": "ECMA E2210",
+    "name": "E2210",
+    "category": "ECMA",
+    "series": "Grupo E - Cartuchos com Fundo Automático (Crash-lock)",
+    "description": "E2210",
+    "thumbnail": "/thumbnails/ecma_e2210.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1011",
+    "rawName": "F1011",
+    "code": "ECMA F1011",
+    "name": "F1011",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F1011",
+    "thumbnail": "/thumbnails/ecma_f1011.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1012",
+    "rawName": "F1012",
+    "code": "ECMA F1012",
+    "name": "f1012",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "f1012",
+    "thumbnail": "/thumbnails/ecma_f1012.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1013",
+    "rawName": "F1013",
+    "code": "ECMA F1013",
+    "name": "F1013",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F1013",
+    "thumbnail": "/thumbnails/ecma_f1013.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1041",
+    "rawName": "F1041",
+    "code": "ECMA F1041",
+    "name": "F1041",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F1041",
+    "thumbnail": "/thumbnails/ecma_f1041.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1051",
+    "rawName": "F1051",
+    "code": "ECMA F1051",
+    "name": "F1051",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F1051",
+    "thumbnail": "/thumbnails/ecma_f1051.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1081",
+    "rawName": "F1081",
+    "code": "ECMA F1081",
+    "name": "F1081",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F1081",
+    "thumbnail": "/thumbnails/ecma_f1081.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1082",
+    "rawName": "F1082",
+    "code": "ECMA F1082",
+    "name": "F1082",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F1082",
+    "thumbnail": "/thumbnails/ecma_f1082.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f1083",
+    "rawName": "F1083",
+    "code": "ECMA F1083",
+    "name": "F1083",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F1083",
+    "thumbnail": "/thumbnails/ecma_f1083.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2001",
+    "rawName": "F2001",
+    "code": "ECMA F2001",
+    "name": "F2001",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2001",
+    "thumbnail": "/thumbnails/ecma_f2001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2033",
+    "rawName": "F2033",
+    "code": "ECMA F2033",
+    "name": "F2033",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2033",
+    "thumbnail": "/thumbnails/ecma_f2033.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2036",
+    "rawName": "F2036",
+    "code": "ECMA F2036",
+    "name": "F2036",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2036",
+    "thumbnail": "/thumbnails/ecma_f2036.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2037",
+    "rawName": "F2037",
+    "code": "ECMA F2037",
+    "name": "F2037",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2037",
+    "thumbnail": "/thumbnails/ecma_f2037.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2040",
+    "rawName": "F2040",
+    "code": "ECMA F2040",
+    "name": "F2040",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2040",
+    "thumbnail": "/thumbnails/ecma_f2040.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2042",
+    "rawName": "F2042",
+    "code": "ECMA F2042",
+    "name": "F2042",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2042",
+    "thumbnail": "/thumbnails/ecma_f2042.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2051",
+    "rawName": "F2051",
+    "code": "ECMA F2051",
+    "name": "F2051",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2051",
+    "thumbnail": "/thumbnails/ecma_f2051.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2052",
+    "rawName": "F2052",
+    "code": "ECMA F2052",
+    "name": "F2052",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2052",
+    "thumbnail": "/thumbnails/ecma_f2052.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2053",
+    "rawName": "F2053",
+    "code": "ECMA F2053",
+    "name": "F2053",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2053",
+    "thumbnail": "/thumbnails/ecma_f2053.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f2060",
+    "rawName": "F2060",
+    "code": "ECMA F2060",
+    "name": "F2060",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F2060",
+    "thumbnail": "/thumbnails/ecma_f2060.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f3022",
+    "rawName": "F3022",
+    "code": "ECMA F3022",
+    "name": "F3022",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F3022",
+    "thumbnail": "/thumbnails/ecma_f3022.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f3052",
+    "rawName": "F3052",
+    "code": "ECMA F3052",
+    "name": "F3052",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F3052",
+    "thumbnail": "/thumbnails/ecma_f3052.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4001",
+    "rawName": "F4001",
+    "code": "ECMA F4001",
+    "name": "F4001",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4001",
+    "thumbnail": "/thumbnails/ecma_f4001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4002",
+    "rawName": "F4002",
+    "code": "ECMA F4002",
+    "name": "F4002",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4002",
+    "thumbnail": "/thumbnails/ecma_f4002.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4003",
+    "rawName": "F4003",
+    "code": "ECMA F4003",
+    "name": "F4003",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4003",
+    "thumbnail": "/thumbnails/ecma_f4003.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4004",
+    "rawName": "F4004",
+    "code": "ECMA F4004",
+    "name": "F4004",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4004",
+    "thumbnail": "/thumbnails/ecma_f4004.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4005",
+    "rawName": "F4005",
+    "code": "ECMA F4005",
+    "name": "F4005",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4005",
+    "thumbnail": "/thumbnails/ecma_f4005.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4011",
+    "rawName": "F4011",
+    "code": "ECMA F4011",
+    "name": "F4011",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4011",
+    "thumbnail": "/thumbnails/ecma_f4011.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4012",
+    "rawName": "F4012",
+    "code": "ECMA F4012",
+    "name": "F4012",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4012",
+    "thumbnail": "/thumbnails/ecma_f4012.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4013",
+    "rawName": "F4013",
+    "code": "ECMA F4013",
+    "name": "F4013",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4013",
+    "thumbnail": "/thumbnails/ecma_f4013.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4062",
+    "rawName": "F4062",
+    "code": "ECMA F4062",
+    "name": "F4062",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4062",
+    "thumbnail": "/thumbnails/ecma_f4062.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f4071",
+    "rawName": "F4071",
+    "code": "ECMA F4071",
+    "name": "F4071",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F4071",
+    "thumbnail": "/thumbnails/ecma_f4071.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f5001",
+    "rawName": "F5001",
+    "code": "ECMA F5001",
+    "name": "F5001",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F5001",
+    "thumbnail": "/thumbnails/ecma_f5001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f5002",
+    "rawName": "F5002",
+    "code": "ECMA F5002",
+    "name": "F5002",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F5002",
+    "thumbnail": "/thumbnails/ecma_f5002.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f5003",
+    "rawName": "F5003",
+    "code": "ECMA F5003",
+    "name": "F5003",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F5003",
+    "thumbnail": "/thumbnails/ecma_f5003.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f5004",
+    "rawName": "F5004",
+    "code": "ECMA F5004",
+    "name": "F5004",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F5004",
+    "thumbnail": "/thumbnails/ecma_f5004.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f5011",
+    "rawName": "F5011",
+    "code": "ECMA F5011",
+    "name": "F5011",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F5011",
+    "thumbnail": "/thumbnails/ecma_f5011.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f5021",
+    "rawName": "F5021",
+    "code": "ECMA F5021",
+    "name": "F5021",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "F5021",
+    "thumbnail": "/thumbnails/ecma_f5021.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6001",
+    "rawName": "F6001",
+    "code": "ECMA F6001",
+    "name": "ECMA F6001",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6001",
+    "thumbnail": "/thumbnails/ecma_f6001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6002",
+    "rawName": "F6002",
+    "code": "ECMA F6002",
+    "name": "ECMA F6002",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6002",
+    "thumbnail": "/thumbnails/ecma_f6002.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6003",
+    "rawName": "F6003",
+    "code": "ECMA F6003",
+    "name": "ECMA F6003",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6003",
+    "thumbnail": "/thumbnails/ecma_f6003.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6006",
+    "rawName": "F6006",
+    "code": "ECMA F6006",
+    "name": "ECMA F6006",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6006",
+    "thumbnail": "/thumbnails/ecma_f6006.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6007",
+    "rawName": "F6007",
+    "code": "ECMA F6007",
+    "name": "ECMA F6007",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6007",
+    "thumbnail": "/thumbnails/ecma_f6007.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6011",
+    "rawName": "F6011",
+    "code": "ECMA F6011",
+    "name": "ECMA F6011",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6011",
+    "thumbnail": "/thumbnails/ecma_f6011.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6012",
+    "rawName": "F6012",
+    "code": "ECMA F6012",
+    "name": "ECMA F6012",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6012",
+    "thumbnail": "/thumbnails/ecma_f6012.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6015",
+    "rawName": "F6015",
+    "code": "ECMA F6015",
+    "name": "ECMA F6015",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6015",
+    "thumbnail": "/thumbnails/ecma_f6015.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6016",
+    "rawName": "F6016",
+    "code": "ECMA F6016",
+    "name": "ECMA F6016",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6016",
+    "thumbnail": "/thumbnails/ecma_f6016.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6032",
+    "rawName": "F6032",
+    "code": "ECMA F6032",
+    "name": "ECMA F6032",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6032",
+    "thumbnail": "/thumbnails/ecma_f6032.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6041",
+    "rawName": "F6041",
+    "code": "ECMA F6041",
+    "name": "ECMA F6041",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6041",
+    "thumbnail": "/thumbnails/ecma_f6041.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6042",
+    "rawName": "F6042",
+    "code": "ECMA F6042",
+    "name": "ECMA F6042",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6042",
+    "thumbnail": "/thumbnails/ecma_f6042.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6081",
+    "rawName": "F6081",
+    "code": "ECMA F6081",
+    "name": "ECMA F6081",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6081",
+    "thumbnail": "/thumbnails/ecma_f6081.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6082",
+    "rawName": "F6082",
+    "code": "ECMA F6082",
+    "name": "ECMA F6082",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6082",
+    "thumbnail": "/thumbnails/ecma_f6082.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6091",
+    "rawName": "F6091",
+    "code": "ECMA F6091",
+    "name": "ECMA F6091",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6091",
+    "thumbnail": "/thumbnails/ecma_f6091.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6092",
+    "rawName": "F6092",
+    "code": "ECMA F6092",
+    "name": "ECMA F6092",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6092",
+    "thumbnail": "/thumbnails/ecma_f6092.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f6093",
+    "rawName": "F6093",
+    "code": "ECMA F6093",
+    "name": "ECMA F6093",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F6093",
+    "thumbnail": "/thumbnails/ecma_f6093.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f7001",
+    "rawName": "F7001",
+    "code": "ECMA F7001",
+    "name": "ECMA F7001",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F7001",
+    "thumbnail": "/thumbnails/ecma_f7001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f7002",
+    "rawName": "F7002",
+    "code": "ECMA F7002",
+    "name": "ECMA F7002",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F7002",
+    "thumbnail": "/thumbnails/ecma_f7002.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f7051",
+    "rawName": "F7051",
+    "code": "ECMA F7051",
+    "name": "ECMA F7051",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F7051",
+    "thumbnail": "/thumbnails/ecma_f7051.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f7052",
+    "rawName": "F7052",
+    "code": "ECMA F7052",
+    "name": "ECMA F7052",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F7052",
+    "thumbnail": "/thumbnails/ecma_f7052.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f7054",
+    "rawName": "F7054",
+    "code": "ECMA F7054",
+    "name": "ECMA F7054",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F7054",
+    "thumbnail": "/thumbnails/ecma_f7054.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f7062",
+    "rawName": "F7062",
+    "code": "ECMA F7062",
+    "name": "ECMA F7062",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F7062",
+    "thumbnail": "/thumbnails/ecma_f7062.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8001",
+    "rawName": "F8001",
+    "code": "ECMA F8001",
+    "name": "ECMA F8001",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8001",
+    "thumbnail": "/thumbnails/ecma_f8001.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8002",
+    "rawName": "F8002",
+    "code": "ECMA F8002",
+    "name": "ECMA F8002",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8002",
+    "thumbnail": "/thumbnails/ecma_f8002.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8003",
+    "rawName": "F8003",
+    "code": "ECMA F8003",
+    "name": "ECMA F8003",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8003",
+    "thumbnail": "/thumbnails/ecma_f8003.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8011",
+    "rawName": "F8011",
+    "code": "ECMA F8011",
+    "name": "ECMA F8011",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8011",
+    "thumbnail": "/thumbnails/ecma_f8011.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8013",
+    "rawName": "F8013",
+    "code": "ECMA F8013",
+    "name": "ECMA F8013",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8013",
+    "thumbnail": "/thumbnails/ecma_f8013.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8021",
+    "rawName": "F8021",
+    "code": "ECMA F8021",
+    "name": "ECMA F8021",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8021",
+    "thumbnail": "/thumbnails/ecma_f8021.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8022",
+    "rawName": "F8022",
+    "code": "ECMA F8022",
+    "name": "ECMA F8022",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8022",
+    "thumbnail": "/thumbnails/ecma_f8022.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8023",
+    "rawName": "F8023",
+    "code": "ECMA F8023",
+    "name": "ECMA F8023",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8023",
+    "thumbnail": "/thumbnails/ecma_f8023.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8024",
+    "rawName": "F8024",
+    "code": "ECMA F8024",
+    "name": "ECMA F8024",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8024",
+    "thumbnail": "/thumbnails/ecma_f8024.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8031",
+    "rawName": "F8031",
+    "code": "ECMA F8031",
+    "name": "ECMA F8031",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8031",
+    "thumbnail": "/thumbnails/ecma_f8031.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8041",
+    "rawName": "F8041",
+    "code": "ECMA F8041",
+    "name": "ECMA F8041",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8041",
+    "thumbnail": "/thumbnails/ecma_f8041.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8051",
+    "rawName": "F8051",
+    "code": "ECMA F8051",
+    "name": "ECMA F8051",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8051",
+    "thumbnail": "/thumbnails/ecma_f8051.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8052",
+    "rawName": "F8052",
+    "code": "ECMA F8052",
+    "name": "ECMA F8052",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8052",
+    "thumbnail": "/thumbnails/ecma_f8052.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_f8053",
+    "rawName": "F8053",
+    "code": "ECMA F8053",
+    "name": "ECMA F8053",
+    "category": "ECMA",
+    "series": "Grupo F - Embalagens Especiais e Confeitaria",
+    "description": "ECMA F8053",
+    "thumbnail": "/thumbnails/ecma_f8053.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x11",
+    "rawName": "X11",
+    "code": "ECMA X11",
+    "name": "ECMA X11 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X11",
+    "thumbnail": "/thumbnails/ecma_x11.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x12",
+    "rawName": "X12",
+    "code": "ECMA X12",
+    "name": "ECMA X12 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X12",
+    "thumbnail": "/thumbnails/ecma_x12.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x13",
+    "rawName": "X13",
+    "code": "ECMA X13",
+    "name": "ECMA X13 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X13",
+    "thumbnail": "/thumbnails/ecma_x13.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x14",
+    "rawName": "X14",
+    "code": "ECMA X14",
+    "name": "ECMA X14 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X14",
+    "thumbnail": "/thumbnails/ecma_x14.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x21",
+    "rawName": "X21",
+    "code": "ECMA X21",
+    "name": "ECMA X21 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X21",
+    "thumbnail": "/thumbnails/ecma_x21.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x22",
+    "rawName": "X22",
+    "code": "ECMA X22",
+    "name": "ECMA X22 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X22",
+    "thumbnail": "/thumbnails/ecma_x22.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x23",
+    "rawName": "X23",
+    "code": "ECMA X23",
+    "name": "ECMA X23 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X23",
+    "thumbnail": "/thumbnails/ecma_x23.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x25",
+    "rawName": "X25",
+    "code": "ECMA X25",
+    "name": "ECMA X25 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X25",
+    "thumbnail": "/thumbnails/ecma_x25.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x26",
+    "rawName": "X26",
+    "code": "ECMA X26",
+    "name": "ECMA X26 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X26",
+    "thumbnail": "/thumbnails/ecma_x26.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x27",
+    "rawName": "X27",
+    "code": "ECMA X27",
+    "name": "ECMA X27 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X27",
+    "thumbnail": "/thumbnails/ecma_x27.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x29",
+    "rawName": "X29",
+    "code": "ECMA X29",
+    "name": "ECMA X29 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X29",
+    "thumbnail": "/thumbnails/ecma_x29.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x31",
+    "rawName": "X31",
+    "code": "ECMA X31",
+    "name": "ECMA X31 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X31",
+    "thumbnail": "/thumbnails/ecma_x31.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x32",
+    "rawName": "X32",
+    "code": "ECMA X32",
+    "name": "ECMA X32 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X32",
+    "thumbnail": "/thumbnails/ecma_x32.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x33",
+    "rawName": "X33",
+    "code": "ECMA X33",
+    "name": "ECMA X33 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X33",
+    "thumbnail": "/thumbnails/ecma_x33.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x35",
+    "rawName": "X35",
+    "code": "ECMA X35",
+    "name": "ECMA X35 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X35",
+    "thumbnail": "/thumbnails/ecma_x35.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x36",
+    "rawName": "X36",
+    "code": "ECMA X36",
+    "name": "ECMA X36 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X36",
+    "thumbnail": "/thumbnails/ecma_x36.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x37",
+    "rawName": "X37",
+    "code": "ECMA X37",
+    "name": "ECMA X37 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X37",
+    "thumbnail": "/thumbnails/ecma_x37.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x38",
+    "rawName": "X38",
+    "code": "ECMA X38",
+    "name": "ECMA X38 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X38",
+    "thumbnail": "/thumbnails/ecma_x38.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x42",
+    "rawName": "X42",
+    "code": "ECMA X42",
+    "name": "ECMA X42 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X42",
+    "thumbnail": "/thumbnails/ecma_x42.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x44",
+    "rawName": "X44",
+    "code": "ECMA X44",
+    "name": "ECMA X44 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X44",
+    "thumbnail": "/thumbnails/ecma_x44.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x45",
+    "rawName": "X45",
+    "code": "ECMA X45",
+    "name": "ECMA X45 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X45",
+    "thumbnail": "/thumbnails/ecma_x45.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x46",
+    "rawName": "X46",
+    "code": "ECMA X46",
+    "name": "ECMA X46 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X46",
+    "thumbnail": "/thumbnails/ecma_x46.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x47",
+    "rawName": "X47",
+    "code": "ECMA X47",
+    "name": "ECMA X47 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X47",
+    "thumbnail": "/thumbnails/ecma_x47.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x48",
+    "rawName": "X48",
+    "code": "ECMA X48",
+    "name": "ECMA X48 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X48",
+    "thumbnail": "/thumbnails/ecma_x48.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x51",
+    "rawName": "X51",
+    "code": "ECMA X51",
+    "name": "ECMA X51 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X51",
+    "thumbnail": "/thumbnails/ecma_x51.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x52",
+    "rawName": "X52",
+    "code": "ECMA X52",
+    "name": "ECMA X52 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X52",
+    "thumbnail": "/thumbnails/ecma_x52.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x62",
+    "rawName": "X62",
+    "code": "ECMA X62",
+    "name": "ECMA X62 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X62",
+    "thumbnail": "/thumbnails/ecma_x62.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x64",
+    "rawName": "X64",
+    "code": "ECMA X64",
+    "name": "ECMA X64 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X64",
+    "thumbnail": "/thumbnails/ecma_x64.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x66",
+    "rawName": "X66",
+    "code": "ECMA X66",
+    "name": "ECMA X66 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X66",
+    "thumbnail": "/thumbnails/ecma_x66.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x71",
+    "rawName": "X71",
+    "code": "ECMA X71",
+    "name": "ECMA X71 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X71",
+    "thumbnail": "/thumbnails/ecma_x71.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x72",
+    "rawName": "X72",
+    "code": "ECMA X72",
+    "name": "ECMA X72 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X72",
+    "thumbnail": "/thumbnails/ecma_x72.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x73",
+    "rawName": "X73",
+    "code": "ECMA X73",
+    "name": "ECMA X73 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X73",
+    "thumbnail": "/thumbnails/ecma_x73.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x81",
+    "rawName": "X81",
+    "code": "ECMA X81",
+    "name": "ECMA X81 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X81",
+    "thumbnail": "/thumbnails/ecma_x81.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x82",
+    "rawName": "X82",
+    "code": "ECMA X82",
+    "name": "ECMA X82 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X82",
+    "thumbnail": "/thumbnails/ecma_x82.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x83",
+    "rawName": "X83",
+    "code": "ECMA X83",
+    "name": "ECMA X83 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X83",
+    "thumbnail": "/thumbnails/ecma_x83.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x84",
+    "rawName": "X84",
+    "code": "ECMA X84",
+    "name": "ECMA X84 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X84",
+    "thumbnail": "/thumbnails/ecma_x84.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x85",
+    "rawName": "X85",
+    "code": "ECMA X85",
+    "name": "ECMA X85 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X85",
+    "thumbnail": "/thumbnails/ecma_x85.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "ecma_x86",
+    "rawName": "X86",
+    "code": "ECMA X86",
+    "name": "ECMA X86 - Embalagem Padrão",
+    "category": "ECMA",
+    "series": "Grupo X - Variantes e Acessórios Especiais",
+    "description": "X86",
+    "thumbnail": "/thumbnails/ecma_x86.jpg",
+    "defaultParams": {
+      "L": 150,
+      "B": 100,
+      "H": 80,
+      "Ep": 0.5,
+      "M": 15
+    }
+  },
+  {
+    "id": "displays_pos_plv_canadien_01",
+    "rawName": "POS_PLV Canadien 01",
+    "code": "POS_PLV Canadien 01",
+    "name": "POS_PLV Canadien 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Canadien 01",
+    "thumbnail": "/thumbnails/displays_pos_plv_canadien_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_canadien_02",
+    "rawName": "POS_PLV Canadien 02",
+    "code": "POS_PLV Canadien 02",
+    "name": "POS_PLV Canadien 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Canadien 02",
+    "thumbnail": "/thumbnails/displays_pos_plv_canadien_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_canadien_03",
+    "rawName": "POS_PLV Canadien 03",
+    "code": "POS_PLV Canadien 03",
+    "name": "POS_PLV Canadien 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Canadien 03",
+    "thumbnail": "/thumbnails/displays_pos_plv_canadien_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_canadien_04",
+    "rawName": "POS_PLV Canadien 04",
+    "code": "POS_PLV Canadien 04",
+    "name": "POS_PLV Canadien 04",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Canadien 04",
+    "thumbnail": "/thumbnails/displays_pos_plv_canadien_04.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_foldable_01",
+    "rawName": "POS_PLV Foldable 01",
+    "code": "POS_PLV Foldable 01",
+    "name": "POS_PLV Foldable 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Foldable 01",
+    "thumbnail": "/thumbnails/displays_pos_plv_foldable_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_foldable_02",
+    "rawName": "POS_PLV Foldable 02",
+    "code": "POS_PLV Foldable 02",
+    "name": "POS_PLV Foldable 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Foldable 02",
+    "thumbnail": "/thumbnails/displays_pos_plv_foldable_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_foldable_03",
+    "rawName": "POS_PLV Foldable 03",
+    "code": "POS_PLV Foldable 03",
+    "name": "POS_PLV Foldable 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Foldable 03",
+    "thumbnail": "/thumbnails/displays_pos_plv_foldable_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_foldable_04",
+    "rawName": "POS_PLV Foldable 04",
+    "code": "POS_PLV Foldable 04",
+    "name": "POS_PLV Foldable 04",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Foldable 04",
+    "thumbnail": "/thumbnails/displays_pos_plv_foldable_04.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_holder_01",
+    "rawName": "POS_PLV Holder 01",
+    "code": "POS_PLV Holder 01",
+    "name": "POS_PLV Holder 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Holder 01",
+    "thumbnail": "/thumbnails/displays_pos_plv_holder_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_holder_02",
+    "rawName": "POS_PLV Holder 02",
+    "code": "POS_PLV Holder 02",
+    "name": "POS_PLV Holder 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Holder 02",
+    "thumbnail": "/thumbnails/displays_pos_plv_holder_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_pos_plv_holder_03",
+    "rawName": "POS_PLV Holder 03",
+    "code": "POS_PLV Holder 03",
+    "name": "POS_PLV Holder 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 1 - Floor Displays",
+    "description": "POS_PLV Holder 03",
+    "thumbnail": "/thumbnails/displays_pos_plv_holder_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_ballot_box_urne_02",
+    "rawName": "Ballot Box / Urne 02",
+    "code": "Ballot Box / Urne 02",
+    "name": "Ballot Box / Urne 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Ballot Box / Urne 02",
+    "thumbnail": "/thumbnails/displays_ballot_box_urne_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_01",
+    "rawName": "Counter Display 01",
+    "code": "Counter Display 01",
+    "name": "Counter Display 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 01",
+    "thumbnail": "/thumbnails/displays_counter_display_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_02",
+    "rawName": "Counter Display 02",
+    "code": "Counter Display 02",
+    "name": "Counter Display 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 02",
+    "thumbnail": "/thumbnails/displays_counter_display_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_03",
+    "rawName": "Counter Display 03",
+    "code": "Counter Display 03",
+    "name": "Counter Display 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 03",
+    "thumbnail": "/thumbnails/displays_counter_display_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_04",
+    "rawName": "Counter Display 04",
+    "code": "Counter Display 04",
+    "name": "Counter Display 04",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 04",
+    "thumbnail": "/thumbnails/displays_counter_display_04.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_05",
+    "rawName": "Counter Display 05",
+    "code": "Counter Display 05",
+    "name": "Counter Display 05",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 05",
+    "thumbnail": "/thumbnails/displays_counter_display_05.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_06",
+    "rawName": "Counter Display 06",
+    "code": "Counter Display 06",
+    "name": "Counter Display 06",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 06",
+    "thumbnail": "/thumbnails/displays_counter_display_06.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_07",
+    "rawName": "Counter Display 07",
+    "code": "Counter Display 07",
+    "name": "Counter display 07 with Header",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter display 07 with Header",
+    "thumbnail": "/thumbnails/displays_counter_display_07.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_08",
+    "rawName": "Counter Display 08",
+    "code": "Counter Display 08",
+    "name": "Counter Display 08",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 08",
+    "thumbnail": "/thumbnails/displays_counter_display_08.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_09",
+    "rawName": "Counter Display 09",
+    "code": "Counter Display 09",
+    "name": "Counter Display 09",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 09",
+    "thumbnail": "/thumbnails/displays_counter_display_09.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_display_10",
+    "rawName": "Counter Display 10",
+    "code": "Counter Display 10",
+    "name": "Counter Display 10 with Header",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Counter Display 10 with Header",
+    "thumbnail": "/thumbnails/displays_counter_display_10.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_cube_01",
+    "rawName": "Cube 01",
+    "code": "Cube 01",
+    "name": "Glued cube box",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Glued cube box",
+    "thumbnail": "/thumbnails/displays_cube_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_cube_02",
+    "rawName": "Cube 02",
+    "code": "Cube 02",
+    "name": "Not glued box",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Not glued box",
+    "thumbnail": "/thumbnails/displays_cube_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_horizontal_display_01",
+    "rawName": "Horizontal Display 01",
+    "code": "Horizontal Display 01",
+    "name": "Horizontal Display 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Horizontal Display 01",
+    "thumbnail": "/thumbnails/displays_horizontal_display_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_horizontal_display_02",
+    "rawName": "Horizontal Display 02",
+    "code": "Horizontal Display 02",
+    "name": "Horizonta Display 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Horizonta Display 02",
+    "thumbnail": "/thumbnails/displays_horizontal_display_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_sign_panel_01",
+    "rawName": "Sign Panel 01",
+    "code": "Sign Panel 01",
+    "name": "Sign Panel 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Sign Panel 01",
+    "thumbnail": "/thumbnails/displays_sign_panel_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_sign_panel_02",
+    "rawName": "Sign Panel 02",
+    "code": "Sign Panel 02",
+    "name": "Sign Panel 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Sign Panel 02",
+    "thumbnail": "/thumbnails/displays_sign_panel_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_sign_panel_03",
+    "rawName": "Sign Panel 03",
+    "code": "Sign Panel 03",
+    "name": "Sign Panel 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Sign Panel 03",
+    "thumbnail": "/thumbnails/displays_sign_panel_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_sign_panel_04",
+    "rawName": "Sign Panel 04",
+    "code": "Sign Panel 04",
+    "name": "Rembordé",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Rembordé",
+    "thumbnail": "/thumbnails/displays_sign_panel_04.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_table_display_01",
+    "rawName": "Table Display 01",
+    "code": "Table Display 01",
+    "name": "Présentoir de Table",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Présentoir de Table",
+    "thumbnail": "/thumbnails/displays_table_display_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_table_display_02",
+    "rawName": "Table Display 02",
+    "code": "Table Display 02",
+    "name": "Presentoir de Table",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Presentoir de Table",
+    "thumbnail": "/thumbnails/displays_table_display_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_table_display_03",
+    "rawName": "Table Display 03",
+    "code": "Table Display 03",
+    "name": "Présentoir de table",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Présentoir de table",
+    "thumbnail": "/thumbnails/displays_table_display_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_table_display_04",
+    "rawName": "Table Display 04",
+    "code": "Table Display 04",
+    "name": "Présentoir de Table",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Présentoir de Table",
+    "thumbnail": "/thumbnails/displays_table_display_04.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_table_display_05",
+    "rawName": "Table Display 05",
+    "code": "Table Display 05",
+    "name": "Présentoir de Table",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "Présentoir de Table",
+    "thumbnail": "/thumbnails/displays_table_display_05.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_table_display_06",
+    "rawName": "Table Display 06",
+    "code": "Table Display 06",
+    "name": "présentoir de table",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 2 - Counter Displays",
+    "description": "présentoir de table",
+    "thumbnail": "/thumbnails/displays_table_display_06.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_brochure_holder_01",
+    "rawName": "Brochure Holder 01",
+    "code": "Brochure Holder 01",
+    "name": "Brochure Holder 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 3 - Flyer Displays",
+    "description": "Brochure Holder 01",
+    "thumbnail": "/thumbnails/displays_brochure_holder_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_brochure_holder_02",
+    "rawName": "Brochure Holder 02",
+    "code": "Brochure Holder 02",
+    "name": "Brochure Holder 02 Grey Cardboard",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 3 - Flyer Displays",
+    "description": "Brochure Holder 02 Grey Cardboard",
+    "thumbnail": "/thumbnails/displays_brochure_holder_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_brochure_holder_03",
+    "rawName": "Brochure Holder 03",
+    "code": "Brochure Holder 03",
+    "name": "Brochure Holder 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 3 - Flyer Displays",
+    "description": "Brochure Holder 03",
+    "thumbnail": "/thumbnails/displays_brochure_holder_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_brochure_holder_04",
+    "rawName": "Brochure Holder 04",
+    "code": "Brochure Holder 04",
+    "name": "Brochure Holder 04",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 3 - Flyer Displays",
+    "description": "Brochure Holder 04",
+    "thumbnail": "/thumbnails/displays_brochure_holder_04.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_brochure_holder_06",
+    "rawName": "Brochure Holder 06",
+    "code": "Brochure Holder 06",
+    "name": "Brochure Holder 06",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 3 - Flyer Displays",
+    "description": "Brochure Holder 06",
+    "thumbnail": "/thumbnails/displays_brochure_holder_06.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_brochure_holder_08",
+    "rawName": "Brochure Holder 08",
+    "code": "Brochure Holder 08",
+    "name": "Brochure Holder 08",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 3 - Flyer Displays",
+    "description": "Brochure Holder 08",
+    "thumbnail": "/thumbnails/displays_brochure_holder_08.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_brochure_holder_09",
+    "rawName": "Brochure Holder 09",
+    "code": "Brochure Holder 09",
+    "name": "Brochure Holder 09",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 3 - Flyer Displays",
+    "description": "Brochure Holder 09",
+    "thumbnail": "/thumbnails/displays_brochure_holder_09.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_kiosk_totem_01",
+    "rawName": "Kiosk / Totem 01",
+    "code": "Kiosk / Totem 01",
+    "name": "Kiosk / Totem 01 Rectangle",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 4 - Totem & Signage",
+    "description": "Kiosk / Totem 01 Rectangle",
+    "thumbnail": "/thumbnails/displays_kiosk_totem_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_kiosk_totem_02",
+    "rawName": "Kiosk / Totem 02",
+    "code": "Kiosk / Totem 02",
+    "name": "Kiosk / Totem 02 Square",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 4 - Totem & Signage",
+    "description": "Kiosk / Totem 02 Square",
+    "thumbnail": "/thumbnails/displays_kiosk_totem_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_kiosk_totem_03",
+    "rawName": "Kiosk / Totem 03",
+    "code": "Kiosk / Totem 03",
+    "name": "Kiosk / Totem 03 Triangle",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 4 - Totem & Signage",
+    "description": "Kiosk / Totem 03 Triangle",
+    "thumbnail": "/thumbnails/displays_kiosk_totem_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_kiosk_totem_04",
+    "rawName": "Kiosk / Totem 04",
+    "code": "Kiosk / Totem 04",
+    "name": "Kiosk / Totem 04 Oval",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 4 - Totem & Signage",
+    "description": "Kiosk / Totem 04 Oval",
+    "thumbnail": "/thumbnails/displays_kiosk_totem_04.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_kiosk_totem_06",
+    "rawName": "Kiosk / Totem 06",
+    "code": "Kiosk / Totem 06",
+    "name": "Kiosk / Totem 06",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 4 - Totem & Signage",
+    "description": "Kiosk / Totem 06",
+    "thumbnail": "/thumbnails/displays_kiosk_totem_06.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_kiosk_totem_07",
+    "rawName": "Kiosk / Totem 07",
+    "code": "Kiosk / Totem 07",
+    "name": "Kiosk / Totem 07",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 4 - Totem & Signage",
+    "description": "Kiosk / Totem 07",
+    "thumbnail": "/thumbnails/displays_kiosk_totem_07.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_01",
+    "rawName": "Counter 01",
+    "code": "Counter 01",
+    "name": "Counter 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 6 - Counter / Stand",
+    "description": "Counter 01",
+    "thumbnail": "/thumbnails/displays_counter_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_02",
+    "rawName": "Counter 02",
+    "code": "Counter 02",
+    "name": "Counter 02",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 6 - Counter / Stand",
+    "description": "Counter 02",
+    "thumbnail": "/thumbnails/displays_counter_02.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_counter_03",
+    "rawName": "Counter 03",
+    "code": "Counter 03",
+    "name": "Counter 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 6 - Counter / Stand",
+    "description": "Counter 03",
+    "thumbnail": "/thumbnails/displays_counter_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_display_folder_06_1",
+    "rawName": "Display_folder_06 (1)",
+    "code": "Display_folder_06 (1)",
+    "name": "Display_folder_06",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Display_folder_06",
+    "thumbnail": "/thumbnails/displays_display_folder_06_1.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_easel_chevalet_03",
+    "rawName": "Easel Chevalet 03",
+    "code": "Easel Chevalet 03",
+    "name": "Easel Chevalet 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Easel Chevalet 03",
+    "thumbnail": "/thumbnails/displays_easel_chevalet_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_folder_display_01_1",
+    "rawName": "Folder_Display_01 (1)",
+    "code": "Folder_Display_01 (1)",
+    "name": "Folder_Display_01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Folder_Display_01",
+    "thumbnail": "/thumbnails/displays_folder_display_01_1.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_folder_display_03_1",
+    "rawName": "Folder_Display_03 (1)",
+    "code": "Folder_Display_03 (1)",
+    "name": "Folder_Display_03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Folder_Display_03",
+    "thumbnail": "/thumbnails/displays_folder_display_03_1.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_folder_display_04_1",
+    "rawName": "Folder_Display_04 (1)",
+    "code": "Folder_Display_04 (1)",
+    "name": "Folder_Display_04",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Folder_Display_04",
+    "thumbnail": "/thumbnails/displays_folder_display_04_1.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_header_fronton_01",
+    "rawName": "Header Fronton 01",
+    "code": "Header Fronton 01",
+    "name": "Header Fronton 01",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Header Fronton 01",
+    "thumbnail": "/thumbnails/displays_header_fronton_01.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_header_fronton_03",
+    "rawName": "Header Fronton 03",
+    "code": "Header Fronton 03",
+    "name": "Header Fronton 03",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Header Fronton 03",
+    "thumbnail": "/thumbnails/displays_header_fronton_03.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  },
+  {
+    "id": "displays_header_fronton_05",
+    "rawName": "Header Fronton 05",
+    "code": "Header Fronton 05",
+    "name": "Header Fronton 05",
+    "category": "DISPLAYS",
+    "series": "DISPLAYS 9 - Parts / Elements",
+    "description": "Header Fronton 05",
+    "thumbnail": "/thumbnails/displays_header_fronton_05.jpg",
+    "defaultParams": {
+      "L": 300,
+      "B": 200,
+      "H": 150,
+      "Ep": 3.0,
+      "M": 35
+    }
+  }
+]

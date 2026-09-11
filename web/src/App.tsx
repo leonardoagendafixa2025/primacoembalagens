@@ -18,6 +18,7 @@ import { CadViewer2D } from './components/CadViewer2D';
 import { FoldingViewer3D } from './components/FoldingViewer3D';
 import { ImpositionView } from './components/ImpositionView';
 import { SavedProjectsModal } from './components/SavedProjectsModal';
+import { CatalogModal } from './components/CatalogModal';
 
 export const App: React.FC = () => {
   // 1. Estados Centrais
@@ -26,7 +27,8 @@ export const App: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<CardboardProfile>(STANDARD_PROFILES[3]); // Onda B
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
 
-  // 2. Projetos Salvos
+  // 2. Catálogo & Projetos Salvos
+  const [isCatalogOpen, setIsCatalogOpen] = useState<boolean>(false);
   const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
   const [isProjectsModalOpen, setIsProjectsModalOpen] = useState<boolean>(false);
 
@@ -105,6 +107,7 @@ export const App: React.FC = () => {
         onExportSVG={handleExportSVG}
         onSaveProject={handleSaveProject}
         onOpenProjectsModal={() => setIsProjectsModalOpen(true)}
+        onOpenCatalog={() => setIsCatalogOpen(true)}
         isSupabaseConnected={isSupabaseConfigured}
       />
 
@@ -127,6 +130,17 @@ export const App: React.FC = () => {
           {activeTab === 'imposition' && <ImpositionView dieline={dieline} />}
         </main>
       </div>
+
+      {/* Modal de Catálogo Completo (472 Modelos FEFCO e ECMA) */}
+      <CatalogModal
+        isOpen={isCatalogOpen}
+        onClose={() => setIsCatalogOpen(false)}
+        onSelectModel={(model) => {
+          handleSelectModel(model);
+          setIsCatalogOpen(false);
+        }}
+        currentModelId={currentModel.id}
+      />
 
       {/* Modal de Projetos Salvos */}
       <SavedProjectsModal

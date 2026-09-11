@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Check,
   FileCode,
+  BookOpen,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -23,6 +24,7 @@ interface HeaderProps {
   onExportSVG: () => void;
   onSaveProject: (name: string) => Promise<void>;
   onOpenProjectsModal: () => void;
+  onOpenCatalog: () => void;
   isSupabaseConnected: boolean;
 }
 
@@ -35,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   onExportSVG,
   onSaveProject,
   onOpenProjectsModal,
+  onOpenCatalog,
   isSupabaseConnected,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
@@ -111,8 +114,43 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* 2. Seletor de Modelo de Embalagem */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* 2. Seletor de Modelo & Catálogo Completo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button
+          onClick={onOpenCatalog}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 7,
+            padding: '7px 13px',
+            borderRadius: 8,
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)',
+            border: '1px solid rgba(59, 130, 246, 0.45)',
+            color: '#93C5FD',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(37, 99, 235, 0.15)',
+            transition: 'all 0.2s ease',
+          }}
+          title="Biblioteca com todos os modelos FEFCO e ECMA"
+        >
+          <BookOpen size={16} color="#60A5FA" />
+          <span>Biblioteca FEFCO / ECMA</span>
+          <span
+            style={{
+              background: '#2563EB',
+              color: '#FFF',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '1px 6px',
+              borderRadius: 10,
+            }}
+          >
+            472
+          </span>
+        </button>
+
         <span style={{ fontSize: 12, color: '#64748B' }}>Modelo:</span>
         <select
           value={currentModel.id}
@@ -129,8 +167,14 @@ export const Header: React.FC<HeaderProps> = ({
             fontSize: 13,
             fontWeight: 500,
             cursor: 'pointer',
+            maxWidth: 220,
           }}
         >
+          {!MODELS.some((m) => m.id === currentModel.id) && (
+            <option key={currentModel.id} value={currentModel.id}>
+              ⭐ {currentModel.code} - {currentModel.name}
+            </option>
+          )}
           {MODELS.map((m) => (
             <option key={m.id} value={m.id}>
               {m.code} - {m.name}
