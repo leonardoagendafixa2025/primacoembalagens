@@ -80,14 +80,14 @@ export const Header: React.FC<HeaderProps> = ({
             width: 40,
             height: 40,
             borderRadius: 10,
-            background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
+            background: 'linear-gradient(135deg, #35a89e 0%, #1f6861 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 16px rgba(59, 130, 246, 0.4)',
+            boxShadow: '0 0 16px rgba(53, 168, 158, 0.4)',
           }}
         >
-          <Box size={22} color="#FFFFFF" />
+          <Box size={22} color="#000000" />
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -100,9 +100,9 @@ export const Header: React.FC<HeaderProps> = ({
                 fontWeight: 700,
                 padding: '2px 6px',
                 borderRadius: 4,
-                background: 'rgba(59, 130, 246, 0.15)',
-                color: '#60A5FA',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
+                background: 'rgba(197, 50, 54, 0.15)',
+                color: '#e04a4e',
+                border: '1px solid rgba(197, 50, 54, 0.4)',
               }}
             >
               CAD EMBALAGENS
@@ -124,25 +124,25 @@ export const Header: React.FC<HeaderProps> = ({
             gap: 7,
             padding: '7px 13px',
             borderRadius: 8,
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.45)',
-            color: '#93C5FD',
+            background: 'rgba(53, 168, 158, 0.12)',
+            border: '1px solid rgba(53, 168, 158, 0.45)',
+            color: '#35a89e',
             fontSize: 13,
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(37, 99, 235, 0.15)',
+            boxShadow: '0 2px 8px rgba(53, 168, 158, 0.15)',
             transition: 'all 0.2s ease',
           }}
           title="Biblioteca com todos os modelos FEFCO e ECMA"
         >
-          <BookOpen size={16} color="#60A5FA" />
+          <BookOpen size={16} color="#35a89e" />
           <span>Biblioteca FEFCO / ECMA</span>
           <span
             style={{
-              background: '#2563EB',
-              color: '#FFF',
+              background: '#35a89e',
+              color: '#000000',
               fontSize: 11,
-              fontWeight: 700,
+              fontWeight: 800,
               padding: '1px 6px',
               borderRadius: 10,
             }}
@@ -161,8 +161,8 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             padding: '7px 12px',
             borderRadius: 8,
-            background: '#1E293B',
-            border: '1px solid #334155',
+            background: '#121616',
+            border: '1px solid #242c2c',
             color: '#F8FAFC',
             fontSize: 13,
             fontWeight: 500,
@@ -187,10 +187,10 @@ export const Header: React.FC<HeaderProps> = ({
       <div
         style={{
           display: 'flex',
-          background: '#0F172A',
+          background: '#0a0d0d',
           padding: 3,
           borderRadius: 10,
-          border: '1px solid #1E293B',
+          border: '1px solid #1c2222',
         }}
       >
         <button
@@ -202,10 +202,10 @@ export const Header: React.FC<HeaderProps> = ({
             padding: '7px 14px',
             borderRadius: 8,
             fontSize: 13,
-            fontWeight: 500,
-            color: activeTab === '2d' ? '#FFF' : '#94A3B8',
-            background: activeTab === '2d' ? '#3B82F6' : 'transparent',
-            boxShadow: activeTab === '2d' ? '0 2px 8px rgba(59,130,246,0.3)' : 'none',
+            fontWeight: activeTab === '2d' ? 600 : 500,
+            color: activeTab === '2d' ? '#000000' : '#94A3B8',
+            background: activeTab === '2d' ? '#35a89e' : 'transparent',
+            boxShadow: activeTab === '2d' ? '0 2px 8px rgba(53,168,158,0.35)' : 'none',
             transition: 'all 0.15s ease',
           }}
         >
@@ -222,10 +222,10 @@ export const Header: React.FC<HeaderProps> = ({
             padding: '7px 14px',
             borderRadius: 8,
             fontSize: 13,
-            fontWeight: 500,
-            color: activeTab === '3d' ? '#FFF' : '#94A3B8',
-            background: activeTab === '3d' ? '#3B82F6' : 'transparent',
-            boxShadow: activeTab === '3d' ? '0 2px 8px rgba(59,130,246,0.3)' : 'none',
+            fontWeight: activeTab === '3d' ? 600 : 500,
+            color: activeTab === '3d' ? '#000000' : '#94A3B8',
+            background: activeTab === '3d' ? '#35a89e' : 'transparent',
+            boxShadow: activeTab === '3d' ? '0 2px 8px rgba(53,168,158,0.35)' : 'none',
             transition: 'all 0.15s ease',
           }}
         >
@@ -242,10 +242,10 @@ export const Header: React.FC<HeaderProps> = ({
             padding: '7px 14px',
             borderRadius: 8,
             fontSize: 13,
-            fontWeight: 500,
-            color: activeTab === 'imposition' ? '#FFF' : '#94A3B8',
-            background: activeTab === 'imposition' ? '#3B82F6' : 'transparent',
-            boxShadow: activeTab === 'imposition' ? '0 2px 8px rgba(59,130,246,0.3)' : 'none',
+            fontWeight: activeTab === 'imposition' ? 600 : 500,
+            color: activeTab === 'imposition' ? '#000000' : '#94A3B8',
+            background: activeTab === 'imposition' ? '#35a89e' : 'transparent',
+            boxShadow: activeTab === 'imposition' ? '0 2px 8px rgba(53,168,158,0.35)' : 'none',
             transition: 'all 0.15s ease',
           }}
         >
@@ -263,9 +263,9 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             padding: '8px 12px',
             borderRadius: 8,
-            background: '#1E293B',
+            background: '#121616',
             color: '#CBD5E1',
-            border: '1px solid #334155',
+            border: '1px solid #242c2c',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
@@ -283,13 +283,14 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             padding: '8px 14px',
             borderRadius: 8,
-            background: saveSuccess ? '#059669' : '#1E293B',
-            color: saveSuccess ? '#FFF' : '#CBD5E1',
-            border: '1px solid #334155',
+            background: saveSuccess ? '#35a89e' : '#121616',
+            color: saveSuccess ? '#000000' : '#CBD5E1',
+            border: '1px solid #242c2c',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
             fontSize: 12,
+            fontWeight: saveSuccess ? 700 : 500,
             transition: 'all 0.2s',
           }}
         >
@@ -304,9 +305,9 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             padding: '8px 12px',
             borderRadius: 8,
-            background: '#1E293B',
+            background: '#121616',
             color: '#CBD5E1',
-            border: '1px solid #334155',
+            border: '1px solid #242c2c',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
@@ -322,14 +323,14 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             padding: '8px 16px',
             borderRadius: 8,
-            background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-            color: '#FFF',
+            background: 'linear-gradient(135deg, #35a89e 0%, #206d66 100%)',
+            color: '#000000',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
             fontSize: 13,
-            fontWeight: 600,
-            boxShadow: '0 2px 10px rgba(59, 130, 246, 0.3)',
+            fontWeight: 700,
+            boxShadow: '0 2px 10px rgba(53, 168, 158, 0.35)',
           }}
         >
           <Download size={16} />

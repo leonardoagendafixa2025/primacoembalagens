@@ -57,19 +57,19 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
           <span
             style={{
               fontSize: 11,
-              fontWeight: 700,
+              fontWeight: 800,
               padding: '2px 8px',
               borderRadius: 4,
-              background: '#3B82F6',
-              color: '#FFF',
+              background: '#c53236',
+              color: '#FFFFFF',
               letterSpacing: 0.5,
             }}
           >
             {model.code}
           </span>
-          <span style={{ fontSize: 12, color: '#94A3B8' }}>{model.category}</span>
+          <span style={{ fontSize: 12, color: '#35a89e', fontWeight: 600 }}>{model.category}</span>
         </div>
-        <h2 style={{ fontSize: 17, fontWeight: 600, color: '#F8FAFC', marginTop: 6 }}>
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: '#F8FAFC', marginTop: 6 }}>
           {model.name}
         </h2>
         <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4, lineHeight: 1.4 }}>
@@ -80,16 +80,16 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
       {/* 2. Resumo da Faca Aberta (Tamanho de Prancha) */}
       <div
         style={{
-          background: '#1E293B',
+          background: '#0d1111',
           borderRadius: 8,
           padding: '12px 14px',
-          border: '1px solid #334155',
+          border: '1px solid #1c2424',
         }}
       >
         <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
           Faca Aberta (Formato Mínimo)
         </div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: '#38BDF8', marginTop: 4 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: '#35a89e', marginTop: 4 }}>
           {Math.round(bounds.width)} x {Math.round(bounds.height)} mm
         </div>
         <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
@@ -100,7 +100,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
       {/* 3. Seletor de Perfil de Papelão / Espessura */}
       <div>
         <label style={{ fontSize: 12, fontWeight: 600, color: '#E2E8F0', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-          <Layers size={14} color="#3B82F6" />
+          <Layers size={14} color="#35a89e" />
           Material & Espessura
         </label>
         <select
@@ -116,8 +116,8 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
             width: '100%',
             padding: '9px 12px',
             borderRadius: 8,
-            background: '#1E293B',
-            border: '1px solid #334155',
+            background: '#121616',
+            border: '1px solid #242c2c',
             color: '#F8FAFC',
             fontSize: 13,
           }}
@@ -134,7 +134,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#E2E8F0', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sliders size={14} color="#3B82F6" />
+            <Sliders size={14} color="#35a89e" />
             Parâmetros Dimensionais
           </label>
           <div style={{ display: 'flex', gap: 4 }}>
@@ -146,9 +146,9 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                   padding: '2px 8px',
                   borderRadius: 4,
                   fontSize: 11,
-                  background: '#1E293B',
+                  background: '#121616',
                   color: '#94A3B8',
-                  border: '1px solid #334155',
+                  border: '1px solid #242c2c',
                 }}
               >
                 {s}
@@ -178,8 +178,8 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                         padding: '4px 6px',
                         textAlign: 'right',
                         borderRadius: 6,
-                        background: '#1E293B',
-                        border: '1px solid #334155',
+                        background: '#121616',
+                        border: '1px solid #242c2c',
                         color: '#FFF',
                         fontSize: 13,
                         fontWeight: 600,
@@ -199,7 +199,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                   style={{
                     width: '100%',
                     cursor: 'pointer',
-                    accentColor: '#3B82F6',
+                    accentColor: '#35a89e',
                   }}
                 />
               </div>

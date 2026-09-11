@@ -75,8 +75,8 @@ export function exportToSVG(dieline: DielineResult, filename = 'faca_embalagem.s
   let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   svg += `<svg xmlns="http://www.w3.org/2000/svg" width="${viewBoxWidth}mm" height="${viewBoxHeight}mm" viewBox="${-margin} ${-margin} ${viewBoxWidth} ${viewBoxHeight}">\n`;
   svg += `  <style>\n`;
-  svg += `    .cut { stroke: #EF4444; stroke-width: 0.5; fill: none; }\n`;
-  svg += `    .crease { stroke: #3B82F6; stroke-width: 0.5; stroke-dasharray: 4,3; fill: none; }\n`;
+  svg += `    .cut { stroke: #c53236; stroke-width: 0.5; fill: none; }\n`;
+  svg += `    .crease { stroke: #35a89e; stroke-width: 0.5; stroke-dasharray: 4,3; fill: none; }\n`;
   svg += `    .perfo { stroke: #10B981; stroke-width: 0.5; stroke-dasharray: 2,2; fill: none; }\n`;
   svg += `  </style>\n`;
   svg += `  <g id="Faca">\n`;

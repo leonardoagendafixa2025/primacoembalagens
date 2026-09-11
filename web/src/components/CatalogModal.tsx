@@ -101,13 +101,14 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                   width: 34,
                   height: 34,
                   borderRadius: 8,
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
+                  background: 'linear-gradient(135deg, #35a89e 0%, #1f6861 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  boxShadow: '0 0 12px rgba(53, 168, 158, 0.4)',
                 }}
               >
-                <Grid size={18} color="#FFF" />
+                <Grid size={18} color="#000000" />
               </div>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F8FAFC' }}>
                 Biblioteca Completa de Embalagens ({CATALOG.length} Modelos)
@@ -131,8 +132,8 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                 width: '100%',
                 padding: '9px 12px 9px 36px',
                 borderRadius: 10,
-                background: '#151D2F',
-                border: '1px solid #334155',
+                background: '#121616',
+                border: '1px solid #242c2c',
                 color: '#FFF',
                 fontSize: 13,
               }}
@@ -140,7 +141,12 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
             {search && (
               <button
                 onClick={() => setSearch('')}
-                style={{ position: 'absolute', right: 10, top: 9, color: '#94A3B8', padding: 2 }}
+                style={{
+                  position: 'absolute',
+                  right: 10,
+                  top: 10,
+                  color: '#64748B',
+                }}
               >
                 <X size={14} />
               </button>
@@ -152,26 +158,25 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
           </button>
         </div>
 
-        {/* Barra de Filtros: Categorias e Séries */}
+        {/* Barra de Filtros e Categorias */}
         <div
           style={{
             padding: '12px 28px',
-            background: '#0F172A',
-            borderBottom: '1px solid #1E293B',
+            background: '#0a0d0d',
+            borderBottom: '1px solid #1c2222',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 16,
-            flexWrap: 'wrap',
           }}
         >
           {/* Tabs de Categoria */}
           <div style={{ display: 'flex', gap: 6 }}>
             {[
               { key: 'ALL', label: `Todos (${CATALOG.length})` },
-              { key: 'FEFCO', label: `FEFCO Papelão (${CATALOG.filter((c) => c.category === 'FEFCO').length})` },
-              { key: 'ECMA', label: `ECMA Cartão (${CATALOG.filter((c) => c.category === 'ECMA').length})` },
-              { key: 'DISPLAYS', label: `Displays/PDV (${CATALOG.filter((c) => c.category === 'DISPLAYS').length})` },
+              { key: 'FEFCO', label: 'FEFCO (194)' },
+              { key: 'ECMA', label: 'ECMA (218)' },
+              { key: 'DISPLAYS', label: 'Displays (60)' },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -184,10 +189,10 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                   borderRadius: 8,
                   fontSize: 12,
                   fontWeight: 600,
-                  color: selectedCategory === tab.key ? '#FFF' : '#94A3B8',
-                  background: selectedCategory === tab.key ? '#3B82F6' : '#1E293B',
+                  color: selectedCategory === tab.key ? '#000000' : '#94A3B8',
+                  background: selectedCategory === tab.key ? '#35a89e' : '#121616',
                   border: '1px solid',
-                  borderColor: selectedCategory === tab.key ? '#3B82F6' : '#334155',
+                  borderColor: selectedCategory === tab.key ? '#35a89e' : '#242c2c',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -207,8 +212,8 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
               style={{
                 padding: '6px 12px',
                 borderRadius: 8,
-                background: '#151D2F',
-                border: '1px solid #334155',
+                background: '#121616',
+                border: '1px solid #242c2c',
                 color: '#E2E8F0',
                 fontSize: 12,
                 maxWidth: 280,
@@ -262,9 +267,9 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                     onClose();
                   }}
                   style={{
-                    background: isSelected ? 'rgba(59, 130, 246, 0.12)' : '#151D2F',
+                    background: isSelected ? 'rgba(53, 168, 158, 0.12)' : '#101414',
                     border: '1px solid',
-                    borderColor: isSelected ? '#3B82F6' : '#222F48',
+                    borderColor: isSelected ? '#35a89e' : '#1c2424',
                     borderRadius: 12,
                     padding: 12,
                     cursor: 'pointer',
@@ -273,14 +278,14 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                     gap: 10,
                     transition: 'all 0.15s ease',
                     position: 'relative',
-                    boxShadow: isSelected ? '0 0 16px rgba(59, 130, 246, 0.25)' : 'none',
+                    boxShadow: isSelected ? '0 0 16px rgba(53, 168, 158, 0.3)' : 'none',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#3B82F6';
+                    e.currentTarget.style.borderColor = '#35a89e';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = isSelected ? '#3B82F6' : '#222F48';
+                    e.currentTarget.style.borderColor = isSelected ? '#35a89e' : '#1c2424';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
@@ -290,7 +295,7 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                       width: '100%',
                       height: 140,
                       borderRadius: 8,
-                      background: '#0F172A',
+                      background: '#000000',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -320,11 +325,11 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                         top: 8,
                         left: 8,
                         fontSize: 10,
-                        fontWeight: 700,
-                        padding: '2px 6px',
+                        fontWeight: 800,
+                        padding: '2px 7px',
                         borderRadius: 4,
-                        background: isFEFCO ? '#1E40AF' : isECMA ? '#047857' : '#6B21A8',
-                        color: '#FFF',
+                        background: isFEFCO ? '#35a89e' : isECMA ? '#c53236' : '#8B5CF6',
+                        color: isFEFCO ? '#000000' : '#FFFFFF',
                         letterSpacing: 0.5,
                       }}
                     >
@@ -362,11 +367,11 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                       width: '100%',
                       padding: '7px 0',
                       borderRadius: 6,
-                      background: isSelected ? '#3B82F6' : '#1E293B',
-                      color: isSelected ? '#FFF' : '#CBD5E1',
-                      border: '1px solid #334155',
+                      background: isSelected ? '#35a89e' : '#141818',
+                      color: isSelected ? '#000000' : '#CBD5E1',
+                      border: '1px solid #242c2c',
                       fontSize: 11,
-                      fontWeight: 600,
+                      fontWeight: isSelected ? 700 : 600,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',

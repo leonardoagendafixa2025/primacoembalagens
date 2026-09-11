@@ -67,15 +67,15 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline }) => {
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    // 1. Limpa fundo
-    ctx.fillStyle = '#0F172A';
+    // 1. Limpa fundo (Preto puro Primacor #000000)
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
 
     // 2. Grade Milimétrica CAD
     if (showGrid) {
       const gridSize = 50 * zoom; // Grid a cada 50mm
       if (gridSize > 12) {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
         ctx.lineWidth = 1;
 
         const startX = pan.x % gridSize;
@@ -110,11 +110,11 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline }) => {
       ctx.lineTo(sx1, sy1);
 
       if (seg.type === 'cut') {
-        ctx.strokeStyle = '#EF4444'; // Vermelho Corte
+        ctx.strokeStyle = '#c53236'; // Vermelho Corte Primacor
         ctx.lineWidth = 1.8;
         ctx.setLineDash([]);
       } else if (seg.type === 'crease') {
-        ctx.strokeStyle = '#3B82F6'; // Azul Vinco
+        ctx.strokeStyle = '#35a89e'; // Verde-água Vinco Primacor
         ctx.lineWidth = 1.6;
         ctx.setLineDash([6 * Math.max(0.5, zoom * 0.5), 4 * Math.max(0.5, zoom * 0.5)]);
       } else if (seg.type === 'perfo') {
@@ -300,7 +300,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline }) => {
         <button
           onClick={() => setShowGrid((g) => !g)}
           title="Alternar Grade"
-          style={{ padding: 6, color: showGrid ? '#3B82F6' : '#64748B', borderRadius: 4 }}
+          style={{ padding: 6, color: showGrid ? '#35a89e' : '#64748B', borderRadius: 4 }}
         >
           <Compass size={18} />
         </button>
@@ -331,11 +331,11 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline }) => {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 16, height: 3, background: '#EF4444', borderRadius: 2 }} />
+          <div style={{ width: 16, height: 3, background: '#c53236', borderRadius: 2 }} />
           <span>Corte</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 16, height: 3, borderTop: '3px dashed #3B82F6' }} />
+          <div style={{ width: 16, height: 3, borderTop: '3px dashed #35a89e' }} />
           <span>Vinco</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -1,32 +1,39 @@
 :root {
-  --bg-main: #0B0F17;
-  --bg-panel: rgba(18, 24, 38, 0.85);
-  --bg-card: #151D2F;
-  --bg-input: #1C263D;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-active: #3B82F6;
+  --bg-main: #000000;
+  --bg-panel: rgba(14, 16, 17, 0.9);
+  --bg-card: #121516;
+  --bg-input: #181c1c;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-active: #35a89e;
   
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
   
-  --color-cut: #EF4444;      /* Vermelho para linhas de corte */
-  --color-crease: #3B82F6;   /* Azul para linhas de vinco */
+  --color-cut: #c53236;      /* Vermelho Primacor para linhas de corte */
+  --color-crease: #35a89e;   /* Verde-água Primacor para linhas de vinco */
   --color-perfo: #10B981;    /* Verde para picote */
   --color-dimension: #F59E0B;/* Âmbar para cotas de medida */
   
-  --accent-primary: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-glow: rgba(59, 130, 246, 0.25);
+  --brand-black: #000000;
+  --brand-teal: #35a89e;
+  --brand-red: #c53236;
+  
+  --accent-primary: #35a89e;
+  --accent-hover: #2d8f86;
+  --accent-glow: rgba(53, 168, 158, 0.25);
+  --danger-primary: #c53236;
+  --danger-hover: #a8272b;
+  --danger-glow: rgba(197, 50, 54, 0.25);
   
   --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(53, 168, 158, 0.2);
 }
 
 * {

@@ -59,8 +59,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
         }}
       >
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Scissors size={18} color="#3B82F6" />
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Scissors size={18} color="#35a89e" />
             Aproveitamento & Imposição
           </h3>
           <p style={{ fontSize: 13, color: '#94A3B8', marginTop: 4 }}>
@@ -77,8 +77,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
             style={{
               padding: '10px 12px',
               borderRadius: 8,
-              background: '#1E293B',
-              border: '1px solid #334155',
+              background: '#121616',
+              border: '1px solid #242c2c',
               color: '#F8FAFC',
               fontSize: 13,
             }}
@@ -103,8 +103,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
                   width: '100%',
                   padding: 8,
                   borderRadius: 6,
-                  background: '#1E293B',
-                  border: '1px solid #334155',
+                  background: '#121616',
+                  border: '1px solid #242c2c',
                   color: '#FFF',
                 }}
               />
@@ -119,8 +119,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
                   width: '100%',
                   padding: 8,
                   borderRadius: 6,
-                  background: '#1E293B',
-                  border: '1px solid #334155',
+                  background: '#121616',
+                  border: '1px solid #242c2c',
                   color: '#FFF',
                 }}
               />
@@ -143,8 +143,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
                 padding: '8px 10px',
                 marginTop: 4,
                 borderRadius: 6,
-                background: '#1E293B',
-                border: '1px solid #334155',
+                background: '#121616',
+                border: '1px solid #242c2c',
                 color: '#FFF',
               }}
             />
@@ -162,8 +162,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
                 padding: '8px 10px',
                 marginTop: 4,
                 borderRadius: 6,
-                background: '#1E293B',
-                border: '1px solid #334155',
+                background: '#121616',
+                border: '1px solid #242c2c',
                 color: '#FFF',
               }}
             />
@@ -177,7 +177,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
             type="checkbox"
             checked={allowRotation}
             onChange={(e) => setAllowRotation(e.target.checked)}
-            style={{ width: 18, height: 18, accentColor: '#3B82F6', cursor: 'pointer' }}
+            style={{ width: 18, height: 18, accentColor: '#35a89e', cursor: 'pointer' }}
           />
         </div>
 
@@ -188,8 +188,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
 
           {/* Cards de Métricas */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div style={{ background: '#1E293B', padding: 12, borderRadius: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12 }}>
+            <div style={{ background: '#121616', padding: 12, borderRadius: 8, border: '1px solid #242c2c' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#35a89e', fontSize: 12 }}>
                 <Box size={14} /> Total Poses
               </div>
               <div style={{ fontSize: 24, fontWeight: 700, color: '#FFF', marginTop: 4 }}>
@@ -200,11 +200,11 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
               </div>
             </div>
 
-            <div style={{ background: '#1E293B', padding: 12, borderRadius: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#10B981', fontSize: 12 }}>
+            <div style={{ background: '#121616', padding: 12, borderRadius: 8, border: '1px solid #242c2c' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#35a89e', fontSize: 12 }}>
                 <Percent size={14} /> Rendimento
               </div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#10B981', marginTop: 4 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#35a89e', marginTop: 4 }}>
                 {imposition.utilizationPercentage}%
               </div>
               <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
@@ -230,7 +230,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
           alignItems: 'center',
           justifyContent: 'center',
           padding: 40,
-          background: '#0B0F17',
+          background: '#000000',
         }}
       >
         <div
@@ -248,23 +248,23 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
             style={{
               maxWidth: '90%',
               maxHeight: '90%',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
-              borderRadius: 8,
-              border: '2px solid #334155',
-              background: '#1E293B',
+              filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.7))',
             }}
-            viewBox={`0 0 ${imposition.sheetWidth} ${imposition.sheetHeight}`}
+            viewBox={`-20 -20 ${imposition.sheetWidth + 40} ${imposition.sheetHeight + 40}`}
           >
-            {/* Folha / Chapa */}
+            {/* Folha Base / Prancha Gráfica */}
             <rect
-              x="0"
-              y="0"
+              x={0}
+              y={0}
               width={imposition.sheetWidth}
               height={imposition.sheetHeight}
-              fill="#F8FAFC"
+              fill="#FFFFFF"
+              stroke="#475569"
+              strokeWidth="2"
+              rx="4"
             />
 
-            {/* Linha limite de sangria/margem */}
+            {/* Linha Tracejada de Margem / Pinça */}
             <rect
               x={marginMargin}
               y={marginMargin}
@@ -285,8 +285,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
                   y={item.y}
                   width={item.width}
                   height={item.height}
-                  fill="rgba(59, 130, 246, 0.08)"
-                  stroke="#3B82F6"
+                  fill="rgba(53, 168, 158, 0.08)"
+                  stroke="#35a89e"
                   strokeWidth="1"
                 />
 
@@ -297,7 +297,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
                   width={Math.max(0, item.width - 4)}
                   height={Math.max(0, item.height - 4)}
                   fill="none"
-                  stroke="#EF4444"
+                  stroke="#c53236"
                   strokeWidth="1.2"
                 />
 

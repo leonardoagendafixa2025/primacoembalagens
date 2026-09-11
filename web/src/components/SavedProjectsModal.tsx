@@ -60,8 +60,8 @@ export const SavedProjectsModal: React.FC<SavedProjectsModalProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <FolderOpen size={20} color="#3B82F6" />
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: '#FFF' }}>Projetos Salvos</h3>
+            <FolderOpen size={20} color="#35a89e" />
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#FFF' }}>Projetos Salvos</h3>
           </div>
           <button onClick={onClose} style={{ color: '#94A3B8', padding: 4 }}>
             <X size={20} />
@@ -72,20 +72,20 @@ export const SavedProjectsModal: React.FC<SavedProjectsModalProps> = ({
         <div
           style={{
             padding: '10px 24px',
-            background: isSupabaseConfigured ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-            borderBottom: '1px solid #1E293B',
+            background: isSupabaseConfigured ? 'rgba(53, 168, 158, 0.12)' : 'rgba(255, 255, 255, 0.05)',
+            borderBottom: '1px solid #1c2222',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
             fontSize: 12,
-            color: isSupabaseConfigured ? '#34D399' : '#60A5FA',
+            color: isSupabaseConfigured ? '#35a89e' : '#94A3B8',
           }}
         >
           {isSupabaseConfigured ? <Cloud size={16} /> : <HardDrive size={16} />}
           <span>
             {isSupabaseConfigured
               ? 'Sincronizado na Nuvem com o Supabase'
-              : 'Armazenamento Local no Navegador (Configure as chaves no .env.local para usar o Supabase Cloud)'}
+              : 'Armazenamento Local no Navegador'}
           </span>
         </div>
 
@@ -100,13 +100,13 @@ export const SavedProjectsModal: React.FC<SavedProjectsModalProps> = ({
               <div
                 key={proj.id}
                 style={{
-                  background: '#1E293B',
+                  background: '#121616',
                   borderRadius: 10,
                   padding: '14px 16px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  border: '1px solid #334155',
+                  border: '1px solid #242c2c',
                 }}
               >
                 <div>
@@ -125,10 +125,10 @@ export const SavedProjectsModal: React.FC<SavedProjectsModalProps> = ({
                     style={{
                       padding: '6px 12px',
                       borderRadius: 6,
-                      background: '#3B82F6',
-                      color: '#FFF',
+                      background: '#35a89e',
+                      color: '#000000',
                       fontSize: 12,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
@@ -142,8 +142,9 @@ export const SavedProjectsModal: React.FC<SavedProjectsModalProps> = ({
                     style={{
                       padding: '6px 8px',
                       borderRadius: 6,
-                      background: '#334155',
-                      color: '#EF4444',
+                      background: 'rgba(197, 50, 54, 0.15)',
+                      border: '1px solid rgba(197, 50, 54, 0.35)',
+                      color: '#c53236',
                     }}
                     title="Excluir"
                   >

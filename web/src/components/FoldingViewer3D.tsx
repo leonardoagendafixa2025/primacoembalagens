@@ -71,21 +71,21 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     dirLight.shadow.bias = -0.0001;
     scene.add(dirLight);
 
-    const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.4);
+    const fillLight = new THREE.DirectionalLight(0x35a89e, 0.35);
     fillLight.position.set(-400, 200, -300);
     scene.add(fillLight);
 
     // 5. Piso com sombra suave
     const floorGeo = new THREE.PlaneGeometry(3000, 3000);
-    const floorMat = new THREE.ShadowMaterial({ opacity: 0.25 });
+    const floorMat = new THREE.ShadowMaterial({ opacity: 0.35 });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -1;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Grade sutil no chão
-    const grid = new THREE.GridHelper(1500, 30, 0x1e293b, 0x0f172a);
+    // Grade sutil no chão (Preto com acento Teal Primacor)
+    const grid = new THREE.GridHelper(1500, 30, 0x35a89e, 0x1a2020);
     grid.position.y = 0;
     scene.add(grid);
 
@@ -349,14 +349,14 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
           onClick={() => setIsPlaying((p) => !p)}
           title={isPlaying ? 'Pausar Simulação' : 'Animar Dobra'}
           style={{
-            background: '#3B82F6',
-            color: '#FFF',
+            background: '#35a89e',
+            color: '#000000',
             padding: '8px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 12px rgba(59, 130, 246, 0.4)',
+            boxShadow: '0 0 14px rgba(53, 168, 158, 0.45)',
           }}
         >
           {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: 2 }} />}
@@ -365,7 +365,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#94A3B8' }}>
             <span>Plana (0%)</span>
-            <span style={{ color: '#38BDF8', fontWeight: 600 }}>Dobra: {Math.round(foldProgress * 100)}%</span>
+            <span style={{ color: '#35a89e', fontWeight: 700 }}>Dobra: {Math.round(foldProgress * 100)}%</span>
             <span>Montada (100%)</span>
           </div>
           <input
@@ -381,7 +381,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
             style={{
               width: '100%',
               cursor: 'pointer',
-              accentColor: '#3B82F6',
+              accentColor: '#35a89e',
             }}
           />
         </div>
@@ -392,8 +392,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
           style={{
             padding: 8,
             borderRadius: 8,
-            color: autoRotate ? '#38BDF8' : '#64748B',
-            background: autoRotate ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+            color: autoRotate ? '#35a89e' : '#64748B',
+            background: autoRotate ? 'rgba(53, 168, 158, 0.15)' : 'transparent',
           }}
         >
           <RotateCw size={18} />
