@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import type { PackagingModel } from '../engine/types';
-import { MODELS } from '../engine/models';
 import {
   Box,
   LayoutGrid,
@@ -17,7 +16,7 @@ export type ActiveTab = '2d' | '3d' | 'imposition';
 
 interface HeaderProps {
   currentModel: PackagingModel;
-  onSelectModel: (model: PackagingModel) => void;
+  onSelectModel?: (model: PackagingModel) => void;
   activeTab: ActiveTab;
   onSelectTab: (tab: ActiveTab) => void;
   onExportDXF: () => void;
@@ -30,7 +29,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentModel,
-  onSelectModel,
   activeTab,
   onSelectTab,
   onExportDXF,
@@ -137,36 +135,40 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </button>
 
-        <span style={{ fontSize: 12, color: '#64748B' }}>Modelo:</span>
-        <select
-          value={currentModel.id}
-          onChange={(e) => {
-            const found = MODELS.find((m) => m.id === e.target.value);
-            if (found) onSelectModel(found);
-          }}
+        {/* Modelo Ativo Atual (Informativo e clicável para abrir a biblioteca) */}
+        <div
+          onClick={onOpenCatalog}
+          title="Clique para trocar o modelo na Biblioteca"
           style={{
-            padding: '7px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 12px',
             borderRadius: 8,
             background: '#121616',
             border: '1px solid #242c2c',
-            color: '#F8FAFC',
-            fontSize: 13,
-            fontWeight: 500,
             cursor: 'pointer',
-            maxWidth: 220,
+            fontSize: 13,
+            transition: 'border-color 0.2s ease',
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#35a89e')}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#242c2c')}
         >
-          {!MODELS.some((m) => m.id === currentModel.id) && (
-            <option key={currentModel.id} value={currentModel.id}>
-              ⭐ {currentModel.code} - {currentModel.name}
-            </option>
-          )}
-          {MODELS.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.code} - {m.name}
-            </option>
-          ))}
-        </select>
+          <span style={{ color: '#35a89e', fontWeight: 700 }}>{currentModel.code}</span>
+          <span style={{ color: '#475569' }}>•</span>
+          <span
+            style={{
+              color: '#E2E8F0',
+              fontWeight: 500,
+              maxWidth: 240,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {currentModel.name}
+          </span>
+        </div>
       </div>
 
       {/* 3. Abas de Visualização (2D / 3D / Imposição) */}
