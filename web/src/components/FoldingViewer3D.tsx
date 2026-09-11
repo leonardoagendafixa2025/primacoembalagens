@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import type { PackagingModel } from '../engine/types';
+import { extractPanelsFromModel, buildFoldable3DTree } from '../engine/foldingEngine';
 import { Play, Pause, RotateCw, Layers } from 'lucide-react';
 
 interface FoldingViewer3DProps {
@@ -21,15 +22,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
   const cameraRef = useRef<THREE.Camera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const boxGroupRef = useRef<THREE.Group | null>(null);
-  const panelsRef = useRef<{
-    base: THREE.Mesh;
-    front: THREE.Group;
-    back: THREE.Group;
-    left: THREE.Group;
-    right: THREE.Group;
-    lid: THREE.Group;
-    tuck: THREE.Group;
-  } | null>(null);
 
   // Configuração inicial da cena Three.js
   useEffect(() => {
@@ -183,7 +175,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     };
   }, [autoRotate]);
 
-  // Recria a geometria 3D articulada quando os parâmetros mudam
+  const updateProgressRef = useRef<((progress: number) => void) | null>(null);
+
+  // Recria a geometria 3D articulada a partir da faca real quando o modelo ou parâmetros mudam
   useEffect(() => {
     const boxGroup = boxGroupRef.current;
     if (!boxGroup) return;
@@ -194,119 +188,28 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
       boxGroup.remove(obj);
     }
 
-    const L = params.L || 300;
-    const B = params.B || 200;
-    const H = params.H || 150;
-    const Ep = Math.max(1.5, params.Ep || 3);
+    const Ep = Math.max(1.0, params.Ep || 3);
 
-    // Material de Papelão Kraft
-    const kraftOuterMat = new THREE.MeshStandardMaterial({
-      color: '#C29B68',
-      roughness: 0.85,
-      metalness: 0.05,
-    });
-    const kraftInnerMat = new THREE.MeshStandardMaterial({
-      color: '#D4B07B',
-      roughness: 0.9,
-      metalness: 0.02,
-    });
-    const materials = [kraftOuterMat, kraftInnerMat, kraftOuterMat, kraftOuterMat, kraftOuterMat, kraftOuterMat];
+    // 1. Calcula a geometria real da faca a partir do motor paramétrico
+    const dieline = model.calculate(params);
 
-    const createPanel = (w: number, h: number) => {
-      const geo = new THREE.BoxGeometry(w, Ep, h);
-      const mesh = new THREE.Mesh(geo, materials);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      return mesh;
-    };
+    // 2. Extrai os painéis e vínculos de vinco correspondentes
+    const panels = extractPanelsFromModel(model.code || model.id, dieline, params);
 
-    // 1. Fundo Base (L x B) fixo no chão
-    const baseMesh = createPanel(L, B);
-    baseMesh.position.set(0, Ep / 2, 0);
-    boxGroup.add(baseMesh);
+    // 3. Constrói a árvore 3D cinemática reversível
+    const tree = buildFoldable3DTree(panels, Ep);
+    boxGroup.add(tree.rootGroup);
+    updateProgressRef.current = tree.updateProgress;
 
-    // 2. Painel Frontal (L x H) articulado na borda +Z
-    const frontGroup = new THREE.Group();
-    frontGroup.position.set(0, Ep / 2, B / 2);
-    const frontMesh = createPanel(L, H);
-    frontMesh.position.set(0, 0, H / 2);
-    frontGroup.add(frontMesh);
-    boxGroup.add(frontGroup);
-
-    // 3. Painel Traseiro (L x H) articulado na borda -Z
-    const backGroup = new THREE.Group();
-    backGroup.position.set(0, Ep / 2, -B / 2);
-    const backMesh = createPanel(L, H);
-    backMesh.position.set(0, 0, -H / 2);
-    backGroup.add(backMesh);
-    boxGroup.add(backGroup);
-
-    // Tampa superior (L x B) articulada no topo do painel traseiro
-    const lidGroup = new THREE.Group();
-    lidGroup.position.set(0, 0, -H);
-    const lidMesh = createPanel(L, B);
-    lidMesh.position.set(0, 0, -B / 2);
-    lidGroup.add(lidMesh);
-    backGroup.add(lidGroup);
-
-    // Aba de encaixe frontal da tampa (L x 35)
-    const tuckGroup = new THREE.Group();
-    tuckGroup.position.set(0, 0, -B);
-    const tuckH = Math.min(40, H * 0.4);
-    const tuckMesh = createPanel(L * 0.95, tuckH);
-    tuckMesh.position.set(0, 0, -tuckH / 2);
-    tuckGroup.add(tuckMesh);
-    lidGroup.add(tuckGroup);
-
-    // 4. Painel Lateral Esquerdo (H x B) articulado na borda -X
-    const leftGroup = new THREE.Group();
-    leftGroup.position.set(-L / 2, Ep / 2, 0);
-    const leftMesh = createPanel(H, B);
-    leftMesh.position.set(-H / 2, 0, 0);
-    leftGroup.add(leftMesh);
-    boxGroup.add(leftGroup);
-
-    // 5. Painel Lateral Direito (H x B) articulado na borda +X
-    const rightGroup = new THREE.Group();
-    rightGroup.position.set(L / 2, Ep / 2, 0);
-    const rightMesh = createPanel(H, B);
-    rightMesh.position.set(H / 2, 0, 0);
-    rightGroup.add(rightMesh);
-    boxGroup.add(rightGroup);
-
-    panelsRef.current = {
-      base: baseMesh,
-      front: frontGroup,
-      back: backGroup,
-      left: leftGroup,
-      right: rightGroup,
-      lid: lidGroup,
-      tuck: tuckGroup,
-    };
+    // Aplica o progresso de dobra atual
+    tree.updateProgress(foldProgress);
   }, [model, params]);
 
-  // Atualiza as rotações de dobra dos painéis 3D conforme o foldProgress
+  // Atualiza as rotações de dobra dos painéis 3D conforme o foldProgress (0% = aberta, 100% = montada)
   useEffect(() => {
-    if (!panelsRef.current) return;
-    const { front, back, left, right, lid, tuck } = panelsRef.current;
-
-    const angle90 = (Math.PI / 2) * foldProgress;
-
-    // Painel frontal levanta 90°
-    front.rotation.x = -angle90;
-
-    // Painel traseiro levanta 90°
-    back.rotation.x = angle90;
-
-    // Tampa fecha 90° em relação à traseira
-    lid.rotation.x = angle90;
-
-    // Aba frontal fecha 90° para encaixar na frente
-    tuck.rotation.x = angle90 * 0.9;
-
-    // Laterais levantam 90°
-    left.rotation.z = angle90;
-    right.rotation.z = -angle90;
+    if (updateProgressRef.current) {
+      updateProgressRef.current(foldProgress);
+    }
   }, [foldProgress]);
 
   // Animação de abrir/fechar contínua quando o usuário aperta Play
