@@ -187,14 +187,22 @@ export function exportToSVG(
   if (dieline.arcs) {
     for (const arc of dieline.arcs) {
       const cls = arc.type === 'crease' ? 'crease' : arc.type === 'perfo' ? 'perfo' : 'cut';
-      const radBeg = (arc.startAngle * Math.PI) / 180;
-      const radEnd = (arc.endAngle * Math.PI) / 180;
-      const x1 = arc.cx + arc.r * Math.cos(radBeg);
-      const y1 = b.height - (arc.cy + arc.r * Math.sin(radBeg));
-      const x2 = arc.cx + arc.r * Math.cos(radEnd);
-      const y2 = b.height - (arc.cy + arc.r * Math.sin(radEnd));
-      const largeArc = Math.abs(arc.endAngle - arc.startAngle) > 180 ? 1 : 0;
-      svg += `    <path d="M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${arc.r.toFixed(2)} ${arc.r.toFixed(2)} 0 ${largeArc} 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" class="${cls}" />\n`;
+      let delta = arc.endAngle - arc.startAngle;
+      while (delta < 0) delta += 360;
+      while (delta > 360) delta -= 360;
+
+      if (Math.abs(delta - 360) < 1e-3 || delta === 0) {
+        svg += `    <circle cx="${arc.cx.toFixed(2)}" cy="${(b.height - arc.cy).toFixed(2)}" r="${arc.r.toFixed(2)}" class="${cls}" />\n`;
+      } else {
+        const radBeg = (arc.startAngle * Math.PI) / 180;
+        const radEnd = (arc.endAngle * Math.PI) / 180;
+        const x1 = arc.cx + arc.r * Math.cos(radBeg);
+        const y1 = b.height - (arc.cy + arc.r * Math.sin(radBeg));
+        const x2 = arc.cx + arc.r * Math.cos(radEnd);
+        const y2 = b.height - (arc.cy + arc.r * Math.sin(radEnd));
+        const largeArc = delta > 180 ? 1 : 0;
+        svg += `    <path d="M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${arc.r.toFixed(2)} ${arc.r.toFixed(2)} 0 ${largeArc} 0 ${x2.toFixed(2)} ${y2.toFixed(2)}" class="${cls}" />\n`;
+      }
     }
   }
 

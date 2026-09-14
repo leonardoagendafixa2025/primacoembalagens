@@ -437,18 +437,39 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
                     const isCrease = arc.type === 'crease';
                     const isPerfo = arc.type === 'perfo';
                     const strokeColor = isCrease ? '#35a89e' : isPerfo ? '#10B981' : '#c53236';
+
+                    let delta = arc.endAngle - arc.startAngle;
+                    while (delta < 0) delta += 360;
+                    while (delta > 360) delta -= 360;
+
+                    // C?rculo completo (360?)
+                    if (Math.abs(delta - 360) < 1e-3 || delta === 0) {
+                      return (
+                        <circle
+                          key={`arc-${aIdx}`}
+                          cx={arc.cx}
+                          cy={toSvgY(arc.cy)}
+                          r={arc.r}
+                          fill="none"
+                          stroke={strokeColor}
+                          strokeWidth="1"
+                        />
+                      );
+                    }
+
                     const radBeg = (arc.startAngle * Math.PI) / 180;
                     const radEnd = (arc.endAngle * Math.PI) / 180;
                     const x1 = arc.cx + arc.r * Math.cos(radBeg);
                     const y1 = toSvgY(arc.cy + arc.r * Math.sin(radBeg));
                     const x2 = arc.cx + arc.r * Math.cos(radEnd);
                     const y2 = toSvgY(arc.cy + arc.r * Math.sin(radEnd));
-                    const largeArc = Math.abs(arc.endAngle - arc.startAngle) > 180 ? 1 : 0;
+                    const largeArc = delta > 180 ? 1 : 0;
 
+                    // sweep-flag = 0 porque toSvgY inverte o eixo vertical Y
                     return (
                       <path
                         key={`arc-${aIdx}`}
-                        d={`M ${x1} ${y1} A ${arc.r} ${arc.r} 0 ${largeArc} 1 ${x2} ${y2}`}
+                        d={`M ${x1} ${y1} A ${arc.r} ${arc.r} 0 ${largeArc} 0 ${x2} ${y2}`}
                         fill="none"
                         stroke={strokeColor}
                         strokeWidth="1"
