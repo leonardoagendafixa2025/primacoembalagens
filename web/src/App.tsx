@@ -106,6 +106,22 @@ export const App: React.FC = () => {
     if (prof) setSelectedProfile(prof);
   };
 
+  // Voltar para a Home ao clicar na Logo oficial
+  const handleGoHome = () => {
+    const homeModel = MODELS[0];
+    setCurrentModel(homeModel);
+    setParams({
+      L: homeModel.defaultParams?.L || 300,
+      B: homeModel.defaultParams?.B || 200,
+      H: homeModel.defaultParams?.H || 150,
+      ...homeModel.defaultParams,
+      Ep: selectedProfile.thickness,
+    });
+    setActiveTab('2d');
+    setIsCatalogOpen(false);
+    setIsProjectsModalOpen(false);
+  };
+
   // Deletar projeto
   const handleDeleteProject = async (id: string) => {
     await deleteProject(id);
@@ -118,6 +134,7 @@ export const App: React.FC = () => {
       <Header
         currentModel={currentModel}
         onSelectModel={handleSelectModel}
+        onGoHome={handleGoHome}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         onExportDXF={handleExportDXF}

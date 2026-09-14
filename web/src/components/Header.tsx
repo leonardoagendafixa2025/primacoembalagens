@@ -25,6 +25,7 @@ interface HeaderProps {
   onOpenProjectsModal: () => void;
   onOpenCatalog: () => void;
   isSupabaseConnected: boolean;
+  onGoHome?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -37,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProjectsModal,
   onOpenCatalog,
   isSupabaseConnected,
+  onGoHome,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -71,8 +73,31 @@ export const Header: React.FC<HeaderProps> = ({
         zIndex: 50,
       }}
     >
-      {/* 1. Logotipo Oficial Primacor */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* 1. Logotipo Oficial Primacor (Clique para voltar para Home) */}
+      <button
+        type="button"
+        onClick={onGoHome}
+        title="Voltar para a página inicial (Home)"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '4px 8px',
+          borderRadius: 8,
+          transition: 'all 0.2s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.opacity = '0.85';
+          e.currentTarget.style.transform = 'scale(1.02)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = '1';
+          e.currentTarget.style.transform = 'scale(1)';
+        }}
+      >
         <img
           src="/primacor-logo-horizontal.png"
           alt="Primacor Gráfica e Editora"
@@ -96,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           CAD EMBALAGENS
         </span>
-      </div>
+      </button>
 
       {/* 2. Seletor de Modelo & Catálogo Completo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
