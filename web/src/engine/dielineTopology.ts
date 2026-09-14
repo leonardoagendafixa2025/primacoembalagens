@@ -306,24 +306,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 8. Escolhe o Painel Raiz (Base/Fundo)
-  let rootFace = panelFaces.find((pf) => pointInPolygon({ x: 0, y: 0 }, pf.points));
-  if (!rootFace && panelFaces.length > 0) {
-    let bestDist = Infinity;
-    for (const pf of panelFaces) {
-      const d = Math.hypot(pf.centroid.x, pf.centroid.y);
-      if (d < bestDist) {
-        bestDist = d;
-        rootFace = pf;
-      }
-    }
-  }
-  if (!rootFace && panelFaces.length > 0) {
-    rootFace = panelFaces[0];
-  }
-  const rootFaceId = rootFace ? rootFace.id : -1;
-
-  // 9. Constrói a Árvore Cinemática (BFS a partir da base)
+  // 8. Constrói o Grafo de Adjacência / Dobras entre Painéis
   const adjMap = new Map<number, { neighborId: number; hinge: RawHingeEdge }[]>();
   for (const pf of panelFaces) {
     adjMap.set(pf.id, []);
@@ -332,6 +315,63 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     adjMap.get(h.panelAId)!.push({ neighborId: h.panelBId, hinge: h });
     adjMap.get(h.panelBId)!.push({ neighborId: h.panelAId, hinge: h });
   }
+
+  // 9. Escolhe o Painel Raiz (Base/Fundo/Corpo Central da Embalagem)
+  // REGRA DE ENGENHARIA: O fechamento 3D DEVE iniciar a partir da BASE / PAINEL CENTRAL.
+  // Abas laterais de colagem, abas terminais e abas de poeira (deg <= 1) NUNCA podem ser raiz.
+  let bMinX = Infinity, bMaxX = -Infinity, bMinY = Infinity, bMaxY = -Infinity;
+  for (const pf of panelFaces) {
+    for (const pt of pf.points) {
+      if (pt.x < bMinX) bMinX = pt.x;
+      if (pt.x > bMaxX) bMaxX = pt.x;
+      if (pt.y < bMinY) bMinY = pt.y;
+      if (pt.y > bMaxY) bMaxY = pt.y;
+    }
+  }
+  const blankCenterX = (bMinX + bMaxX) / 2;
+  const blankCenterY = (bMinY + bMaxY) / 2;
+  const blankDiag = Math.hypot(bMaxX - bMinX, bMaxY - bMinY) || 1;
+
+  let maxArea = 0;
+  let maxDeg = 0;
+  for (const pf of panelFaces) {
+    if (pf.area > maxArea) maxArea = pf.area;
+    const deg = adjMap.get(pf.id)?.length || 0;
+    if (deg > maxDeg) maxDeg = deg;
+  }
+
+  // Descarta abas terminais / abas laterais (deg <= 1) se houver painéis centrais estruturais
+  const minDegAllowed = maxDeg >= 2 ? 2 : 1;
+  const minAreaAllowed = maxArea * 0.2; // descarta tiras ou abas menores
+
+  let candidates = panelFaces.filter(
+    (pf) => (adjMap.get(pf.id)?.length || 0) >= minDegAllowed && pf.area >= minAreaAllowed
+  );
+  if (candidates.length === 0) {
+    candidates = panelFaces.filter((pf) => (adjMap.get(pf.id)?.length || 0) >= minDegAllowed);
+  }
+  if (candidates.length === 0) {
+    candidates = panelFaces;
+  }
+
+  let rootFace = candidates[0];
+  let bestScore = -Infinity;
+
+  for (const pf of candidates) {
+    const distToCenter = Math.hypot(pf.centroid.x - blankCenterX, pf.centroid.y - blankCenterY);
+    const normDist = distToCenter / (blankDiag / 2); // 0 no centro, ~1 na borda
+    const normArea = pf.area / (maxArea || 1);
+    const deg = adjMap.get(pf.id)?.length || 0;
+
+    // Prioriza conexões estruturais (deg), área da base/fundo e proximidade do centro real da faca
+    const score = deg * 250 + normArea * 500 + (1.0 - normDist) * 400;
+    if (score > bestScore) {
+      bestScore = score;
+      rootFace = pf;
+    }
+  }
+
+  const rootFaceId = rootFace ? rootFace.id : -1;
 
   const visitedPanels = new Set<number>();
   const parentMap = new Map<number, { parentId: number; hinge: RawHingeEdge; depth: number }>();
