@@ -19,6 +19,11 @@ import { computeBoundingBox } from '../geometry';
  * MAX_COORDINATE_ERROR <= 0.000152 mm
  */
 export const fefco0429: PackagingModel = {
+  status: 'PASS',
+  isFoldable: true,
+  originalSource: 'C#_PARAMETRIC_DLL',
+  implementationType: 'NATIVE_TS',
+  generator: 'fefco0429',
   id: 'fefco_0429',
   code: 'FEFCO 0429',
   name: 'Caixa de Envio com Tampa Integrada e Abas Laterais (FEFCO 0429)',

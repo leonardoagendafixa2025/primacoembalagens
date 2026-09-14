@@ -1,6 +1,11 @@
 import type { PackagingModel, DielineResult, Segment2D, DimensionLine, BoundingBox2D } from '../types';
 
 export const ecmaB10: PackagingModel = {
+  status: 'PASS',
+  isFoldable: true,
+  originalSource: 'C#_PARAMETRIC_DLL',
+  implementationType: 'NATIVE_TS',
+  generator: 'ecmaB10',
   id: 'ecma_b10',
   code: 'ECMA B10',
   name: 'Cartucho com Abas Opostas (Tuck-in Reverso)',

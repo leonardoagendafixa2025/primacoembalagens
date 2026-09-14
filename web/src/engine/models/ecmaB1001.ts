@@ -2,6 +2,11 @@ import type { PackagingModel, DielineResult, Segment2D, DimensionLine } from '..
 import { computeBoundingBox, normalizeGeometry } from '../geometry';
 
 export const ecmaB1001: PackagingModel = {
+  status: 'PASS',
+  isFoldable: true,
+  originalSource: 'C#_PARAMETRIC_DLL',
+  implementationType: 'NATIVE_TS',
+  generator: 'ecmaB1001',
   id: 'ecma_b1001',
   code: 'ECMA B10.01',
   name: 'Bandeja Dobrável com Trava (Tray Lock)',

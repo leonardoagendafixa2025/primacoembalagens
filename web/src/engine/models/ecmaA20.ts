@@ -1,6 +1,11 @@
 import type { PackagingModel, DielineResult, Segment2D, DimensionLine, BoundingBox2D } from '../types';
 
 export const ecmaA20: PackagingModel = {
+  status: 'PASS',
+  isFoldable: true,
+  originalSource: 'C#_PARAMETRIC_DLL',
+  implementationType: 'NATIVE_TS',
+  generator: 'ecmaA20',
   id: 'ecma_a20',
   code: 'ECMA A20',
   name: 'Luva Deslizante (Sleeve)',

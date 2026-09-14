@@ -2,6 +2,11 @@ import type { PackagingModel, DielineResult, Segment2D, Arc2D, DimensionLine } f
 import { computeBoundingBox } from '../geometry';
 
 export const fefco0201: PackagingModel = {
+  status: 'PASS',
+  isFoldable: true,
+  originalSource: 'C#_PARAMETRIC_DLL',
+  implementationType: 'NATIVE_TS',
+  generator: 'fefco0201',
   id: 'fefco_0201',
   code: 'FEFCO 0201',
   name: 'Caixa Maleta Americana Padrão (RSC)',

@@ -19,17 +19,19 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
 
   // Refs Three.js
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.Camera | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const boxGroupRef = useRef<THREE.Group | null>(null);
+  const updateProgressRef = useRef<((progress: number) => void) | null>(null);
+  const sphericalRef = useRef({ radius: 800, theta: Math.PI / 4, phi: Math.PI / 3 });
 
   // Configuração inicial da cena Three.js
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const width = mount.clientWidth;
-    const height = mount.clientHeight;
+    const width = Math.max(mount.clientWidth || 800, 100);
+    const height = Math.max(mount.clientHeight || 600, 100);
 
     // 1. Cena
     const scene = new THREE.Scene();
@@ -37,13 +39,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     sceneRef.current = scene;
 
     // 2. Câmera
-    const camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
-    camera.position.set(400, 350, 500);
-    camera.lookAt(0, 50, 0);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
     cameraRef.current = camera;
 
     // 3. Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -52,32 +52,32 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     rendererRef.current = renderer;
 
     // 4. Luzes
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.2);
-    dirLight.position.set(300, 600, 400);
+    const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.3);
+    dirLight.position.set(400, 800, 500);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.bias = -0.0001;
     scene.add(dirLight);
 
-    const fillLight = new THREE.DirectionalLight(0x35a89e, 0.35);
-    fillLight.position.set(-400, 200, -300);
+    const fillLight = new THREE.DirectionalLight(0x35a89e, 0.4);
+    fillLight.position.set(-500, 300, -400);
     scene.add(fillLight);
 
     // 5. Piso com sombra suave
-    const floorGeo = new THREE.PlaneGeometry(3000, 3000);
-    const floorMat = new THREE.ShadowMaterial({ opacity: 0.35 });
+    const floorGeo = new THREE.PlaneGeometry(5000, 5000);
+    const floorMat = new THREE.ShadowMaterial({ opacity: 0.3 });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -1;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Grade sutil no chão (Preto com acento Teal Primacor)
-    const grid = new THREE.GridHelper(1500, 30, 0x35a89e, 0x1a2020);
+    // Grade sutil no chão (Teal Primacor)
+    const grid = new THREE.GridHelper(2000, 40, 0x35a89e, 0x1a2428);
     grid.position.y = 0;
     scene.add(grid);
 
@@ -90,14 +90,14 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     let isMouseDown = false;
     let prevMouseX = 0;
     let prevMouseY = 0;
-    const spherical = { radius: 700, theta: Math.PI / 4, phi: Math.PI / 3 };
 
     const updateCameraPosition = () => {
-      spherical.phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.05, spherical.phi));
-      camera.position.x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
-      camera.position.y = spherical.radius * Math.cos(spherical.phi);
-      camera.position.z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
-      camera.lookAt(0, 50, 0);
+      const sp = sphericalRef.current;
+      sp.phi = Math.max(0.08, Math.min(Math.PI / 2 - 0.05, sp.phi));
+      camera.position.x = sp.radius * Math.sin(sp.phi) * Math.sin(sp.theta);
+      camera.position.y = sp.radius * Math.cos(sp.phi);
+      camera.position.z = sp.radius * Math.sin(sp.phi) * Math.cos(sp.theta);
+      camera.lookAt(0, 40, 0);
     };
     updateCameraPosition();
 
@@ -116,8 +116,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
 
-      spherical.theta -= deltaX * 0.006;
-      spherical.phi -= deltaY * 0.006;
+      sphericalRef.current.theta -= deltaX * 0.006;
+      sphericalRef.current.phi -= deltaY * 0.006;
       updateCameraPosition();
     };
 
@@ -127,7 +127,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      spherical.radius = Math.max(200, Math.min(1800, spherical.radius + e.deltaY * 0.8));
+      sphericalRef.current.radius = Math.max(150, Math.min(4000, sphericalRef.current.radius + e.deltaY * 0.8));
       updateCameraPosition();
     };
 
@@ -135,7 +135,20 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     dom.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-    dom.addEventListener('wheel', onWheel);
+    dom.addEventListener('wheel', onWheel, { passive: false });
+
+    // Observador de Redimensionamento (Garante render perfeito na troca de aba 2D <-> 3D)
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width: w, height: h } = entry.contentRect;
+        if (w > 0 && h > 0) {
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+      }
+    });
+    resizeObserver.observe(mount);
 
     // Loop de Animação
     let reqId = 0;
@@ -143,7 +156,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
       reqId = requestAnimationFrame(animate);
 
       if (autoRotate && !isMouseDown) {
-        spherical.theta += 0.005;
+        sphericalRef.current.theta += 0.004;
         updateCameraPosition();
       }
 
@@ -151,31 +164,19 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     };
     animate();
 
-    const handleResize = () => {
-      if (!mount) return;
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener('resize', handleResize);
-
     return () => {
       cancelAnimationFrame(reqId);
+      resizeObserver.disconnect();
       dom.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
       dom.removeEventListener('wheel', onWheel);
-      window.removeEventListener('resize', handleResize);
       if (mount.contains(dom)) {
         mount.removeChild(dom);
       }
       renderer.dispose();
     };
   }, [autoRotate]);
-
-  const updateProgressRef = useRef<((progress: number) => void) | null>(null);
 
   // Recria a geometria 3D articulada a partir da faca real quando o modelo ou parâmetros mudam
   useEffect(() => {
@@ -189,19 +190,42 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     }
 
     const Ep = Math.max(1.0, params.Ep || 3);
+    const isFoldable = model.isFoldable !== false &&
+      model.status !== 'NON_FOLDABLE' &&
+      model.status !== 'ORIGINAL_NO_GEOMETRY' &&
+      model.status !== 'DOCUMENT_ONLY';
 
-    // 1. Calcula a geometria real da faca a partir do motor paramétrico com proteção estrita
+    if (!isFoldable) {
+      updateProgressRef.current = null;
+      return;
+    }
+
     try {
-      if (model.status === 'PASS' && model.isFoldable) {
-        const dieline = model.calculate(params);
-        const panels = extractPanelsFromModel(model.code || model.id, dieline, params);
-        if (panels && panels.length > 0) {
-          const tree = buildFoldable3DTree(panels, Ep);
-          boxGroup.add(tree.rootGroup);
-          updateProgressRef.current = tree.updateProgress;
-          tree.updateProgress(foldProgress);
-          return;
+      const dieline = model.calculate(params);
+      const panels = extractPanelsFromModel(model.code || model.id, dieline, params);
+
+      if (panels && panels.length > 0) {
+        const tree = buildFoldable3DTree(panels, Ep);
+        boxGroup.add(tree.rootGroup);
+        updateProgressRef.current = tree.updateProgress;
+        tree.updateProgress(foldProgress);
+
+        // Auto-enquadramento da câmera à proporção real da caixa
+        const bbox = new THREE.Box3().setFromObject(tree.rootGroup);
+        const sphere = new THREE.Sphere();
+        bbox.getBoundingSphere(sphere);
+        if (sphere.radius > 10) {
+          sphericalRef.current.radius = Math.max(400, sphere.radius * 2.3);
+          const cam = cameraRef.current;
+          if (cam) {
+            const sp = sphericalRef.current;
+            cam.position.x = sp.radius * Math.sin(sp.phi) * Math.sin(sp.theta);
+            cam.position.y = sp.radius * Math.cos(sp.phi);
+            cam.position.z = sp.radius * Math.sin(sp.phi) * Math.cos(sp.theta);
+            cam.lookAt(0, 40, 0);
+          }
         }
+        return;
       }
       updateProgressRef.current = null;
     } catch (e) {
@@ -224,7 +248,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
     const interval = setInterval(() => {
       setFoldProgress((prev) => {
         if (prev >= 1) forward = false;
-        if (prev <= 0.05) forward = true;
+        if (prev <= 0.02) forward = true;
         const next = forward ? prev + 0.015 : prev - 0.015;
         return Math.max(0, Math.min(1, next));
       });
@@ -308,7 +332,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
         </button>
       </div>
 
-            {/* Banner de Modelo 2D Plano / Não Dobrável */}
+      {/* Banner de Modelo 2D Plano / Não Dobrável */}
       {model && model.status === 'NON_FOLDABLE' && (
         <div
           style={{
@@ -337,8 +361,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
         </div>
       )}
 
-      {/* Diagnóstico Técnico de Modelo Não Disponível para Dobra 3D */}
-      {model && model.status !== 'PASS' && model.status !== 'NON_FOLDABLE' && (
+      {/* Diagnóstico Técnico de Modelo Sem Geometria no Original */}
+      {model && (model.status === 'ORIGINAL_NO_GEOMETRY' || model.status === 'DOCUMENT_ONLY' || model.status === 'FAIL') && (
         <div
           style={{
             position: 'absolute',
@@ -390,7 +414,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
           </div>
         </div>
       )}
-{/* Dica de Interação 3D */}
+
+      {/* Dica de Interação 3D */}
       <div
         style={{
           position: 'absolute',

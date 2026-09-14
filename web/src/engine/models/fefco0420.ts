@@ -13,6 +13,11 @@ import { computeBoundingBox } from '../geometry';
  * Baseado no modelo original PLMPackLib (PicParam F_0420.des)
  */
 export const fefco0420: PackagingModel = {
+  status: 'PASS',
+  isFoldable: true,
+  originalSource: 'C#_PARAMETRIC_DLL',
+  implementationType: 'NATIVE_TS',
+  generator: 'fefco0420',
   id: 'fefco_0420',
   code: 'FEFCO 0420',
   name: 'Envoltório com Tampa Articulada (Five-Panel Folder)',

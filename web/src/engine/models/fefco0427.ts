@@ -10,6 +10,11 @@ import { computeBoundingBox } from '../geometry';
  * 2. top_cover_427 (Tampa superior articulada com abas laterais e aba frontal com orelhas de trava Ra20)
  */
 export const fefco0427: PackagingModel = {
+  status: 'PASS',
+  isFoldable: true,
+  originalSource: 'C#_PARAMETRIC_DLL',
+  implementationType: 'NATIVE_TS',
+  generator: 'fefco0427',
   id: 'fefco_0427',
   code: 'FEFCO 0427',
   name: 'Caixa E-Commerce com Orelhas de Travamento (FEFCO 0427)',
