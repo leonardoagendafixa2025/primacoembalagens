@@ -60,9 +60,19 @@ export const App: React.FC = () => {
     }));
   };
 
-  // Cálculo da Faca 2D em tempo real
+  // Cálculo da Faca 2D em tempo real com proteção estrita
   const dieline = useMemo(() => {
-    return currentModel.calculate(params);
+    try {
+      return currentModel.calculate(params);
+    } catch (err: any) {
+      return {
+        segments: [],
+        arcs: [],
+        dimensions: [],
+        bounds: { minX: -150, minY: -100, maxX: 150, maxY: 100, width: 300, height: 200 },
+        error: err?.message || 'Erro ao calcular geometria',
+      };
+    }
   }, [currentModel, params]);
 
   // Exportadores

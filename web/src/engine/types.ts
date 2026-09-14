@@ -49,6 +49,7 @@ export interface DielineResult {
   arcs: Arc2D[];
   dimensions: DimensionLine[];
   bounds: BoundingBox2D;
+  error?: string;
 }
 
 export interface ParamDef {
@@ -61,15 +62,25 @@ export interface ParamDef {
   description?: string;
 }
 
+export type ModelStatus = 'PASS' | 'NON_FOLDABLE' | 'ORIGINAL_NO_GEOMETRY' | 'DOCUMENT_ONLY' | 'FAIL';
+export type OriginalSourceType = 'C#_PARAMETRIC_DLL' | 'DES_VECTOR_DRAWING' | 'PDF_DOCUMENT_ONLY' | 'NONE';
+export type ImplementationType = 'NATIVE_TS' | 'DES_GEOMETRY_PARSER' | 'CSHARP_EVALUATED' | 'NONE';
+
 export interface PackagingModel {
   id: string;
   code: string;
   name: string;
-  category: 'FEFCO' | 'ECMA' | 'DISPLAY' | 'PERSONALIZADO';
+  category: 'FEFCO' | 'ECMA' | 'DISPLAYS' | 'DISPLAY' | 'PERSONALIZADO';
   description: string;
   defaultParams: Record<string, number>;
   paramDefs: ParamDef[];
   calculate: (params: Record<string, number>) => DielineResult;
+  status?: ModelStatus;
+  originalSource?: OriginalSourceType;
+  implementationType?: ImplementationType;
+  generator?: string;
+  isFoldable?: boolean;
+  error?: string;
 }
 
 export interface CardboardProfile {

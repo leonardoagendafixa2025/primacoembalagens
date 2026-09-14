@@ -190,19 +190,24 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
 
     const Ep = Math.max(1.0, params.Ep || 3);
 
-    // 1. Calcula a geometria real da faca a partir do motor paramétrico
-    const dieline = model.calculate(params);
-
-    // 2. Extrai os painéis e vínculos de vinco correspondentes
-    const panels = extractPanelsFromModel(model.code || model.id, dieline, params);
-
-    // 3. Constrói a árvore 3D cinemática reversível
-    const tree = buildFoldable3DTree(panels, Ep);
-    boxGroup.add(tree.rootGroup);
-    updateProgressRef.current = tree.updateProgress;
-
-    // Aplica o progresso de dobra atual
-    tree.updateProgress(foldProgress);
+    // 1. Calcula a geometria real da faca a partir do motor paramétrico com proteção estrita
+    try {
+      if (model.status === 'PASS' && model.isFoldable) {
+        const dieline = model.calculate(params);
+        const panels = extractPanelsFromModel(model.code || model.id, dieline, params);
+        if (panels && panels.length > 0) {
+          const tree = buildFoldable3DTree(panels, Ep);
+          boxGroup.add(tree.rootGroup);
+          updateProgressRef.current = tree.updateProgress;
+          tree.updateProgress(foldProgress);
+          return;
+        }
+      }
+      updateProgressRef.current = null;
+    } catch (e) {
+      console.warn('[FoldingViewer3D] Unable to fold model:', e);
+      updateProgressRef.current = null;
+    }
   }, [model, params]);
 
   // Atualiza as rotações de dobra dos painéis 3D conforme o foldProgress (0% = aberta, 100% = montada)
@@ -303,7 +308,89 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
         </button>
       </div>
 
-      {/* Dica de Interação 3D */}
+            {/* Banner de Modelo 2D Plano / Não Dobrável */}
+      {model && model.status === 'NON_FOLDABLE' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(15, 23, 42, 0.9)',
+            border: '1px solid #35a89e',
+            borderRadius: 8,
+            padding: '10px 18px',
+            color: '#E2E8F0',
+            fontSize: 13,
+            zIndex: 20,
+            backdropFilter: 'blur(8px)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#35a89e' }} />
+          <span>
+            <strong>Modelo 2D Vetorial Plano:</strong> Este modelo ({model.code}) é um desenho técnico bidimensional e não possui estrutura de articulação/dobra 3D.
+          </span>
+        </div>
+      )}
+
+      {/* Diagnóstico Técnico de Modelo Não Disponível para Dobra 3D */}
+      {model && model.status !== 'PASS' && model.status !== 'NON_FOLDABLE' && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(5, 8, 15, 0.88)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 20,
+            padding: 24,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 480,
+              width: '100%',
+              background: '#0B0F17',
+              border: '1px solid #EF4444',
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+              color: '#E2E8F0',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: 16, fontWeight: 700, color: '#FFFFFF' }}>
+              VISUALIZAÇÃO 3D INDISPONÍVEL
+            </h3>
+            <p style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.5, margin: '0 0 16px 0' }}>
+              {model.error ||
+                `O modelo "${model.code}" possui status ${model.status}. A geração de caixa 3D arbitrária está desativada pela regra Zero Fallback.`}
+            </p>
+            <div
+              style={{
+                display: 'inline-block',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                padding: '4px 12px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: '#FCA5A5',
+              }}
+            >
+              STATUS: {model.status} | ZERO FALLBACK
+            </div>
+          </div>
+        </div>
+      )}
+{/* Dica de Interação 3D */}
       <div
         style={{
           position: 'absolute',

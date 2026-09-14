@@ -187,28 +187,56 @@ export const fefco0429: PackagingModel = {
     }
 
     // =========================================================================
-    // top_cover_429: Tampa Superior e Abas com PicToolRound
+    // top_cover_429: Tampa Superior e Abas com PicToolRound analítico exato (C#)
     // =========================================================================
     const B2top = B + m15;
     const cw = m16;
     const cs = m17;
-    const Rp = 15;
+    let Rp = 15;
+    if (Rp > H7 - 1.0) Rp = H7 - 1.0;
 
     const yBaseCover = B2 + H2;
+
+    const sqrt10 = Math.sqrt(10);
+    const X_v = L2 - cw + H7;
+    const cx = X_v - Rp;
+    const x_b = L2 - cw;
+    const y_b = yBaseCover + cs + cs;
+
+    // cy2: centro do fillet inferior (entre linha 5 e linha 6)
+    const cy2 = (cx - x_b + 3 * y_b + Rp * sqrt10) / 3;
+
+    // cy1: centro do fillet superior (entre linha 6 e linha 7)
+    const y7 = yBaseCover + cs + B2top - cs;
+    const cy1 = (-cx + x_b + 3 * y7 - Rp * sqrt10) / 3;
+
+    // Tangentes
+    const xt5 = cx + Rp / sqrt10;
+    const yt5 = cy2 - 3 * Rp / sqrt10;
+
+    const xt6 = cx + Rp;
+    const yt6_low = cy2;
+    const yt6_high = cy1;
+
+    const xt7 = cx + Rp / sqrt10;
+    const yt7 = cy1 + 3 * Rp / sqrt10;
+
+    const cx_top = L2 - cw - Rp;
+    const cy_top = yBaseCover + cs + B2top + H7 - Rp;
 
     // 1. LADO DIREITO DA TAMPA (+X)
     segments.push({ x0: L2 - cw, y0: yBaseCover + cs, x1: L2, y1: yBaseCover, type: 'cut' });
     segments.push({ x0: L2 - cw, y0: yBaseCover + cs, x1: L2 - cw, y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: 234.243, y0: 285.414, x1: L2 - cw, y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: 244.5, y0: 299.645, x1: 244.5, y1: 413.355, type: 'cut' });
-    segments.push({ x0: 234.243, y0: 427.586, x1: L2 - cw, y1: yBaseCover + cs + B2top - cs, type: 'cut' });
+    segments.push({ x0: xt5, y0: yt5, x1: L2 - cw, y1: yBaseCover + cs + cs, type: 'cut' });
+    segments.push({ x0: xt6, y0: yt6_low, x1: xt6, y1: yt6_high, type: 'cut' });
+    segments.push({ x0: xt7, y0: yt7, x1: L2 - cw, y1: yBaseCover + cs + B2top - cs, type: 'cut' });
     segments.push({ x0: L2 - cw, y0: yBaseCover + cs + B2top - cs, x1: L2 - cw, y1: yBaseCover + cs + cs, type: 'crease' });
     segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs + B2top, x1: L2 - cw, y1: yBaseCover + cs + B2top, type: 'crease' });
     segments.push({ x0: L2 - cw, y0: yBaseCover + cs + B2top, x1: L2 - cw, y1: yBaseCover + cs + B2top - cs, type: 'cut' });
-    segments.push({ x0: L2 - cw, y0: yBaseCover + cs + B2top + H7 - Rp, x1: L2 - cw, y1: yBaseCover + cs + B2top, type: 'cut' });
+    segments.push({ x0: L2 - cw, y0: cy_top, x1: L2 - cw, y1: yBaseCover + cs + B2top, type: 'cut' });
 
     // Borda horizontal superior da aba frontal
-    segments.push({ x0: -(L2 - cw - Rp), y0: yBaseCover + cs + B2top + H7, x1: L2 - cw - Rp, y1: yBaseCover + cs + B2top + H7, type: 'cut' });
+    segments.push({ x0: -cx_top, y0: cy_top + Rp, x1: cx_top, y1: cy_top + Rp, type: 'cut' });
 
     // Vinco base da tampa
     segments.push({ x0: L2 - cw, y0: yBaseCover + cs, x1: -(L2 - cw), y1: yBaseCover + cs, type: 'crease' });
@@ -216,20 +244,20 @@ export const fefco0429: PackagingModel = {
     // 2. LADO ESQUERDO DA TAMPA (-X)
     segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs, x1: -L2, y1: yBaseCover, type: 'cut' });
     segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs, x1: -(L2 - cw), y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: -234.243, y0: 285.414, x1: -(L2 - cw), y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: -244.5, y0: 299.645, x1: -244.5, y1: 413.355, type: 'cut' });
-    segments.push({ x0: -234.243, y0: 427.586, x1: -(L2 - cw), y1: yBaseCover + cs + B2top - cs, type: 'cut' });
+    segments.push({ x0: -xt5, y0: yt5, x1: -(L2 - cw), y1: yBaseCover + cs + cs, type: 'cut' });
+    segments.push({ x0: -xt6, y0: yt6_low, x1: -xt6, y1: yt6_high, type: 'cut' });
+    segments.push({ x0: -xt7, y0: yt7, x1: -(L2 - cw), y1: yBaseCover + cs + B2top - cs, type: 'cut' });
     segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs + B2top - cs, x1: -(L2 - cw), y1: yBaseCover + cs + cs, type: 'crease' });
     segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs + B2top, x1: -(L2 - cw), y1: yBaseCover + cs + B2top - cs, type: 'cut' });
-    segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs + B2top + H7 - Rp, x1: -(L2 - cw), y1: yBaseCover + cs + B2top, type: 'cut' });
+    segments.push({ x0: -(L2 - cw), y0: cy_top, x1: -(L2 - cw), y1: yBaseCover + cs + B2top, type: 'cut' });
 
-    // 3. OS 6 ARCOS FILLET (PicToolRound original)
-    arcs.push({ cx: 229.5, cy: 413.355, r: 15, startAngle: 0, endAngle: 71.565, type: 'cut' });
-    arcs.push({ cx: 229.5, cy: 299.645, r: 15, startAngle: 288.435, endAngle: 360, type: 'cut' });
-    arcs.push({ cx: L2 - cw - Rp, cy: yBaseCover + cs + B2top + H7 - Rp, r: Rp, startAngle: 0, endAngle: 90, type: 'cut' });
-    arcs.push({ cx: -229.5, cy: 413.355, r: 15, startAngle: 108.435, endAngle: 180, type: 'cut' });
-    arcs.push({ cx: -229.5, cy: 299.645, r: 15, startAngle: 180, endAngle: 251.565, type: 'cut' });
-    arcs.push({ cx: -(L2 - cw - Rp), cy: yBaseCover + cs + B2top + H7 - Rp, r: Rp, startAngle: 90, endAngle: 180, type: 'cut' });
+    // 3. OS 6 ARCOS FILLET (PicToolRound original C#)
+    arcs.push({ cx: cx, cy: cy1, r: Rp, startAngle: 0, endAngle: 71.565051, type: 'cut' });
+    arcs.push({ cx: cx, cy: cy2, r: Rp, startAngle: 288.434949, endAngle: 360, type: 'cut' });
+    arcs.push({ cx: cx_top, cy: cy_top, r: Rp, startAngle: 0, endAngle: 90, type: 'cut' });
+    arcs.push({ cx: -cx, cy: cy1, r: Rp, startAngle: 108.434949, endAngle: 180, type: 'cut' });
+    arcs.push({ cx: -cx, cy: cy2, r: Rp, startAngle: 180, endAngle: 251.565051, type: 'cut' });
+    arcs.push({ cx: -cx_top, cy: cy_top, r: Rp, startAngle: 90, endAngle: 180, type: 'cut' });
 
     // =========================================================================
     // COTAS TÉCNICAS

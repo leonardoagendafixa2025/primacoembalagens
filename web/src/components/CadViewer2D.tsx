@@ -431,7 +431,148 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         </button>
       </div>
 
-      {/* Painel de Auditoria Forense CAD & Diagnóstico (TEST E / TEST F) */}
+            {/* Diagnóstico de Modelo Não-Funcional / Sem Geometria / Documento */}
+      {model && model.status !== 'PASS' && model.status !== 'NON_FOLDABLE' && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(5, 8, 15, 0.88)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 20,
+            padding: 24,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 520,
+              width: '100%',
+              background: '#0B0F17',
+              border: `1px solid ${
+                model.status === 'ORIGINAL_NO_GEOMETRY'
+                  ? '#F59E0B'
+                  : model.status === 'DOCUMENT_ONLY'
+                  ? '#3B82F6'
+                  : '#EF4444'
+              }`,
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+              color: '#E2E8F0',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 8,
+                  background:
+                    model.status === 'ORIGINAL_NO_GEOMETRY'
+                      ? 'rgba(245, 158, 11, 0.15)'
+                      : model.status === 'DOCUMENT_ONLY'
+                      ? 'rgba(59, 130, 246, 0.15)'
+                      : 'rgba(239, 68, 68, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color:
+                    model.status === 'ORIGINAL_NO_GEOMETRY'
+                      ? '#F59E0B'
+                      : model.status === 'DOCUMENT_ONLY'
+                      ? '#3B82F6'
+                      : '#EF4444',
+                  fontWeight: 800,
+                  fontSize: 20,
+                }}
+              >
+                !
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#FFFFFF' }}>
+                  {model.status === 'ORIGINAL_NO_GEOMETRY'
+                    ? 'REGISTRO SEM GEOMETRIA NO ORIGINAL'
+                    : model.status === 'DOCUMENT_ONLY'
+                    ? 'APENAS DOCUMENTO TÉCNICO NO ORIGINAL'
+                    : 'MODELO NÃO IMPLEMENTADO NA WEB'}
+                </h3>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    marginTop: 4,
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    fontFamily: 'monospace',
+                    background:
+                      model.status === 'ORIGINAL_NO_GEOMETRY'
+                        ? 'rgba(245, 158, 11, 0.2)'
+                        : model.status === 'DOCUMENT_ONLY'
+                        ? 'rgba(59, 130, 246, 0.2)'
+                        : 'rgba(239, 68, 68, 0.2)',
+                    color:
+                      model.status === 'ORIGINAL_NO_GEOMETRY'
+                        ? '#FCD34D'
+                        : model.status === 'DOCUMENT_ONLY'
+                        ? '#93C5FD'
+                        : '#FCA5A5',
+                  }}
+                >
+                  STATUS: {model.status}
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#040711',
+                border: '1px solid #1E293B',
+                borderRadius: 8,
+                padding: 12,
+                fontSize: 12,
+                fontFamily: 'monospace',
+                lineHeight: 1.6,
+                marginBottom: 16,
+              }}
+            >
+              <div><strong>ID:</strong> {model.id}</div>
+              <div><strong>CÓDIGO:</strong> {model.code}</div>
+              <div><strong>NOME:</strong> {model.name}</div>
+              <div><strong>CATEGORIA:</strong> {model.category}</div>
+              <div><strong>FONTE ORIGINAL:</strong> {model.originalSource}</div>
+              <div><strong>IMPLEMENTAÇÃO:</strong> {model.implementationType}</div>
+            </div>
+
+            <p style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.5, margin: '0 0 16px 0' }}>
+              {model.error ||
+                'Este item do catálogo não possui geometria vetorial disponível para renderização no motor CAD 2D.'}
+            </p>
+
+            <div
+              style={{
+                fontSize: 11,
+                color: '#64748B',
+                borderTop: '1px solid #1E293B',
+                paddingTop: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <ShieldCheck size={14} color="#35a89e" />
+              <span>
+                <strong>Regra Estrita de Integridade:</strong> Substituição por caixa genérica desativada (Zero Fallback).
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+{/* Painel de Auditoria Forense CAD & Diagnóstico (TEST E / TEST F) */}
       {showDebug && (
         <div
           style={{
