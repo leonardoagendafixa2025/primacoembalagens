@@ -174,12 +174,12 @@ export function buildFoldable3DTree(
     parentItem.pivotGroup.add(item.pivotGroup);
   }
 
-  // Centraliza o rootGroup no centro da faca 2D
-  const bbox = new THREE.Box3().setFromObject(rootGroup);
-  const center = new THREE.Vector3();
-  bbox.getCenter(center);
-  // Mantém Y=0 no nível do chão
-  rootGroup.position.set(-center.x, 0, -center.z);
+  // Centraliza o rootGroup exatamente na BASE da embalagem (Root Panel)
+  // Dessa forma, a base física da caixa fica perfeitamente ancorada em (0, 0, 0)
+  // e todas as rotações 360° orbitam exatamente em torno do centro da sua base!
+  const baseCx = rootPanel.centroid.x;
+  const baseCz = -rootPanel.centroid.y;
+  rootGroup.position.set(-baseCx, 0, -baseCz);
 
   // Atualização contínua e 100% reversível de 0% a 100%
   const updateProgress = (progress: number) => {

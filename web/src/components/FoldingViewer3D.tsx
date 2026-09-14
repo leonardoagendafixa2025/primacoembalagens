@@ -35,17 +35,20 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
   const boxGroupRef = useRef<THREE.Group | null>(null);
   const updateProgressRef = useRef<((progress: number) => void) | null>(null);
   const sphericalRef = useRef({ radius: 800, theta: Math.PI / 4, phi: Math.PI / 3 });
+  const orbitTargetRef = useRef(new THREE.Vector3(0, 50, 0));
 
-  // Posição de câmera (Orbital)
+  // Posição de câmera orbital com rotação 360° perfeita em torno da base
   const updateCameraPosition = () => {
     const camera = cameraRef.current;
     if (!camera) return;
     const sp = sphericalRef.current;
-    sp.phi = Math.max(0.02, Math.min(Math.PI / 2 - 0.05, sp.phi));
-    camera.position.x = sp.radius * Math.sin(sp.phi) * Math.sin(sp.theta);
-    camera.position.y = sp.radius * Math.cos(sp.phi);
-    camera.position.z = sp.radius * Math.sin(sp.phi) * Math.cos(sp.theta);
-    camera.lookAt(0, 30, 0);
+    const target = orbitTargetRef.current;
+    // Permite visão orbital livre desde o topo até quase o nível do chão
+    sp.phi = Math.max(0.05, Math.min(Math.PI * 0.48, sp.phi));
+    camera.position.x = target.x + sp.radius * Math.sin(sp.phi) * Math.sin(sp.theta);
+    camera.position.y = target.y + sp.radius * Math.cos(sp.phi);
+    camera.position.z = target.z + sp.radius * Math.sin(sp.phi) * Math.cos(sp.theta);
+    camera.lookAt(target.x, target.y, target.z);
   };
 
   // Configuração inicial da cena Three.js
@@ -235,12 +238,16 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
           rootId: tree.topology.rootPanelId,
         });
 
-        // Auto-enquadramento suave da câmera
+        // Centraliza o ponto focal da rotação 360° na meia altura da caixa
+        const boxH = Math.max(30, params.H || 100);
+        orbitTargetRef.current.set(0, boxH * 0.4, 0);
+
+        // Auto-enquadramento suave da câmera em torno da base
         const bbox = new THREE.Box3().setFromObject(tree.rootGroup);
         const sphere = new THREE.Sphere();
         bbox.getBoundingSphere(sphere);
         if (sphere.radius > 10) {
-          sphericalRef.current.radius = Math.max(450, sphere.radius * 2.4);
+          sphericalRef.current.radius = Math.max(450, sphere.radius * 2.2);
           updateCameraPosition();
         }
         return;
