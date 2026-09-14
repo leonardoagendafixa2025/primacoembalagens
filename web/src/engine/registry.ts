@@ -8,6 +8,7 @@ import { ecmaB10 } from './models/ecmaCarton';
 import { ecmaA20 } from './models/ecmaA20';
 import { ecmaA1075 } from './models/ecmaA1075';
 import { ecmaB1001 } from './models/ecmaB1001';
+import { ecmaB1506_53 } from './models/ecmaB1506_53';
 
 export interface CatalogItem {
   id: string;
@@ -38,6 +39,9 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   ecma_a20: ecmaA20,
   ecma_a1075: ecmaA1075,
   ecma_a0175: ecmaA1075,
+  ecma_b1506_53: ecmaB1506_53,
+  ecma_b1506: ecmaB1506_53,
+  ecma_b1506_60: ecmaB1506_53,
 };
 
 // Códigos oficiais que na base original do PLMPackLib NÃO possuem geometria

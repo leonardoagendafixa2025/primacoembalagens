@@ -9,6 +9,7 @@ import { ecmaB10 } from './ecmaCarton';
 import { ecmaA20 } from './ecmaA20';
 import { ecmaA1075 } from './ecmaA1075';
 import { ecmaB1001 } from './ecmaB1001';
+import { ecmaB1506_53 } from './ecmaB1506_53';
 
 export { CATALOG, getModelById, generateAuditMatrix } from '../registry';
 export type { CatalogItem, AuditRow } from '../registry';
@@ -24,4 +25,5 @@ export const MODELS: PackagingModel[] = [
   ecmaB10,
   ecmaA20,
   ecmaA1075,
+  ecmaB1506_53,
 ];

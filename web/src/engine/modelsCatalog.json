@@ -3936,11 +3936,10 @@
     "description": "B.15.06",
     "thumbnail": "/thumbnails/ecma_b1506.jpg",
     "defaultParams": {
-      "L": 150,
-      "B": 100,
+      "L": 225,
+      "B": 200,
       "H": 80,
-      "Ep": 0.5,
-      "M": 15
+      "Ep": 0.5
     }
   },
   {
@@ -3953,11 +3952,10 @@
     "description": "B1506 53",
     "thumbnail": "/thumbnails/ecma_b1506_53.jpg",
     "defaultParams": {
-      "L": 150,
-      "B": 100,
+      "L": 225,
+      "B": 200,
       "H": 80,
-      "Ep": 0.5,
-      "M": 15
+      "Ep": 0.5
     }
   },
   {
@@ -3970,11 +3968,10 @@
     "description": "ECMA B1506.60",
     "thumbnail": "/thumbnails/ecma_b1506_60.jpg",
     "defaultParams": {
-      "L": 150,
-      "B": 100,
+      "L": 225,
+      "B": 200,
       "H": 80,
-      "Ep": 0.5,
-      "M": 15
+      "Ep": 0.5
     }
   },
   {
