@@ -404,24 +404,24 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
         az = -az;
       }
 
-      let targetAngle = 90;
-      let foldOrder = 1;
+      // TODAS as dobras de caixas industriais são de 90° relativas para o interior da embalagem!
+      // Dobras de parede dupla alcançam 180° pela composição de duas dobras consecutivas de 90° (Parede->Topo a 90° + Topo->Retorno a 90° = 180°).
+      // A tampa alcança 180° em relação à base pela composição (Base->Parede a 90° + Parede->Tampa a 90° = 180° horizontal).
+      const targetAngle = 90;
 
+      // Ordem física sequencial de montagem:
+      let foldOrder = 1;
       if (parentInfo.depth === 1) {
-        targetAngle = 90;
         foldOrder = 1;
       } else if (parentInfo.depth === 2) {
-        const parentHinge = parentMap.get(parentInfo.parentId)?.hinge;
-        if (parentHinge && Math.hypot(parentHinge.x1 - parentHinge.x0, parentHinge.y1 - parentHinge.y0) > 20) {
-          targetAngle = 180;
-          foldOrder = 2;
-        } else {
-          targetAngle = 90;
-          foldOrder = 2;
-        }
+        // Distingue tampa (comprimento longo em Z) de abas laterais
+        const isLid = Math.abs(childCentroidZ) > Math.abs(hMidZ) + 50;
+        foldOrder = isLid ? 4 : 2;
+      } else if (parentInfo.depth === 3) {
+        const isLidChild = parentMap.get(parentInfo.parentId)?.depth === 2;
+        foldOrder = isLidChild ? 5 : 3;
       } else {
-        targetAngle = 90;
-        foldOrder = parentInfo.depth;
+        foldOrder = 5;
       }
 
       const hingeId = `hinge_${parentInfo.parentId}_to_${pf.id}`;

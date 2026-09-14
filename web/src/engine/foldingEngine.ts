@@ -189,9 +189,22 @@ export function buildFoldable3DTree(
       if (id === rootPanel.id) continue;
 
       let localT = t;
-      if (item.foldOrder > 1) {
-        // Dobra sequencial suave para abas internas/roll-over
-        localT = Math.max(0, Math.min(1, (t - 0.25) / 0.75));
+      // Ordem física sequencial de montagem:
+      // Ordem 1: paredes principais (0% a 50%)
+      // Ordem 2: abas de poeira e topo duplo (20% a 70%)
+      // Ordem 3: retorno das paredes duplas (40% a 85%)
+      // Ordem 4: tampa fecha por cima (55% a 95%)
+      // Ordem 5: abas da tampa e trava frontal inserem (70% a 100%)
+      if (item.foldOrder === 1) {
+        localT = Math.min(1, t / 0.5);
+      } else if (item.foldOrder === 2) {
+        localT = Math.max(0, Math.min(1, (t - 0.2) / 0.5));
+      } else if (item.foldOrder === 3) {
+        localT = Math.max(0, Math.min(1, (t - 0.4) / 0.45));
+      } else if (item.foldOrder === 4) {
+        localT = Math.max(0, Math.min(1, (t - 0.55) / 0.4));
+      } else {
+        localT = Math.max(0, Math.min(1, (t - 0.70) / 0.3));
       }
 
       const currentAngle = item.targetAngleRad * localT;
