@@ -7,6 +7,7 @@ import { fefco0200 } from './fefco0200';
 import { fefco0203 } from './fefco0203';
 import { ecmaB10 } from './ecmaCarton';
 import { ecmaA20 } from './ecmaA20';
+import { ecmaA1075 } from './ecmaA1075';
 import { ecmaB1001 } from './ecmaB1001';
 
 export { CATALOG, getModelById, generateAuditMatrix } from '../registry';
@@ -22,4 +23,5 @@ export const MODELS: PackagingModel[] = [
   ecmaB1001,
   ecmaB10,
   ecmaA20,
+  ecmaA1075,
 ];

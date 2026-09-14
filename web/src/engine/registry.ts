@@ -6,6 +6,7 @@ import rawCSharpData from './csharpModelsData.json';
 import { fefco0429 } from './models/fefco0429';
 import { ecmaB10 } from './models/ecmaCarton';
 import { ecmaA20 } from './models/ecmaA20';
+import { ecmaA1075 } from './models/ecmaA1075';
 import { ecmaB1001 } from './models/ecmaB1001';
 
 export interface CatalogItem {
@@ -35,6 +36,8 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   ecma_b10: ecmaB10,
   ecma_b1001: ecmaB1001,
   ecma_a20: ecmaA20,
+  ecma_a1075: ecmaA1075,
+  ecma_a0175: ecmaA1075,
 };
 
 // Códigos oficiais que na base original do PLMPackLib NÃO possuem geometria
@@ -83,16 +86,52 @@ function createDesCalculator(rawItem: any, defaultL: number, defaultB: number) {
       y1: Math.round(((s.y1 - midY) * scaleY) * 1000) / 1000,
     }));
 
-    const avgScale = (scaleX + scaleY) / 2;
-    const arcs: Arc2D[] = (geom.arcs || []).map((a: any, idx: number) => ({
-      id: `des-arc-${idx}`,
-      type: a.type === 'crease' ? 'crease' : 'cut',
-      cx: Math.round(((a.cx - midX) * scaleX) * 1000) / 1000,
-      cy: Math.round(((a.cy - midY) * scaleY) * 1000) / 1000,
-      r: Math.round((a.r * avgScale) * 1000) / 1000,
-      startAngle: a.startAngle,
-      endAngle: a.endAngle,
-    }));
+    const arcs: Arc2D[] = (geom.arcs || []).map((a: any, idx: number) => {
+      const origCx = (a.cx - midX);
+      const origCy = (a.cy - midY);
+      const cxScaled = origCx * scaleX;
+      const cyScaled = origCy * scaleY;
+      const isFullCircle = Math.abs(Math.abs((a.endAngle || 360) - (a.startAngle || 0)) - 360) < 1;
+
+      if (isFullCircle) {
+        return {
+          id: `des-arc-${idx}`,
+          type: a.type === 'crease' ? 'crease' : 'cut',
+          cx: Math.round(cxScaled * 1000) / 1000,
+          cy: Math.round(cyScaled * 1000) / 1000,
+          r: Math.round((a.r * (scaleX + scaleY) / 2) * 1000) / 1000,
+          startAngle: 0,
+          endAngle: 360,
+        };
+      }
+
+      // Preserva tangência e continuidade absoluta com os segmentos adjacentes
+      const a0Rad = (a.startAngle * Math.PI) / 180;
+      const a1Rad = (a.endAngle * Math.PI) / 180;
+      const p0x = (origCx + a.r * Math.cos(a0Rad)) * scaleX;
+      const p0y = (origCy + a.r * Math.sin(a0Rad)) * scaleY;
+      const p1x = (origCx + a.r * Math.cos(a1Rad)) * scaleX;
+      const p1y = (origCy + a.r * Math.sin(a1Rad)) * scaleY;
+
+      let newA0 = (Math.atan2(p0y - cyScaled, p0x - cxScaled) * 180) / Math.PI;
+      let newA1 = (Math.atan2(p1y - cyScaled, p1x - cxScaled) * 180) / Math.PI;
+      if (newA0 < 0) newA0 += 360;
+      if (newA1 < 0) newA1 += 360;
+
+      const r0 = Math.hypot(p0x - cxScaled, p0y - cyScaled);
+      const r1 = Math.hypot(p1x - cxScaled, p1y - cyScaled);
+      const rScaled = (r0 + r1) / 2;
+
+      return {
+        id: `des-arc-${idx}`,
+        type: a.type === 'crease' ? 'crease' : 'cut',
+        cx: Math.round(cxScaled * 1000) / 1000,
+        cy: Math.round(cyScaled * 1000) / 1000,
+        r: Math.round(rScaled * 1000) / 1000,
+        startAngle: Math.round(newA0 * 1000) / 1000,
+        endAngle: Math.round(newA1 * 1000) / 1000,
+      };
+    });
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const s of segments) {
@@ -157,16 +196,50 @@ function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number,
       y1: Math.round((s.y1 * scaleY) * 1000) / 1000,
     }));
 
-    const avgScale = (scaleX + scaleY) / 2;
-    const arcs: Arc2D[] = (geom.arcs || []).map((a: any, idx: number) => ({
-      id: `cs-arc-${idx}`,
-      type: a.type === 'crease' ? 'crease' : 'cut',
-      cx: Math.round((a.cx * scaleX) * 1000) / 1000,
-      cy: Math.round((a.cy * scaleY) * 1000) / 1000,
-      r: Math.round((a.r * avgScale) * 1000) / 1000,
-      startAngle: a.startAngle,
-      endAngle: a.endAngle,
-    }));
+    const arcs: Arc2D[] = (geom.arcs || []).map((a: any, idx: number) => {
+      const cxScaled = a.cx * scaleX;
+      const cyScaled = a.cy * scaleY;
+      const isFullCircle = Math.abs(Math.abs((a.endAngle || 360) - (a.startAngle || 0)) - 360) < 1;
+
+      if (isFullCircle) {
+        return {
+          id: `cs-arc-${idx}`,
+          type: a.type === 'crease' ? 'crease' : 'cut',
+          cx: Math.round(cxScaled * 1000) / 1000,
+          cy: Math.round(cyScaled * 1000) / 1000,
+          r: Math.round((a.r * (scaleX + scaleY) / 2) * 1000) / 1000,
+          startAngle: 0,
+          endAngle: 360,
+        };
+      }
+
+      // Preserva tangência e continuidade absoluta com os segmentos adjacentes
+      const a0Rad = (a.startAngle * Math.PI) / 180;
+      const a1Rad = (a.endAngle * Math.PI) / 180;
+      const p0x = (a.cx + a.r * Math.cos(a0Rad)) * scaleX;
+      const p0y = (a.cy + a.r * Math.sin(a0Rad)) * scaleY;
+      const p1x = (a.cx + a.r * Math.cos(a1Rad)) * scaleX;
+      const p1y = (a.cy + a.r * Math.sin(a1Rad)) * scaleY;
+
+      let newA0 = (Math.atan2(p0y - cyScaled, p0x - cxScaled) * 180) / Math.PI;
+      let newA1 = (Math.atan2(p1y - cyScaled, p1x - cxScaled) * 180) / Math.PI;
+      if (newA0 < 0) newA0 += 360;
+      if (newA1 < 0) newA1 += 360;
+
+      const r0 = Math.hypot(p0x - cxScaled, p0y - cyScaled);
+      const r1 = Math.hypot(p1x - cxScaled, p1y - cyScaled);
+      const rScaled = (r0 + r1) / 2;
+
+      return {
+        id: `cs-arc-${idx}`,
+        type: a.type === 'crease' ? 'crease' : 'cut',
+        cx: Math.round(cxScaled * 1000) / 1000,
+        cy: Math.round(cyScaled * 1000) / 1000,
+        r: Math.round(rScaled * 1000) / 1000,
+        startAngle: Math.round(newA0 * 1000) / 1000,
+        endAngle: Math.round(newA1 * 1000) / 1000,
+      };
+    });
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const s of segments) {
