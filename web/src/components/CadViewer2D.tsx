@@ -1,7 +1,6 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { DielineResult, PackagingModel } from '../engine/types';
-import { ZoomIn, ZoomOut, Maximize2, Eye, Compass, Terminal, ShieldCheck } from 'lucide-react';
-import { fefco0429 } from '../engine/models/fefco0429';
+import { ZoomIn, ZoomOut, Maximize2, Eye, Compass, ShieldCheck } from 'lucide-react';
 
 interface CadViewer2DProps {
   dieline: DielineResult;
@@ -12,25 +11,6 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Modo Diagnóstico (TEST E / TEST F):
-  // 'flow'   = Fluxo normal da aplicação (Catálogo -> Registry -> Model -> Params -> calculate) [PADRÃO OPERACIONAL]
-  // 'direct' = Bypass total do catálogo (fefco0429.calculate puro L300 B200 H150 Ep3 H7=100) [DIAGNÓSTICO C#]
-  const [diagMode, setDiagMode] = useState<'flow' | 'direct'>('flow');
-
-  // 1. Geometria Direta C#-Parity (Bypass total de catálogo, registry, UI)
-  const directDieline = useMemo(() => {
-    return fefco0429.calculate({
-      L: 300,
-      B: 200,
-      H: 150,
-      Ep: 3.0,
-      H7: 100,
-    });
-  }, []);
-
-  // 2. Geometria ativa para desenho e visualização
-  const activeDieline = diagMode === 'direct' ? directDieline : dieline;
-
   // Transformações da Câmera CAD (Pan e Zoom)
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -40,69 +20,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
   // Opções visuais
   const [showGrid, setShowGrid] = useState(true);
   const [showDimensions, setShowDimensions] = useState(true);
-  const [showDebug, setShowDebug] = useState(true);
   const [mouseMm, setMouseMm] = useState({ x: 0, y: 0 });
-
-  // TESTE C — COMPARAÇÃO MATEMÁTICA DIRETA (A vs B)
-  const comparison = useMemo(() => {
-    let maxErr = 0;
-    const vSegs = dieline.segments || [];
-    const vArcs = dieline.arcs || [];
-    const dSegs = directDieline.segments;
-    const dArcs = directDieline.arcs || [];
-
-    for (let i = 0; i < dSegs.length; i++) {
-      const a = dSegs[i];
-      const b = vSegs[i];
-      if (!b) continue;
-      const err0 = Math.hypot(a.x0 - b.x0, a.y0 - b.y0);
-      const err1 = Math.hypot(a.x1 - b.x1, a.y1 - b.y1);
-      const err = Math.max(err0, err1);
-      if (err > maxErr) maxErr = err;
-    }
-
-    for (let i = 0; i < dArcs.length; i++) {
-      const a = dArcs[i];
-      const b = vArcs[i];
-      if (!b) continue;
-      const errC = Math.hypot(a.cx - b.cx, a.cy - b.cy);
-      const errR = Math.abs(a.r - b.r);
-      const errA0 = Math.abs(a.startAngle - b.startAngle);
-      const errA1 = Math.abs(a.endAngle - b.endAngle);
-      const err = Math.max(errC, errR, errA0, errA1);
-      if (err > maxErr) maxErr = err;
-    }
-
-    const totalA = dSegs.length + dArcs.length;
-    const totalB = vSegs.length + vArcs.length;
-    const isMatch = totalA === totalB && maxErr <= 0.001;
-
-    return {
-      totalA,
-      totalB,
-      segmentsA: dSegs.length,
-      segmentsB: vSegs.length,
-      arcsA: dArcs.length,
-      arcsB: vArcs.length,
-      isMatch,
-      maxErrorMm: maxErr,
-    };
-  }, [directDieline, dieline]);
-
-  // Logs Forenses no Console (TESTE A & TESTE B) - Apenas quando requisitado ou no modo direto
-  useEffect(() => {
-    if (diagMode === 'direct') {
-      console.log('==================================================');
-      console.log('[DIRECT TEST] Modo Bypass Direto Ativado');
-      console.log('model = fefco_f429');
-      console.log('source = fefco0429.calculate');
-      console.log('parameters = L300 B200 H150 Ep3 H7=100');
-      console.log(`segments = ${directDieline.segments.length}`);
-      console.log(`arcs = ${directDieline.arcs.length}`);
-      console.log(`total = ${directDieline.segments.length + directDieline.arcs.length}`);
-      console.log('boundingBox:', directDieline.bounds);
-    }
-  }, [diagMode, directDieline]);
 
   // Ajusta a visualização para enquadrar perfeitamente a faca
   const fitToScreen = useCallback(() => {
@@ -113,7 +31,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     const availW = rect.width - padding * 2;
     const availH = rect.height - padding * 2;
 
-    const b = activeDieline.bounds;
+    const b = dieline.bounds;
     const scaleX = availW / (b.width || 1);
     const scaleY = availH / (b.height || 1);
     const fitZoom = Math.min(scaleX, scaleY, 1.8);
@@ -129,7 +47,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
       x: centerX - dielineCenterX * fitZoom,
       y: centerY + dielineCenterY * fitZoom, // No canvas Y cresce para baixo
     });
-  }, [activeDieline]);
+  }, [dieline]);
 
   useEffect(() => {
     fitToScreen();
@@ -182,7 +100,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     const toScreenY = (mmY: number) => pan.y - mmY * zoom; // Inverte Y para CAD padrão
 
     // 3. Desenho dos Segmentos da Faca (109 segmentos)
-    for (const seg of activeDieline.segments) {
+    for (const seg of dieline.segments) {
       const sx0 = toScreenX(seg.x0);
       const sy0 = toScreenY(seg.y0);
       const sx1 = toScreenX(seg.x1);
@@ -210,8 +128,8 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     ctx.setLineDash([]);
 
     // 3.1 Desenho dos Arcos da Faca (6 arcos de concordância / aba frontal)
-    if (activeDieline.arcs && activeDieline.arcs.length > 0) {
-      for (const arc of activeDieline.arcs) {
+    if (dieline.arcs && dieline.arcs.length > 0) {
+      for (const arc of dieline.arcs) {
         ctx.beginPath();
         const sx = toScreenX(arc.cx);
         const sy = toScreenY(arc.cy);
@@ -238,13 +156,13 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     }
 
     // 4. Desenho de Cotas e Medidas
-    if (showDimensions && activeDieline.dimensions) {
+    if (showDimensions && dieline.dimensions) {
       ctx.font = '11px monospace';
       ctx.fillStyle = '#F59E0B';
       ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
       ctx.lineWidth = 1;
 
-      for (const dim of activeDieline.dimensions) {
+      for (const dim of dieline.dimensions) {
         const sx0 = toScreenX(dim.x0);
         const sy0 = toScreenY(dim.y0);
         const sx1 = toScreenX(dim.x1);
@@ -293,7 +211,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
       ctx.fillText('X', ox + 35, oy + 4);
       ctx.fillText('Y', ox - 3, oy - 35);
     }
-  }, [activeDieline, zoom, pan, showGrid, showDimensions]);
+  }, [dieline, zoom, pan, showGrid, showDimensions]);
 
   // Interação Mouse: Drag Pan
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -422,14 +340,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         >
           <Eye size={18} />
         </button>
-        <button
-          onClick={() => setShowDebug((dbg) => !dbg)}
-          title="Alternar Auditoria Forense CAD"
-          style={{ padding: 6, color: showDebug ? '#35a89e' : '#64748B', borderRadius: 4 }}
-        >
-          <Terminal size={18} />
-        </button>
-      </div>
+        </div>
 
             {/* Diagnóstico de Modelo Não-Funcional / Sem Geometria / Documento */}
       {model && model.status !== 'PASS' && model.status !== 'NON_FOLDABLE' && (
@@ -572,120 +483,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         </div>
       )}
 
-{/* Painel de Auditoria Forense CAD & Diagnóstico (TEST E / TEST F) */}
-      {showDebug && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 16,
-            left: 16,
-            background: 'rgba(5, 8, 15, 0.92)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid #1E293B',
-            borderRadius: 10,
-            padding: '12px 16px',
-            fontSize: 11,
-            fontFamily: 'monospace',
-            color: '#94A3B8',
-            zIndex: 15,
-            lineHeight: 1.5,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-            maxWidth: 400,
-          }}
-        >
-          {/* Header do HUD */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ color: '#35a89e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <ShieldCheck size={14} color="#35a89e" />
-              <span>DIAGNÓSTICO FORENSE CAD (C# PARITY)</span>
-            </div>
-            <span
-              style={{
-                fontSize: 10,
-                padding: '2px 6px',
-                borderRadius: 4,
-                background: comparison.isMatch ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                color: comparison.isMatch ? '#10B981' : '#EF4444',
-                fontWeight: 700,
-              }}
-            >
-              {comparison.isMatch ? 'MATCH: YES' : 'MATCH: NO'}
-            </span>
-          </div>
-
-          {/* Botões de Alternância de Modo (TEST E / TEST F) */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-            <button
-              type="button"
-              onClick={() => setDiagMode('direct')}
-              style={{
-                flex: 1,
-                padding: '6px 8px',
-                borderRadius: 6,
-                fontSize: 10,
-                fontWeight: 700,
-                cursor: 'pointer',
-                background: diagMode === 'direct' ? '#35a89e' : '#141818',
-                color: diagMode === 'direct' ? '#000000' : '#94A3B8',
-                border: diagMode === 'direct' ? '1px solid #35a89e' : '1px solid #242c2c',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              DIRECT C#-PARITY GEOMETRY
-            </button>
-            <button
-              type="button"
-              onClick={() => setDiagMode('flow')}
-              style={{
-                flex: 1,
-                padding: '6px 8px',
-                borderRadius: 6,
-                fontSize: 10,
-                fontWeight: 700,
-                cursor: 'pointer',
-                background: diagMode === 'flow' ? '#35a89e' : '#141818',
-                color: diagMode === 'flow' ? '#000000' : '#94A3B8',
-                border: diagMode === 'flow' ? '1px solid #35a89e' : '1px solid #242c2c',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              REAL APPLICATION FLOW
-            </button>
-          </div>
-
-          {/* Informações Técnicas do Modelo e Origem */}
-          <div><strong style={{ color: '#E2E8F0' }}>MODEL:</strong> {diagMode === 'direct' ? 'fefco_0429 (FEFCO 0429)' : `${model?.id || 'fefco_0429'} (${model?.code || 'FEFCO 0429'})`}</div>
-          <div><strong style={{ color: '#E2E8F0' }}>SOURCE:</strong> {diagMode === 'direct' ? 'fefco0429.calculate (Bypass Direto C#)' : `Catalog -> Registry -> ${model?.code || 'Model'}`}</div>
-          <div><strong style={{ color: '#E2E8F0' }}>MODO ATIVO:</strong> {diagMode === 'flow' ? 'FLUXO REAL OPERACIONAL' : 'DIAGNÓSTICO ISOLADO C#'}</div>
-
-          <div style={{ margin: '6px 0', borderTop: '1px solid #1E293B' }} />
-
-          {/* Contagem de Entidades do Canvas Ativo */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-            <div><strong style={{ color: '#E2E8F0' }}>SEGMENTS:</strong> {activeDieline.segments.length}</div>
-            <div><strong style={{ color: '#E2E8F0' }}>ARCS:</strong> {activeDieline.arcs?.length || 0}</div>
-            <div><strong style={{ color: '#35a89e' }}>TOTAL RENDERED:</strong> {activeDieline.segments.length + (activeDieline.arcs?.length || 0)}</div>
-            <div><strong style={{ color: '#E2E8F0' }}>TIPO:</strong> {diagMode === 'direct' ? '100% C# Parity' : 'Paramétrico Interativo'}</div>
-          </div>
-
-          <div style={{ margin: '6px 0', borderTop: '1px solid #1E293B' }} />
-
-          {/* Comparativo Forense C# Parity (quando FEFCO 0429 ou modo direto) */}
-          <div><strong style={{ color: '#E2E8F0' }}>REF DIRETA 0429:</strong> 115 entities (109 seg + 6 arcs)</div>
-          <div><strong style={{ color: '#E2E8F0' }}>CANVAS ATUAL:</strong> {activeDieline.segments.length + (activeDieline.arcs?.length || 0)} entities ({activeDieline.segments.length} seg + {activeDieline.arcs?.length || 0} arcs)</div>
-          {(model?.code?.includes('0429') || diagMode === 'direct') && (
-            <div><strong style={{ color: comparison.isMatch ? '#10B981' : '#EF4444' }}>PARIDADE C#:</strong> {comparison.isMatch ? '100% IDÊNTICA (Erro <= 0.001 mm)' : 'DIVERGÊNCIA DETECTADA'}</div>
-          )}
-
-          <div style={{ margin: '6px 0', borderTop: '1px solid #1E293B' }} />
-
-          {/* Bounding Box do Modelo Ativo */}
-          <div><strong style={{ color: '#E2E8F0' }}>BBOX:</strong> X[{activeDieline.bounds.minX.toFixed(1)} a {activeDieline.bounds.maxX.toFixed(1)}] Y[{activeDieline.bounds.minY.toFixed(1)} a {activeDieline.bounds.maxY.toFixed(1)}]</div>
-          <div><strong style={{ color: '#E2E8F0' }}>WIDTH:</strong> {activeDieline.bounds.width.toFixed(2)} mm | <strong style={{ color: '#E2E8F0' }}>HEIGHT:</strong> {activeDieline.bounds.height.toFixed(2)} mm</div>
-        </div>
-      )}
-
-      {/* Legenda de Tipos de Linha CAD e Coordenadas */}
+      {/* Barra de Status e Legenda Inferior */}
       <div
         className="glass-panel"
         style={{
