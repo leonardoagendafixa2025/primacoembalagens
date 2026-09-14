@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PackagingModel, DielineResult } from '../engine/types';
 import { buildFoldable3DTree } from '../engine/foldingEngine';
 import { Play, Pause, RotateCw, Eye, Box, CheckCircle2 } from 'lucide-react';
@@ -32,26 +33,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
   const boxGroupRef = useRef<THREE.Group | null>(null);
   const updateProgressRef = useRef<((progress: number) => void) | null>(null);
-  const sphericalRef = useRef({ radius: 800, theta: Math.PI / 4, phi: Math.PI / 3 });
-  const orbitTargetRef = useRef(new THREE.Vector3(0, 50, 0));
 
-  // Posição de câmera orbital com rotação 360° perfeita em torno da base
-  const updateCameraPosition = () => {
-    const camera = cameraRef.current;
-    if (!camera) return;
-    const sp = sphericalRef.current;
-    const target = orbitTargetRef.current;
-    // Permite visão orbital livre desde o topo até quase o nível do chão
-    sp.phi = Math.max(0.05, Math.min(Math.PI * 0.48, sp.phi));
-    camera.position.x = target.x + sp.radius * Math.sin(sp.phi) * Math.sin(sp.theta);
-    camera.position.y = target.y + sp.radius * Math.cos(sp.phi);
-    camera.position.z = target.z + sp.radius * Math.sin(sp.phi) * Math.cos(sp.theta);
-    camera.lookAt(target.x, target.y, target.z);
-  };
-
-  // Configuração inicial da cena Three.js
+  // Configuração inicial da cena Three.js com OrbitControls profissional
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -66,6 +52,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
 
     // 2. Câmera
     const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+    camera.position.set(500, 400, 500);
     cameraRef.current = camera;
 
     // 3. Renderer
@@ -77,7 +64,22 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. Luzes
+    // 4. OrbitControls com rotação 360° total (horizontal e vertical em torno da base)
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 60;
+    controls.maxDistance = 5000;
+    // Permite girar 360 graus em torno da base e inspecionar por todos os ângulos
+    controls.minPolarAngle = 0.02;
+    controls.maxPolarAngle = Math.PI - 0.02;
+    controls.target.set(0, 50, 0);
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = 2.5;
+    controlsRef.current = controls;
+
+    // 5. Luzes
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     scene.add(ambientLight);
 
@@ -89,71 +91,32 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     dirLight.shadow.bias = -0.0001;
     scene.add(dirLight);
 
+    const bottomLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    bottomLight.position.set(0, -600, 0);
+    scene.add(bottomLight);
+
     const fillLight = new THREE.DirectionalLight(0x35a89e, 0.4);
     fillLight.position.set(-500, 300, -400);
     scene.add(fillLight);
 
-    // 5. Piso com sombra suave
+    // 6. Piso semi-transparente para permitir visualização por baixo da base
     const floorGeo = new THREE.PlaneGeometry(5000, 5000);
-    const floorMat = new THREE.ShadowMaterial({ opacity: 0.3 });
+    const floorMat = new THREE.ShadowMaterial({ opacity: 0.25 });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -1;
+    floor.position.y = -0.5;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Grade sutil no chão (Teal Primacor)
+    // Grade no chão ancorada em Y=0
     const grid = new THREE.GridHelper(2000, 40, 0x35a89e, 0x1a2428);
     grid.position.y = 0;
     scene.add(grid);
 
-    // 6. Grupo da Caixa
+    // 7. Grupo da Caixa
     const boxGroup = new THREE.Group();
     scene.add(boxGroup);
     boxGroupRef.current = boxGroup;
-
-    updateCameraPosition();
-
-    // Controles de Órbita via Mouse
-    let isMouseDown = false;
-    let prevMouseX = 0;
-    let prevMouseY = 0;
-
-    const onMouseDown = (e: MouseEvent) => {
-      if (e.button === 0) {
-        isMouseDown = true;
-        prevMouseX = e.clientX;
-        prevMouseY = e.clientY;
-      }
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isMouseDown) return;
-      const deltaX = e.clientX - prevMouseX;
-      const deltaY = e.clientY - prevMouseY;
-      prevMouseX = e.clientX;
-      prevMouseY = e.clientY;
-
-      sphericalRef.current.theta -= deltaX * 0.006;
-      sphericalRef.current.phi -= deltaY * 0.006;
-      updateCameraPosition();
-    };
-
-    const onMouseUp = () => {
-      isMouseDown = false;
-    };
-
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      sphericalRef.current.radius = Math.max(150, Math.min(4000, sphericalRef.current.radius + e.deltaY * 0.8));
-      updateCameraPosition();
-    };
-
-    const dom = renderer.domElement;
-    dom.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    dom.addEventListener('wheel', onWheel, { passive: false });
 
     // Observador de Redimensionamento
     const resizeObserver = new ResizeObserver((entries) => {
@@ -168,16 +131,13 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     });
     resizeObserver.observe(mount);
 
-    // Loop de Animação
+    // Loop de Animação suave com Damping do OrbitControls
     let reqId = 0;
     const animate = () => {
       reqId = requestAnimationFrame(animate);
-
-      if (autoRotate && !isMouseDown) {
-        sphericalRef.current.theta += 0.004;
-        updateCameraPosition();
+      if (controlsRef.current) {
+        controlsRef.current.update();
       }
-
       renderer.render(scene, camera);
     };
     animate();
@@ -185,15 +145,22 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     return () => {
       cancelAnimationFrame(reqId);
       resizeObserver.disconnect();
-      dom.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      dom.removeEventListener('wheel', onWheel);
-      if (mount.contains(dom)) {
-        mount.removeChild(dom);
+      if (controlsRef.current) {
+        controlsRef.current.dispose();
+      }
+      if (mount.contains(renderer.domElement)) {
+        mount.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };
+  }, []);
+
+  // Atualiza autoRotate sem destruir a cena Three.js
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.autoRotate = autoRotate;
+      controlsRef.current.autoRotateSpeed = 2.5;
+    }
   }, [autoRotate]);
 
   // Recria a geometria 3D articulada a partir da MESMA faca 2D real
@@ -238,17 +205,20 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
           rootId: tree.topology.rootPanelId,
         });
 
-        // Centraliza o ponto focal da rotação 360° na meia altura da caixa
+        // Centraliza o ponto focal dos OrbitControls na meia altura da embalagem montada
         const boxH = Math.max(30, params.H || 100);
-        orbitTargetRef.current.set(0, boxH * 0.4, 0);
+        if (controlsRef.current && cameraRef.current) {
+          controlsRef.current.target.set(0, boxH * 0.4, 0);
 
-        // Auto-enquadramento suave da câmera em torno da base
-        const bbox = new THREE.Box3().setFromObject(tree.rootGroup);
-        const sphere = new THREE.Sphere();
-        bbox.getBoundingSphere(sphere);
-        if (sphere.radius > 10) {
-          sphericalRef.current.radius = Math.max(450, sphere.radius * 2.2);
-          updateCameraPosition();
+          // Auto-enquadramento suave da câmera
+          const bbox = new THREE.Box3().setFromObject(tree.rootGroup);
+          const sphere = new THREE.Sphere();
+          bbox.getBoundingSphere(sphere);
+          if (sphere.radius > 10) {
+            const dist = Math.max(450, sphere.radius * 2.2);
+            cameraRef.current.position.set(dist * 0.7, dist * 0.65, dist * 0.7);
+            controlsRef.current.update();
+          }
         }
         return;
       }
@@ -281,17 +251,36 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     return () => clearInterval(interval);
   }, [isPlaying]);
 
-  // Funções de câmera para validação visual rápida
+  // Funções de câmera para validação visual rápida em 360 graus
   const snapToTopView = () => {
-    sphericalRef.current.theta = 0;
-    sphericalRef.current.phi = 0.03; // Vista Superior (olhando para o plano da faca)
-    updateCameraPosition();
+    const controls = controlsRef.current;
+    const camera = cameraRef.current;
+    if (!controls || !camera) return;
+    controls.target.set(0, 0, 0);
+    const dist = camera.position.length() || 800;
+    camera.position.set(0, dist, 0);
+    controls.update();
   };
 
   const snapToPerspective = () => {
-    sphericalRef.current.theta = Math.PI / 4;
-    sphericalRef.current.phi = Math.PI / 3;
-    updateCameraPosition();
+    const controls = controlsRef.current;
+    const camera = cameraRef.current;
+    if (!controls || !camera) return;
+    const boxH = Math.max(30, params.H || 100);
+    controls.target.set(0, boxH * 0.4, 0);
+    const dist = 750;
+    camera.position.set(dist * 0.7, dist * 0.65, dist * 0.7);
+    controls.update();
+  };
+
+  const snapToBottomView = () => {
+    const controls = controlsRef.current;
+    const camera = cameraRef.current;
+    if (!controls || !camera) return;
+    controls.target.set(0, 0, 0);
+    const dist = camera.position.length() || 800;
+    camera.position.set(0, -dist * 0.9, 0.01);
+    controls.update();
   };
 
   return (
@@ -355,7 +344,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
           border: '1px solid rgba(53, 168, 158, 0.25)',
           backdropFilter: 'blur(12px)',
           zIndex: 10,
-          minWidth: 540,
+          minWidth: 560,
         }}
       >
         {/* Botões de Estágio de Dobra Rápido (0%, 25%, 50%, 75%, 100%) */}
@@ -390,7 +379,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
             </button>
           ))}
 
-          {/* Vistas de Câmera */}
+          {/* Vistas de Câmera 360° */}
           <button
             onClick={snapToTopView}
             title="Vista Superior (Comparação 2D Plana)"
@@ -429,6 +418,26 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
           >
             <Box size={13} />
             <span>3D</span>
+          </button>
+
+          <button
+            onClick={snapToBottomView}
+            title="Vista Inferior (Inspeção do Fundo)"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '4px 10px',
+              fontSize: 11,
+              borderRadius: 14,
+              border: '1px solid rgba(148, 163, 184, 0.3)',
+              background: 'transparent',
+              color: '#CBD5E1',
+              cursor: 'pointer',
+            }}
+          >
+            <Eye size={13} />
+            <span>Fundo</span>
           </button>
         </div>
 
@@ -481,7 +490,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
 
           <button
             onClick={() => setAutoRotate((r) => !r)}
-            title="Auto-Girar 360°"
+            title="Girar 360° Automaticamente"
             style={{
               padding: 8,
               borderRadius: 8,
