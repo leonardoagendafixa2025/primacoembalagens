@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import type { PackagingModel } from '../engine/types';
-import { extractPanelsFromModel, buildFoldable3DTree } from '../engine/foldingEngine';
+import { buildFoldable3DTree } from '../engine/foldingEngine';
 import { Play, Pause, RotateCw, Layers } from 'lucide-react';
 
 interface FoldingViewer3DProps {
@@ -202,10 +202,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params 
 
     try {
       const dieline = model.calculate(params);
-      const panels = extractPanelsFromModel(model.code || model.id, dieline, params);
+      const tree = buildFoldable3DTree(dieline, Ep);
 
-      if (panels && panels.length > 0) {
-        const tree = buildFoldable3DTree(panels, Ep);
+      if (tree.panelsCount > 0) {
         boxGroup.add(tree.rootGroup);
         updateProgressRef.current = tree.updateProgress;
         tree.updateProgress(foldProgress);
