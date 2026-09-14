@@ -117,6 +117,9 @@ function createDesCalculator(rawItem: any, defaultL: number, defaultB: number) {
       let newA1 = (Math.atan2(p1y - cyScaled, p1x - cxScaled) * 180) / Math.PI;
       if (newA0 < 0) newA0 += 360;
       if (newA1 < 0) newA1 += 360;
+      while (newA1 < newA0) {
+        newA1 += 360;
+      }
 
       const r0 = Math.hypot(p0x - cxScaled, p0y - cyScaled);
       const r1 = Math.hypot(p1x - cxScaled, p1y - cyScaled);
@@ -225,6 +228,9 @@ function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number,
       let newA1 = (Math.atan2(p1y - cyScaled, p1x - cxScaled) * 180) / Math.PI;
       if (newA0 < 0) newA0 += 360;
       if (newA1 < 0) newA1 += 360;
+      while (newA1 < newA0) {
+        newA1 += 360;
+      }
 
       const r0 = Math.hypot(p0x - cxScaled, p0y - cyScaled);
       const r1 = Math.hypot(p1x - cxScaled, p1y - cyScaled);

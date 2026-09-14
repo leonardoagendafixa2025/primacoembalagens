@@ -136,10 +136,16 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         const sr = arc.r * zoom;
 
         // No CAD cartesiano (+Y para cima), ângulos crescem anti-horário.
+        // Um arco vai de startAngle até endAngle no sentido anti-horário.
         // No Canvas (+Y para baixo), o ângulo de tela correspondente é invertido: -theta.
-        // O sentido anti-horário do CAD vira anti-horário no canvas com anticlockwise=true.
-        const a0 = (-arc.startAngle * Math.PI) / 180;
-        const a1 = (-arc.endAngle * Math.PI) / 180;
+        // O sentido anti-horário do CAD (+theta) vira anti-horário no canvas com anticlockwise=true.
+        let startAngle = arc.startAngle;
+        let endAngle = arc.endAngle;
+        while (endAngle < startAngle) {
+          endAngle += 360;
+        }
+        const a0 = (-startAngle * Math.PI) / 180;
+        const a1 = (-endAngle * Math.PI) / 180;
         ctx.arc(sx, sy, sr, a0, a1, true);
 
         if (arc.type === 'cut') {
