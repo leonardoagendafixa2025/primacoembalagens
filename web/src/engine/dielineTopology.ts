@@ -1,4 +1,4 @@
-import type { Point2D, Segment2D, Arc2D, DielineResult } from './types';
+import type { Point2D, DielineResult } from './types';
 
 export interface TopologicalHinge {
   id: string;

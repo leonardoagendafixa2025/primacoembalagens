@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import type { Point2D, DielineResult } from './types';
-import { buildFoldingTopology, type TopologicalPanel, type TopologicalHinge, type DielineTopology } from './dielineTopology';
+import type { DielineResult } from './types';
+import { buildFoldingTopology, type TopologicalPanel, type DielineTopology } from './dielineTopology';
 
 export interface FoldableTreeResult {
   rootGroup: THREE.Group;

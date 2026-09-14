@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import type { PackagingModel, DielineResult } from '../engine/types';
 import { buildFoldable3DTree } from '../engine/foldingEngine';
-import { Play, Pause, RotateCw, Eye, Box, Layers, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, RotateCw, Eye, Box, CheckCircle2 } from 'lucide-react';
 
 interface FoldingViewer3DProps {
   model: PackagingModel;
@@ -17,7 +17,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
   const [foldProgress, setFoldProgress] = useState(0.85);
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
-  const [showDiagnostic, setShowDiagnostic] = useState(true);
+  const [showDiagnostic] = useState(true);
 
   // Informações de paridade topológica
   const [topologyStats, setTopologyStats] = useState<{
