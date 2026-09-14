@@ -143,7 +143,7 @@ export const App: React.FC = () => {
         {/* Área Central / Visualizador Alternável */}
         <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {activeTab === '2d' && <CadViewer2D dieline={dieline} model={currentModel} />}
-          {activeTab === '3d' && <FoldingViewer3D model={currentModel} params={params} />}
+          {activeTab === '3d' && <FoldingViewer3D model={currentModel} dieline={dieline} params={params} />}
           {activeTab === 'imposition' && <ImpositionView dieline={dieline} />}
         </main>
       </div>
