@@ -80,25 +80,29 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     controls.autoRotateSpeed = 2.5;
     controlsRef.current = controls;
 
-    // 5. Luzes
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // 5. Luzes de estúdio balanceadas (Daylight Neutro para fidelidade do papel cartão BRANCO)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.3);
-    dirLight.position.set(400, 800, 500);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    dirLight.shadow.bias = -0.0001;
-    scene.add(dirLight);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.4);
+    mainLight.position.set(450, 800, 500);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.bias = -0.0001;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    fillLight.position.set(-500, 400, -300);
+    scene.add(fillLight);
+
+    const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    backLight.position.set(0, 600, -500);
+    scene.add(backLight);
 
     const bottomLight = new THREE.DirectionalLight(0xffffff, 0.5);
     bottomLight.position.set(0, -600, 0);
     scene.add(bottomLight);
-
-    const fillLight = new THREE.DirectionalLight(0x35a89e, 0.4);
-    fillLight.position.set(-500, 300, -400);
-    scene.add(fillLight);
 
     // 6. Piso semi-transparente para permitir visualização por baixo da base
     const floorGeo = new THREE.PlaneGeometry(5000, 5000);
@@ -192,8 +196,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
       // UTILIZA EXATAMENTE A MESMA FACA DO 2D
       const currentDieline = dieline || model.calculate(params);
       const outerColor = profile?.outerColor || '#FFFFFF';
-      const innerColor = profile?.innerColor || '#F5EFE6';
-      const roughness = profile?.roughness ?? 0.35;
+      const innerColor = profile?.innerColor || '#FFFFFF';
+      const roughness = profile?.roughness ?? 0.28;
       const tree = buildFoldable3DTree(currentDieline, Ep, outerColor, innerColor, roughness);
 
       if (tree.panelsCount > 0) {

@@ -57,6 +57,17 @@ export function createPanelMesh(
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.name = panel.name;
+
+  // Arestas CAD da faca para visualização nítida de vincos, cortes e abas sobre o papel branco
+  const edgeGeo = new THREE.EdgesGeometry(geom, 20);
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: 0x64748b,
+    transparent: true,
+    opacity: 0.5,
+  });
+  const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
+  mesh.add(edgeLines);
+
   return mesh;
 }
 
@@ -76,8 +87,8 @@ export function buildFoldable3DTree(
   dieline: DielineResult,
   thickness: number,
   outerColor: string = '#FFFFFF',
-  innerColor: string = '#F5EFE6',
-  roughness: number = 0.35
+  innerColor: string = '#FFFFFF',
+  roughness: number = 0.28
 ): FoldableTreeResult {
   const rootGroup = new THREE.Group();
   const topology = buildFoldingTopology(dieline);
@@ -92,20 +103,22 @@ export function buildFoldable3DTree(
     };
   }
 
-  // Materiais de acabamento Cartão Branco Duplex / Triplex ou Kraft
-  const matOuter = new THREE.MeshStandardMaterial({
+  // Materiais de acabamento Cartão BRANCO Duplex / Triplex
+  // Face principal (Couchê Branco acetinado)
+  const matFace = new THREE.MeshStandardMaterial({
     color: outerColor,
     roughness: roughness,
-    metalness: 0.02,
+    metalness: 0.01,
     side: THREE.DoubleSide,
   });
-  const matInner = new THREE.MeshStandardMaterial({
+  // Miolo e bordas de corte da celulose
+  const matEdge = new THREE.MeshStandardMaterial({
     color: innerColor,
-    roughness: Math.min(1.0, roughness + 0.1),
-    metalness: 0.02,
+    roughness: Math.min(1.0, roughness + 0.15),
+    metalness: 0.01,
     side: THREE.DoubleSide,
   });
-  const materials = [matOuter, matInner];
+  const materials = [matFace, matEdge];
 
   // Painel Raiz (Base/Fundo)
   const rootPanel = panels.find((p) => p.isRoot) || panels[0];
