@@ -70,7 +70,7 @@ export interface PackagingModel {
   id: string;
   code: string;
   name: string;
-  category: 'FEFCO' | 'ECMA' | 'DISPLAYS' | 'DISPLAY' | 'PERSONALIZADO';
+  category: 'FEFCO' | 'ECMA' | 'PERSONALIZADO';
   description: string;
   defaultParams: Record<string, number>;
   paramDefs: ParamDef[];

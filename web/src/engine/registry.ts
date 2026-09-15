@@ -23,7 +23,7 @@ export interface CatalogItem {
   rawName: string;
   code: string;
   name: string;
-  category: 'FEFCO' | 'ECMA' | 'DISPLAYS';
+  category: 'FEFCO' | 'ECMA';
   series: string;
   description: string;
   thumbnail: string | null;
@@ -346,7 +346,7 @@ export function getModelById(id: string): PackagingModel {
   if (desItem && desItem.geometry) {
     const segs = desItem.geometry.segments || [];
     const hasCreases = segs.some((s: any) => s.type === 'crease');
-    const isFoldable = hasCreases && catalogItem.category !== 'DISPLAYS';
+    const isFoldable = hasCreases;
 
     const defL = catalogItem.defaultParams?.L || 300;
     const defB = catalogItem.defaultParams?.B || 200;

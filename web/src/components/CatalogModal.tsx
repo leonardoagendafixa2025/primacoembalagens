@@ -17,7 +17,7 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
   currentModelId,
 }) => {
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'FEFCO' | 'ECMA' | 'DISPLAYS'>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'FEFCO' | 'ECMA'>('ALL');
   const [selectedSeries, setSelectedSeries] = useState<string>('ALL');
 
   // Séries disponíveis baseadas na categoria
@@ -174,9 +174,8 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
           <div style={{ display: 'flex', gap: 6 }}>
             {[
               { key: 'ALL', label: `Todos (${CATALOG.length})` },
-              { key: 'FEFCO', label: 'FEFCO (194)' },
-              { key: 'ECMA', label: 'ECMA (218)' },
-              { key: 'DISPLAYS', label: 'Displays (60)' },
+              { key: 'FEFCO', label: 'FEFCO' },
+              { key: 'ECMA', label: 'ECMA' },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -259,7 +258,6 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                 item.id === currentModelId ||
                 item.code.toLowerCase().replace(/\s+/g, '') === currentModelId.toLowerCase().replace(/\s+/g, '');
               const isFEFCO = item.category === 'FEFCO';
-              const isECMA = item.category === 'ECMA';
 
               const handleCardClick = (e: React.MouseEvent) => {
                 e.preventDefault();
@@ -339,7 +337,7 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                         fontWeight: 800,
                         padding: '2px 7px',
                         borderRadius: 4,
-                        background: isFEFCO ? '#35a89e' : isECMA ? '#c53236' : '#8B5CF6',
+                        background: isFEFCO ? '#35a89e' : '#c53236',
                         color: isFEFCO ? '#000000' : '#FFFFFF',
                         letterSpacing: 0.5,
                       }}
