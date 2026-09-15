@@ -349,7 +349,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         </div>
 
             {/* Diagnóstico de Modelo Não-Funcional / Sem Geometria / Documento */}
-      {model && model.status !== 'PASS' && model.status !== 'NON_FOLDABLE' && (
+      {model && model.status !== 'PASS' && model.status !== 'NON_FOLDABLE' && model.status !== 'PENDING_PORTING' && (
         <div
           style={{
             position: 'absolute',
