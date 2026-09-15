@@ -1,17 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { PackagingModel, DielineResult } from '../engine/types';
+import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
 import { buildFoldable3DTree } from '../engine/foldingEngine';
-import { Play, Pause, RotateCw, Eye, Box, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Box, Eye, CheckCircle2 } from 'lucide-react';
 
 interface FoldingViewer3DProps {
   model: PackagingModel;
   params: Record<string, number>;
   dieline?: DielineResult;
+  profile?: CardboardProfile;
 }
 
-export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params, dieline }) => {
+export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params, dieline, profile }) => {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
   // Progresso da dobra: 0 (aberta) a 1 (montada)
@@ -174,7 +175,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
       boxGroup.remove(obj);
     }
 
-    const Ep = Math.max(0.5, params.Ep || 3);
+    const Ep = Math.max(0.05, params.Ep || profile?.thickness || 0.4);
     const isFoldable =
       model.isFoldable !== false &&
       model.status !== 'NON_FOLDABLE' &&
@@ -190,7 +191,10 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     try {
       // UTILIZA EXATAMENTE A MESMA FACA DO 2D
       const currentDieline = dieline || model.calculate(params);
-      const tree = buildFoldable3DTree(currentDieline, Ep);
+      const outerColor = profile?.outerColor || '#FFFFFF';
+      const innerColor = profile?.innerColor || '#F5EFE6';
+      const roughness = profile?.roughness ?? 0.35;
+      const tree = buildFoldable3DTree(currentDieline, Ep, outerColor, innerColor, roughness);
 
       if (tree.panelsCount > 0) {
         boxGroup.add(tree.rootGroup);
@@ -227,7 +231,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
       console.warn('[FoldingViewer3D] Erro na interpretação topológica:', e);
       updateProgressRef.current = null;
     }
-  }, [model, params, dieline]);
+  }, [model, params, dieline, profile]);
 
   // Atualiza as rotações de dobra conforme o foldProgress (0% = aberta, 100% = montada)
   useEffect(() => {

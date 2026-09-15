@@ -21,7 +21,7 @@ export const ecmaB1506_53: PackagingModel = {
     { key: 'L', label: 'Comprimento (L)', min: 50, max: 1200, step: 5, unit: 'mm' },
     { key: 'B', label: 'Largura (B)', min: 30, max: 800, step: 5, unit: 'mm' },
     { key: 'H', label: 'Altura (H)', min: 20, max: 600, step: 2, unit: 'mm' },
-    { key: 'Ep', label: 'Espessura (Ep)', min: 0.2, max: 3.0, step: 0.1, unit: 'mm' },
+    { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 3.0, step: 0.05, unit: 'mm' },
   ],
   calculate(params: Record<string, number>): DielineResult {
     const L = params.L ?? 225;

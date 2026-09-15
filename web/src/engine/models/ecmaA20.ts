@@ -22,7 +22,7 @@ export const ecmaA20: PackagingModel = {
     { key: 'L', label: 'Comprimento (L)', min: 50, max: 600, step: 2, unit: 'mm', description: 'Comprimento da embalagem interna' },
     { key: 'B', label: 'Largura da Luva (B)', min: 30, max: 400, step: 2, unit: 'mm', description: 'Largura da cinta externa' },
     { key: 'H', label: 'Altura (H)', min: 15, max: 200, step: 1, unit: 'mm', description: 'Espessura da bandeja' },
-    { key: 'Ep', label: 'Espessura (Ep)', min: 0.2, max: 1.5, step: 0.05, unit: 'mm', description: 'Espessura do cartão' },
+    { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 1.5, step: 0.05, unit: 'mm', description: 'Espessura do cartão (a partir de 0,1mm)' },
     { key: 'M', label: 'Aba de Cola (M)', min: 10, max: 30, step: 1, unit: 'mm', description: 'Aba de colagem' },
   ],
   calculate(params: Record<string, number>): DielineResult {

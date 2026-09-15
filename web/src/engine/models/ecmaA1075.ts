@@ -28,7 +28,7 @@ export const ecmaA1075: PackagingModel = {
     { key: 'L', label: 'Comprimento (L)', min: 50, max: 1000, step: 5, unit: 'mm', description: 'Comprimento principal da base' },
     { key: 'B', label: 'Largura (B)', min: 40, max: 800, step: 5, unit: 'mm', description: 'Largura principal da base' },
     { key: 'H', label: 'Altura (H)', min: 60, max: 1200, step: 5, unit: 'mm', description: 'Altura do corpo do cartucho' },
-    { key: 'Ep', label: 'Espessura (Ep)', min: 0.2, max: 3.0, step: 0.1, unit: 'mm', description: 'Espessura do material' },
+    { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 3.0, step: 0.05, unit: 'mm', description: 'Espessura do material (a partir de 0,1mm)' },
     { key: 'g', label: 'Aba de Colagem (g)', min: 10, max: 40, step: 1, unit: 'mm', description: 'Largura da aba de colagem' },
     { key: 'r', label: 'Raio do Telhado (r)', min: 10, max: 100, step: 1, unit: 'mm', description: 'Raio de arredondamento do topo' },
   ],
@@ -123,35 +123,33 @@ export const ecmaA1075: PackagingModel = {
     segments.push({ id: 'seg-28', type: 'cut', x0: 0.0, y0: yTopFold, x1: 0.0, y1: yRoofBase });
     segments.push({ id: 'seg-29', type: 'cut', x0: 0.0, y0: yRoofBase, x1: g, y1: yRoofBase });
 
-    // Telhado e Alça (Gable Roof) com Tangência Exata PicToolRound
-    const xMidRoof = g + A + B + A / 2.0;
-    const yApex = yRoofBase + (A / 2.0) * Math.tan(ta * deg2rad);
+    // Telhado e Alça (Gable Roof) com Tangência Exata PicToolRound (Idêntico ao C# original)
+    const xMidRoof = g + A + B + v1;
+    const yArcCenter = -88.6862 + B + H + B + h - r;
 
-    const xArcCenter = xMidRoof;
-    const yArcCenter = yApex - r / Cosd(ta);
+    const angleStart = 90.0 - ta;
+    const angleEnd = 90.0 + ta;
 
-    const xTan0 = xMidRoof - r * Sind(ta);
-    const yTan0 = yArcCenter + r * Cosd(ta);
+    const xTan0 = xMidRoof - r * Cosd(angleStart);
+    const yTan0 = yArcCenter + r * Sind(angleStart);
 
-    const xTan1 = xMidRoof + r * Sind(ta);
-    const yTan1 = yTan0;
+    const xTan1 = xMidRoof + r * Cosd(angleStart);
+    const yTan1 = yArcCenter + r * Sind(angleStart);
 
-    // 30: Linha inclinada esquerda do telhado (cortada exatamente no ponto de tangência do arco)
+    // 30: Linha inclinada esquerda do telhado
     segments.push({ id: 'seg-30', type: 'cut', x0: g + A + B, y0: yRoofBase, x1: xTan0, y1: yTan0 });
-    // 31: Linha inclinada direita do telhado (cortada exatamente no ponto de tangência do arco)
+    // 31: Linha inclinada direita do telhado
     segments.push({ id: 'seg-31', type: 'cut', x0: g + A + B + A, y0: yRoofBase, x1: xTan1, y1: yTan1 });
 
-    // 32: Arco superior do telhado/alça com tangência perfeita às linhas 30 e 31
-    const angleStart = 90 - ta;
-    const angleEnd = 90 + ta;
+    // 32: Arco superior do telhado/alça com tangência perfeita
     arcs.push({
       id: 'arc-32',
       type: 'cut',
-      cx: xArcCenter,
+      cx: xMidRoof,
       cy: yArcCenter,
       r: r,
-      startAngle: Math.round(angleStart * 1000) / 1000,
-      endAngle: Math.round(angleEnd * 1000) / 1000,
+      startAngle: angleStart,
+      endAngle: angleEnd,
     });
 
     // Furo/Rasgo de alça no painel 1
@@ -165,8 +163,8 @@ export const ecmaA1075: PackagingModel = {
       cx: g + v6 - v2,
       cy: ySlot,
       r: v2,
-      startAngle: 0,
-      endAngle: 360,
+      startAngle: 0.005,
+      endAngle: 360.005,
     });
     arcs.push({
       id: 'arc-35',
@@ -174,8 +172,8 @@ export const ecmaA1075: PackagingModel = {
       cx: g + v6 + v7 + v2,
       cy: ySlot,
       r: v2,
-      startAngle: 0,
-      endAngle: 360,
+      startAngle: 179.995,
+      endAngle: 539.995,
     });
 
     // 36, 37: Vincos triangulares do telhado painel 2

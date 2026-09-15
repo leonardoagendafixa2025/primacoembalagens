@@ -23,8 +23,11 @@ import { CatalogModal } from './components/CatalogModal';
 export const App: React.FC = () => {
   // 1. Estados Centrais
   const [currentModel, setCurrentModel] = useState<PackagingModel>(MODELS[0]);
-  const [params, setParams] = useState<Record<string, number>>(MODELS[0].defaultParams);
-  const [selectedProfile, setSelectedProfile] = useState<CardboardProfile>(STANDARD_PROFILES[3]); // Onda B
+  const [selectedProfile, setSelectedProfile] = useState<CardboardProfile>(STANDARD_PROFILES[0]); // Papel Cartão BRANCO Duplex
+  const [params, setParams] = useState<Record<string, number>>(() => ({
+    ...MODELS[0].defaultParams,
+    Ep: STANDARD_PROFILES[0].thickness,
+  }));
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
 
   // 2. Catálogo & Projetos Salvos
@@ -160,7 +163,7 @@ export const App: React.FC = () => {
         {/* Área Central / Visualizador Alternável */}
         <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {activeTab === '2d' && <CadViewer2D dieline={dieline} model={currentModel} />}
-          {activeTab === '3d' && <FoldingViewer3D model={currentModel} dieline={dieline} params={params} />}
+          {activeTab === '3d' && <FoldingViewer3D model={currentModel} dieline={dieline} params={params} profile={selectedProfile} />}
           {activeTab === 'imposition' && <ImpositionView dieline={dieline} />}
         </main>
       </div>

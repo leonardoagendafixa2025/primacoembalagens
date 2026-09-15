@@ -62,7 +62,7 @@ export interface ParamDef {
   description?: string;
 }
 
-export type ModelStatus = 'PASS' | 'NON_FOLDABLE' | 'ORIGINAL_NO_GEOMETRY' | 'DOCUMENT_ONLY' | 'FAIL';
+export type ModelStatus = 'PASS' | 'NON_FOLDABLE' | 'ORIGINAL_NO_GEOMETRY' | 'DOCUMENT_ONLY' | 'FAIL' | 'PENDING_PORTING';
 export type OriginalSourceType = 'C#_PARAMETRIC_DLL' | 'DES_VECTOR_DRAWING' | 'PDF_DOCUMENT_ONLY' | 'NONE';
 export type ImplementationType = 'NATIVE_TS' | 'DES_GEOMETRY_PARSER' | 'CSHARP_EVALUATED' | 'NONE';
 
@@ -89,13 +89,89 @@ export interface CardboardProfile {
   code: string;
   thickness: number; // mm
   description: string;
+  outerColor?: string;
+  innerColor?: string;
+  roughness?: number;
+  minThickness?: number;
 }
 
 export const STANDARD_PROFILES: CardboardProfile[] = [
-  { id: 'cartao_300', name: 'Papel Cartão Duplex/Triplex', code: 'CARTAO', thickness: 0.5, description: '300-350g/m² - Caixas leves, remédios e cosméticos' },
-  { id: 'onda_f', name: 'Micro-ondulado Onda F', code: 'F', thickness: 0.9, description: 'Micro-ondulado fino para acabamento nobre' },
-  { id: 'onda_e', name: 'Micro-ondulado Onda E', code: 'E', thickness: 1.5, description: 'Excelente para caixas de e-commerce e alimentos' },
-  { id: 'onda_b', name: 'Papelão Ondulado Onda B', code: 'B', thickness: 3.0, description: 'Padrão industrial rígido para transporte médio' },
-  { id: 'onda_c', name: 'Papelão Ondulado Onda C', code: 'C', thickness: 4.0, description: 'Alta resistência ao empilhamento' },
-  { id: 'onda_bc', name: 'Onda Dupla (Onda BC)', code: 'BC', thickness: 7.0, description: 'Pesado para cargas industriais e exportação' },
+  {
+    id: 'cartao_duplex_branco',
+    name: 'Papel Cartão BRANCO Duplex',
+    code: 'DUPLEX',
+    thickness: 0.4,
+    description: 'Frente Branca Couchê / Verso Creme - 250 a 450g/m² (a partir de 0,1mm)',
+    outerColor: '#FFFFFF',
+    innerColor: '#F5EFE6',
+    roughness: 0.35,
+    minThickness: 0.1,
+  },
+  {
+    id: 'cartao_triplex_branco',
+    name: 'Papel Cartão BRANCO Triplex',
+    code: 'TRIPLEX',
+    thickness: 0.4,
+    description: 'Frente e Verso 100% Brancos - Embalagens nobres e cosméticos (a partir de 0,1mm)',
+    outerColor: '#FFFFFF',
+    innerColor: '#FAFAFA',
+    roughness: 0.3,
+    minThickness: 0.1,
+  },
+  {
+    id: 'onda_f',
+    name: 'Micro-ondulado Onda F',
+    code: 'F',
+    thickness: 0.9,
+    description: 'Micro-ondulado fino para acabamento nobre',
+    outerColor: '#D8B589',
+    innerColor: '#E2C49D',
+    roughness: 0.8,
+    minThickness: 0.8,
+  },
+  {
+    id: 'onda_e',
+    name: 'Micro-ondulado Onda E',
+    code: 'E',
+    thickness: 1.5,
+    description: 'Excelente para caixas de e-commerce e alimentos',
+    outerColor: '#C29B68',
+    innerColor: '#D4B07B',
+    roughness: 0.85,
+    minThickness: 1.2,
+  },
+  {
+    id: 'onda_b',
+    name: 'Papelão Ondulado Onda B',
+    code: 'B',
+    thickness: 3.0,
+    description: 'Padrão industrial rígido para transporte médio',
+    outerColor: '#B88B58',
+    innerColor: '#C99E6B',
+    roughness: 0.9,
+    minThickness: 2.5,
+  },
+  {
+    id: 'onda_c',
+    name: 'Papelão Ondulado Onda C',
+    code: 'C',
+    thickness: 4.0,
+    description: 'Alta resistência ao empilhamento',
+    outerColor: '#A87D4A',
+    innerColor: '#BD915D',
+    roughness: 0.9,
+    minThickness: 3.5,
+  },
+  {
+    id: 'onda_bc',
+    name: 'Onda Dupla (Onda BC)',
+    code: 'BC',
+    thickness: 7.0,
+    description: 'Pesado para cargas industriais e exportação',
+    outerColor: '#966D3B',
+    innerColor: '#A87E4C',
+    roughness: 0.95,
+    minThickness: 6.0,
+  },
 ];
+

@@ -53,7 +53,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
     >
       {/* 1. Header do Modelo */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span
             style={{
               fontSize: 11,
@@ -68,6 +68,16 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
             {model.code}
           </span>
           <span style={{ fontSize: 12, color: '#35a89e', fontWeight: 600 }}>{model.category}</span>
+          {model.status === 'PASS' && (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(53, 168, 158, 0.2)', color: '#35a89e', border: '1px solid rgba(53, 168, 158, 0.4)' }}>
+              ✓ Ground Truth C# 100%
+            </span>
+          )}
+          {model.status === 'PENDING_PORTING' && (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(234, 179, 8, 0.2)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.4)' }}>
+              Aguardando Portabilidade C#
+            </span>
+          )}
         </div>
         <h2 style={{ fontSize: 17, fontWeight: 700, color: '#F8FAFC', marginTop: 6 }}>
           {model.name}
@@ -75,6 +85,11 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
         <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4, lineHeight: 1.4 }}>
           {model.description}
         </p>
+        {model.status === 'PENDING_PORTING' && (
+          <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 6, fontSize: 11, color: '#fef08a', lineHeight: 1.4 }}>
+            ⚠️ <strong>Aguardando Portabilidade C#:</strong> Geometria CAD original renderizada 1:1. Escalonamento arbitrário bloqueado até portabilidade matemática fiel da DLL C#.
+          </div>
+        )}
       </div>
 
       {/* 2. Resumo da Faca Aberta (Tamanho de Prancha) */}
@@ -128,6 +143,14 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
             </option>
           ))}
         </select>
+        {(() => {
+          const currentProf = STANDARD_PROFILES.find((p) => p.id === selectedProfileId);
+          return currentProf ? (
+            <div style={{ fontSize: 11, color: '#64748B', marginTop: 4, lineHeight: 1.3 }}>
+              {currentProf.description}
+            </div>
+          ) : null;
+        })()}
       </div>
 
       {/* 4. Botões de Presets Rápidos */}
@@ -160,7 +183,10 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
         {/* Sliders e Inputs de Cada Parâmetro */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {model.paramDefs.map((def) => {
+            const isEp = def.key === 'Ep';
             const val = params[def.key] ?? model.defaultParams[def.key];
+            const minVal = isEp ? 0.1 : def.min;
+            const stepVal = isEp ? 0.05 : def.step;
             return (
               <div key={def.key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -168,11 +194,14 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <input
                       type="number"
-                      min={def.min}
+                      min={minVal}
                       max={def.max}
-                      step={def.step}
+                      step={stepVal}
                       value={val}
-                      onChange={(e) => onParamChange(def.key, parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const parsed = parseFloat(e.target.value);
+                        onParamChange(def.key, isNaN(parsed) ? 0 : parsed);
+                      }}
                       style={{
                         width: 72,
                         padding: '4px 6px',
@@ -191,9 +220,9 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
 
                 <input
                   type="range"
-                  min={def.min}
+                  min={minVal}
                   max={def.max}
-                  step={def.step}
+                  step={stepVal}
                   value={val}
                   onChange={(e) => onParamChange(def.key, parseFloat(e.target.value))}
                   style={{

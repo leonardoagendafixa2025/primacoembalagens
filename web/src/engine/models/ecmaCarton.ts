@@ -22,7 +22,7 @@ export const ecmaB10: PackagingModel = {
     { key: 'L', label: 'Comprimento / Frente (L)', min: 30, max: 400, step: 1, unit: 'mm', description: 'Comprimento frontal' },
     { key: 'B', label: 'Largura / Lateral (B)', min: 20, max: 300, step: 1, unit: 'mm', description: 'Profundidade da lateral' },
     { key: 'H', label: 'Altura (H)', min: 40, max: 500, step: 1, unit: 'mm', description: 'Altura total da embalagem' },
-    { key: 'Ep', label: 'Espessura (Ep)', min: 0.2, max: 2.0, step: 0.05, unit: 'mm', description: 'Caliper do cartão' },
+    { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 2.0, step: 0.05, unit: 'mm', description: 'Caliper do cartão (a partir de 0,1mm)' },
     { key: 'M', label: 'Aba de Cola (M)', min: 10, max: 25, step: 1, unit: 'mm', description: 'Aba lateral colada' },
   ],
   calculate(params: Record<string, number>): DielineResult {

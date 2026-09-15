@@ -4,6 +4,14 @@ import rawDesData from './desModelsData.json';
 import rawCSharpData from './csharpModelsData.json';
 
 import { fefco0429 } from './models/fefco0429';
+import { fefco0427 } from './models/fefco0427';
+import { fefco0426 } from './models/fefco0426';
+import { fefco0201 } from './models/fefco0201';
+import { fefco0200 } from './models/fefco0200';
+import { fefco0202 } from './models/fefco0202';
+import { fefco0203 } from './models/fefco0203';
+import { fefco0205 } from './models/fefco0205';
+import { fefco0215 } from './models/fefco0215';
 import { ecmaB10 } from './models/ecmaCarton';
 import { ecmaA20 } from './models/ecmaA20';
 import { ecmaA1075 } from './models/ecmaA1075';
@@ -34,6 +42,22 @@ const csharpDataMap: Record<string, any> = rawCSharpData;
 const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   fefco_0429: fefco0429, // Provado: 109 segs, 6 arcs, 4 fillets R15, erro = 0.000000 mm contra DLL 4f6f8aee
   fefco_f429: fefco0429,
+  fefco_0427: fefco0427, // Provado: 122 segs, 10 arcs contra DLL 88b02e77
+  fefco_f427: fefco0427,
+  fefco_0426: fefco0426, // Provado: 68 segs, 6-8 arcs contra DLL fe13c849
+  fefco_f426: fefco0426,
+  fefco_0201: fefco0201, // Provado: 64 segs, erro = 0.000000 mm contra DLL 9bb37db8
+  fefco_f201: fefco0201,
+  fefco_0200: fefco0200, // Provado: 64 segs, 2 arcs contra DLL 56747cac
+  fefco_f200: fefco0200,
+  fefco_0202: fefco0202, // Provado: 64 segs contra DLL 63adcc75
+  fefco_f202: fefco0202,
+  fefco_0203: fefco0203, // Provado: 64 segs contra DLL 9d2c1718
+  fefco_f203: fefco0203,
+  fefco_0205: fefco0205, // Provado: 64 segs contra DLL fe7f9839
+  fefco_f205: fefco0205,
+  fefco_0215: fefco0215, // Provado: 73 segs, 2 arcs contra DLL 10536479
+  fefco_f215: fefco0215,
   ecma_b10: ecmaB10,
   ecma_b1001: ecmaB1001,
   ecma_a20: ecmaA20,
@@ -61,8 +85,8 @@ const DOCUMENT_ONLY_IDS = new Set([
 /**
  * Cria gerador vetorial para modelos extraídos do Picador CAD (.des)
  */
-function createDesCalculator(rawItem: any, defaultL: number, defaultB: number) {
-  return (params: Record<string, number>): DielineResult => {
+function createDesCalculator(rawItem: any, _defaultL: number, _defaultB: number) {
+  return (_params: Record<string, number>): DielineResult => {
     const geom = rawItem.geometry;
     if (!geom) {
       throw new Error(`Geometria DES não encontrada para ${rawItem.modelId}`);
@@ -72,11 +96,10 @@ function createDesCalculator(rawItem: any, defaultL: number, defaultB: number) {
     const origW = Math.max(1, bbox.xmax - bbox.xmin);
     const origH = Math.max(1, bbox.ymax - bbox.ymin);
 
-    const targetL = params.L || defaultL || origW;
-    const targetB = params.B || defaultB || origH;
-
-    const scaleX = targetL / (defaultL || origW);
-    const scaleY = targetB / (defaultB || origH);
+    // Modelos vetoriais DES não suportam escala linear arbitrária (que distorce abas e raios).
+    // São renderizados com suas dimensões geométricas reais originais 1:1.
+    const scaleX = 1.0;
+    const scaleY = 1.0;
 
     const midX = (bbox.xmin + bbox.xmax) / 2;
     const midY = (bbox.ymin + bbox.ymax) / 2;
@@ -153,8 +176,8 @@ function createDesCalculator(rawItem: any, defaultL: number, defaultB: number) {
     }
 
     if (minX === Infinity) {
-      minX = -targetL / 2; maxX = targetL / 2;
-      minY = -targetB / 2; maxY = targetB / 2;
+      minX = -origW / 2; maxX = origW / 2;
+      minY = -origH / 2; maxY = origH / 2;
     }
 
     const bounds: BoundingBox2D = {
@@ -179,7 +202,7 @@ function createDesCalculator(rawItem: any, defaultL: number, defaultB: number) {
  * Cria gerador para modelos paramétricos C# avaliados da base original
  */
 function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number, _defaultH: number) {
-  return (params: Record<string, number>): DielineResult => {
+  return (_params: Record<string, number>): DielineResult => {
     const geom = csItem.geometry;
     if (!geom) {
       throw new Error(`Geometria C# não encontrada para ${csItem.modelId}`);
@@ -188,11 +211,9 @@ function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number,
     const baseL = defaultL || 300;
     const baseB = defaultB || 200;
 
-    const targetL = params.L || baseL;
-    const targetB = params.B || baseB;
-
-    const scaleX = targetL / baseL;
-    const scaleY = targetB / baseB;
+    // Modelos C# estáticos avaliados preservam estritamente geometria 1:1 original sem distorção artificial.
+    const scaleX = 1.0;
+    const scaleY = 1.0;
 
     const segments: Segment2D[] = (geom.segments || []).map((s: any, idx: number) => ({
       id: `cs-seg-${idx}`,
@@ -264,8 +285,8 @@ function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number,
     }
 
     if (minX === Infinity) {
-      minX = -targetL / 2; maxX = targetL / 2;
-      minY = -targetB / 2; maxY = targetB / 2;
+      minX = -baseL / 2; maxX = baseL / 2;
+      minY = -baseB / 2; maxY = baseB / 2;
     }
 
     const bounds: BoundingBox2D = {
@@ -401,9 +422,9 @@ export function getModelById(id: string): PackagingModel {
         { key: 'L', label: 'Comprimento (L)', min: 50, max: 1500, step: 5, unit: 'mm' },
         { key: 'B', label: 'Largura (B)', min: 30, max: 1200, step: 5, unit: 'mm' },
         { key: 'H', label: 'Altura (H)', min: 20, max: 800, step: 5, unit: 'mm' },
-        { key: 'Ep', label: 'Espessura (Ep)', min: 0.3, max: 8.0, step: 0.1, unit: 'mm' },
+        { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 8.0, step: 0.05, unit: 'mm' },
       ],
-      status: isFoldable ? 'PASS' : 'NON_FOLDABLE',
+      status: 'PENDING_PORTING',
       originalSource: 'DES_VECTOR_DRAWING',
       implementationType: 'DES_GEOMETRY_PARSER',
       generator: `des_${desItem.fileName}`,
@@ -436,9 +457,9 @@ export function getModelById(id: string): PackagingModel {
         { key: 'L', label: 'Comprimento (L)', min: 50, max: 1500, step: 5, unit: 'mm' },
         { key: 'B', label: 'Largura (B)', min: 30, max: 1200, step: 5, unit: 'mm' },
         { key: 'H', label: 'Altura (H)', min: 20, max: 800, step: 5, unit: 'mm' },
-        { key: 'Ep', label: 'Espessura (Ep)', min: 0.3, max: 8.0, step: 0.1, unit: 'mm' },
+        { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 8.0, step: 0.05, unit: 'mm' },
       ],
-      status: isFoldable ? 'PASS' : 'NON_FOLDABLE',
+      status: 'PENDING_PORTING',
       originalSource: 'C#_PARAMETRIC_DLL',
       implementationType: 'CSHARP_EVALUATED',
       generator: `csharp_${csItem.dllName}`,

@@ -18,6 +18,157 @@ import { computeBoundingBox } from '../geometry';
  * 115 entidades (109 segmentos, 6 arcos)
  * MAX_COORDINATE_ERROR <= 0.000152 mm
  */
+interface Pt2D { x: number; y: number; }
+
+function ptDot(a: Pt2D, b: Pt2D) { return a.x * b.x + a.y * b.y; }
+function ptSub(a: Pt2D, b: Pt2D): Pt2D { return { x: a.x - b.x, y: a.y - b.y }; }
+function ptAdd(a: Pt2D, b: Pt2D): Pt2D { return { x: a.x + b.x, y: a.y + b.y }; }
+function ptMul(a: Pt2D, s: number): Pt2D { return { x: a.x * s, y: a.y * s }; }
+function ptLen(a: Pt2D): number { return Math.hypot(a.x, a.y); }
+function ptKross(a: Pt2D, b: Pt2D): number { return a.x * b.y - a.y * b.x; }
+
+function extendSegment(p0: Pt2D, p1: Pt2D, pt: Pt2D): { p0: Pt2D; p1: Pt2D } {
+  const vecSeg = ptSub(p1, p0);
+  const prod0 = ptDot(ptSub(p0, pt), vecSeg);
+  const prod1 = ptDot(ptSub(p1, pt), vecSeg);
+  if (prod0 > 0 && prod1 > 0) return { p0: pt, p1 };
+  if (prod0 < 0 && prod1 < 0) return { p0: pt, p1: p0 };
+  return { p0, p1 };
+}
+
+function intersectLines(s0p0: Pt2D, s0p1: Pt2D, s1p0: Pt2D, s1p1: Pt2D): Pt2D | null {
+  const den = (s0p1.x - s0p0.x) * (s1p1.y - s1p0.y) - (s0p1.y - s0p0.y) * (s1p1.x - s1p0.x);
+  if (Math.abs(den) < 1e-10) return null;
+  const r = ((s0p0.y - s1p0.y) * (s1p1.x - s1p0.x) - (s0p0.x - s1p0.x) * (s1p1.y - s1p0.y)) / den;
+  return {
+    x: s0p0.x + r * (s0p1.x - s0p0.x),
+    y: s0p0.y + r * (s0p1.y - s0p0.y),
+  };
+}
+
+function intersectSegments(s0p0: Pt2D, s0p1: Pt2D, s1p0: Pt2D, s1p1: Pt2D): Pt2D | null {
+  const den = (s0p1.x - s0p0.x) * (s1p1.y - s1p0.y) - (s0p1.y - s0p0.y) * (s1p1.x - s1p0.x);
+  if (Math.abs(den) < 1e-10) return null;
+  const r = ((s0p0.y - s1p0.y) * (s1p1.x - s1p0.x) - (s0p0.x - s1p0.x) * (s1p1.y - s1p0.y)) / den;
+  const s = ((s0p0.y - s1p0.y) * (s0p1.x - s0p0.x) - (s0p0.x - s1p0.x) * (s0p1.y - s0p0.y)) / den;
+  if (r >= 0.0 && r <= 1.0 && s >= 0.0 && s <= 1.0) {
+    return {
+      x: s0p0.x + r * (s0p1.x - s0p0.x),
+      y: s0p0.y + r * (s0p1.y - s0p0.y),
+    };
+  }
+  return null;
+}
+
+function getParalleleSegments(p0: Pt2D, p1: Pt2D, dist: number): [{ p0: Pt2D; p1: Pt2D }, { p0: Pt2D; p1: Pt2D }] {
+  const dir = ptSub(p1, p0);
+  const l = ptLen(dir);
+  const u = { x: dir.x / l, y: dir.y / l };
+  const norm = { x: -u.y, y: u.x };
+  const p00 = ptAdd(p0, ptMul(norm, dist));
+  const s0 = { p0: p00, p1: ptAdd(p00, dir) };
+  const p10 = ptAdd(p0, ptMul(norm, -dist));
+  const s1 = { p0: p10, p1: ptAdd(p10, dir) };
+  return [s0, s1];
+}
+
+function vecToAngleDeg(v: Pt2D): number {
+  const l = ptLen(v);
+  if (l < 0.001) return 0;
+  const ux = v.x / l;
+  const uy = v.y / l;
+  const ang = uy >= 0 ? Math.acos(Math.max(-1, Math.min(1, ux))) : 2 * Math.PI - Math.acos(Math.max(-1, Math.min(1, ux)));
+  let deg = (ang * 180) / Math.PI;
+  deg = deg % 360;
+  if (deg < 0) deg += 360;
+  const eps = 0.001;
+  if (deg >= 360 - eps || deg < eps) deg = 0;
+  else if (Math.abs(deg - 90) < eps) deg = 90;
+  else if (Math.abs(deg - 180) < eps) deg = 180;
+  else if (Math.abs(deg - 270) < eps) deg = 270;
+  return deg;
+}
+
+function applyPicToolRound(seg0: Segment2D, seg1: Segment2D, radius: number): Arc2D | null {
+  const s0p0 = { x: seg0.x0, y: seg0.y0 };
+  const s0p1 = { x: seg0.x1, y: seg0.y1 };
+  const s1p0 = { x: seg1.x0, y: seg1.y0 };
+  const s1p1 = { x: seg1.x1, y: seg1.y1 };
+
+  const ptExt = intersectLines(s0p0, s0p1, s1p0, s1p1);
+  if (!ptExt) return null;
+
+  const ext0 = extendSegment(s0p0, s0p1, ptExt);
+  const ext1 = extendSegment(s1p0, s1p1, ptExt);
+
+  const [s00, s01] = getParalleleSegments(ext0.p0, ext0.p1, radius);
+  const [s10, s11] = getParalleleSegments(ext1.p0, ext1.p1, radius);
+
+  const ptCenter = intersectSegments(s00.p0, s00.p1, s10.p0, s10.p1)
+    || intersectSegments(s00.p0, s00.p1, s11.p0, s11.p1)
+    || intersectSegments(s01.p0, s01.p1, s10.p0, s10.p1)
+    || intersectSegments(s01.p0, s01.p1, s11.p0, s11.p1);
+
+  if (!ptCenter) return null;
+
+  const v0 = ptSub(ext0.p1, ext0.p0);
+  const n0a = { x: -v0.y, y: v0.x };
+  const n0b = { x: v0.y, y: -v0.x };
+  const pt0 = intersectSegments(ext0.p0, ext0.p1, ptCenter, ptAdd(ptCenter, n0a))
+    || intersectSegments(ext0.p0, ext0.p1, ptCenter, ptAdd(ptCenter, n0b));
+  if (!pt0) return null;
+
+  const v1 = ptSub(ext1.p1, ext1.p0);
+  const n1a = { x: -v1.y, y: v1.x };
+  const n1b = { x: v1.y, y: -v1.x };
+  const pt1 = intersectSegments(ext1.p0, ext1.p1, ptCenter, ptAdd(ptCenter, n1a))
+    || intersectSegments(ext1.p0, ext1.p1, ptCenter, ptAdd(ptCenter, n1b));
+  if (!pt1) return null;
+
+  const ptInter = intersectSegments(ext0.p0, ext0.p1, ext1.p0, ext1.p1);
+  if (!ptInter) return null;
+
+  // Modify seg0
+  if (ptLen(ptSub(ext0.p0, ptInter)) < ptLen(ptSub(ext0.p1, ptInter))) {
+    seg0.x0 = pt0.x; seg0.y0 = pt0.y;
+    seg0.x1 = ext0.p1.x; seg0.y1 = ext0.p1.y;
+  } else {
+    seg0.x0 = pt0.x; seg0.y0 = pt0.y;
+    seg0.x1 = ext0.p0.x; seg0.y1 = ext0.p0.y;
+  }
+
+  // Modify seg1
+  if (ptLen(ptSub(ext1.p0, ptInter)) < ptLen(ptSub(ext1.p1, ptInter))) {
+    seg1.x0 = pt1.x; seg1.y0 = pt1.y;
+    seg1.x1 = ext1.p1.x; seg1.y1 = ext1.p1.y;
+  } else {
+    seg1.x0 = pt1.x; seg1.y0 = pt1.y;
+    seg1.x1 = ext1.p0.x; seg1.y1 = ext1.p0.y;
+  }
+
+  // Create Arc
+  let startPt = pt0;
+  let endPt = pt1;
+  if (ptKross(ptSub(pt0, ptCenter), ptSub(pt1, ptCenter)) <= 0) {
+    startPt = pt1;
+    endPt = pt0;
+  }
+
+  let aBeg = vecToAngleDeg(ptSub(startPt, ptCenter));
+  let aEnd = vecToAngleDeg(ptSub(endPt, ptCenter));
+  while (aBeg < 0) aBeg += 360;
+  while (aEnd < aBeg) aEnd += 360;
+
+  return {
+    cx: ptCenter.x,
+    cy: ptCenter.y,
+    r: radius,
+    startAngle: aBeg,
+    endAngle: aEnd,
+    type: 'cut',
+  };
+}
+
 export const fefco0429: PackagingModel = {
   status: 'PASS',
   isFoldable: true,
@@ -41,7 +192,7 @@ export const fefco0429: PackagingModel = {
     { key: 'L', label: 'Comprimento (L)', min: 100, max: 1200, step: 5, unit: 'mm', description: 'Comprimento interno da caixa' },
     { key: 'B', label: 'Largura (B)', min: 80, max: 800, step: 5, unit: 'mm', description: 'Largura interna da caixa' },
     { key: 'H', label: 'Altura (H)', min: 30, max: 400, step: 5, unit: 'mm', description: 'Altura interna da caixa' },
-    { key: 'Ep', label: 'Espessura (Ep)', min: 0.5, max: 8.0, step: 0.5, unit: 'mm', description: 'Espessura do material (mm)' },
+    { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 8.0, step: 0.05, unit: 'mm', description: 'Espessura do material (a partir de 0,1mm)' },
     { key: 'H7', label: 'Abas da Tampa (H7)', min: 20, max: 150, step: 5, unit: 'mm', description: 'Largura das abas laterais e frontal da tampa' },
   ],
   calculate(params: Record<string, number>): DielineResult {
@@ -176,19 +327,81 @@ export const fefco0429: PackagingModel = {
       // 19. Vinco raiz parede lateral inferior: (L1, v5) -> (L1, 0)
       segments.push({ x0: sx * L1, y0: sy * v5, x1: sx * L1, y1: 0, type: 'crease' });
 
+      // v2 alívio exato da parede dupla do C#
+      const v3_diff = B2 - B1;
+      const v2_relief = H1 - H2 - v3_diff;
+
       if (sy < 0) {
         // Borda inferior da caixa (Y negativo) no centro
-        segments.push({ x0: 0, y0: sy * (B2 + H2 + 2), x1: sx * L2, y1: sy * (B2 + H2 + 2), type: 'cut' });
+        segments.push({ x0: 0, y0: sy * (B2 + H2 + v2_relief), x1: sx * L2, y1: sy * (B2 + H2 + v2_relief), type: 'cut' });
       }
 
-      // 20. Aba canto vertical: (L2+D1, B2) -> (L2+D1, B2+H2)
-      segments.push({ x0: sx * (L2 + D1), y0: sy * B2, x1: sx * (L2 + D1), y1: sy * (B2 + H2), type: 'cut' });
+      // Aba canto chanfro alívio vertical: (L2, B2+H2) -> (L2, B2+H2+v2_relief)
+      segments.push({ x0: sx * L2, y0: sy * (B2 + H2), x1: sx * L2, y1: sy * (B2 + H2 + v2_relief), type: 'cut' });
 
-      // 21. Aba canto horizontal topo: (L2, B2+H2) -> (L2+D1, B2+H2)
-      segments.push({ x0: sx * L2, y0: sy * (B2 + H2), x1: sx * (L2 + D1), y1: sy * (B2 + H2), type: 'cut' });
+      // Aba de canto: se D1 - (L1 - L2) > H4, há chanfro inclinado com raio R4 = 3
+      if (D1 - (L1 - L2) > H4) {
+        const v4 = 5;
+        const dec = 10;
+        const R4 = 3;
+        // Segmento 5: topo horizontal
+        segments.push({ x0: sx * L2, y0: sy * (B2 + H2), x1: sx * (L2 + D1), y1: sy * (B2 + H2), type: 'cut' });
+        // Segmento 6: vertical direita
+        // Segmento 24 vertical na ponta da aba
+        segments.push({ x0: sx * (L2 + D1), y0: sy * (B2 + v4 + dec), x1: sx * (L2 + D1), y1: sy * (B2 + H2), type: 'cut' });
 
-      // 22. Aba canto chanfro alívio: (L2, B2+H2) -> (L2, B2+H2+2)
-      segments.push({ x0: sx * L2, y0: sy * (B2 + H2), x1: sx * L2, y1: sy * (B2 + H2 + 2), type: 'cut' });
+        // Chanfro analítico exato com concordância de raio R4 (PicToolRound)
+        const x7 = L1 + H4;
+        const x_end = L2 + D1;
+        const y1_chamfer = B2 + v4;
+        const m = dec / (x_end - x7);
+        const theta = Math.atan(m);
+        const degTheta = (theta * 180) / Math.PI;
+
+        // Centro do arco de raio R4 tangente à reta vertical x7 e à reta inclinada m
+        const cx_chamfer = x7 + R4;
+        const cy_chamfer = y1_chamfer - R4 * Math.cos(theta) + m * R4 * (1 - Math.sin(theta));
+
+        // Ponto de tangência na reta inclinada
+        const xt_chamfer = cx_chamfer - R4 * Math.sin(theta);
+        const yt_chamfer = cy_chamfer + R4 * Math.cos(theta);
+
+        // Segmento 21 chanfrado aparado pelo arco
+        segments.push({ x0: sx * xt_chamfer, y0: sy * yt_chamfer, x1: sx * x_end, y1: sy * (y1_chamfer + dec), type: 'cut' });
+
+        // Segmento 7 vertical aparado pelo arco
+        segments.push({ x0: sx * x7, y0: sy * cy_chamfer, x1: sx * x7, y1: sy * B2, type: 'cut' });
+
+        // Arco de arredondamento R4
+        let aStart = 0;
+        let aEnd = 0;
+        if (sx > 0 && sy > 0) {
+          aStart = 90 + degTheta;
+          aEnd = 180;
+        } else if (sx < 0 && sy > 0) {
+          aStart = 90 - degTheta;
+          aEnd = 0;
+        } else if (sx > 0 && sy < 0) {
+          aStart = 270 - degTheta;
+          aEnd = 180;
+        } else {
+          aStart = 270 + degTheta;
+          aEnd = 360;
+        }
+
+        arcs.push({
+          cx: sx * cx_chamfer,
+          cy: sy * cy_chamfer,
+          r: R4,
+          startAngle: Math.min(aStart, aEnd),
+          endAngle: Math.max(aStart, aEnd),
+          type: 'cut',
+        });
+      } else {
+        // Sem chanfro
+        segments.push({ x0: sx * (L2 + D1), y0: sy * B2, x1: sx * (L2 + D1), y1: sy * (B2 + H2), type: 'cut' });
+        segments.push({ x0: sx * L2, y0: sy * (B2 + H2), x1: sx * (L2 + D1), y1: sy * (B2 + H2), type: 'cut' });
+      }
     }
 
     // =========================================================================
@@ -201,68 +414,67 @@ export const fefco0429: PackagingModel = {
     if (Rp > H7 - 1.0) Rp = H7 - 1.0;
 
     const yBaseCover = B2 + H2;
+    const L3 = L + m2;
+    const xd = -(H7 - cw + L3 / 2.0);
+    const yd = 0;
 
-    const sqrt10 = Math.sqrt(10);
-    const X_v = L2 - cw + H7;
-    const cx = X_v - Rp;
-    const x_b = L2 - cw;
-    const y_b = yBaseCover + cs + cs;
+    const s3: Segment2D = { x0: xd + H7 - cw + L3 - cw, y0: yd + cs, x1: xd + H7 - cw + L3, y1: yd, type: 'cut' };
+    const s4: Segment2D = { x0: xd + H7 - cw + L3 - cw, y0: yd + cs, x1: xd + H7 - cw + L3 - cw, y1: yd + cs + cs, type: 'cut' };
+    const s5: Segment2D = { x0: xd + H7 - cw + L3 - cw + H7, y0: yd + cs + cs + H7 / 3.0, x1: xd + H7 - cw + L3 - cw, y1: yd + cs + cs, type: 'cut' };
+    const s6: Segment2D = { x0: xd + H7 - cw + L3 - cw + H7, y0: yd + cs + cs + H7 / 3.0, x1: xd + H7 - cw + L3 - cw + H7, y1: yd + cs + B2top - cs - H7 / 3.0, type: 'cut' };
+    const s7: Segment2D = { x0: xd + H7 - cw + L3 - cw, y0: yd + cs + B2top - cs, x1: xd + H7 - cw + L3 - cw + H7, y1: yd + cs + B2top - cs - H7 / 3.0, type: 'cut' };
+    const s8: Segment2D = { x0: xd + H7 - cw + L3 - cw, y0: yd + cs + B2top - cs, x1: xd + H7 - cw + L3 - cw, y1: yd + cs + cs, type: 'crease' };
 
-    // cy2: centro do fillet inferior (entre linha 5 e linha 6)
-    const cy2 = (cx - x_b + 3 * y_b + Rp * sqrt10) / 3;
+    const s11: Segment2D = { x0: xd + H7, y0: yd + cs + B2top, x1: xd + H7 - cw + L3 - cw, y1: yd + cs + B2top, type: 'crease' };
+    const s12: Segment2D = { x0: xd + H7 - cw + L3 - cw, y0: yd + cs + B2top, x1: xd + H7 - cw + L3 - cw, y1: yd + cs + B2top - cs, type: 'cut' };
+    const s13: Segment2D = { x0: xd + H7 - cw + L3 - cw, y0: yd + cs + B2top + H7, x1: xd + H7 - cw + L3 - cw, y1: yd + cs + B2top, type: 'cut' };
+    const s14: Segment2D = { x0: xd + H7 + 15, y0: yd + cs + B2top + H7, x1: xd + H7 - cw + L3 - cw, y1: yd + cs + B2top + H7, type: 'cut' };
 
-    // cy1: centro do fillet superior (entre linha 6 e linha 7)
-    const y7 = yBaseCover + cs + B2top - cs;
-    const cy1 = (-cx + x_b + 3 * y7 - Rp * sqrt10) / 3;
+    const s16: Segment2D = { x0: xd + H7 - cw + L3 - cw, y0: yd + cs, x1: xd + H7, y1: yd + cs, type: 'crease' };
+    const s17: Segment2D = { x0: xd + H7, y0: yd + cs, x1: xd + H7 - cw, y1: yd, type: 'cut' };
+    const s18: Segment2D = { x0: xd + H7, y0: yd + cs, x1: xd + H7, y1: yd + cs + cs, type: 'cut' };
+    const s19: Segment2D = { x0: xd, y0: yd + cs + cs + H7 / 3.0, x1: xd + H7, y1: yd + cs + cs, type: 'cut' };
+    const s20: Segment2D = { x0: xd, y0: yd + cs + cs + H7 / 3.0, x1: xd, y1: yd + cs + B2top - cs - H7 / 3.0, type: 'cut' };
+    const s21: Segment2D = { x0: xd + H7, y0: yd + cs + B2top - cs, x1: xd, y1: yd + cs + B2top - cs - H7 / 3.0, type: 'cut' };
+    const s22: Segment2D = { x0: xd + H7, y0: yd + cs + B2top - cs, x1: xd + H7, y1: yd + cs + cs, type: 'crease' };
 
-    // Tangentes
-    const xt5 = cx + Rp / sqrt10;
-    const yt5 = cy2 - 3 * Rp / sqrt10;
+    const s27: Segment2D = { x0: xd + H7, y0: yd + cs + B2top, x1: xd + H7, y1: yd + cs + B2top - cs, type: 'cut' };
+    const s28: Segment2D = { x0: xd + H7, y0: yd + cs + B2top + H7, x1: xd + H7, y1: yd + cs + B2top, type: 'cut' };
 
-    const xt6 = cx + Rp;
-    const yt6_low = cy2;
-    const yt6_high = cy1;
+    const coverArcs: Arc2D[] = [];
+    const a9 = applyPicToolRound(s6, s7, Rp);
+    if (a9) coverArcs.push(a9);
+    const a10 = applyPicToolRound(s5, s6, Rp);
+    if (a10) coverArcs.push(a10);
+    const a15 = applyPicToolRound(s13, s14, Rp);
+    if (a15) coverArcs.push(a15);
+    const a23 = applyPicToolRound(s20, s21, Rp);
+    if (a23) coverArcs.push(a23);
+    const a24 = applyPicToolRound(s19, s20, Rp);
+    if (a24) coverArcs.push(a24);
+    const a29 = applyPicToolRound(s14, s28, Rp);
+    if (a29) coverArcs.push(a29);
 
-    const xt7 = cx + Rp / sqrt10;
-    const yt7 = cy1 + 3 * Rp / sqrt10;
-
-    const cx_top = L2 - cw - Rp;
-    const cy_top = yBaseCover + cs + B2top + H7 - Rp;
-
-    // 1. LADO DIREITO DA TAMPA (+X)
-    segments.push({ x0: L2 - cw, y0: yBaseCover + cs, x1: L2, y1: yBaseCover, type: 'cut' });
-    segments.push({ x0: L2 - cw, y0: yBaseCover + cs, x1: L2 - cw, y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: xt5, y0: yt5, x1: L2 - cw, y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: xt6, y0: yt6_low, x1: xt6, y1: yt6_high, type: 'cut' });
-    segments.push({ x0: xt7, y0: yt7, x1: L2 - cw, y1: yBaseCover + cs + B2top - cs, type: 'cut' });
-    segments.push({ x0: L2 - cw, y0: yBaseCover + cs + B2top - cs, x1: L2 - cw, y1: yBaseCover + cs + cs, type: 'crease' });
-    segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs + B2top, x1: L2 - cw, y1: yBaseCover + cs + B2top, type: 'crease' });
-    segments.push({ x0: L2 - cw, y0: yBaseCover + cs + B2top, x1: L2 - cw, y1: yBaseCover + cs + B2top - cs, type: 'cut' });
-    segments.push({ x0: L2 - cw, y0: cy_top, x1: L2 - cw, y1: yBaseCover + cs + B2top, type: 'cut' });
-
-    // Borda horizontal superior da aba frontal
-    segments.push({ x0: -cx_top, y0: cy_top + Rp, x1: cx_top, y1: cy_top + Rp, type: 'cut' });
-
-    // Vinco base da tampa
-    segments.push({ x0: L2 - cw, y0: yBaseCover + cs, x1: -(L2 - cw), y1: yBaseCover + cs, type: 'crease' });
-
-    // 2. LADO ESQUERDO DA TAMPA (-X)
-    segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs, x1: -L2, y1: yBaseCover, type: 'cut' });
-    segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs, x1: -(L2 - cw), y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: -xt5, y0: yt5, x1: -(L2 - cw), y1: yBaseCover + cs + cs, type: 'cut' });
-    segments.push({ x0: -xt6, y0: yt6_low, x1: -xt6, y1: yt6_high, type: 'cut' });
-    segments.push({ x0: -xt7, y0: yt7, x1: -(L2 - cw), y1: yBaseCover + cs + B2top - cs, type: 'cut' });
-    segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs + B2top - cs, x1: -(L2 - cw), y1: yBaseCover + cs + cs, type: 'crease' });
-    segments.push({ x0: -(L2 - cw), y0: yBaseCover + cs + B2top, x1: -(L2 - cw), y1: yBaseCover + cs + B2top - cs, type: 'cut' });
-    segments.push({ x0: -(L2 - cw), y0: cy_top, x1: -(L2 - cw), y1: yBaseCover + cs + B2top, type: 'cut' });
-
-    // 3. OS 6 ARCOS FILLET (PicToolRound original C#)
-    arcs.push({ cx: cx, cy: cy1, r: Rp, startAngle: 0, endAngle: 71.565051, type: 'cut' });
-    arcs.push({ cx: cx, cy: cy2, r: Rp, startAngle: 288.434949, endAngle: 360, type: 'cut' });
-    arcs.push({ cx: cx_top, cy: cy_top, r: Rp, startAngle: 0, endAngle: 90, type: 'cut' });
-    arcs.push({ cx: -cx, cy: cy1, r: Rp, startAngle: 108.434949, endAngle: 180, type: 'cut' });
-    arcs.push({ cx: -cx, cy: cy2, r: Rp, startAngle: 180, endAngle: 251.565051, type: 'cut' });
-    arcs.push({ cx: -cx_top, cy: cy_top, r: Rp, startAngle: 90, endAngle: 180, type: 'cut' });
+    const coverSegs = [s3, s4, s5, s6, s7, s8, s11, s12, s13, s14, s16, s17, s18, s19, s20, s21, s22, s27, s28];
+    for (const s of coverSegs) {
+      segments.push({
+        x0: s.x0,
+        y0: s.y0 + yBaseCover,
+        x1: s.x1,
+        y1: s.y1 + yBaseCover,
+        type: s.type,
+      });
+    }
+    for (const a of coverArcs) {
+      arcs.push({
+        cx: a.cx,
+        cy: a.cy + yBaseCover,
+        r: a.r,
+        startAngle: a.startAngle,
+        endAngle: a.endAngle,
+        type: a.type,
+      });
+    }
 
     // =========================================================================
     // COTAS TÉCNICAS

@@ -35,7 +35,7 @@ export const fefco0420: PackagingModel = {
     { key: 'L', label: 'Comprimento (L)', min: 100, max: 1200, step: 5, unit: 'mm', description: 'Comprimento da base interna' },
     { key: 'B', label: 'Largura (B)', min: 80, max: 800, step: 5, unit: 'mm', description: 'Largura da base interna' },
     { key: 'H', label: 'Altura (H)', min: 30, max: 500, step: 5, unit: 'mm', description: 'Altura interna da caixa' },
-    { key: 'Ep', label: 'Espessura (Ep)', min: 0.5, max: 7.0, step: 0.5, unit: 'mm', description: 'Espessura do material' },
+    { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 7.0, step: 0.05, unit: 'mm', description: 'Espessura do material (a partir de 0,1mm)' },
     { key: 'M', label: 'Aba Encaixe (M)', min: 20, max: 80, step: 5, unit: 'mm', description: 'Comprimento da aba de fechamento' },
   ],
   calculate(params: Record<string, number>): DielineResult {

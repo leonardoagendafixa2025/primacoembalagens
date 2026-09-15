@@ -43,7 +43,7 @@ export function createPanelMesh(
   }
 
   const geom = new THREE.ExtrudeGeometry(shape, {
-    depth: Math.max(0.5, thickness),
+    depth: Math.max(0.05, thickness),
     bevelEnabled: false,
   });
 
@@ -75,8 +75,9 @@ interface KinematicNodeItem {
 export function buildFoldable3DTree(
   dieline: DielineResult,
   thickness: number,
-  outerColor: string = '#C29B68',
-  innerColor: string = '#D4B07B'
+  outerColor: string = '#FFFFFF',
+  innerColor: string = '#F5EFE6',
+  roughness: number = 0.35
 ): FoldableTreeResult {
   const rootGroup = new THREE.Group();
   const topology = buildFoldingTopology(dieline);
@@ -91,20 +92,20 @@ export function buildFoldable3DTree(
     };
   }
 
-  // Materiais de acabamento Kraft
-  const kraftOuter = new THREE.MeshStandardMaterial({
+  // Materiais de acabamento Cartão Branco Duplex / Triplex ou Kraft
+  const matOuter = new THREE.MeshStandardMaterial({
     color: outerColor,
-    roughness: 0.85,
-    metalness: 0.05,
-    side: THREE.DoubleSide,
-  });
-  const kraftInner = new THREE.MeshStandardMaterial({
-    color: innerColor,
-    roughness: 0.9,
+    roughness: roughness,
     metalness: 0.02,
     side: THREE.DoubleSide,
   });
-  const materials = [kraftOuter, kraftInner];
+  const matInner = new THREE.MeshStandardMaterial({
+    color: innerColor,
+    roughness: Math.min(1.0, roughness + 0.1),
+    metalness: 0.02,
+    side: THREE.DoubleSide,
+  });
+  const materials = [matOuter, matInner];
 
   // Painel Raiz (Base/Fundo)
   const rootPanel = panels.find((p) => p.isRoot) || panels[0];

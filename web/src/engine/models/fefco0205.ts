@@ -2,30 +2,30 @@ import type { PackagingModel, DielineResult, Segment2D, Arc2D, DimensionLine } f
 import { computeBoundingBox } from '../geometry';
 
 /**
- * FEFCO 0203 - Caixa com Abas Totalmente Sobrepostas (Full Overlap Box / FOL)
- * Portabilidade matemática 1:1 do PLMPackLib C# original (9d2c1718_5844_4cee_a509_e85b48f0de20.dll)
+ * FEFCO 0205 - Caixa com Abas Baseadas no Comprimento (L Flaps)
+ * Portabilidade matemática 1:1 do PLMPackLib C# original (fe7f9839_ab63_4477_86ee_e1a07fac2fa9.dll)
  * 
  * Componentes originais integrados:
- * 1. Fefco_0203 (Guid: 9d2c1718-5844-4cee-a509-e85b48f0de20)
+ * 1. Fefco_0205 (Guid: fe7f9839-ab63-4477-86ee-e1a07fac2fa9)
  * 2. Half_0200_Fefco_p2 (Guid: 45f99ef2-1648-48b4-a4b6-a84a918a0b26)
  * 
  * Validação numérica C# vs TS:
  * 64 segmentos, 2 arcos (pontos degenerados de aba de cola)
- * FL = FB = Math.floor(B + e / 2.0)
+ * FL = FB = Math.floor((L + e) / 2.0)
  * Delta máximo comprovado em 32 passos: <= 0.00000023 mm
  */
-export const fefco0203: PackagingModel = {
+export const fefco0205: PackagingModel = {
   status: 'PASS',
   isFoldable: true,
   originalSource: 'C#_PARAMETRIC_DLL',
   implementationType: 'NATIVE_TS',
-  generator: 'fefco0203',
-  id: 'fefco_0203',
-  code: 'FEFCO 0203',
-  name: 'Caixa com Abas Totalmente Sobrepostas (Full Overlap / FOL)',
+  generator: 'fefco0205',
+  id: 'fefco_0205',
+  code: 'FEFCO 0205',
+  name: 'Caixa com Abas Proporcionais ao Comprimento (F205)',
   category: 'FEFCO',
   description:
-    'Caixa maleta estilo FEFCO 0203 onde as abas superiores e inferiores se sobrepõem completamente (largura total B), proporcionando proteção e resistência máxima contra compressão e empilhamento.',
+    'Caixa maleta estilo FEFCO 0205 onde a altura das abas de fechamento é dimensionada em relação ao comprimento (L) ao invés da largura (B).',
   defaultParams: {
     L: 300,
     B: 200,
@@ -77,8 +77,8 @@ export const fefco0203: PackagingModel = {
     const H1_full = H + 2.0 * e;
     const H1 = H1_full / 2.0;
 
-    // Em FEFCO 0203, as abas sobrepõem-se totalmente: FL = FB = Math.floor(B + e / 2.0)
-    const FL = Math.floor(B + e / 2.0);
+    // Em FEFCO 0205, as abas são proporcionais ao Comprimento: FL = FB = Math.floor((L + e) / 2.0)
+    const FL = Math.floor((L + e) / 2.0);
     const FB = FL;
 
     function generateHalf(sy_pos: boolean): Segment2D[] {
@@ -179,7 +179,7 @@ export const fefco0203: PackagingModel = {
     ];
 
     return {
-      modelId: 'fefco_0203',
+      modelId: 'fefco_0205',
       params,
       segments,
       arcs,
