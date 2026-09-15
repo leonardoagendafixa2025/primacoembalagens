@@ -73,11 +73,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
               ✓ Ground Truth C# 100%
             </span>
           )}
-          {model.status === 'PENDING_PORTING' && (
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(234, 179, 8, 0.2)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.4)' }}>
-              Aguardando Portabilidade C#
-            </span>
-          )}
+
         </div>
         <h2 style={{ fontSize: 17, fontWeight: 700, color: '#F8FAFC', marginTop: 6 }}>
           {model.name}
@@ -85,11 +81,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
         <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4, lineHeight: 1.4 }}>
           {model.description}
         </p>
-        {model.status === 'PENDING_PORTING' && (
-          <div style={{ marginTop: 10, padding: '8px 10px', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 6, fontSize: 11, color: '#fef08a', lineHeight: 1.4 }}>
-            ⚠️ <strong>Aguardando Portabilidade C#:</strong> Geometria CAD original renderizada 1:1. Escalonamento arbitrário bloqueado até portabilidade matemática fiel da DLL C#.
-          </div>
-        )}
+
       </div>
 
       {/* 2. Resumo da Faca Aberta (Tamanho de Prancha) */}
