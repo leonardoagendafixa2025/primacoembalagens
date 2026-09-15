@@ -80,7 +80,6 @@ export const fefco0215: PackagingModel = {
     const Hcov1 = 40.0;
     const t8_b = 0.0;
     const Hcov2 = 40.0;
-    const ChLock = 5.0;
     const t9_b = -3.0;
     const t10_b = 4.0;
     const Hcov3 = 40.0;
@@ -220,25 +219,19 @@ export const fefco0215: PackagingModel = {
     const segments = [...top_segs, ...transformed_bot];
     const arcs = [...top_arcs];
 
-    const bbox = computeBoundingBox(segments, arcs);
+    const bounds = computeBoundingBox({ segments, arcs });
 
     const dimensions: DimensionLine[] = [
-      { from: { x: t9, y: 0 }, to: { x: t9 + L1, y: 0 }, value: L, label: `L = ${L} mm`, type: 'horizontal' },
-      { from: { x: t9 + L1, y: 0 }, to: { x: t9 + L1 + B1, y: 0 }, value: B, label: `B = ${B} mm`, type: 'horizontal' },
-      { from: { x: t9 + L1 + B1, y: 0 }, to: { x: t9 + L1 + B1 + L2, y: 0 }, value: L, label: `L = ${L} mm`, type: 'horizontal' },
-      { from: { x: t9 + L1 + B1 + L2, y: 0 }, to: { x: t9 + L1 + B1 + L2 + B2, y: 0 }, value: B, label: `B = ${B} mm`, type: 'horizontal' },
-      { from: { x: -40, y: -h1_half }, to: { x: -40, y: h1_half }, value: H, label: `H = ${H} mm`, type: 'vertical' },
-      { from: { x: bbox.minX, y: -h1_half - 50 }, to: { x: bbox.maxX, y: -h1_half - 50 }, value: bbox.width, label: `Largura Total = ${bbox.width.toFixed(1)} mm`, type: 'horizontal' },
-      { from: { x: bbox.maxX + 30, y: bbox.minY }, to: { x: bbox.maxX + 30, y: bbox.maxY }, value: bbox.height, label: `Altura Total = ${bbox.height.toFixed(1)} mm`, type: 'vertical' },
+      { x0: t9, y0: 0, x1: t9 + L1, y1: 0, text: `L = ${L} mm` },
+      { x0: t9 + L1, y0: 0, x1: t9 + L1 + B1, y1: 0, text: `B = ${B} mm` },
+      { x0: -40, y0: -h1_half, x1: -40, y1: h1_half, text: `H = ${H} mm`, isVertical: true },
     ];
 
     return {
-      modelId: 'fefco_0215',
-      params,
       segments,
       arcs,
       dimensions,
-      boundingBox: bbox,
+      bounds,
     };
   },
 };

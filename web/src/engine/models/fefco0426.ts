@@ -243,22 +243,18 @@ export const fefco0426: PackagingModel = {
     segments.push({ type: 'crease', x0: H1 - m4 / 2.0 + v4, y0: T1 + H4, x1: H1 - m4 / 2.0 + v4 + L3, y1: T1 + H4 });
     segments.push({ type: 'crease', x0: H1 - m4 / 2.0, y0: T1 + H4 + dbw, x1: H1 - m4 / 2.0 + L2, y1: T1 + H4 + dbw });
 
-    const bbox = computeBoundingBox(segments, arcs);
+    const bounds = computeBoundingBox({ segments, arcs });
 
     const dimensions: DimensionLine[] = [
-      { from: { x: H1, y: 0 }, to: { x: H1 + L1, y: 0 }, value: L, label: `L = ${L} mm`, type: 'horizontal' },
-      { from: { x: 0, y: y_fold_slot }, to: { x: H1, y: y_fold_slot }, value: H, label: `H = ${H} mm`, type: 'horizontal' },
-      { from: { x: bbox.minX, y: -30 }, to: { x: bbox.maxX, y: -30 }, value: bbox.width, label: `Largura Total = ${bbox.width.toFixed(1)} mm`, type: 'horizontal' },
-      { from: { x: bbox.maxX + 30, y: bbox.minY }, to: { x: bbox.maxX + 30, y: bbox.maxY }, value: bbox.height, label: `Altura Total = ${bbox.height.toFixed(1)} mm`, type: 'vertical' },
+      { x0: H1, y0: 0, x1: H1 + L1, y1: 0, text: `L = ${L} mm` },
+      { x0: 0, y0: y_fold_slot, x1: H1, y1: y_fold_slot, text: `H = ${H} mm` },
     ];
 
     return {
-      modelId: 'fefco_0426',
-      params,
       segments,
       arcs,
       dimensions,
-      boundingBox: bbox,
+      bounds,
     };
   },
 };

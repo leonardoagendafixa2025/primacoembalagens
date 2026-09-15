@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
 import { buildFoldable3DTree } from '../engine/foldingEngine';
-import { Play, Pause, RotateCcw, Box, Eye, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, RotateCw, Box, Eye, CheckCircle2 } from 'lucide-react';
 
 interface FoldingViewer3DProps {
   model: PackagingModel;

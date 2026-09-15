@@ -198,7 +198,6 @@ export const fefco0427: PackagingModel = {
     const m4 = 3.0 * ep1 + GE;
     const m5 = PP;
     const m6 = ep1 + GE / 2.0;
-    const m7 = 0.0;
     const m8 = GE;
     const m9 = GE;
     const m10 = m6;

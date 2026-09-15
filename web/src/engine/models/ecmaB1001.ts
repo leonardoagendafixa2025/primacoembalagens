@@ -132,23 +132,19 @@ export const ecmaB1001: PackagingModel = {
     segs.push({ type: 'cut', x0: -80.0002+H+H+B+H+H, y0: Htuck+H+H+A, x1: -80.0002+H+H+B+H+H, y1: Htuck+H+H });
     segs.push({ type: 'cut', x0: -80.0002+H+H+B+H+H, y0: Htuck+H+H, x1: -80.0002+H+H+B+H, y1: Htuck+H+H });
 
-    const bbox = computeBoundingBox(segs, []);
+    const bounds = computeBoundingBox({ segments: segs, arcs: [] });
 
     const dimensions: DimensionLine[] = [
-      { from: { x: -80.0002 + H + H, y: Htuck + H + H }, to: { x: -80.0002 + H + H + B, y: Htuck + H + H }, value: B, label: `B = ${B} mm`, type: 'horizontal' },
-      { from: { x: -80.0002 + H + H, y: Htuck + H + H }, to: { x: -80.0002 + H + H, y: Htuck + H + H + A }, value: A, label: `L = ${A} mm`, type: 'vertical' },
-      { from: { x: -80.0002 + H, y: Htuck + H + H }, to: { x: -80.0002 + H + H, y: Htuck + H + H }, value: H, label: `H = ${H} mm`, type: 'horizontal' },
-      { from: { x: bbox.minX, y: -20 }, to: { x: bbox.maxX, y: -20 }, value: bbox.width, label: `Largura Total = ${bbox.width.toFixed(1)} mm`, type: 'horizontal' },
-      { from: { x: bbox.maxX + 20, y: bbox.minY }, to: { x: bbox.maxX + 20, y: bbox.maxY }, value: bbox.height, label: `Altura Total = ${bbox.height.toFixed(1)} mm`, type: 'vertical' },
+      { x0: -80.0002 + H + H, y0: Htuck + H + H, x1: -80.0002 + H + H + B, y1: Htuck + H + H, text: `B = ${B} mm` },
+      { x0: -80.0002 + H + H, y0: Htuck + H + H, x1: -80.0002 + H + H, y1: Htuck + H + H + A, text: `L = ${A} mm`, isVertical: true },
+      { x0: -80.0002 + H, y0: Htuck + H + H, x1: -80.0002 + H + H, y1: Htuck + H + H, text: `H = ${H} mm` },
     ];
 
     return {
-      modelId: 'ecma_b1001',
-      params,
       segments: segs,
       arcs: [],
       dimensions,
-      boundingBox: bbox,
+      bounds,
     };
   },
 };

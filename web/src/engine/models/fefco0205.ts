@@ -51,7 +51,6 @@ export const fefco0205: PackagingModel = {
     const Hbc = 0.0;
     const EcL = (k / 10.0) * Ec; // 3.0
     const EcB = (1.0 - (k / 10.0)) * Ec; // 3.0
-    const EcL2 = (iGS === 1) ? 0.0 : EcL;
     const EcB2 = (iGS === 1) ? EcB : 0.0;
     const v1 = Ec / 2.0; // 3.0
     const v = Ec / 2.0;  // 3.0
@@ -168,23 +167,19 @@ export const fefco0205: PackagingModel = {
       { type: 'cut', cx: -xGlueOuter, cy: yGluePeak, r: 0.0, startAngle: 0.0, endAngle: 0.0 },
     ];
 
-    const bbox = computeBoundingBox(segments, arcs);
+    const bounds = computeBoundingBox({ segments, arcs });
 
     const dimensions: DimensionLine[] = [
-      { from: { x: -L1, y: -H1 }, to: { x: 0, y: -H1 }, value: L, label: `L = ${L} mm`, type: 'horizontal' },
-      { from: { x: -(L1 + B1), y: -H1 }, to: { x: -L1, y: -H1 }, value: B, label: `B = ${B} mm`, type: 'horizontal' },
-      { from: { x: 20, y: -H1 }, to: { x: 20, y: H1 }, value: H, label: `H = ${H} mm`, type: 'vertical' },
-      { from: { x: -(L1 + B1 + L2 + B2 + G), y: 0 }, to: { x: 0, y: 0 }, value: bbox.width, label: `Largura Total = ${bbox.width.toFixed(1)} mm`, type: 'horizontal' },
-      { from: { x: 50, y: -bbox.height / 2 }, to: { x: 50, y: bbox.height / 2 }, value: bbox.height, label: `Altura Total = ${bbox.height.toFixed(1)} mm`, type: 'vertical' },
+      { x0: -L1, y0: -H1, x1: 0, y1: -H1, text: `L = ${L} mm` },
+      { x0: -(L1 + B1), y0: -H1, x1: -L1, y1: -H1, text: `B = ${B} mm` },
+      { x0: 20, y0: -H1, x1: 20, y1: H1, text: `H = ${H} mm`, isVertical: true },
     ];
 
     return {
-      modelId: 'fefco_0205',
-      params,
       segments,
       arcs,
       dimensions,
-      boundingBox: bbox,
+      bounds,
     };
   },
 };

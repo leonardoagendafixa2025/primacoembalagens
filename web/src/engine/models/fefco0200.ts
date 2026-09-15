@@ -139,7 +139,7 @@ export const fefco0200: PackagingModel = {
       // 20
       segs.push({ type: 'cut', x0: L1 + B1 - EcB + Ec, y0: sy * (H1 - EcH), x1: L1 + B1 - EcB + Ec, y1: sy * (H1 + Hbc + FL) });
       // 21
-      segs.push({ type: 'cut', x0: L1 + B1 - EcB + Ec + wFL, y0: sy * (H1 + Hbc + FL), x1: L1 + B1 + L2 - EcL, y1: sy * (H1 + Hbc + FL) });
+      segs.push({ type: 'cut', x0: L1 + B1 - EcB + Ec, y0: sy * (H1 + Hbc + FL), x1: L1 + B1 + L2 - EcL, y1: sy * (H1 + Hbc + FL) });
       // 22
       segs.push({ type: 'cut', x0: L1 + B1 + L2 - EcL, y0: sy * (H1 - EcH), x1: L1 + B1 + L2 - EcL, y1: sy * (H1 + Hbc + FL) });
       // 23
