@@ -62,8 +62,8 @@ export interface ParamDef {
   description?: string;
 }
 
-export type ModelStatus = 'PASS' | 'NON_FOLDABLE' | 'ORIGINAL_NO_GEOMETRY' | 'DOCUMENT_ONLY' | 'FAIL' | 'PENDING_PORTING';
-export type OriginalSourceType = 'C#_PARAMETRIC_DLL' | 'DES_VECTOR_DRAWING' | 'PDF_DOCUMENT_ONLY' | 'NONE';
+export type ModelStatus = 'PASS' | 'NON_FOLDABLE' | 'FAIL' | 'PENDING_PORTING';
+export type OriginalSourceType = 'C#_PARAMETRIC_DLL' | 'DES_VECTOR_DRAWING' | 'NONE';
 export type ImplementationType = 'NATIVE_TS' | 'DES_GEOMETRY_PARSER' | 'CSHARP_EVALUATED' | 'NONE';
 
 export interface PackagingModel {

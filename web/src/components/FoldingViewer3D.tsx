@@ -182,9 +182,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     const Ep = Math.max(0.05, params.Ep || profile?.thickness || 0.4);
     const isFoldable =
       model.isFoldable !== false &&
-      model.status !== 'NON_FOLDABLE' &&
-      model.status !== 'ORIGINAL_NO_GEOMETRY' &&
-      model.status !== 'DOCUMENT_ONLY';
+      model.status !== 'NON_FOLDABLE';
 
     if (!isFoldable) {
       updateProgressRef.current = null;

@@ -68,19 +68,7 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   ecma_b1506_60: ecmaB1506_53,
 };
 
-// Códigos oficiais que na base original do PLMPackLib NÃO possuem geometria
-const ORIGINAL_NO_GEOMETRY_IDS = new Set([
-  'fefco_f772', 'fefco_f773', 'fefco_f774',
-  'fefco_f933', 'fefco_f934', 'fefco_f935',
-  'fefco_f965', 'fefco_f966', 'fefco_f967',
-  'fefco_f975', 'fefco_f976',
-  'displays_counter_display_09', 'displays_counter_display_10'
-]);
 
-// Códigos oficiais que na base original possuem apenas PDF
-const DOCUMENT_ONLY_IDS = new Set([
-  'displays_ballot_box_urne_02'
-]);
 
 /**
  * Cria gerador vetorial para modelos extraídos do Picador CAD (.des)
@@ -353,55 +341,7 @@ export function getModelById(id: string): PackagingModel {
     return errorModel;
   }
 
-  // 2. Modelo sem geometria na fonte original do PLMPackLib
-  if (ORIGINAL_NO_GEOMETRY_IDS.has(id)) {
-    const noGeomModel: PackagingModel = {
-      id: catalogItem.id,
-      code: catalogItem.code,
-      name: catalogItem.name,
-      category: catalogItem.category as any,
-      description: catalogItem.description,
-      defaultParams: catalogItem.defaultParams || { L: 300, B: 200, H: 150, Ep: 3 },
-      paramDefs: [],
-      status: 'ORIGINAL_NO_GEOMETRY',
-      originalSource: 'NONE',
-      implementationType: 'NONE',
-      generator: 'NONE',
-      isFoldable: false,
-      error: `ORIGINAL_NO_GEOMETRY: Modelo "${catalogItem.code}" existe no catálogo técnico mas não possui arquivo CAD associado no banco de dados original.`,
-      calculate: () => {
-        throw new Error(`ORIGINAL_NO_GEOMETRY: ${catalogItem.code}`);
-      },
-    };
-    MODEL_CACHE.set(id, noGeomModel);
-    return noGeomModel;
-  }
-
-  // 3. Modelo com apenas documento PDF no original
-  if (DOCUMENT_ONLY_IDS.has(id)) {
-    const docOnlyModel: PackagingModel = {
-      id: catalogItem.id,
-      code: catalogItem.code,
-      name: catalogItem.name,
-      category: catalogItem.category as any,
-      description: catalogItem.description,
-      defaultParams: catalogItem.defaultParams || { L: 300, B: 200, H: 150, Ep: 3 },
-      paramDefs: [],
-      status: 'DOCUMENT_ONLY',
-      originalSource: 'PDF_DOCUMENT_ONLY',
-      implementationType: 'NONE',
-      generator: 'NONE',
-      isFoldable: false,
-      error: `DOCUMENT_ONLY_IN_ORIGINAL: Modelo "${catalogItem.code}" possui apenas documentação PDF na base original do PLMPackLib.`,
-      calculate: () => {
-        throw new Error(`DOCUMENT_ONLY_IN_ORIGINAL: ${catalogItem.code}`);
-      },
-    };
-    MODEL_CACHE.set(id, docOnlyModel);
-    return docOnlyModel;
-  }
-
-  // 4. Modelo DES extraído do PLMPackLib (188 modelos)
+  // 2. Modelo DES extraído do PLMPackLib
   const desItem = desDataMap[id];
   if (desItem && desItem.geometry) {
     const segs = desItem.geometry.segments || [];
@@ -526,10 +466,7 @@ export function generateAuditMatrix(): AuditRow[] {
     let fold100: 'PASS' | 'N/A' = 'N/A';
     let roundtrip: 'PASS' | 'N/A' = 'N/A';
 
-    if (model.status === 'ORIGINAL_NO_GEOMETRY' || model.status === 'DOCUMENT_ONLY') {
-      status2D = 'NO_GEOMETRY';
-      status3D = 'NOT_APPLICABLE';
-    } else if (model.status === 'PASS' || model.status === 'NON_FOLDABLE') {
+    if (model.status === 'PASS' || model.status === 'NON_FOLDABLE' || model.status === 'PENDING_PORTING') {
       try {
         const geom = model.calculate(model.defaultParams || { L: 300, B: 200, H: 150, Ep: 3 });
         if (geom.segments && geom.segments.length > 0) {
