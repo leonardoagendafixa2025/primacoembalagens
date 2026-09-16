@@ -118,10 +118,12 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     grid.position.y = 0;
     scene.add(grid);
 
-    // 7. Grupo da Caixa
+    // 7. Grupo da Caixa (elevado 1mm para evitar z-fighting com o chão)
     const boxGroup = new THREE.Group();
+    boxGroup.position.y = 1;
     scene.add(boxGroup);
     boxGroupRef.current = boxGroup;
+
 
     // Observador de Redimensionamento
     const resizeObserver = new ResizeObserver((entries) => {
