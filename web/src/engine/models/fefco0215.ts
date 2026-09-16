@@ -125,7 +125,6 @@ export const fefco0215: PackagingModel = {
     top_segs.push({ type: 'cut', x0: t9 + L1 + B1, y0: h1_half, x1: t9 + L1 + B1 - Ec, y1: h1_half });
     top_segs.push({ type: 'cut', x0: t9 + L1 + B1 - Ec, y0: h1_half, x1: t9 + L1 + B1 - Ec, y1: h1_half + Hflap - yCh });
     top_segs.push({ type: 'cut', x0: t9 + L1 + B1 - Ec - xCh, y0: h1_half + Hflap, x1: t9 + L1 + t9, y1: h1_half + Hflap });
-    top_segs.push({ type: 'cut', x0: t9 + L1 + t9, y0: h1_half + Hflap, x1: t9 + L1 + t9, y1: h1_half + t7 });
     top_segs.push({ type: 'cut', x0: t9 + L1 + t9, y0: h1_half + t7, x1: t9 + L1, y1: h1_half });
     top_segs.push({ type: 'cut', x0: 0.0, y0: h1_half + t7, x1: 0.0, y1: h1_half + t7 + FL });
     top_segs.push({ type: 'cut', x0: 0.0, y0: h1_half + t7, x1: t9, y1: h1_half });

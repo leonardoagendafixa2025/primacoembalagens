@@ -146,12 +146,32 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
+  // 3.5 Deduplica segmentos idênticos ou sobrepostos (mesmo par de vértices)
+  // Evita arestas duplas no grafo DCEL que geram ciclos de área zero e corrompem as faces
+  const edgeKeyMap = new Map<string, { p0: Point2D; p1: Point2D; type: string }>();
+  for (const s of cleanSegs) {
+    const idx0 = uniquePoints.indexOf(s.p0);
+    const idx1 = uniquePoints.indexOf(s.p1);
+    if (idx0 === idx1 || idx0 === -1 || idx1 === -1) continue;
+    const key = idx0 < idx1 ? `${idx0}_${idx1}` : `${idx1}_${idx0}`;
+    const existing = edgeKeyMap.get(key);
+    if (!existing) {
+      edgeKeyMap.set(key, s);
+    } else {
+      // Se houver conflito entre corte e vinco na mesma aresta, 'cut' tem precedência
+      if (s.type === 'cut' || existing.type === 'cut') {
+        existing.type = 'cut';
+      }
+    }
+  }
+  const finalSegs = Array.from(edgeKeyMap.values());
+
   // 4. Constrói o grafo Half-Edge (DCEL)
   const vertexOutgoing = new Map<Point2D, InternalHalfEdge[]>();
   const halfEdges: InternalHalfEdge[] = [];
   let heIdCounter = 0;
 
-  for (const s of cleanSegs) {
+  for (const s of finalSegs) {
     const he1: InternalHalfEdge = {
       id: heIdCounter++,
       u: s.p0,
@@ -289,14 +309,14 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     y1: number;
     length: number;
   }
-  const rawHinges: RawHingeEdge[] = [];
+  const rawHingesList: RawHingeEdge[] = [];
 
   for (const he of halfEdges) {
     if (he.type === 'crease' && he.twin && he.face && he.twin.face) {
       const fA = he.face;
       const fB = he.twin.face;
       if (panelFaces.includes(fA) && panelFaces.includes(fB) && fA.id < fB.id) {
-        rawHinges.push({
+        rawHingesList.push({
           panelAId: fA.id,
           panelBId: fB.id,
           x0: he.u.x,
@@ -307,6 +327,47 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
         });
       }
     }
+  }
+
+  // Agrupa e une sub-vincos colineares entre o mesmo par de painéis (ex: vincos particionados por interseções)
+  const mergedHingeMap = new Map<string, RawHingeEdge[]>();
+  for (const h of rawHingesList) {
+    const key = `${Math.min(h.panelAId, h.panelBId)}_${Math.max(h.panelAId, h.panelBId)}`;
+    if (!mergedHingeMap.has(key)) mergedHingeMap.set(key, []);
+    mergedHingeMap.get(key)!.push(h);
+  }
+
+  const rawHinges: RawHingeEdge[] = [];
+  for (const [, list] of mergedHingeMap.entries()) {
+    if (list.length === 1) {
+      rawHinges.push(list[0]);
+      continue;
+    }
+    const allPts: Point2D[] = [];
+    for (const h of list) {
+      allPts.push({ x: h.x0, y: h.y0 }, { x: h.x1, y: h.y1 });
+    }
+    let maxD2 = -1;
+    let pBest1 = allPts[0], pBest2 = allPts[1];
+    for (let i = 0; i < allPts.length; i++) {
+      for (let j = i + 1; j < allPts.length; j++) {
+        const d2 = (allPts[i].x - allPts[j].x) ** 2 + (allPts[i].y - allPts[j].y) ** 2;
+        if (d2 > maxD2) {
+          maxD2 = d2;
+          pBest1 = allPts[i];
+          pBest2 = allPts[j];
+        }
+      }
+    }
+    rawHinges.push({
+      panelAId: list[0].panelAId,
+      panelBId: list[0].panelBId,
+      x0: pBest1.x,
+      y0: pBest1.y,
+      x1: pBest2.x,
+      y1: pBest2.y,
+      length: Math.sqrt(maxD2),
+    });
   }
 
   // 8. Constrói o Grafo de Adjacência / Dobras entre Painéis
