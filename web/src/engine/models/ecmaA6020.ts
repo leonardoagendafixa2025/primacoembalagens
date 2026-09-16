@@ -118,14 +118,13 @@ export const ecmaA6020: PackagingModel = {
     const yTuckCrease = yLidTop;
     const yTuckTop = yLidTop + hTuck;
 
-    // Vinco da aba de inserção
-    const creaseInset = Math.min(6.0, wTuck * 0.08);
+    // Vinco da aba de inserção de ponta a ponta (encontra exatamente as laterais de corte)
     segments.push({
       id: 'cr-tuck',
       type: 'crease',
-      x0: xTuckLeft + creaseInset,
+      x0: xTuckLeft,
       y0: yTuckCrease,
-      x1: xTuckRight - creaseInset,
+      x1: xTuckRight,
       y1: yTuckCrease,
     });
 
