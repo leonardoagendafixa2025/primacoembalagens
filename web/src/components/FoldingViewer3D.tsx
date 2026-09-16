@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
 import { buildFoldable3DTree } from '../engine/foldingEngine';
-import { Play, Pause, RotateCw, Box, Eye, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, RotateCw, Box, Eye } from 'lucide-react';
 
 interface FoldingViewer3DProps {
   model: PackagingModel;
@@ -19,16 +19,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
   const [foldProgress, setFoldProgress] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
-  const [showDiagnostic] = useState(true);
 
-  // Informações de paridade topológica
-  const [topologyStats, setTopologyStats] = useState<{
-    panelsCount: number;
-    hingesCount: number;
-    width: number;
-    height: number;
-    rootId: string;
-  } | null>(null);
 
   // Refs Three.js
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -188,7 +179,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
 
     if (!isFoldable) {
       updateProgressRef.current = null;
-      setTopologyStats(null);
       return;
     }
 
@@ -204,14 +194,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
         boxGroup.add(tree.rootGroup);
         updateProgressRef.current = tree.updateProgress;
         tree.updateProgress(foldProgress);
-
-        setTopologyStats({
-          panelsCount: tree.panelsCount,
-          hingesCount: tree.topology.hinges.length,
-          width: currentDieline.bounds.width,
-          height: currentDieline.bounds.height,
-          rootId: tree.topology.rootPanelId,
-        });
 
         // Centraliza o ponto focal dos OrbitControls na meia altura da embalagem montada
         const boxH = Math.max(30, params.H || 100);
@@ -295,44 +277,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     <div style={{ position: 'relative', width: '100%', height: '100%', background: '#0B0F17' }}>
       <div ref={mountRef} style={{ width: '100%', height: '100%', cursor: 'grab' }} />
 
-      {/* Painel Superior de Diagnóstico e Paridade 2D/3D */}
-      {showDiagnostic && topologyStats && (
-        <div
-          className="glass-panel"
-          style={{
-            position: 'absolute',
-            top: 16,
-            left: 16,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
-            padding: '12px 18px',
-            borderRadius: 12,
-            background: 'rgba(11, 15, 23, 0.85)',
-            border: '1px solid rgba(53, 168, 158, 0.3)',
-            backdropFilter: 'blur(10px)',
-            color: '#E2E8F0',
-            fontSize: 12,
-            zIndex: 10,
-            maxWidth: 360,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#35a89e' }}>
-            <CheckCircle2 size={16} />
-            <span>FACA 2D ➔ 3D PARIDADE TOPOLÓGICA 1:1</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '4px 16px', color: '#94A3B8' }}>
-            <span>Faca 2D Original:</span>
-            <span style={{ color: '#F1F5F9', fontWeight: 600 }}>{topologyStats.width.toFixed(1)} x {topologyStats.height.toFixed(1)} mm</span>
-            <span>Painéis Reais Extraídos:</span>
-            <span style={{ color: '#F1F5F9', fontWeight: 600 }}>{topologyStats.panelsCount} painéis</span>
-            <span>Vincos / Articulações:</span>
-            <span style={{ color: '#F1F5F9', fontWeight: 600 }}>{topologyStats.hingesCount} eixos 3D</span>
-            <span>Alinhamento em 0%:</span>
-            <span style={{ color: '#10B981', fontWeight: 700 }}>100% COINCIDENTE (0.000 mm)</span>
-          </div>
-        </div>
-      )}
 
       {/* Barra de Controle de Dobra e Vistas Rápidas */}
       <div
