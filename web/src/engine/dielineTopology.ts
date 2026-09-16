@@ -95,6 +95,50 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
+  // 1.5 Fechamento inteligente de alívios industriais (Die-making relief gaps):
+  // Em embalagens com fundo automático ou alívios circulares (notches/punch), as facas industriais
+  // propositalmente deixam folga de 0.4mm a 1.6mm entre o término do vinco vertical e a aresta adjacente.
+  // Projetamos endpoints de vincos com gap <= 1.6mm até a aresta mais próxima para que o DCEL
+  // feche os polígonos de cada parede individual sem vazamento planar.
+  const MAX_RELIEF_GAP = 1.6;
+  for (const s of rawSegs) {
+    if (s.type !== 'crease') continue;
+    for (const other of rawSegs) {
+      if (other === s) continue;
+      const ox0 = other.p0.x, oy0 = other.p0.y, ox1 = other.p1.x, oy1 = other.p1.y;
+      const l2 = (ox1 - ox0) ** 2 + (oy1 - oy0) ** 2;
+      if (l2 < 1e-6) continue;
+
+      const t0 = ((s.p0.x - ox0) * (ox1 - ox0) + (s.p0.y - oy0) * (oy1 - oy0)) / l2;
+      if (t0 >= -0.05 && t0 <= 1.05) {
+        const projX = ox0 + t0 * (ox1 - ox0);
+        const projY = oy0 + t0 * (oy1 - oy0);
+        const dist = Math.hypot(s.p0.x - projX, s.p0.y - projY);
+        if (dist > 0.04 && dist <= MAX_RELIEF_GAP) {
+          s.p0 = { x: projX, y: projY };
+          break;
+        }
+      }
+    }
+    for (const other of rawSegs) {
+      if (other === s) continue;
+      const ox0 = other.p0.x, oy0 = other.p0.y, ox1 = other.p1.x, oy1 = other.p1.y;
+      const l2 = (ox1 - ox0) ** 2 + (oy1 - oy0) ** 2;
+      if (l2 < 1e-6) continue;
+
+      const t1 = ((s.p1.x - ox0) * (ox1 - ox0) + (s.p1.y - oy0) * (oy1 - oy0)) / l2;
+      if (t1 >= -0.05 && t1 <= 1.05) {
+        const projX = ox0 + t1 * (ox1 - ox0);
+        const projY = oy0 + t1 * (oy1 - oy0);
+        const dist = Math.hypot(s.p1.x - projX, s.p1.y - projY);
+        if (dist > 0.04 && dist <= MAX_RELIEF_GAP) {
+          s.p1 = { x: projX, y: projY };
+          break;
+        }
+      }
+    }
+  }
+
   // 2. Unifica vértices próximos (tolerância numérica de 0.05 mm)
   const EPS = 0.05;
   const uniquePoints: Point2D[] = [];
