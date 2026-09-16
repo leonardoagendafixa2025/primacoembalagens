@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { PackagingModel } from '../engine/types';
+import modelsCatalog from '../engine/modelsCatalog.json';
 import {
   Box,
   LayoutGrid,
@@ -12,6 +13,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+const CATALOG_COUNT = modelsCatalog.length;
 
 export type ActiveTab = '2d' | '3d' | 'imposition';
 
@@ -128,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Separador Vertical */}
         <div style={{ width: 1, height: 24, background: 'var(--cad-border-subtle)' }} />
 
-        {/* Botão da Biblioteca Geral (472 Modelos FEFCO / ECMA) */}
+        {/* Botão da Biblioteca Geral */}
         <button
           type="button"
           onClick={onOpenCatalog}
@@ -155,7 +158,7 @@ export const Header: React.FC<HeaderProps> = ({
               borderRadius: 4,
             }}
           >
-            472
+            {CATALOG_COUNT}
           </span>
         </button>
 
