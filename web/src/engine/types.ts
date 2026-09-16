@@ -98,25 +98,14 @@ export interface CardboardProfile {
 
 export const STANDARD_PROFILES: CardboardProfile[] = [
   {
-    id: 'cartao_triplex_branco',
-    name: 'Papel Cartão BRANCO Triplex',
-    code: 'TRIPLEX',
+    id: 'cartao_duplex_triplex',
+    name: 'Papel Duplex/Triplex',
+    code: 'DUPLEX/TRIPLEX',
     thickness: 0.4,
-    description: 'Frente e Verso 100% BRANCOS - Embalagens nobres, cosméticos e farmacêuticos (a partir de 0,1mm)',
+    description: 'Cartão gráfico para embalagens, cosméticos, farmacêuticos e displays (a partir de 0,1mm)',
     outerColor: '#FFFFFF',
     innerColor: '#FFFFFF',
     roughness: 0.28,
-    minThickness: 0.1,
-  },
-  {
-    id: 'cartao_duplex_branco',
-    name: 'Papel Cartão BRANCO Duplex',
-    code: 'DUPLEX',
-    thickness: 0.4,
-    description: 'Frente Branca Couchê / Verso Creme Claro - Cartão duplex gráfico (a partir de 0,1mm)',
-    outerColor: '#FFFFFF',
-    innerColor: '#FAF7F0',
-    roughness: 0.32,
     minThickness: 0.1,
   },
 ];

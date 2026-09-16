@@ -23,7 +23,7 @@ import { CatalogModal } from './components/CatalogModal';
 export const App: React.FC = () => {
   // 1. Estados Centrais
   const [currentModel, setCurrentModel] = useState<PackagingModel>(MODELS[0]);
-  const [selectedProfile, setSelectedProfile] = useState<CardboardProfile>(STANDARD_PROFILES[0]); // Papel Cartão BRANCO Duplex
+  const [selectedProfile, setSelectedProfile] = useState<CardboardProfile>(STANDARD_PROFILES[0]); // Papel Duplex/Triplex
   const [params, setParams] = useState<Record<string, number>>(() => ({
     ...MODELS[0].defaultParams,
     Ep: STANDARD_PROFILES[0].thickness,
@@ -106,7 +106,7 @@ export const App: React.FC = () => {
     setCurrentModel(model);
     setParams(proj.params);
     const prof = STANDARD_PROFILES.find((p) => p.id === proj.profile_id);
-    if (prof) setSelectedProfile(prof);
+    setSelectedProfile(prof || STANDARD_PROFILES[0]);
   };
 
   // Voltar para a Home ao clicar na Logo oficial
