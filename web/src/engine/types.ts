@@ -71,6 +71,7 @@ export interface PackagingModel {
   code: string;
   name: string;
   category: 'FEFCO' | 'ECMA' | 'PERSONALIZADO';
+  series?: string;
   description: string;
   defaultParams: Record<string, number>;
   paramDefs: ParamDef[];

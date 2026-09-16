@@ -109,9 +109,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     grid.position.y = 0;
     scene.add(grid);
 
-    // 7. Grupo da Caixa (elevado 1mm para evitar z-fighting com o chão)
+    // 7. Grupo da Caixa
     const boxGroup = new THREE.Group();
-    boxGroup.position.y = 1;
+    boxGroup.position.set(0, 0, 0);
     scene.add(boxGroup);
     boxGroupRef.current = boxGroup;
 
@@ -191,17 +191,59 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
       const tree = buildFoldable3DTree(currentDieline, Ep, outerColor, innerColor, roughness);
 
       if (tree.panelsCount > 0) {
+        // Verifica se é modelo tubular (FEFCO 02xx / 07xx / ECMA A, B, E) para manter a caixa em pé com o fundo no chão
+        const codeStr = (model.code || model.id || '').toUpperCase();
+        const isTubular =
+          codeStr.includes('FEFCO 02') ||
+          codeStr.includes('FEFCO 07') ||
+          codeStr.includes('FEFCO_02') ||
+          codeStr.includes('FEFCO_07') ||
+          codeStr.includes('FEFCO_F2') ||
+          codeStr.includes('FEFCO_F7') ||
+          codeStr.startsWith('ECMA A') ||
+          codeStr.startsWith('ECMA B') ||
+          codeStr.startsWith('ECMA E') ||
+          codeStr.startsWith('ECMA_A') ||
+          codeStr.startsWith('ECMA_B') ||
+          codeStr.startsWith('ECMA_E') ||
+          Boolean(model.series && (
+            model.series.includes('0200') ||
+            model.series.includes('0700') ||
+            model.series.includes('Grupo A') ||
+            model.series.includes('Grupo B') ||
+            model.series.includes('Grupo E')
+          ));
+
+        if (isTubular) {
+          // Rotaciona 90° em torno de X para colocar o fundo (+Z) voltado para o chão (-Y) e a tampa para cima (+Y)
+          tree.rootGroup.rotation.x = Math.PI / 2;
+        }
+
+        // Função de fechamento que SEMPRE garante o FUNDO no chão a Y = 1.0mm e centralizado em X e Z
+        const updateWithGrounding = (progress: number) => {
+          tree.rootGroup.position.set(0, 0, 0);
+          tree.updateProgress(progress);
+          boxGroup.updateMatrixWorld(true);
+          const bbox = new THREE.Box3().setFromObject(boxGroup);
+          // Garante o fundo sempre exatamente no chão (1mm acima para evitar z-fighting e o chão entrando dentro da embalagem)
+          const groundY = 1.0 - bbox.min.y;
+          const cx = (bbox.min.x + bbox.max.x) / 2;
+          const cz = (bbox.min.z + bbox.max.z) / 2;
+          tree.rootGroup.position.set(-cx, groundY, -cz);
+          boxGroup.updateMatrixWorld(true);
+        };
+
         boxGroup.add(tree.rootGroup);
-        updateProgressRef.current = tree.updateProgress;
-        tree.updateProgress(foldProgress);
+        updateProgressRef.current = updateWithGrounding;
+        updateWithGrounding(foldProgress);
 
-        // Centraliza o ponto focal dos OrbitControls na meia altura da embalagem montada
-        const boxH = Math.max(30, params.H || 100);
+        // Auto-enquadramento suave da câmera na altura real da caixa
+        boxGroup.updateMatrixWorld(true);
+        const bbox = new THREE.Box3().setFromObject(boxGroup);
+        const boxH = Math.max(30, bbox.max.y - bbox.min.y);
         if (controlsRef.current && cameraRef.current) {
-          controlsRef.current.target.set(0, boxH * 0.4, 0);
+          controlsRef.current.target.set(0, boxH * 0.45, 0);
 
-          // Auto-enquadramento suave da câmera
-          const bbox = new THREE.Box3().setFromObject(tree.rootGroup);
           const sphere = new THREE.Sphere();
           bbox.getBoundingSphere(sphere);
           if (sphere.radius > 10) {
