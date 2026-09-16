@@ -95,6 +95,112 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
+  // 1.5 Cura universal de alívios de vinco industriais e recuos (Relief Notches & Crease Setback Healer)
+  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente são interrompidos
+  // por furos/entalhes de alívio circular (relief punch) ou recuados por tolerância de fabricação (setback <= 3mm).
+  // Isso deixa pontas soltas (dead-ends) que impedem o fechamento dos ciclos planares dos painéis.
+
+  // 1.5a: Fechamento de gaps entre vincos colineares (entalhes de alívio / relief notches <= 3.0mm)
+  const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
+  const bridgeCreases: { p0: Point2D; p1: Point2D; type: string }[] = [];
+  for (let i = 0; i < creaseSegs.length; i++) {
+    const c1 = creaseSegs[i];
+    const dx1 = c1.p1.x - c1.p0.x;
+    const dy1 = c1.p1.y - c1.p0.y;
+    const l1 = Math.hypot(dx1, dy1);
+    if (l1 < 1e-4) continue;
+    const u1x = dx1 / l1, u1y = dy1 / l1;
+
+    for (let j = i + 1; j < creaseSegs.length; j++) {
+      const c2 = creaseSegs[j];
+      const dx2 = c2.p1.x - c2.p0.x;
+      const dy2 = c2.p1.y - c2.p0.y;
+      const l2 = Math.hypot(dx2, dy2);
+      if (l2 < 1e-4) continue;
+      const u2x = dx2 / l2, u2y = dy2 / l2;
+
+      // Devem ser paralelos (produto vetorial ~ 0)
+      const cross = Math.abs(u1x * u2y - u1y * u2x);
+      if (cross > 0.05) continue;
+
+      // Devem estar na mesma reta colinear
+      const v0x = c2.p0.x - c1.p0.x;
+      const v0y = c2.p0.y - c1.p0.y;
+      if (Math.abs(v0x * u1y - v0y * u1x) > 0.15) continue;
+
+      // Testa os 4 pares de pontas para encontrar a ponte entre os segmentos
+      const pairs: [Point2D, Point2D][] = [
+        [c1.p0, c2.p0],
+        [c1.p0, c2.p1],
+        [c1.p1, c2.p0],
+        [c1.p1, c2.p1],
+      ];
+      for (const [pA, pB] of pairs) {
+        const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+        if (d > 0.05 && d <= 3.0) {
+          const bdx = (pB.x - pA.x) / d;
+          const bdy = (pB.y - pA.y) / d;
+          if (Math.abs(Math.abs(bdx * u1x + bdy * u1y) - 1.0) < 0.1) {
+            bridgeCreases.push({
+              p0: { x: pA.x, y: pA.y },
+              p1: { x: pB.x, y: pB.y },
+              type: 'crease',
+            });
+          }
+        }
+      }
+    }
+  }
+  rawSegs.push(...bridgeCreases);
+
+  // 1.5b: Extensão de vincos com pontas soltas (Dead-End Crease Extension / Snapping <= 2.5mm)
+  for (const s of rawSegs) {
+    if (s.type !== 'crease') continue;
+    const endpoints: ('p0' | 'p1')[] = ['p0', 'p1'];
+    for (const ep of endpoints) {
+      const pt = s[ep];
+      const otherPt = ep === 'p0' ? s.p1 : s.p0;
+
+      let meets = 0;
+      for (const o of rawSegs) {
+        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.08 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.08) {
+          meets++;
+        }
+      }
+      if (meets <= 1) {
+        const dirx = pt.x - otherPt.x;
+        const diry = pt.y - otherPt.y;
+        const dlen = Math.hypot(dirx, diry);
+        if (dlen < 1e-4) continue;
+        const udx = dirx / dlen;
+        const udy = diry / dlen;
+
+        let bestT = 9999;
+        let bestInter: Point2D | null = null;
+
+        for (const o of rawSegs) {
+          if (o === s) continue;
+          const x3 = o.p0.x, y3 = o.p0.y;
+          const x4 = o.p1.x, y4 = o.p1.y;
+          const denom = udx * (y4 - y3) - udy * (x4 - x3);
+          if (Math.abs(denom) < 1e-5) continue;
+          const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
+          const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
+          if (t > 0.02 && t <= 2.5 && u >= -0.01 && u <= 1.01) {
+            if (t < bestT) {
+              bestT = t;
+              bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
+            }
+          }
+        }
+
+        if (bestInter) {
+          s[ep] = bestInter;
+        }
+      }
+    }
+  }
+
   // 2. Unifica vértices próximos (tolerância numérica de 0.05 mm)
   const EPS = 0.05;
   const uniquePoints: Point2D[] = [];
