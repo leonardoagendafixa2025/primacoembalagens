@@ -242,11 +242,14 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
 
   // 6. Separa painéis de furos internos (mortises, rasgos, recortes vazados)
+  // IMPORTANTE: threshold de 800 mm² para furos — furos reais (dedo, mortise) são pequenos;
+  // abas do fundo semi-automático (snap-lock, 1-2-3 bottom) têm área > 800 mm² e devem ser painéis.
   const holeFaces = allFaces.filter(
-    (f) => !f.isExternal && f.edges.every((e) => e.type === 'cut') && f.area > 0 && f.area < 2500
+    (f) => !f.isExternal && f.edges.every((e) => e.type === 'cut') && f.area > 0 && f.area < 800
   );
+  // Área mínima de 10 mm² para incluir abas estreitas (aba de cola, lingueta, abas de poeira)
   const panelFaces = allFaces.filter(
-    (f) => !f.isExternal && !holeFaces.includes(f) && f.area > 50
+    (f) => !f.isExternal && !holeFaces.includes(f) && f.area > 10
   );
 
   // Mapeia furos para seus painéis hospedeiros
