@@ -18,7 +18,7 @@ interface IntervalMapping {
   x1Orig: number;
   x0New: number;
   x1New: number;
-  type: 'L' | 'B' | 'M' | 'other';
+  type: 'L' | 'B' | 'M' | 'H' | 'other';
   label: string;
 }
 
@@ -27,13 +27,20 @@ interface YIntervalMapping {
   y1Orig: number;
   y0New: number;
   y1New: number;
-  type: 'H' | 'top_flap' | 'bottom_flap' | 'other';
+  type: 'H' | 'B' | 'L' | 'flap' | 'other';
   label: string;
 }
 
+type PackagingStructureType = 'TUBE' | 'TRAY' | 'GENERIC';
+
 /**
- * Motor universal de deformação paramétrica por zonas contínuas (Piecewise Parametric Morphing).
- * Preserva estritamente tangências, continuidade de linhas e gera cotas técnicas parciais.
+ * MOTOR PARAMÉTRICO UNIVERSAL CAD DE EMBALAGENS (PLMPack Parametric Core)
+ * 
+ * Princípios Fundamentais:
+ * 1. Topologia e Conectividade Estrita C0: Nenhum gap ou degrau entre retas e arcos.
+ * 2. Reconhecimento de Estrutura (Tubo com 4 paredes vs Bandeja/Tray com base central e abas H).
+ * 3. Preservação de Ângulos e Geometria Curva: Arcos e concordâncias (fillets) mantêm tangência contínua.
+ * 4. Cotas Fiéis: As cotas exibidas derivam das dimensões reais dos painéis regenerados.
  */
 export function computeParametricDieline(
   rawGeom: ParametricInputGeom,
@@ -64,181 +71,286 @@ export function computeParametricDieline(
     maxY0 = Math.max(maxY0, a.cy + a.r);
   }
 
-  // Parâmetros nominais base e parâmetros do usuário
-  const baseL = Math.max(nominalParams.L || 150, 10);
-  const baseB = Math.max(nominalParams.B || 100, 10);
-  const baseH = Math.max(nominalParams.H || 100, 10);
-  const baseM = Math.max(nominalParams.M || 15, 5);
+  const origWidth = maxX0 - minX0;
+  const origHeight = maxY0 - minY0;
+
+  // Parâmetros nominais base e novos parâmetros definidos pelo usuário
+  const baseL = Math.max(nominalParams.L || 300, 10);
+  const baseB = Math.max(nominalParams.B || 200, 10);
+  const baseH = Math.max(nominalParams.H || 150, 10);
+  const baseM = Math.max(nominalParams.M || 25, 5);
 
   const targetL = Math.max(userParams.L ?? baseL, 10);
   const targetB = Math.max(userParams.B ?? baseB, 10);
   const targetH = Math.max(userParams.H ?? baseH, 10);
   const targetM = Math.max(userParams.M ?? baseM, 5);
 
-  // 2. Detecção de Vincos Verticais (Divisão de Painéis em X)
-  const verticalCreaseXSet = new Set<number>();
+  // 2. Análise Topológica dos Vincos: Detecção de Linhas de Dobra Principais
+  const verticalCreases: Array<{ x: number; y0: number; y1: number; len: number }> = [];
+  const horizontalCreases: Array<{ y: number; x0: number; x1: number; len: number }> = [];
+
   for (const s of origSegs) {
-    if (s.type === 'crease' && Math.abs(s.x0 - s.x1) <= 1.0 && Math.abs(s.y0 - s.y1) >= 15.0) {
-      const avgX = (s.x0 + s.x1) / 2;
-      verticalCreaseXSet.add(Math.round(avgX * 10) / 10);
+    if (s.type === 'crease') {
+      const dx = Math.abs(s.x1 - s.x0);
+      const dy = Math.abs(s.y1 - s.y0);
+      if (dx <= 1.2 && dy >= 12.0) {
+        verticalCreases.push({ x: (s.x0 + s.x1) / 2, y0: Math.min(s.y0, s.y1), y1: Math.max(s.y0, s.y1), len: dy });
+      } else if (dy <= 1.2 && dx >= 12.0) {
+        horizontalCreases.push({ y: (s.y0 + s.y1) / 2, x0: Math.min(s.x0, s.x1), x1: Math.max(s.x0, s.x1), len: dx });
+      }
     }
   }
 
-  // Agrupa X próximos (< 3mm)
-  const sortedRawX = Array.from(verticalCreaseXSet).sort((a, b) => a - b);
-  const clusteredX: number[] = [];
-  for (const x of sortedRawX) {
-    if (clusteredX.length === 0 || Math.abs(x - clusteredX[clusteredX.length - 1]) >= 3.0) {
-      clusteredX.push(x);
+  // Agrupamento de vincos em divisores de zonas
+  function clusterCoordinates(coords: number[], tolerance: number = 3.5): number[] {
+    const sorted = [...new Set(coords.map(c => Math.round(c * 10) / 10))].sort((a, b) => a - b);
+    const clustered: number[] = [];
+    for (const c of sorted) {
+      if (clustered.length === 0 || Math.abs(c - clustered[clustered.length - 1]) >= tolerance) {
+        clustered.push(c);
+      }
     }
+    return clustered;
   }
 
-  // Monta a lista completa de divisores em X: [minX0, ...clusteredX, maxX0]
+  const vXClusters = clusterCoordinates(verticalCreases.map(c => c.x));
+  const hYClusters = clusterCoordinates(horizontalCreases.map(c => c.y));
+
+  // 3. Classificação de Arquitetura da Embalagem (Tubo de 4 Paredes vs Bandeja/Folder)
+  let structure: PackagingStructureType = 'GENERIC';
+  if (vXClusters.length >= 3 && vXClusters.length <= 6 && hYClusters.length >= 2) {
+    structure = 'TUBE';
+  } else if (vXClusters.length === 2 && hYClusters.length === 2) {
+    structure = 'TRAY';
+  } else if (origWidth > origHeight * 1.6 && vXClusters.length >= 4) {
+    structure = 'TUBE';
+  } else if (vXClusters.length === 2 || hYClusters.length === 2) {
+    structure = 'TRAY';
+  }
+
+  // 4. Mapeamento de Zonas Horizontais X
   const fullXBoundaries: number[] = [minX0];
-  for (const x of clusteredX) {
+  for (const x of vXClusters) {
     if (x > minX0 + 4.0 && x < maxX0 - 4.0) {
       fullXBoundaries.push(x);
     }
   }
   fullXBoundaries.push(maxX0);
 
-  // 3. Mapeamento de Zonas Horizontais X
   const xIntervals: IntervalMapping[] = [];
-  let currNewX = 0;
+  let currNewX = minX0; // Mantém a mesma ancoragem de origem
 
+  const spansX = [];
   for (let i = 0; i < fullXBoundaries.length - 1; i++) {
-    const x0 = fullXBoundaries[i];
-    const x1 = fullXBoundaries[i + 1];
-    const origSpan = x1 - x0;
+    spansX.push(fullXBoundaries[i + 1] - fullXBoundaries[i]);
+  }
 
-    let type: 'L' | 'B' | 'M' | 'other' = 'other';
-    let label = `${Math.round(origSpan)} mm`;
-    let targetSpan = origSpan;
+  if (structure === 'TUBE') {
+    // Tubo clássico (ECMA A/B, FEFCO 02xx): M + L + B + L + B ou L + B + L + B
+    // Identifica se a primeira zona é uma aba de cola estreita (< 40mm e span << outros)
+    const hasGlueFlap = spansX.length >= 4 && spansX[0] <= Math.max(baseM * 1.6, 38) && spansX[0] < spansX[1] * 0.45;
+    let panelIdx = 0;
 
-    // Se é a primeira aba pequena (< 40mm) na borda esquerda: aba de colagem
-    if (i === 0 && origSpan <= Math.max(baseM * 1.8, 35) && fullXBoundaries.length >= 4) {
-      type = 'M';
-      label = `Aba: ${Math.round(targetM)}`;
-      targetSpan = targetM;
-    } else {
-      // Compara se o tamanho original é mais próximo de L ou B
-      const diffL = Math.abs(origSpan - baseL);
-      const diffB = Math.abs(origSpan - baseB);
+    for (let i = 0; i < spansX.length; i++) {
+      const origSpan = spansX[i];
+      let targetSpan = origSpan;
+      let type: 'L' | 'B' | 'M' | 'other' = 'other';
+      let label = `${Math.round(origSpan)} mm`;
 
-      if (diffL <= diffB && diffL < baseL * 0.4) {
-        type = 'L';
-        label = `L = ${Math.round(targetL)}`;
-        targetSpan = targetL;
-      } else if (diffB < diffL && diffB < baseB * 0.4) {
-        type = 'B';
-        label = `B = ${Math.round(targetB)}`;
-        targetSpan = targetB;
+      if (i === 0 && hasGlueFlap) {
+        type = 'M';
+        targetSpan = targetM;
+        label = `Aba: ${Math.round(targetM)}`;
       } else {
-        // Escala proporcional à média de L e B
-        const avgScale = ((targetL / baseL) + (targetB / baseB)) / 2;
-        targetSpan = origSpan * avgScale;
-        label = `${Math.round(targetSpan)}`;
+        // Alternância dos painéis do tubo: L, B, L, B ou correspondência nominal
+        const diffL = Math.abs(origSpan - baseL);
+        const diffB = Math.abs(origSpan - baseB);
+
+        if (diffL <= diffB && diffL < baseL * 0.45) {
+          type = 'L';
+          targetSpan = targetL;
+          label = `L = ${Math.round(targetL)}`;
+        } else if (diffB < diffL && diffB < baseB * 0.45) {
+          type = 'B';
+          targetSpan = targetB;
+          label = `B = ${Math.round(targetB)}`;
+        } else {
+          // Alternância sequencial
+          if (panelIdx % 2 === 0) {
+            type = 'L';
+            targetSpan = (origSpan / baseL) * targetL;
+            label = `L = ${Math.round(targetSpan)}`;
+          } else {
+            type = 'B';
+            targetSpan = (origSpan / baseB) * targetB;
+            label = `B = ${Math.round(targetSpan)}`;
+          }
+        }
+        panelIdx++;
       }
-    }
 
-    xIntervals.push({
-      x0Orig: x0,
-      x1Orig: x1,
-      x0New: currNewX,
-      x1New: currNewX + targetSpan,
-      type,
-      label,
-    });
-    currNewX += targetSpan;
+      xIntervals.push({
+        x0Orig: fullXBoundaries[i],
+        x1Orig: fullXBoundaries[i + 1],
+        x0New: currNewX,
+        x1New: currNewX + targetSpan,
+        type,
+        label,
+      });
+      currNewX += targetSpan;
+    }
+  } else if (structure === 'TRAY') {
+    // Bandeja (FEFCO 04xx, 03xx): aba lateral esquerda (H) + base central (L ou B) + aba lateral direita (H)
+    for (let i = 0; i < spansX.length; i++) {
+      const origSpan = spansX[i];
+      let targetSpan = origSpan;
+      let type: 'L' | 'B' | 'H' | 'other' = 'other';
+      let label = `${Math.round(origSpan)} mm`;
+
+      if (i === 0 || i === spansX.length - 1) {
+        // Abas laterais de bandeja representam a altura das paredes (H)
+        type = 'H';
+        targetSpan = (origSpan / baseH) * targetH;
+        label = `H = ${Math.round(targetSpan)}`;
+      } else {
+        // Painel central da bandeja
+        type = 'L';
+        targetSpan = (origSpan / baseL) * targetL;
+        label = `L = ${Math.round(targetSpan)}`;
+      }
+
+      xIntervals.push({
+        x0Orig: fullXBoundaries[i],
+        x1Orig: fullXBoundaries[i + 1],
+        x0New: currNewX,
+        x1New: currNewX + targetSpan,
+        type,
+        label,
+      });
+      currNewX += targetSpan;
+    }
+  } else {
+    // Caso Genérico proporcional suave
+    const scaleX = targetL / baseL;
+    for (let i = 0; i < spansX.length; i++) {
+      const origSpan = spansX[i];
+      const targetSpan = origSpan * scaleX;
+      xIntervals.push({
+        x0Orig: fullXBoundaries[i],
+        x1Orig: fullXBoundaries[i + 1],
+        x0New: currNewX,
+        x1New: currNewX + targetSpan,
+        type: 'other',
+        label: `${Math.round(targetSpan)}`,
+      });
+      currNewX += targetSpan;
+    }
   }
 
-  // 4. Detecção de Vincos Horizontais (Divisão do Corpo H e Abas em Y)
-  const horizCreaseYSet = new Set<number>();
-  for (const s of origSegs) {
-    if (s.type === 'crease' && Math.abs(s.y0 - s.y1) <= 1.0 && Math.abs(s.x0 - s.x1) >= 20.0) {
-      const avgY = (s.y0 + s.y1) / 2;
-      horizCreaseYSet.add(Math.round(avgY * 10) / 10);
-    }
-  }
-
-  const sortedRawY = Array.from(horizCreaseYSet).sort((a, b) => a - b);
-  const clusteredY: number[] = [];
-  for (const y of sortedRawY) {
-    if (clusteredY.length === 0 || Math.abs(y - clusteredY[clusteredY.length - 1]) >= 4.0) {
-      clusteredY.push(y);
-    }
-  }
-
-  // Monta a lista de divisores em Y
+  // 5. Mapeamento de Zonas Verticais Y
   const fullYBoundaries: number[] = [minY0];
-  for (const y of clusteredY) {
-    if (y > minY0 + 5.0 && y < maxY0 - 5.0) {
+  for (const y of hYClusters) {
+    if (y > minY0 + 4.0 && y < maxY0 - 4.0) {
       fullYBoundaries.push(y);
     }
   }
   fullYBoundaries.push(maxY0);
 
-  // Mapeamento de Zonas Verticais Y
   const yIntervals: YIntervalMapping[] = [];
-  let currNewY = 0;
+  let currNewY = minY0;
 
-  // Localiza o intervalo central de maior probabilidade de ser o corpo H
-  let bestHIndex = -1;
-  let minHDiff = Infinity;
+  const spansY = [];
   for (let j = 0; j < fullYBoundaries.length - 1; j++) {
-    const y0 = fullYBoundaries[j];
-    const y1 = fullYBoundaries[j + 1];
-    const span = y1 - y0;
-    const diff = Math.abs(span - baseH);
-    if (diff < minHDiff) {
-      minHDiff = diff;
-      bestHIndex = j;
+    spansY.push(fullYBoundaries[j + 1] - fullYBoundaries[j]);
+  }
+
+  if (structure === 'TUBE') {
+    // Em tubos: Fundo + Corpo central (H) + Tampa/Abas
+    let bestHIdx = -1;
+    let minHDiff = Infinity;
+    for (let j = 0; j < spansY.length; j++) {
+      const diff = Math.abs(spansY[j] - baseH);
+      if (diff < minHDiff) {
+        minHDiff = diff;
+        bestHIdx = j;
+      }
+    }
+
+    for (let j = 0; j < spansY.length; j++) {
+      const origSpan = spansY[j];
+      let targetSpan = origSpan;
+      let type: 'H' | 'B' | 'flap' | 'other' = 'other';
+      let label = `${Math.round(origSpan)}`;
+
+      if (j === bestHIdx && spansY.length >= 3) {
+        type = 'H';
+        targetSpan = (origSpan / baseH) * targetH;
+        label = `H = ${Math.round(targetSpan)}`;
+      } else {
+        // Abas de tampa ou fundo dependem prioritariamente da largura B
+        type = 'flap';
+        const flapScale = targetB / baseB;
+        targetSpan = origSpan * flapScale;
+        label = `Aba: ${Math.round(targetSpan)}`;
+      }
+
+      yIntervals.push({
+        y0Orig: fullYBoundaries[j],
+        y1Orig: fullYBoundaries[j + 1],
+        y0New: currNewY,
+        y1New: currNewY + targetSpan,
+        type,
+        label,
+      });
+      currNewY += targetSpan;
+    }
+  } else if (structure === 'TRAY') {
+    // Em bandejas: Parede superior (H) + Fundo Central (B) + Parede inferior (H)
+    for (let j = 0; j < spansY.length; j++) {
+      const origSpan = spansY[j];
+      let targetSpan = origSpan;
+      let type: 'H' | 'B' | 'other' = 'other';
+      let label = `${Math.round(origSpan)}`;
+
+      if (j === 0 || j === spansY.length - 1) {
+        type = 'H';
+        targetSpan = (origSpan / baseH) * targetH;
+        label = `H = ${Math.round(targetSpan)}`;
+      } else {
+        type = 'B';
+        targetSpan = (origSpan / baseB) * targetB;
+        label = `B = ${Math.round(targetSpan)}`;
+      }
+
+      yIntervals.push({
+        y0Orig: fullYBoundaries[j],
+        y1Orig: fullYBoundaries[j + 1],
+        y0New: currNewY,
+        y1New: currNewY + targetSpan,
+        type,
+        label,
+      });
+      currNewY += targetSpan;
+    }
+  } else {
+    // Genérico Y
+    const scaleY = targetH / baseH;
+    for (let j = 0; j < spansY.length; j++) {
+      const origSpan = spansY[j];
+      const targetSpan = origSpan * scaleY;
+      yIntervals.push({
+        y0Orig: fullYBoundaries[j],
+        y1Orig: fullYBoundaries[j + 1],
+        y0New: currNewY,
+        y1New: currNewY + targetSpan,
+        type: 'other',
+        label: `${Math.round(targetSpan)}`,
+      });
+      currNewY += targetSpan;
     }
   }
 
-  for (let j = 0; j < fullYBoundaries.length - 1; j++) {
-    const y0 = fullYBoundaries[j];
-    const y1 = fullYBoundaries[j + 1];
-    const origSpan = y1 - y0;
-
-    let type: 'H' | 'top_flap' | 'bottom_flap' | 'other' = 'other';
-    let targetSpan = origSpan;
-    let label = `${Math.round(origSpan)}`;
-
-    if (j === bestHIndex && fullYBoundaries.length >= 3) {
-      type = 'H';
-      targetSpan = targetH;
-      label = `H = ${Math.round(targetH)}`;
-    } else if (j < bestHIndex) {
-      type = 'bottom_flap';
-      // Abas inferiores de fundo geralmente escalam com B
-      const scaleB = targetB / baseB;
-      targetSpan = origSpan * scaleB;
-      label = `Fundo: ${Math.round(targetSpan)}`;
-    } else if (j > bestHIndex) {
-      type = 'top_flap';
-      // Abas superiores/tampa escalam com B
-      const scaleB = targetB / baseB;
-      targetSpan = origSpan * scaleB;
-      label = `Tampa: ${Math.round(targetSpan)}`;
-    } else {
-      // Escala genérica por H
-      targetSpan = origSpan * (targetH / baseH);
-      label = `${Math.round(targetSpan)}`;
-    }
-
-    yIntervals.push({
-      y0Orig: y0,
-      y1Orig: y1,
-      y0New: currNewY,
-      y1New: currNewY + targetSpan,
-      type,
-      label,
-    });
-    currNewY += targetSpan;
-  }
-
-  // 5. Funções de Transferência Monotônicas Contínuas C0
+  // 6. Funções Bijetoras de Mapeamento Monotônico Contínuo C0
   function mapX(x: number): number {
     if (xIntervals.length === 0) return x;
     if (x <= xIntervals[0].x0Orig) {
@@ -281,39 +393,47 @@ export function computeParametricDieline(
     return y;
   }
 
-  // 6. Mapeamento de Vértices Únicos (Garante continuidade absoluta)
-  // Todos os endpoints são coletados, deduplicados, mapeados uma única vez,
-  // e então reatribuídos aos segmentos. Isso elimina qualquer gap.
-  const VERTEX_EPS = 0.05;
+  // 7. Mapeamento de Vértices Únicos com Tolerância Zero de Degraus
+  // Registra todos os pontos de extremidade (segmentos e arcos) em uma malha topológica única.
+  const VERTEX_TOL = 0.04;
   const vtxKey = (x: number, y: number) =>
-    `${Math.round(x / VERTEX_EPS)},${Math.round(y / VERTEX_EPS)}`;
+    `${Math.round(x / VERTEX_TOL)},${Math.round(y / VERTEX_TOL)}`;
 
-  // 6.1 Coletar todos os vértices únicos dos segmentos originais
-  const vertexMap = new Map<string, { origX: number; origY: number; mapX: number; mapY: number }>();
+  const vertexMap = new Map<string, { mapX: number; mapY: number }>();
 
+  function registerVertex(x: number, y: number): { mapX: number; mapY: number } {
+    const k = vtxKey(x, y);
+    const existing = vertexMap.get(k);
+    if (existing) return existing;
+    const mapped = {
+      mapX: Math.round(mapX(x) * 1000) / 1000,
+      mapY: Math.round(mapY(y) * 1000) / 1000,
+    };
+    vertexMap.set(k, mapped);
+    return mapped;
+  }
+
+  // Registra vértices de todos os segmentos
   for (const s of origSegs) {
-    const k0 = vtxKey(s.x0, s.y0);
-    if (!vertexMap.has(k0)) {
-      vertexMap.set(k0, {
-        origX: s.x0, origY: s.y0,
-        mapX: Math.round(mapX(s.x0) * 1000) / 1000,
-        mapY: Math.round(mapY(s.y0) * 1000) / 1000,
-      });
-    }
-    const k1 = vtxKey(s.x1, s.y1);
-    if (!vertexMap.has(k1)) {
-      vertexMap.set(k1, {
-        origX: s.x1, origY: s.y1,
-        mapX: Math.round(mapX(s.x1) * 1000) / 1000,
-        mapY: Math.round(mapY(s.y1) * 1000) / 1000,
-      });
+    registerVertex(s.x0, s.y0);
+    registerVertex(s.x1, s.y1);
+  }
+
+  // Registra endpoints dos arcos para amarrar perfeitamente arcos e segmentos
+  for (const a of origArcs) {
+    const isFull = Math.abs(Math.abs(a.endAngle - a.startAngle) - 360) < 1;
+    if (!isFull) {
+      const a0Rad = (a.startAngle * Math.PI) / 180;
+      const a1Rad = (a.endAngle * Math.PI) / 180;
+      registerVertex(a.cx + a.r * Math.cos(a0Rad), a.cy + a.r * Math.sin(a0Rad));
+      registerVertex(a.cx + a.r * Math.cos(a1Rad), a.cy + a.r * Math.sin(a1Rad));
     }
   }
 
-  // 6.2 Construir segmentos mapeados usando vértices únicos
+  // Constrói segmentos transformados usando exatamente os vértices compartilhados
   const segments: Segment2D[] = origSegs.map((s, idx) => {
-    const v0 = vertexMap.get(vtxKey(s.x0, s.y0))!;
-    const v1 = vertexMap.get(vtxKey(s.x1, s.y1))!;
+    const v0 = registerVertex(s.x0, s.y0);
+    const v1 = registerVertex(s.x1, s.y1);
     return {
       id: `${prefix}-seg-${idx}`,
       type: s.type === 'crease' ? 'crease' : (s.type === 'perfo' || s.type === 'perforation' ? 'perfo' : 'cut'),
@@ -324,19 +444,22 @@ export function computeParametricDieline(
     };
   });
 
-  // 7. Aplicação da Deformação nos Arcos com Preservação de Tangência
-  const arcs: Arc2D[] = origArcs.map((a, idx) => {
-    const cxNew = mapX(a.cx);
-    const cyNew = mapY(a.cy);
+  // 8. Transformação de Arcos Preservando Tangência e Continuidade Estrita
+  const arcs: Arc2D[] = [];
+  let extraCurveSegCount = 0;
 
-    // Escala local média do raio
-    const localScaleX = (mapX(a.cx + a.r) - mapX(a.cx - a.r)) / (2 * a.r || 1);
-    const localScaleY = (mapY(a.cy + a.r) - mapY(a.cy - a.r)) / (2 * a.r || 1);
-    const rNew = a.r * ((Math.abs(localScaleX) + Math.abs(localScaleY)) / 2);
+  for (let idx = 0; idx < origArcs.length; idx++) {
+    const a = origArcs[idx];
+    const isFullCircle = Math.abs(Math.abs(a.endAngle - a.startAngle) - 360) < 1;
 
-    const isFullCircle = Math.abs(Math.abs((a.endAngle || 360) - (a.startAngle || 0)) - 360) < 1;
     if (isFullCircle) {
-      return {
+      // Furos circulares e alívios redondos preservam o centro transformado e raio
+      const cxNew = mapX(a.cx);
+      const cyNew = mapY(a.cy);
+      const scaleLocal = ((mapX(a.cx + a.r) - cxNew) + (mapY(a.cy + a.r) - cyNew)) / (2 * a.r || 1);
+      const rNew = Math.max(1.0, a.r * Math.abs(scaleLocal));
+
+      arcs.push({
         id: `${prefix}-arc-${idx}`,
         type: a.type === 'crease' ? 'crease' : 'cut',
         cx: Math.round(cxNew * 1000) / 1000,
@@ -344,37 +467,56 @@ export function computeParametricDieline(
         r: Math.round(rNew * 1000) / 1000,
         startAngle: 0,
         endAngle: 360,
-      };
+      });
+    } else {
+      // Arcos de canto, fillets e concordâncias de abas:
+      // Para garantir que NENHUMA LINHA QUEBRE sob escala não-isotrópica (X != Y),
+      // discretizamos o arco em uma cadeia de micro-segmentos conectando rigidamente
+      // do endpoint v0 (mesmo vértice do segmento reto anterior) até v1 (mesmo vértice do segmento seguinte).
+      const a0Rad = (a.startAngle * Math.PI) / 180;
+      const a1Rad = (a.endAngle * Math.PI) / 180;
+      const p0 = registerVertex(a.cx + a.r * Math.cos(a0Rad), a.cy + a.r * Math.sin(a0Rad));
+      const p1 = registerVertex(a.cx + a.r * Math.cos(a1Rad), a.cy + a.r * Math.sin(a1Rad));
+
+      let span = a.endAngle - a.startAngle;
+      while (span < 0) span += 360;
+
+      // Se o arco for um raio pequeno de concordância (< 15mm), 6 a 12 passos geram suavidade CAD industrial
+      const steps = Math.max(6, Math.min(18, Math.round((span / 90) * 8)));
+      const da = (span * Math.PI / 180) / steps;
+
+      let lastPt = p0;
+      for (let s = 1; s <= steps; s++) {
+        let currPt;
+        if (s === steps) {
+          // Último passo conecta EXATAMENTE ao endpoint p1 do segmento adjacente (GAP ZERO)
+          currPt = p1;
+        } else {
+          const ang = a0Rad + s * da;
+          const origX = a.cx + a.r * Math.cos(ang);
+          const origY = a.cy + a.r * Math.sin(ang);
+          currPt = {
+            mapX: Math.round(mapX(origX) * 1000) / 1000,
+            mapY: Math.round(mapY(origY) * 1000) / 1000,
+          };
+        }
+
+        segments.push({
+          id: `${prefix}-arc-seg-${idx}-${s}`,
+          type: a.type === 'crease' ? 'crease' : 'cut',
+          x0: lastPt.mapX,
+          y0: lastPt.mapY,
+          x1: currPt.mapX,
+          y1: currPt.mapY,
+        });
+
+        lastPt = currPt;
+        extraCurveSegCount++;
+      }
     }
+  }
 
-    // Calcula os pontos inicial e final transformados
-    const a0Rad = (a.startAngle * Math.PI) / 180;
-    const a1Rad = (a.endAngle * Math.PI) / 180;
-    const p0x = mapX(a.cx + a.r * Math.cos(a0Rad));
-    const p0y = mapY(a.cy + a.r * Math.sin(a0Rad));
-    const p1x = mapX(a.cx + a.r * Math.cos(a1Rad));
-    const p1y = mapY(a.cy + a.r * Math.sin(a1Rad));
-
-    let newA0 = (Math.atan2(p0y - cyNew, p0x - cxNew) * 180) / Math.PI;
-    let newA1 = (Math.atan2(p1y - cyNew, p1x - cxNew) * 180) / Math.PI;
-    if (newA0 < 0) newA0 += 360;
-    if (newA1 < 0) newA1 += 360;
-    while (newA1 < newA0) {
-      newA1 += 360;
-    }
-
-    return {
-      id: `${prefix}-arc-${idx}`,
-      type: a.type === 'crease' ? 'crease' : 'cut',
-      cx: Math.round(cxNew * 1000) / 1000,
-      cy: Math.round(cyNew * 1000) / 1000,
-      r: Math.round(rNew * 1000) / 1000,
-      startAngle: Math.round(newA0 * 1000) / 1000,
-      endAngle: Math.round(newA1 * 1000) / 1000,
-    };
-  });
-
-  // 8. BoundingBox da Geometria Deformada
+  // 9. BoundingBox da Geometria Regenerada
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const s of segments) {
     minX = Math.min(minX, s.x0, s.x1);
@@ -398,10 +540,10 @@ export function computeParametricDieline(
     height: maxY - minY,
   };
 
-  // 9. Geração Automática das Cotas Técnicas (Abas, Painéis e Formato Geral)
+  // 10. Cotas Técnicas Fiéis
   const dimensions: DimensionLine[] = [];
 
-  // 9.1 Cotas Horizontais dos Painéis e Abas
+  // Cotas Horizontais por Painel
   const horizDimY = maxY + 15;
   for (const inv of xIntervals) {
     const span = inv.x1New - inv.x0New;
@@ -417,7 +559,7 @@ export function computeParametricDieline(
     }
   }
 
-  // 9.2 Cotas Verticais (Corpo H, Fundo e Tampa)
+  // Cotas Verticais
   const vertDimX = minX - 18;
   for (const inv of yIntervals) {
     const span = inv.y1New - inv.y0New;
@@ -434,7 +576,7 @@ export function computeParametricDieline(
     }
   }
 
-  // 9.3 Cota Geral de Formato Mínimo Aberto (Largura e Altura Totais)
+  // Cota Geral Aberta
   dimensions.push({
     x0: minX,
     y0: minY - 28,
