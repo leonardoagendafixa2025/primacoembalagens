@@ -127,7 +127,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     }
     ctx.setLineDash([]);
 
-    // 3.1 Desenho dos Arcos da Faca (6 arcos de concordância / aba frontal)
+    // 3.1 Desenho dos Arcos da Faca
     if (dieline.arcs && dieline.arcs.length > 0) {
       for (const arc of dieline.arcs) {
         ctx.beginPath();
@@ -135,18 +135,21 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         const sy = toScreenY(arc.cy);
         const sr = arc.r * zoom;
 
-        // No CAD cartesiano (+Y para cima), ângulos crescem anti-horário.
-        // Um arco vai de startAngle até endAngle no sentido anti-horário.
-        // No Canvas (+Y para baixo), o ângulo de tela correspondente é invertido: -theta.
-        // O sentido anti-horário do CAD (+theta) vira anti-horário no canvas com anticlockwise=true.
-        let startAngle = arc.startAngle;
-        let endAngle = arc.endAngle;
-        while (endAngle < startAngle) {
-          endAngle += 360;
+        const isFull = Math.abs(Math.abs(arc.endAngle - arc.startAngle) - 360) < 1 ||
+                       (arc.startAngle === 0 && arc.endAngle === 360);
+
+        if (isFull) {
+          ctx.arc(sx, sy, sr, 0, Math.PI * 2, false);
+        } else {
+          let startAngle = arc.startAngle;
+          let endAngle = arc.endAngle;
+          while (endAngle < startAngle) {
+            endAngle += 360;
+          }
+          const a0 = (-startAngle * Math.PI) / 180;
+          const a1 = (-endAngle * Math.PI) / 180;
+          ctx.arc(sx, sy, sr, a0, a1, true);
         }
-        const a0 = (-startAngle * Math.PI) / 180;
-        const a1 = (-endAngle * Math.PI) / 180;
-        ctx.arc(sx, sy, sr, a0, a1, true);
 
         if (arc.type === 'cut') {
           ctx.strokeStyle = '#c53236'; // Vermelho Corte Primacor
@@ -161,12 +164,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
       }
     }
 
-    // 4. Desenho de Cotas e Medidas
+    // 4. Desenho de Cotas e Medidas Técnicas
     if (showDimensions && dieline.dimensions) {
-      ctx.font = '11px monospace';
-      ctx.fillStyle = '#F59E0B';
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-      ctx.lineWidth = 1;
+      ctx.font = 'bold 10px monospace';
 
       for (const dim of dieline.dimensions) {
         const sx0 = toScreenX(dim.x0);
@@ -174,13 +174,16 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         const sx1 = toScreenX(dim.x1);
         const sy1 = toScreenY(dim.y1);
 
-        const off = (dim.offset || 15) * zoom;
+        const off = (dim.offset || 12) * zoom;
         const cx0 = dim.isVertical ? sx0 + off : sx0;
         const cy0 = dim.isVertical ? sy0 : sy0 - off;
         const cx1 = dim.isVertical ? sx1 + off : sx1;
         const cy1 = dim.isVertical ? sy1 : sy1 - off;
 
-        // Linha da cota
+        // Linha da cota e linhas de extensão
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(cx0, cy0);
         ctx.lineTo(cx1, cy1);
@@ -189,13 +192,29 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         ctx.lineTo(cx0, cy0);
         ctx.moveTo(sx1, sy1);
         ctx.lineTo(cx1, cy1);
+
+        // Tiques técnicos nas pontas
+        const tickSize = 3;
+        ctx.moveTo(cx0 - tickSize, cy0 + tickSize);
+        ctx.lineTo(cx0 + tickSize, cy0 - tickSize);
+        ctx.moveTo(cx1 - tickSize, cy1 + tickSize);
+        ctx.lineTo(cx1 + tickSize, cy1 - tickSize);
         ctx.stroke();
 
-        // Texto da cota
+        // Texto da cota com fundo legível
         const textX = (cx0 + cx1) / 2;
-        const textY = (cy0 + cy1) / 2 - 4;
+        const textY = (cy0 + cy1) / 2;
+        const textMetrics = ctx.measureText(dim.text);
+        const bgW = textMetrics.width + 6;
+        const bgH = 13;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(textX - bgW / 2, textY - bgH / 2 - 1, bgW, bgH);
+
+        ctx.fillStyle = '#F59E0B';
         ctx.textAlign = 'center';
-        ctx.fillText(dim.text, textX, textY);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(dim.text, textX, textY - 1);
       }
     }
 

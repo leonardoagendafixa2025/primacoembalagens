@@ -1,4 +1,4 @@
-import type { PackagingModel, DielineResult, Segment2D, Arc2D, BoundingBox2D, ModelStatus, OriginalSourceType, ImplementationType } from './types';
+import type { PackagingModel, DielineResult, ModelStatus, OriginalSourceType, ImplementationType } from './types';
 import rawCatalog from './modelsCatalog.json';
 import rawDesData from './desModelsData.json';
 import rawCSharpData from './csharpModelsData.json';
@@ -18,6 +18,8 @@ import { ecmaA1075 } from './models/ecmaA1075';
 import { ecmaB1001 } from './models/ecmaB1001';
 import { ecmaB1506_53 } from './models/ecmaB1506_53';
 import { ecmaA6020 } from './models/ecmaA6020';
+import { ecmaA0115 } from './models/ecmaA0115';
+import { computeParametricDieline } from './parametricMorph';
 
 export interface CatalogItem {
   id: string;
@@ -69,232 +71,45 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   ecma_b1506_60: ecmaB1506_53,
   ecma_a6020: ecmaA6020,
   ecma_a60_20: ecmaA6020,
+  ecma_a0115: ecmaA0115,
+  ecma_a115: ecmaA0115,
 };
 
-
-
 /**
- * Cria gerador vetorial para modelos extraídos do Picador CAD (.des)
+ * Cria gerador vetorial para modelos extraídos do Picador CAD (.des) com parametrização contínua em tempo real
  */
-function createDesCalculator(rawItem: any, _defaultL: number, _defaultB: number) {
-  return (_params: Record<string, number>): DielineResult => {
+function createDesCalculator(rawItem: any, defaultL: number, defaultB: number, defaultH: number = 150) {
+  return (params: Record<string, number>): DielineResult => {
     const geom = rawItem.geometry;
     if (!geom) {
       throw new Error(`Geometria DES não encontrada para ${rawItem.modelId}`);
     }
 
-    const bbox = geom.bbox || { xmin: -200, ymin: -200, xmax: 200, ymax: 200 };
-    const origW = Math.max(1, bbox.xmax - bbox.xmin);
-    const origH = Math.max(1, bbox.ymax - bbox.ymin);
-
-    // Modelos vetoriais DES não suportam escala linear arbitrária (que distorce abas e raios).
-    // São renderizados com suas dimensões geométricas reais originais 1:1.
-    const scaleX = 1.0;
-    const scaleY = 1.0;
-
-    const midX = (bbox.xmin + bbox.xmax) / 2;
-    const midY = (bbox.ymin + bbox.ymax) / 2;
-
-    const segments: Segment2D[] = (geom.segments || []).map((s: any, idx: number) => ({
-      id: `des-seg-${idx}`,
-      type: s.type === 'crease' ? 'crease' : (s.type === 'perforation' ? 'perfo' : 'cut'),
-      x0: Math.round(((s.x0 - midX) * scaleX) * 1000) / 1000,
-      y0: Math.round(((s.y0 - midY) * scaleY) * 1000) / 1000,
-      x1: Math.round(((s.x1 - midX) * scaleX) * 1000) / 1000,
-      y1: Math.round(((s.y1 - midY) * scaleY) * 1000) / 1000,
-    }));
-
-    const arcs: Arc2D[] = (geom.arcs || []).map((a: any, idx: number) => {
-      const origCx = (a.cx - midX);
-      const origCy = (a.cy - midY);
-      const cxScaled = origCx * scaleX;
-      const cyScaled = origCy * scaleY;
-      const isFullCircle = Math.abs(Math.abs((a.endAngle || 360) - (a.startAngle || 0)) - 360) < 1;
-
-      if (isFullCircle) {
-        return {
-          id: `des-arc-${idx}`,
-          type: a.type === 'crease' ? 'crease' : 'cut',
-          cx: Math.round(cxScaled * 1000) / 1000,
-          cy: Math.round(cyScaled * 1000) / 1000,
-          r: Math.round((a.r * (scaleX + scaleY) / 2) * 1000) / 1000,
-          startAngle: 0,
-          endAngle: 360,
-        };
-      }
-
-      // Preserva tangência e continuidade absoluta com os segmentos adjacentes
-      const a0Rad = (a.startAngle * Math.PI) / 180;
-      const a1Rad = (a.endAngle * Math.PI) / 180;
-      const p0x = (origCx + a.r * Math.cos(a0Rad)) * scaleX;
-      const p0y = (origCy + a.r * Math.sin(a0Rad)) * scaleY;
-      const p1x = (origCx + a.r * Math.cos(a1Rad)) * scaleX;
-      const p1y = (origCy + a.r * Math.sin(a1Rad)) * scaleY;
-
-      let newA0 = (Math.atan2(p0y - cyScaled, p0x - cxScaled) * 180) / Math.PI;
-      let newA1 = (Math.atan2(p1y - cyScaled, p1x - cxScaled) * 180) / Math.PI;
-      if (newA0 < 0) newA0 += 360;
-      if (newA1 < 0) newA1 += 360;
-      while (newA1 < newA0) {
-        newA1 += 360;
-      }
-
-      const r0 = Math.hypot(p0x - cxScaled, p0y - cyScaled);
-      const r1 = Math.hypot(p1x - cxScaled, p1y - cyScaled);
-      const rScaled = (r0 + r1) / 2;
-
-      return {
-        id: `des-arc-${idx}`,
-        type: a.type === 'crease' ? 'crease' : 'cut',
-        cx: Math.round(cxScaled * 1000) / 1000,
-        cy: Math.round(cyScaled * 1000) / 1000,
-        r: Math.round(rScaled * 1000) / 1000,
-        startAngle: Math.round(newA0 * 1000) / 1000,
-        endAngle: Math.round(newA1 * 1000) / 1000,
-      };
-    });
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const s of segments) {
-      if (s.x0 < minX) minX = s.x0;
-      if (s.x1 < minX) minX = s.x1;
-      if (s.x0 > maxX) maxX = s.x0;
-      if (s.x1 > maxX) maxX = s.x1;
-      if (s.y0 < minY) minY = s.y0;
-      if (s.y1 < minY) minY = s.y1;
-      if (s.y0 > maxY) maxY = s.y0;
-      if (s.y1 > maxY) maxY = s.y1;
-    }
-
-    if (minX === Infinity) {
-      minX = -origW / 2; maxX = origW / 2;
-      minY = -origH / 2; maxY = origH / 2;
-    }
-
-    const bounds: BoundingBox2D = {
-      minX, minY, maxX, maxY,
-      width: maxX - minX,
-      height: maxY - minY,
-    };
-
-    return {
-      segments,
-      arcs,
-      dimensions: [
-        { x0: minX, y0: minY - 20, x1: maxX, y1: minY - 20, text: `${Math.round(bounds.width)} mm` },
-        { x0: minX - 20, y0: minY, x1: minX - 20, y1: maxY, text: `${Math.round(bounds.height)} mm`, isVertical: true },
-      ],
-      bounds,
-    };
+    return computeParametricDieline(
+      geom,
+      { L: defaultL, B: defaultB, H: defaultH, M: 20 },
+      params,
+      'des'
+    );
   };
 }
 
 /**
- * Cria gerador para modelos paramétricos C# avaliados da base original
+ * Cria gerador para modelos paramétricos C# avaliados da base original com parametrização contínua em tempo real
  */
-function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number, _defaultH: number) {
-  return (_params: Record<string, number>): DielineResult => {
+function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number, defaultH: number = 150) {
+  return (params: Record<string, number>): DielineResult => {
     const geom = csItem.geometry;
     if (!geom) {
       throw new Error(`Geometria C# não encontrada para ${csItem.modelId}`);
     }
 
-    const baseL = defaultL || 300;
-    const baseB = defaultB || 200;
-
-    // Modelos C# estáticos avaliados preservam estritamente geometria 1:1 original sem distorção artificial.
-    const scaleX = 1.0;
-    const scaleY = 1.0;
-
-    const segments: Segment2D[] = (geom.segments || []).map((s: any, idx: number) => ({
-      id: `cs-seg-${idx}`,
-      type: s.type === 'crease' ? 'crease' : 'cut',
-      x0: Math.round((s.x0 * scaleX) * 1000) / 1000,
-      y0: Math.round((s.y0 * scaleY) * 1000) / 1000,
-      x1: Math.round((s.x1 * scaleX) * 1000) / 1000,
-      y1: Math.round((s.y1 * scaleY) * 1000) / 1000,
-    }));
-
-    const arcs: Arc2D[] = (geom.arcs || []).map((a: any, idx: number) => {
-      const cxScaled = a.cx * scaleX;
-      const cyScaled = a.cy * scaleY;
-      const isFullCircle = Math.abs(Math.abs((a.endAngle || 360) - (a.startAngle || 0)) - 360) < 1;
-
-      if (isFullCircle) {
-        return {
-          id: `cs-arc-${idx}`,
-          type: a.type === 'crease' ? 'crease' : 'cut',
-          cx: Math.round(cxScaled * 1000) / 1000,
-          cy: Math.round(cyScaled * 1000) / 1000,
-          r: Math.round((a.r * (scaleX + scaleY) / 2) * 1000) / 1000,
-          startAngle: 0,
-          endAngle: 360,
-        };
-      }
-
-      // Preserva tangência e continuidade absoluta com os segmentos adjacentes
-      const a0Rad = (a.startAngle * Math.PI) / 180;
-      const a1Rad = (a.endAngle * Math.PI) / 180;
-      const p0x = (a.cx + a.r * Math.cos(a0Rad)) * scaleX;
-      const p0y = (a.cy + a.r * Math.sin(a0Rad)) * scaleY;
-      const p1x = (a.cx + a.r * Math.cos(a1Rad)) * scaleX;
-      const p1y = (a.cy + a.r * Math.sin(a1Rad)) * scaleY;
-
-      let newA0 = (Math.atan2(p0y - cyScaled, p0x - cxScaled) * 180) / Math.PI;
-      let newA1 = (Math.atan2(p1y - cyScaled, p1x - cxScaled) * 180) / Math.PI;
-      if (newA0 < 0) newA0 += 360;
-      if (newA1 < 0) newA1 += 360;
-      while (newA1 < newA0) {
-        newA1 += 360;
-      }
-
-      const r0 = Math.hypot(p0x - cxScaled, p0y - cyScaled);
-      const r1 = Math.hypot(p1x - cxScaled, p1y - cyScaled);
-      const rScaled = (r0 + r1) / 2;
-
-      return {
-        id: `cs-arc-${idx}`,
-        type: a.type === 'crease' ? 'crease' : 'cut',
-        cx: Math.round(cxScaled * 1000) / 1000,
-        cy: Math.round(cyScaled * 1000) / 1000,
-        r: Math.round(rScaled * 1000) / 1000,
-        startAngle: Math.round(newA0 * 1000) / 1000,
-        endAngle: Math.round(newA1 * 1000) / 1000,
-      };
-    });
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const s of segments) {
-      if (s.x0 < minX) minX = s.x0;
-      if (s.x1 < minX) minX = s.x1;
-      if (s.x0 > maxX) maxX = s.x0;
-      if (s.x1 > maxX) maxX = s.x1;
-      if (s.y0 < minY) minY = s.y0;
-      if (s.y1 < minY) minY = s.y1;
-      if (s.y0 > maxY) maxY = s.y0;
-      if (s.y1 > maxY) maxY = s.y1;
-    }
-
-    if (minX === Infinity) {
-      minX = -baseL / 2; maxX = baseL / 2;
-      minY = -baseB / 2; maxY = baseB / 2;
-    }
-
-    const bounds: BoundingBox2D = {
-      minX, minY, maxX, maxY,
-      width: maxX - minX,
-      height: maxY - minY,
-    };
-
-    return {
-      segments,
-      arcs,
-      dimensions: [
-        { x0: minX, y0: minY - 20, x1: maxX, y1: minY - 20, text: `${Math.round(bounds.width)} mm` },
-        { x0: minX - 20, y0: minY, x1: minX - 20, y1: maxY, text: `${Math.round(bounds.height)} mm`, isVertical: true },
-      ],
-      bounds,
-    };
+    return computeParametricDieline(
+      geom,
+      { L: defaultL, B: defaultB, H: defaultH, M: 20 },
+      params,
+      'cs'
+    );
   };
 }
 
@@ -353,6 +168,7 @@ export function getModelById(id: string): PackagingModel {
 
     const defL = catalogItem.defaultParams?.L || 300;
     const defB = catalogItem.defaultParams?.B || 200;
+    const defH = catalogItem.defaultParams?.H || 150;
 
     const desModel: PackagingModel = {
       id: catalogItem.id,
@@ -360,7 +176,7 @@ export function getModelById(id: string): PackagingModel {
       name: catalogItem.name,
       category: catalogItem.category as any,
       description: catalogItem.description,
-      defaultParams: catalogItem.defaultParams || { L: defL, B: defB, H: 150, Ep: 3 },
+      defaultParams: catalogItem.defaultParams || { L: defL, B: defB, H: defH, Ep: 3 },
       paramDefs: [
         { key: 'L', label: 'Comprimento (L)', min: 50, max: 1500, step: 5, unit: 'mm' },
         { key: 'B', label: 'Largura (B)', min: 30, max: 1200, step: 5, unit: 'mm' },
@@ -372,7 +188,7 @@ export function getModelById(id: string): PackagingModel {
       implementationType: 'DES_GEOMETRY_PARSER',
       generator: `des_${desItem.fileName}`,
       isFoldable,
-      calculate: createDesCalculator(desItem, defL, defB),
+      calculate: createDesCalculator(desItem, defL, defB, defH),
     };
     MODEL_CACHE.set(id, desModel);
     return desModel;
