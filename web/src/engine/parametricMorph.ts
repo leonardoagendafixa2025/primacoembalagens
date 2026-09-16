@@ -281,15 +281,91 @@ export function computeParametricDieline(
     return y;
   }
 
-  // 6. Aplicação da Deformação nos Segmentos
-  const segments: Segment2D[] = origSegs.map((s, idx) => ({
-    id: `${prefix}-seg-${idx}`,
-    type: s.type === 'crease' ? 'crease' : (s.type === 'perfo' || s.type === 'perforation' ? 'perfo' : 'cut'),
-    x0: Math.round(mapX(s.x0) * 1000) / 1000,
-    y0: Math.round(mapY(s.y0) * 1000) / 1000,
-    x1: Math.round(mapX(s.x1) * 1000) / 1000,
-    y1: Math.round(mapY(s.y1) * 1000) / 1000,
-  }));
+  // 6. Aplicação da Deformação nos Segmentos com Preservação de Ângulo para Diagonais
+  const segments: Segment2D[] = origSegs.map((s, idx) => {
+    const segType = s.type === 'crease' ? 'crease' : (s.type === 'perfo' || s.type === 'perforation' ? 'perfo' : 'cut');
+    
+    const isHoriz = Math.abs(s.y0 - s.y1) < 0.5;
+    const isVert = Math.abs(s.x0 - s.x1) < 0.5;
+    
+    if (isHoriz || isVert) {
+      // Segmentos horizontais e verticais: mapear endpoints diretamente (sem distorção de ângulo)
+      return {
+        id: `${prefix}-seg-${idx}`,
+        type: segType,
+        x0: Math.round(mapX(s.x0) * 1000) / 1000,
+        y0: Math.round(mapY(s.y0) * 1000) / 1000,
+        x1: Math.round(mapX(s.x1) * 1000) / 1000,
+        y1: Math.round(mapY(s.y1) * 1000) / 1000,
+      };
+    }
+    
+    // Segmentos diagonais: preservar ângulo original, escalar pelo ponto médio
+    const midXOrig = (s.x0 + s.x1) / 2;
+    const midYOrig = (s.y0 + s.y1) / 2;
+    const midXNew = mapX(midXOrig);
+    const midYNew = mapY(midYOrig);
+    
+    // Calcular a escala local no ponto médio
+    const dx = s.x1 - s.x0;
+    const dy = s.y1 - s.y0;
+    
+    // Escala local em X e Y no ponto médio
+    const eps = 0.5;
+    const scaleXLocal = (mapX(midXOrig + eps) - mapX(midXOrig - eps)) / (2 * eps);
+    const scaleYLocal = (mapY(midYOrig + eps) - mapY(midYOrig - eps)) / (2 * eps);
+    
+    // Escalar os componentes dx,dy pela escala local
+    const newDx = dx * scaleXLocal;
+    const newDy = dy * scaleYLocal;
+    const halfNewDx = newDx / 2;
+    const halfNewDy = newDy / 2;
+    
+    return {
+      id: `${prefix}-seg-${idx}`,
+      type: segType,
+      x0: Math.round((midXNew - halfNewDx) * 1000) / 1000,
+      y0: Math.round((midYNew - halfNewDy) * 1000) / 1000,
+      x1: Math.round((midXNew + halfNewDx) * 1000) / 1000,
+      y1: Math.round((midYNew + halfNewDy) * 1000) / 1000,
+    };
+  });
+
+  // 6.5 Costura de Endpoints - Garantir que segmentos conectados permaneçam conectados
+  // Construir hash espacial de endpoints originais coincidentes
+  const EPS_STITCH = 0.1;
+  const pointKey = (x: number, y: number) => `${Math.round(x / EPS_STITCH)},${Math.round(y / EPS_STITCH)}`;
+  
+  interface EndpointRef { segIdx: number; end: 0 | 1; }
+  const pointGroups = new Map<string, EndpointRef[]>();
+  
+  for (let i = 0; i < origSegs.length; i++) {
+    const s = origSegs[i];
+    const key0 = pointKey(s.x0, s.y0);
+    const key1 = pointKey(s.x1, s.y1);
+    if (!pointGroups.has(key0)) pointGroups.set(key0, []);
+    pointGroups.get(key0)!.push({ segIdx: i, end: 0 });
+    if (!pointGroups.has(key1)) pointGroups.set(key1, []);
+    pointGroups.get(key1)!.push({ segIdx: i, end: 1 });
+  }
+  
+  // Para cada grupo de endpoints coincidentes, forçar todos a mesma posição (média)
+  for (const [, refs] of pointGroups) {
+    if (refs.length < 2) continue;
+    let sumX = 0, sumY = 0;
+    for (const ref of refs) {
+      const seg = segments[ref.segIdx];
+      if (ref.end === 0) { sumX += seg.x0; sumY += seg.y0; }
+      else { sumX += seg.x1; sumY += seg.y1; }
+    }
+    const avgX = Math.round((sumX / refs.length) * 1000) / 1000;
+    const avgY = Math.round((sumY / refs.length) * 1000) / 1000;
+    for (const ref of refs) {
+      const seg = segments[ref.segIdx];
+      if (ref.end === 0) { seg.x0 = avgX; seg.y0 = avgY; }
+      else { seg.x1 = avgX; seg.y1 = avgY; }
+    }
+  }
 
   // 7. Aplicação da Deformação nos Arcos com Preservação de Tangência
   const arcs: Arc2D[] = origArcs.map((a, idx) => {
