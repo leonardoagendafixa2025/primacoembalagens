@@ -9,6 +9,7 @@ import {
   Check,
   FileCode,
   BookOpen,
+  ChevronDown,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -42,17 +43,21 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
   const handleSaveClick = async () => {
-    const name = prompt('Nome do projeto ou embalagem para salvar:', `${currentModel.name} - ${new Date().toLocaleDateString()}`);
+    const name = prompt(
+      'Nome do projeto de embalagem:',
+      `${currentModel.name} - ${new Date().toLocaleDateString()}`
+    );
     if (!name) return;
 
     setIsSaving(true);
     try {
       await onSaveProject(name);
       setSaveSuccess(true);
-      confetti({ particleCount: 50, spread: 60, origin: { y: 0.1 } });
-      setTimeout(() => setSaveSuccess(false), 2500);
+      confetti({ particleCount: 40, spread: 50, origin: { y: 0.1 } });
+      setTimeout(() => setSaveSuccess(false), 2000);
     } catch (err) {
       alert('Erro ao salvar projeto: ' + err);
     } finally {
@@ -62,134 +67,126 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header
-      className="glass-panel"
       style={{
-        height: 64,
+        height: 'var(--cad-header-height)',
+        background: 'var(--cad-bg-header)',
+        borderBottom: '1px solid var(--cad-border-subtle)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 20px',
-        borderBottom: '1px solid var(--border-color)',
+        padding: '0 14px',
         zIndex: 50,
+        userSelect: 'none',
       }}
     >
-            {/* 1. Logotipo Oficial Primacor (Clique para voltar para Home) */}
-      <button
-        type="button"
-        onClick={onGoHome}
-        title="Voltar para a página inicial (Home)"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: '4px 8px',
-          borderRadius: 8,
-          transition: 'all 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = '0.85';
-          e.currentTarget.style.transform = 'scale(1.02)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = '1';
-          e.currentTarget.style.transform = 'scale(1)';
-        }}
-      >
-        <img
-          src="/primacor-logo-horizontal.png"
-          alt="Primacor Gráfica e Editora"
-          style={{
-            height: 38,
-            objectFit: 'contain',
-            filter: 'drop-shadow(0 2px 8px rgba(53, 168, 158, 0.25))',
-          }}
-        />
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            padding: '2px 7px',
-            borderRadius: 4,
-            background: 'rgba(197, 50, 54, 0.15)',
-            color: '#e04a4e',
-            border: '1px solid rgba(197, 50, 54, 0.4)',
-            letterSpacing: 0.5,
-          }}
-        >
-          CAD EMBALAGENS
-        </span>
-      </button>
-
-      {/* 2. Seletor de Modelo & Catálogo Completo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* 1. Logotipo Oficial Primacor & Identificador CAD Pro */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button
           type="button"
-          onClick={() => {
-            console.log('[UI] Biblioteca clicked');
-            onOpenCatalog();
-          }}
+          onClick={onGoHome}
+          title="Primacor CAD - Voltar ao Início"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 7,
-            padding: '7px 13px',
-            borderRadius: 8,
-            background: 'rgba(53, 168, 158, 0.12)',
-            border: '1px solid rgba(53, 168, 158, 0.45)',
-            color: '#35a89e',
-            fontSize: 13,
-            fontWeight: 600,
+            gap: 10,
+            background: 'none',
+            border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(53, 168, 158, 0.15)',
-            transition: 'all 0.2s ease',
+            padding: '4px 6px',
+            borderRadius: 'var(--cad-radius-sm)',
+            transition: 'opacity 0.15s ease',
           }}
-          title="Biblioteca com todos os modelos FEFCO e ECMA"
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
         >
-          <BookOpen size={16} color="#35a89e" />
-          <span>Biblioteca FEFCO / ECMA</span>
+          <img
+            src="/primacor-logo-horizontal.png"
+            alt="Primacor Gráfica"
+            style={{
+              height: 30,
+              objectFit: 'contain',
+            }}
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 800,
+                color: 'var(--cad-accent)',
+                letterSpacing: 1.2,
+                textTransform: 'uppercase',
+              }}
+            >
+              PACKAGING CAD PRO
+            </span>
+            <span style={{ fontSize: 8, color: 'var(--cad-text-muted)', letterSpacing: 0.5, marginTop: 2 }}>
+              v2.4 INDUSTRIAL
+            </span>
+          </div>
+        </button>
+
+        {/* Separador Vertical */}
+        <div style={{ width: 1, height: 24, background: 'var(--cad-border-subtle)' }} />
+
+        {/* Botão da Biblioteca Geral (472 Modelos FEFCO / ECMA) */}
+        <button
+          type="button"
+          onClick={onOpenCatalog}
+          className="cad-btn"
+          style={{
+            background: 'var(--cad-bg-panel)',
+            border: '1px solid var(--cad-border-default)',
+            color: 'var(--cad-text-primary)',
+            padding: '5px 10px',
+            gap: 7,
+          }}
+          title="Biblioteca de Modelos Paramétricos (Atalho: Ctrl+K)"
+        >
+          <BookOpen size={14} color="var(--cad-accent)" />
+          <span style={{ fontWeight: 600 }}>Biblioteca</span>
           <span
             style={{
-              background: '#35a89e',
-              color: '#000000',
-              fontSize: 11,
-              fontWeight: 800,
-              padding: '1px 6px',
-              borderRadius: 10,
+              background: 'var(--cad-accent-dim)',
+              color: 'var(--cad-accent)',
+              border: '1px solid var(--cad-accent-border)',
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '1px 5px',
+              borderRadius: 4,
             }}
           >
             472
           </span>
         </button>
 
-        {/* Modelo Ativo Atual (Informativo e clicável para abrir a biblioteca) */}
+        {/* Modelo Ativo Selecionado */}
         <div
           onClick={onOpenCatalog}
-          title="Clique para trocar o modelo na Biblioteca"
+          title="Clique para trocar modelo na Biblioteca"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            padding: '6px 12px',
-            borderRadius: 8,
-            background: '#121616',
-            border: '1px solid #242c2c',
+            padding: '4px 10px',
+            borderRadius: 'var(--cad-radius-sm)',
+            background: 'var(--cad-bg-input)',
+            border: '1px solid var(--cad-border-subtle)',
             cursor: 'pointer',
-            fontSize: 13,
-            transition: 'border-color 0.2s ease',
+            fontSize: 12,
+            transition: 'border-color 0.15s ease',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#35a89e')}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#242c2c')}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--cad-accent-border)')}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--cad-border-subtle)')}
         >
-          <span style={{ color: '#35a89e', fontWeight: 700 }}>{currentModel.code}</span>
-          <span style={{ color: '#475569' }}>•</span>
+          <span style={{ color: 'var(--cad-accent)', fontWeight: 700, letterSpacing: 0.3 }}>
+            {currentModel.code}
+          </span>
+          <span style={{ color: 'var(--cad-border-hover)' }}>|</span>
           <span
             style={{
-              color: '#E2E8F0',
+              color: 'var(--cad-text-secondary)',
               fontWeight: 500,
-              maxWidth: 240,
+              maxWidth: 180,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -200,159 +197,203 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* 3. Abas de Visualização (2D / 3D / Imposição) */}
+      {/* 2. Seletor de Modo de Trabalho (Faca 2D / Dobra 3D / Imposição) */}
       <div
         style={{
           display: 'flex',
-          background: '#0a0d0d',
-          padding: 3,
-          borderRadius: 10,
-          border: '1px solid #1c2222',
+          background: 'var(--cad-bg-app)',
+          padding: 2,
+          borderRadius: 'var(--cad-radius-md)',
+          border: '1px solid var(--cad-border-subtle)',
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)',
         }}
       >
         <button
+          type="button"
           onClick={() => onSelectTab('2d')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            padding: '7px 14px',
-            borderRadius: 8,
-            fontSize: 13,
+            padding: '6px 14px',
+            borderRadius: 'var(--cad-radius-sm)',
+            fontSize: 12,
             fontWeight: activeTab === '2d' ? 600 : 500,
-            color: activeTab === '2d' ? '#000000' : '#94A3B8',
-            background: activeTab === '2d' ? '#35a89e' : 'transparent',
-            boxShadow: activeTab === '2d' ? '0 2px 8px rgba(53,168,158,0.35)' : 'none',
-            transition: 'all 0.15s ease',
+            color: activeTab === '2d' ? '#000000' : 'var(--cad-text-secondary)',
+            background: activeTab === '2d' ? 'var(--cad-accent)' : 'transparent',
+            boxShadow: activeTab === '2d' ? '0 1px 4px rgba(0, 210, 180, 0.35)' : 'none',
+            transition: 'all 0.12s ease',
+            border: 'none',
+            cursor: 'pointer',
           }}
         >
-          <FileCode size={16} />
-          Faca 2D
+          <FileCode size={14} />
+          <span>Faca 2D</span>
         </button>
 
         <button
+          type="button"
           onClick={() => onSelectTab('3d')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            padding: '7px 14px',
-            borderRadius: 8,
-            fontSize: 13,
+            padding: '6px 14px',
+            borderRadius: 'var(--cad-radius-sm)',
+            fontSize: 12,
             fontWeight: activeTab === '3d' ? 600 : 500,
-            color: activeTab === '3d' ? '#000000' : '#94A3B8',
-            background: activeTab === '3d' ? '#35a89e' : 'transparent',
-            boxShadow: activeTab === '3d' ? '0 2px 8px rgba(53,168,158,0.35)' : 'none',
-            transition: 'all 0.15s ease',
+            color: activeTab === '3d' ? '#000000' : 'var(--cad-text-secondary)',
+            background: activeTab === '3d' ? 'var(--cad-accent)' : 'transparent',
+            boxShadow: activeTab === '3d' ? '0 1px 4px rgba(0, 210, 180, 0.35)' : 'none',
+            transition: 'all 0.12s ease',
+            border: 'none',
+            cursor: 'pointer',
           }}
         >
-          <Box size={16} />
-          Dobra 3D
+          <Box size={14} />
+          <span>Dobra 3D</span>
         </button>
 
         <button
+          type="button"
           onClick={() => onSelectTab('imposition')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            padding: '7px 14px',
-            borderRadius: 8,
-            fontSize: 13,
+            padding: '6px 14px',
+            borderRadius: 'var(--cad-radius-sm)',
+            fontSize: 12,
             fontWeight: activeTab === 'imposition' ? 600 : 500,
-            color: activeTab === 'imposition' ? '#000000' : '#94A3B8',
-            background: activeTab === 'imposition' ? '#35a89e' : 'transparent',
-            boxShadow: activeTab === 'imposition' ? '0 2px 8px rgba(53,168,158,0.35)' : 'none',
-            transition: 'all 0.15s ease',
+            color: activeTab === 'imposition' ? '#000000' : 'var(--cad-text-secondary)',
+            background: activeTab === 'imposition' ? 'var(--cad-accent)' : 'transparent',
+            boxShadow: activeTab === 'imposition' ? '0 1px 4px rgba(0, 210, 180, 0.35)' : 'none',
+            transition: 'all 0.12s ease',
+            border: 'none',
+            cursor: 'pointer',
           }}
         >
-          <LayoutGrid size={16} />
-          Imposição
+          <LayoutGrid size={14} />
+          <span>Imposição</span>
         </button>
       </div>
 
-      {/* 4. Botões de Ação e Exportação */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        {/* Abrir Projetos Salvos */}
+      {/* 3. Ações Técnicas: Projetos, Salvar e Exportações */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Projetos Salvos */}
         <button
+          type="button"
           onClick={onOpenProjectsModal}
-          title={isSupabaseConnected ? 'Projetos sincronizados no Supabase' : 'Projetos salvos localmente'}
-          style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            background: '#121616',
-            color: '#CBD5E1',
-            border: '1px solid #242c2c',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 12,
-          }}
+          className="cad-btn"
+          title={isSupabaseConnected ? 'Projetos sincronizados na Nuvem' : 'Projetos salvos localmente'}
         >
-          <FolderOpen size={15} />
-          Projetos
+          <FolderOpen size={14} />
+          <span>Projetos</span>
         </button>
 
         {/* Salvar Projeto */}
         <button
+          type="button"
           onClick={handleSaveClick}
           disabled={isSaving}
+          className="cad-btn"
           style={{
-            padding: '8px 14px',
-            borderRadius: 8,
-            background: saveSuccess ? '#35a89e' : '#121616',
-            color: saveSuccess ? '#000000' : '#CBD5E1',
-            border: '1px solid #242c2c',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 12,
-            fontWeight: saveSuccess ? 700 : 500,
-            transition: 'all 0.2s',
+            background: saveSuccess ? 'rgba(16, 185, 129, 0.2)' : 'var(--cad-bg-panel)',
+            borderColor: saveSuccess ? '#10b981' : 'var(--cad-border-default)',
+            color: saveSuccess ? '#10b981' : 'var(--cad-text-primary)',
           }}
         >
-          {saveSuccess ? <Check size={15} /> : <Save size={15} />}
-          {saveSuccess ? 'Salvo!' : 'Salvar'}
+          {saveSuccess ? <Check size={14} color="#10b981" /> : <Save size={14} />}
+          <span>{isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Salvar'}</span>
         </button>
 
-        {/* Exportar SVG */}
-        <button
-          onClick={onExportSVG}
-          title="Baixar em formato vetorial SVG"
-          style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            background: '#121616',
-            color: '#CBD5E1',
-            border: '1px solid #242c2c',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 12,
-          }}
-        >
-          SVG
-        </button>
+        {/* Dropdown de Exportação CAD */}
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={() => setIsExportMenuOpen((prev) => !prev)}
+            className="cad-btn cad-btn-primary"
+            title="Opções de Exportação CAD (DXF / SVG)"
+          >
+            <Download size={14} />
+            <span>Exportar</span>
+            <ChevronDown size={12} />
+          </button>
 
-        {/* Exportar DXF */}
-        <button
-          onClick={onExportDXF}
-          style={{
-            padding: '8px 16px',
-            borderRadius: 8,
-            background: 'linear-gradient(135deg, #35a89e 0%, #206d66 100%)',
-            color: '#000000',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-            fontWeight: 700,
-            boxShadow: '0 2px 10px rgba(53, 168, 158, 0.35)',
-          }}
-        >
-          <Download size={16} />
-          Baixar DXF
-        </button>
+          {isExportMenuOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 6px)',
+                right: 0,
+                background: 'var(--cad-bg-dropdown)',
+                border: '1px solid var(--cad-border-default)',
+                borderRadius: 'var(--cad-radius-md)',
+                boxShadow: 'var(--cad-shadow-panel)',
+                padding: '6px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                minWidth: 190,
+                zIndex: 100,
+              }}
+              onMouseLeave={() => setIsExportMenuOpen(false)}
+            >
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: 'var(--cad-text-muted)',
+                  padding: '4px 8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                }}
+              >
+                Formatos de Produção
+              </div>
+
+              <button
+                type="button"
+                className="cad-btn"
+                onClick={() => {
+                  onExportDXF();
+                  setIsExportMenuOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  justifyContent: 'flex-start',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--cad-text-primary)',
+                  fontSize: 12,
+                }}
+              >
+                <FileCode size={14} color="var(--cad-accent)" />
+                <span style={{ fontWeight: 600 }}>DXF (AutoCAD / Laser)</span>
+              </button>
+
+              <button
+                type="button"
+                className="cad-btn"
+                onClick={() => {
+                  onExportSVG();
+                  setIsExportMenuOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  justifyContent: 'flex-start',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--cad-text-primary)',
+                  fontSize: 12,
+                }}
+              >
+                <Download size={14} color="#f59e0b" />
+                <span style={{ fontWeight: 600 }}>SVG (Vetor Gráfico)</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

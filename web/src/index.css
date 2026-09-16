@@ -1,5 +1,7 @@
+@import './styles/cadTheme.css';
+
 :root {
-  --bg-main: #000000;
+  --bg-main: var(--cad-bg-app);
   --bg-panel: rgba(14, 16, 17, 0.9);
   --bg-card: #121516;
   --bg-input: #181c1c;

@@ -1,13 +1,14 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { DielineResult, PackagingModel } from '../engine/types';
-import { ZoomIn, ZoomOut, Maximize2, Eye, Compass } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Grid, Ruler, RotateCcw } from 'lucide-react';
 
 interface CadViewer2DProps {
   dieline: DielineResult;
   model?: PackagingModel;
+  onViewportUpdate?: (info: { cursorMm: { x: number; y: number }; zoom: number }) => void;
 }
 
-export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
+export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model, onViewportUpdate }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -27,14 +28,14 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     if (!canvasRef.current || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
 
-    const padding = 60;
+    const padding = 70;
     const availW = rect.width - padding * 2;
     const availH = rect.height - padding * 2;
 
     const b = dieline.bounds;
     const scaleX = availW / (b.width || 1);
     const scaleY = availH / (b.height || 1);
-    const fitZoom = Math.min(scaleX, scaleY, 1.8);
+    const fitZoom = Math.min(scaleX, scaleY, 2.0);
 
     setZoom(fitZoom);
     // Centraliza o ponto médio do dieline no centro do canvas
@@ -47,7 +48,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
       x: centerX - dielineCenterX * fitZoom,
       y: centerY + dielineCenterY * fitZoom, // No canvas Y cresce para baixo
     });
-  }, [dieline]);
+
+    onViewportUpdate?.({ cursorMm: mouseMm, zoom: fitZoom });
+  }, [dieline, mouseMm, onViewportUpdate]);
 
   useEffect(() => {
     fitToScreen();
@@ -68,21 +71,39 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    // 1. Limpa fundo (Preto puro Primacor #000000)
-    ctx.fillStyle = '#000000';
+    // 1. Fundo Preto CAD de Alto Contraste (#060709)
+    ctx.fillStyle = '#060709';
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Grade Milimétrica CAD
+    // 2. Grade Milimétrica CAD Profissional com Subdivisões
     if (showGrid) {
-      const gridSize = 50 * zoom; // Grid a cada 50mm
-      if (gridSize > 12) {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        ctx.lineWidth = 1;
+      // Sub-grid fino (10mm) se o zoom for suficiente
+      const subGridSize = 10 * zoom;
+      if (subGridSize > 14) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        const startX = pan.x % subGridSize;
+        const startY = pan.y % subGridSize;
+        for (let x = startX; x < width; x += subGridSize) {
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+        }
+        for (let y = startY; y < height; y += subGridSize) {
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+        }
+        ctx.stroke();
+      }
 
+      // Grid Principal (50mm)
+      const gridSize = 50 * zoom;
+      if (gridSize > 10) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.055)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
         const startX = pan.x % gridSize;
         const startY = pan.y % gridSize;
-
-        ctx.beginPath();
         for (let x = startX; x < width; x += gridSize) {
           ctx.moveTo(x, 0);
           ctx.lineTo(x, height);
@@ -99,7 +120,27 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
     const toScreenX = (mmX: number) => pan.x + mmX * zoom;
     const toScreenY = (mmY: number) => pan.y - mmY * zoom; // Inverte Y para CAD padrão
 
-    // 3. Desenho dos Segmentos da Faca (109 segmentos)
+    // 3. Eixo X / Y de Referência (Linhas de zero)
+    const axisX = toScreenY(0);
+    const axisY = toScreenX(0);
+    if (axisX >= 0 && axisX <= height) {
+      ctx.strokeStyle = 'rgba(0, 210, 180, 0.12)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, axisX);
+      ctx.lineTo(width, axisX);
+      ctx.stroke();
+    }
+    if (axisY >= 0 && axisY <= width) {
+      ctx.strokeStyle = 'rgba(0, 210, 180, 0.12)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(axisY, 0);
+      ctx.lineTo(axisY, height);
+      ctx.stroke();
+    }
+
+    // 4. Desenho dos Segmentos da Faca
     for (const seg of dieline.segments) {
       const sx0 = toScreenX(seg.x0);
       const sy0 = toScreenY(seg.y0);
@@ -111,23 +152,23 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
       ctx.lineTo(sx1, sy1);
 
       if (seg.type === 'cut') {
-        ctx.strokeStyle = '#c53236'; // Vermelho Corte Primacor
-        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = '#ef4444'; // Vermelho Corte Primacor
+        ctx.lineWidth = 1.6;
         ctx.setLineDash([]);
       } else if (seg.type === 'crease') {
-        ctx.strokeStyle = '#35a89e'; // Verde-água Vinco Primacor
-        ctx.lineWidth = 1.6;
-        ctx.setLineDash([6 * Math.max(0.5, zoom * 0.5), 4 * Math.max(0.5, zoom * 0.5)]);
+        ctx.strokeStyle = '#00d2b4'; // Verde-água Vinco Primacor
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([5 * Math.max(0.5, zoom * 0.4), 3 * Math.max(0.5, zoom * 0.4)]);
       } else if (seg.type === 'perfo') {
-        ctx.strokeStyle = '#10B981'; // Verde Picote
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([3 * Math.max(0.5, zoom * 0.5), 3 * Math.max(0.5, zoom * 0.5)]);
+        ctx.strokeStyle = '#10b981'; // Verde Picote
+        ctx.lineWidth = 1.3;
+        ctx.setLineDash([2.5 * Math.max(0.5, zoom * 0.4), 2.5 * Math.max(0.5, zoom * 0.4)]);
       }
       ctx.stroke();
     }
     ctx.setLineDash([]);
 
-    // 3.1 Desenho dos Arcos da Faca
+    // 5. Desenho dos Arcos da Faca com Tangência Perfeita
     if (dieline.arcs && dieline.arcs.length > 0) {
       for (const arc of dieline.arcs) {
         ctx.beginPath();
@@ -135,8 +176,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         const sy = toScreenY(arc.cy);
         const sr = arc.r * zoom;
 
-        const isFull = Math.abs(Math.abs(arc.endAngle - arc.startAngle) - 360) < 1 ||
-                       (arc.startAngle === 0 && arc.endAngle === 360);
+        const isFull =
+          Math.abs(Math.abs(arc.endAngle - arc.startAngle) - 360) < 1 ||
+          (arc.startAngle === 0 && arc.endAngle === 360);
 
         if (isFull) {
           ctx.arc(sx, sy, sr, 0, Math.PI * 2, false);
@@ -152,19 +194,19 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         }
 
         if (arc.type === 'cut') {
-          ctx.strokeStyle = '#c53236'; // Vermelho Corte Primacor
-          ctx.lineWidth = 1.8;
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1.6;
           ctx.setLineDash([]);
         } else if (arc.type === 'crease') {
-          ctx.strokeStyle = '#35a89e'; // Verde-água Vinco Primacor
-          ctx.lineWidth = 1.6;
-          ctx.setLineDash([6 * Math.max(0.5, zoom * 0.5), 4 * Math.max(0.5, zoom * 0.5)]);
+          ctx.strokeStyle = '#00d2b4';
+          ctx.lineWidth = 1.4;
+          ctx.setLineDash([5 * Math.max(0.5, zoom * 0.4), 3 * Math.max(0.5, zoom * 0.4)]);
         }
         ctx.stroke();
       }
     }
 
-    // 4. Desenho de Cotas e Medidas Técnicas
+    // 6. Desenho de Cotas e Medidas Técnicas ISO
     if (showDimensions && dieline.dimensions) {
       ctx.font = 'bold 10px monospace';
 
@@ -174,67 +216,66 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         const sx1 = toScreenX(dim.x1);
         const sy1 = toScreenY(dim.y1);
 
-        const off = (dim.offset || 12) * zoom;
+        const off = (dim.offset || 14) * zoom;
         const cx0 = dim.isVertical ? sx0 + off : sx0;
         const cy0 = dim.isVertical ? sy0 : sy0 - off;
         const cx1 = dim.isVertical ? sx1 + off : sx1;
         const cy1 = dim.isVertical ? sy1 : sy1 - off;
 
-        // Linha da cota e linhas de extensão
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+        // Linhas de extensão e cota
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
         ctx.lineWidth = 1;
         ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(cx0, cy0);
         ctx.lineTo(cx1, cy1);
-        // Extensões
         ctx.moveTo(sx0, sy0);
         ctx.lineTo(cx0, cy0);
         ctx.moveTo(sx1, sy1);
         ctx.lineTo(cx1, cy1);
 
         // Tiques técnicos nas pontas
-        const tickSize = 3;
-        ctx.moveTo(cx0 - tickSize, cy0 + tickSize);
-        ctx.lineTo(cx0 + tickSize, cy0 - tickSize);
-        ctx.moveTo(cx1 - tickSize, cy1 + tickSize);
-        ctx.lineTo(cx1 + tickSize, cy1 - tickSize);
+        const tick = 3;
+        ctx.moveTo(cx0 - tick, cy0 + tick);
+        ctx.lineTo(cx0 + tick, cy0 - tick);
+        ctx.moveTo(cx1 - tick, cy1 + tick);
+        ctx.lineTo(cx1 + tick, cy1 - tick);
         ctx.stroke();
 
-        // Texto da cota com fundo legível
+        // Texto com caixa de alto contraste
         const textX = (cx0 + cx1) / 2;
         const textY = (cy0 + cy1) / 2;
-        const textMetrics = ctx.measureText(dim.text);
-        const bgW = textMetrics.width + 6;
+        const metrics = ctx.measureText(dim.text);
+        const bgW = metrics.width + 6;
         const bgH = 13;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillStyle = 'rgba(10, 12, 16, 0.9)';
         ctx.fillRect(textX - bgW / 2, textY - bgH / 2 - 1, bgW, bgH);
 
-        ctx.fillStyle = '#F59E0B';
+        ctx.fillStyle = '#f59e0b';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(dim.text, textX, textY - 1);
       }
     }
 
-    // 5. Origem (Eixo X/Y)
+    // 7. Gizmo de Origem CAD (0,0)
     const ox = toScreenX(0);
     const oy = toScreenY(0);
-    if (ox >= -50 && ox <= width + 50 && oy >= -50 && oy <= height + 50) {
-      ctx.strokeStyle = '#64748B';
+    if (ox >= -40 && ox <= width + 40 && oy >= -40 && oy <= height + 40) {
+      ctx.strokeStyle = '#475569';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(ox, oy);
-      ctx.lineTo(ox + 30, oy);
+      ctx.lineTo(ox + 24, oy);
       ctx.moveTo(ox, oy);
-      ctx.lineTo(ox, oy - 30);
+      ctx.lineTo(ox, oy - 24);
       ctx.stroke();
 
-      ctx.font = '10px sans-serif';
-      ctx.fillStyle = '#94A3B8';
-      ctx.fillText('X', ox + 35, oy + 4);
-      ctx.fillText('Y', ox - 3, oy - 35);
+      ctx.font = '9px monospace';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('X', ox + 28, oy + 3);
+      ctx.fillText('Y', ox - 2, oy - 28);
     }
   }, [dieline, zoom, pan, showGrid, showDimensions]);
 
@@ -261,7 +302,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
       const mouseY = e.clientY - rect.top;
       const mmX = (mouseX - pan.x) / zoom;
       const mmY = (pan.y - mouseY) / zoom;
-      setMouseMm({ x: Math.round(mmX), y: Math.round(mmY) });
+      const newCoords = { x: Math.round(mmX * 10) / 10, y: Math.round(mmY * 10) / 10 };
+      setMouseMm(newCoords);
+      onViewportUpdate?.({ cursorMm: newCoords, zoom });
     }
   };
 
@@ -273,7 +316,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-    const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.1), 10);
+    const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.05), 15);
 
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
@@ -285,6 +328,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         y: mouseY - (mouseY - pan.y) * (newZoom / zoom),
       });
       setZoom(newZoom);
+      onViewportUpdate?.({ cursorMm: mouseMm, zoom: newZoom });
     }
   };
 
@@ -297,7 +341,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
         height: '100%',
         overflow: 'hidden',
         userSelect: 'none',
-        background: '#0F172A',
+        background: 'var(--cad-bg-workspace)',
       }}
     >
       <canvas
@@ -311,133 +355,133 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model }) => {
           width: '100%',
           height: '100%',
           display: 'block',
-          cursor: isDragging ? 'grabbing' : 'grab',
+          cursor: isDragging ? 'grabbing' : 'crosshair',
         }}
       />
 
-      {/* Toolbar Flutuante de Controle do Canvas */}
+      {/* Toolbar Flutuante Superior Direita com Ferramentas Rápidas */}
       <div
-        className="glass-panel"
         style={{
           position: 'absolute',
-          top: 16,
-          right: 16,
+          top: 12,
+          right: 12,
           display: 'flex',
-          gap: 6,
-          padding: '6px 8px',
-          borderRadius: 8,
-          zIndex: 10,
+          gap: 4,
+          padding: 4,
+          borderRadius: 'var(--cad-radius-md)',
+          background: 'var(--cad-bg-panel)',
+          border: '1px solid var(--cad-border-default)',
+          boxShadow: 'var(--cad-shadow-subtle)',
+          zIndex: 15,
         }}
       >
         <button
-          onClick={() => setZoom((z) => Math.min(z * 1.25, 10))}
-          title="Zoom In"
-          style={{ padding: 6, color: '#94A3B8', borderRadius: 4 }}
-        >
-          <ZoomIn size={18} />
-        </button>
-        <button
-          onClick={() => setZoom((z) => Math.max(z * 0.8, 0.1))}
-          title="Zoom Out"
-          style={{ padding: 6, color: '#94A3B8', borderRadius: 4 }}
-        >
-          <ZoomOut size={18} />
-        </button>
-        <button
-          onClick={fitToScreen}
-          title="Ajustar à Tela"
-          style={{ padding: 6, color: '#94A3B8', borderRadius: 4 }}
-        >
-          <Maximize2 size={18} />
-        </button>
-        <div style={{ width: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 4px' }} />
-        <button
-          onClick={() => setShowGrid((g) => !g)}
-          title="Alternar Grade"
-          style={{ padding: 6, color: showGrid ? '#35a89e' : '#64748B', borderRadius: 4 }}
-        >
-          <Compass size={18} />
-        </button>
-        <button
-          onClick={() => setShowDimensions((d) => !d)}
-          title="Alternar Cotas"
-          style={{ padding: 6, color: showDimensions ? '#F59E0B' : '#64748B', borderRadius: 4 }}
-        >
-          <Eye size={18} />
-        </button>
-        </div>
-
-            {/* Overlay de Erro — apenas para modelos com status FAIL (sem geometria) */}
-      {model && model.status === 'FAIL' && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(5, 8, 15, 0.88)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 20,
-            padding: 24,
+          type="button"
+          className="cad-tool-btn cad-tooltip"
+          data-tooltip="Aproximar (+)"
+          onClick={() => {
+            const nz = Math.min(zoom * 1.25, 15);
+            setZoom(nz);
+            onViewportUpdate?.({ cursorMm: mouseMm, zoom: nz });
           }}
         >
-          <div
-            style={{
-              maxWidth: 460,
-              width: '100%',
-              background: '#0B0F17',
-              border: '1px solid #EF4444',
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
-              color: '#E2E8F0',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
-            <h3 style={{ margin: '0 0 8px 0', fontSize: 16, fontWeight: 700, color: '#EF4444' }}>
-              Geometria não disponível
-            </h3>
-            <p style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.5, margin: 0 }}>
-              {model.code} — Este modelo não possui geometria CAD disponível.
-            </p>
-          </div>
-        </div>
-      )}
+          <ZoomIn size={15} />
+        </button>
 
-      {/* Barra de Status e Legenda Inferior */}
+        <button
+          type="button"
+          className="cad-tool-btn cad-tooltip"
+          data-tooltip="Afastar (-)"
+          onClick={() => {
+            const nz = Math.max(zoom * 0.8, 0.05);
+            setZoom(nz);
+            onViewportUpdate?.({ cursorMm: mouseMm, zoom: nz });
+          }}
+        >
+          <ZoomOut size={15} />
+        </button>
+
+        <button
+          type="button"
+          className="cad-tool-btn cad-tooltip"
+          data-tooltip="Enquadrar Faca (Fit)"
+          onClick={fitToScreen}
+        >
+          <Maximize2 size={15} />
+        </button>
+
+        <div style={{ width: 1, height: 18, background: 'var(--cad-border-subtle)', margin: 'auto 2px' }} />
+
+        <button
+          type="button"
+          className={`cad-tool-btn cad-tooltip ${showGrid ? 'active' : ''}`}
+          data-tooltip={showGrid ? 'Ocultar Grade' : 'Exibir Grade'}
+          onClick={() => setShowGrid((g) => !g)}
+        >
+          <Grid size={15} />
+        </button>
+
+        <button
+          type="button"
+          className={`cad-tool-btn cad-tooltip ${showDimensions ? 'active' : ''}`}
+          data-tooltip={showDimensions ? 'Ocultar Cotas' : 'Exibir Cotas'}
+          onClick={() => setShowDimensions((d) => !d)}
+        >
+          <Ruler size={15} />
+        </button>
+
+        <button
+          type="button"
+          className="cad-tool-btn cad-tooltip"
+          data-tooltip="Resetar Visão"
+          onClick={() => {
+            setPan({ x: 0, y: 0 });
+            fitToScreen();
+          }}
+        >
+          <RotateCcw size={15} />
+        </button>
+      </div>
+
+      {/* Legenda Técnica de Cores no Canto Inferior Esquerdo */}
       <div
-        className="glass-panel"
         style={{
           position: 'absolute',
-          bottom: 16,
-          left: 16,
+          bottom: 12,
+          left: 12,
           display: 'flex',
           alignItems: 'center',
-          gap: 16,
-          padding: '8px 14px',
-          borderRadius: 8,
-          fontSize: 12,
-          color: '#CBD5E1',
+          gap: 14,
+          padding: '6px 12px',
+          borderRadius: 'var(--cad-radius-sm)',
+          background: 'var(--cad-bg-panel)',
+          border: '1px solid var(--cad-border-subtle)',
+          fontSize: 11,
+          fontWeight: 500,
+          color: 'var(--cad-text-secondary)',
           zIndex: 10,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 16, height: 3, background: '#c53236', borderRadius: 2 }} />
+          <div style={{ width: 14, height: 2, background: '#ef4444', borderRadius: 1 }} />
           <span>Corte</span>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 16, height: 3, borderTop: '3px dashed #35a89e' }} />
+          <div style={{ width: 14, height: 2, borderTop: '2px dashed #00d2b4' }} />
           <span>Vinco</span>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 16, height: 3, borderTop: '3px dotted #10B981' }} />
+          <div style={{ width: 14, height: 2, borderTop: '2px dotted #10b981' }} />
           <span>Picote</span>
         </div>
-        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.15)' }} />
-        <div style={{ fontFamily: 'monospace', color: '#94A3B8' }}>
-          X: {mouseMm.x} mm | Y: {mouseMm.y} mm | Zoom: {Math.round(zoom * 100)}%
+
+        <div style={{ width: 1, height: 12, background: 'var(--cad-border-subtle)' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 14, height: 2, background: '#f59e0b', borderRadius: 1 }} />
+          <span>Cotas Técnicas</span>
         </div>
       </div>
     </div>

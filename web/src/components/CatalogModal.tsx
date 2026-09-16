@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { CATALOG, getModelById } from '../engine/models';
 import type { PackagingModel } from '../engine/types';
-import { X, Search, Box, Grid, Filter, ArrowRight } from 'lucide-react';
+import { X, Search, Box, Grid, Filter, ArrowRight, Check } from 'lucide-react';
 
 interface CatalogModalProps {
   isOpen: boolean;
@@ -35,11 +35,8 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
   const filteredModels = useMemo(() => {
     const q = search.toLowerCase().trim();
     return CATALOG.filter((item) => {
-      // Filtro de categoria
       if (selectedCategory !== 'ALL' && item.category !== selectedCategory) return false;
-      // Filtro de série
       if (selectedSeries !== 'ALL' && item.series !== selectedSeries) return false;
-      // Filtro de busca
       if (q) {
         const matchCode = item.code.toLowerCase().includes(q);
         const matchName = item.name.toLowerCase().includes(q);
@@ -58,164 +55,198 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(5, 8, 15, 0.85)',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(5, 7, 10, 0.85)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 150,
+        userSelect: 'none',
       }}
       onClick={onClose}
     >
       <div
-        className="glass-panel"
         style={{
           width: '92vw',
-          maxWidth: 1200,
+          maxWidth: 1240,
           height: '88vh',
-          borderRadius: 20,
-          background: '#0B0F17',
-          border: '1px solid #1E293B',
+          borderRadius: 'var(--cad-radius-lg)',
+          background: 'var(--cad-bg-panel)',
+          border: '1px solid var(--cad-border-default)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.8)',
+          boxShadow: 'var(--cad-shadow-panel)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header do Catálogo */}
+        {/* 1. Header do Catálogo */}
         <div
           style={{
-            padding: '20px 28px',
-            borderBottom: '1px solid #1E293B',
+            padding: '16px 24px',
+            background: 'var(--cad-bg-header)',
+            borderBottom: '1px solid var(--cad-border-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 20,
           }}
         >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 8,
-                  background: 'linear-gradient(135deg, #35a89e 0%, #1f6861 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 12px rgba(53, 168, 158, 0.4)',
-                }}
-              >
-                <Grid size={18} color="#000000" />
-              </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F8FAFC' }}>
-                Biblioteca Completa de Embalagens ({CATALOG.length} Modelos)
-              </h2>
-            </div>
-            <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
-              Padrões internacionais FEFCO (Papelão Ondulado) e ECMA (Papel-Cartão) para cartonagem industrial.
-            </p>
-          </div>
-
-          {/* Campo de Busca Rápida */}
-          <div style={{ position: 'relative', width: 340 }}>
-            <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: 12, top: 11 }} />
-            <input
-              type="text"
-              placeholder="Buscar por código ou nome (ex: 0201, 0427, B10, A20)..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoFocus
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
               style={{
-                width: '100%',
-                padding: '9px 12px 9px 36px',
-                borderRadius: 10,
-                background: '#121616',
-                border: '1px solid #242c2c',
-                color: '#FFF',
-                fontSize: 13,
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--cad-radius-sm)',
+                background: 'var(--cad-accent-dim)',
+                border: '1px solid var(--cad-accent-border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                style={{
-                  position: 'absolute',
-                  right: 10,
-                  top: 10,
-                  color: '#64748B',
-                }}
-              >
-                <X size={14} />
-              </button>
-            )}
+            >
+              <Grid size={18} color="var(--cad-accent)" />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--cad-text-primary)' }}>
+                  Biblioteca Técnica de Embalagens
+                </h2>
+                <span
+                  style={{
+                    background: 'var(--cad-accent-dim)',
+                    color: 'var(--cad-accent)',
+                    border: '1px solid var(--cad-accent-border)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '1px 6px',
+                    borderRadius: 4,
+                  }}
+                >
+                  {CATALOG.length} Modelos CAD
+                </span>
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--cad-text-muted)', marginTop: 2 }}>
+                Padrões industriais normativos FEFCO (Ondulado) e ECMA (Cartão Duplex/Triplex)
+              </p>
+            </div>
           </div>
 
-          <button onClick={onClose} style={{ color: '#94A3B8', padding: 6 }}>
-            <X size={22} />
-          </button>
+          {/* Campo de Busca de Alta Precisão */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ position: 'relative', width: 340 }}>
+              <Search
+                size={14}
+                color="var(--cad-text-muted)"
+                style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}
+              />
+              <input
+                type="text"
+                placeholder="Buscar por código (ex: 0201, 0427, A0115, B10)..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '7px 30px 7px 32px',
+                  borderRadius: 'var(--cad-radius-sm)',
+                  background: 'var(--cad-bg-input)',
+                  border: '1px solid var(--cad-border-default)',
+                  color: 'var(--cad-text-primary)',
+                  fontSize: 12,
+                  outline: 'none',
+                }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--cad-text-muted)',
+                  }}
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="cad-tool-btn"
+              title="Fechar (Esc)"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
-        {/* Barra de Filtros e Categorias */}
+        {/* 2. Barra de Filtros e Categorias */}
         <div
           style={{
-            padding: '12px 28px',
-            background: '#0a0d0d',
-            borderBottom: '1px solid #1c2222',
+            padding: '10px 24px',
+            background: 'var(--cad-bg-app)',
+            borderBottom: '1px solid var(--cad-border-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 16,
           }}
         >
-          {/* Tabs de Categoria */}
+          {/* Categoria */}
           <div style={{ display: 'flex', gap: 6 }}>
             {[
               { key: 'ALL', label: `Todos (${CATALOG.length})` },
-              { key: 'FEFCO', label: 'FEFCO' },
-              { key: 'ECMA', label: 'ECMA' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setSelectedCategory(tab.key as any);
-                  setSelectedSeries('ALL');
-                }}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: selectedCategory === tab.key ? '#000000' : '#94A3B8',
-                  background: selectedCategory === tab.key ? '#35a89e' : '#121616',
-                  border: '1px solid',
-                  borderColor: selectedCategory === tab.key ? '#35a89e' : '#242c2c',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+              { key: 'FEFCO', label: 'FEFCO (Ondulado)' },
+              { key: 'ECMA', label: 'ECMA (Cartão)' },
+            ].map((tab) => {
+              const isActive = selectedCategory === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(tab.key as any);
+                    setSelectedSeries('ALL');
+                  }}
+                  className="cad-btn"
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    background: isActive ? 'var(--cad-accent)' : 'var(--cad-bg-panel)',
+                    borderColor: isActive ? 'var(--cad-accent)' : 'var(--cad-border-default)',
+                    color: isActive ? '#000000' : 'var(--cad-text-secondary)',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Seletor de Série */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Filter size={13} /> Série:
+            <span style={{ fontSize: 11, color: 'var(--cad-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Filter size={12} /> Família / Série:
             </span>
             <select
               value={selectedSeries}
               onChange={(e) => setSelectedSeries(e.target.value)}
               style={{
-                padding: '6px 12px',
-                borderRadius: 8,
-                background: '#121616',
-                border: '1px solid #242c2c',
-                color: '#E2E8F0',
-                fontSize: 12,
+                padding: '5px 10px',
+                borderRadius: 'var(--cad-radius-sm)',
+                background: 'var(--cad-bg-input)',
+                border: '1px solid var(--cad-border-default)',
+                color: 'var(--cad-text-primary)',
+                fontSize: 11,
                 maxWidth: 280,
+                outline: 'none',
               }}
             >
               <option value="ALL">Todas as Séries ({filteredModels.length})</option>
@@ -228,15 +259,15 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
           </div>
         </div>
 
-        {/* Grid de Cards de Modelos com Imagens Reais */}
+        {/* 3. Grid de Modelos CAD */}
         <div
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '24px 28px',
+            padding: '20px 24px',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-            gap: 18,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: 14,
             alignContent: 'start',
           }}
         >
@@ -246,11 +277,11 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                 gridColumn: '1 / -1',
                 textAlign: 'center',
                 padding: '60px 0',
-                color: '#64748B',
-                fontSize: 15,
+                color: 'var(--cad-text-muted)',
+                fontSize: 13,
               }}
             >
-              Nenhum modelo encontrado para "{search}". Tente buscar por outros códigos como "0201", "0427", "A01" ou "B10".
+              Nenhum modelo encontrado para "{search}".
             </div>
           ) : (
             filteredModels.map((item) => {
@@ -267,7 +298,7 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                   onSelectModel(resolvedModel);
                   onClose();
                 } catch (err) {
-                  console.error('Erro ao selecionar modelo da biblioteca:', err);
+                  console.error('Erro ao carregar modelo:', err);
                 }
               };
 
@@ -276,34 +307,33 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                   key={item.id}
                   onClick={handleCardClick}
                   style={{
-                    background: isSelected ? 'rgba(53, 168, 158, 0.12)' : '#101414',
+                    background: isSelected ? 'var(--cad-accent-dim)' : 'var(--cad-bg-panel-elevated)',
                     border: '1px solid',
-                    borderColor: isSelected ? '#35a89e' : '#1c2424',
-                    borderRadius: 12,
-                    padding: 12,
+                    borderColor: isSelected ? 'var(--cad-accent)' : 'var(--cad-border-subtle)',
+                    borderRadius: 'var(--cad-radius-md)',
+                    padding: 10,
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 10,
-                    transition: 'all 0.15s ease',
+                    gap: 8,
+                    transition: 'all 0.12s ease',
                     position: 'relative',
-                    boxShadow: isSelected ? '0 0 16px rgba(53, 168, 158, 0.3)' : 'none',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#35a89e';
+                    e.currentTarget.style.borderColor = 'var(--cad-accent-border)';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = isSelected ? '#35a89e' : '#1c2424';
+                    e.currentTarget.style.borderColor = isSelected ? 'var(--cad-accent)' : 'var(--cad-border-subtle)';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
-                  {/* Thumbnail da Embalagem */}
+                  {/* Thumbnail Técnico */}
                   <div
                     style={{
                       width: '100%',
-                      height: 140,
-                      borderRadius: 8,
+                      height: 120,
+                      borderRadius: 'var(--cad-radius-sm)',
                       background: '#000000',
                       display: 'flex',
                       alignItems: 'center',
@@ -318,93 +348,96 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                         alt={item.name}
                         loading="lazy"
                         style={{
-                          maxWidth: '90%',
-                          maxHeight: '90%',
+                          maxWidth: '92%',
+                          maxHeight: '92%',
                           objectFit: 'contain',
                         }}
                       />
                     ) : (
-                      <Box size={42} color="#334155" />
+                      <Box size={36} color="var(--cad-text-dim)" />
                     )}
 
-                    {/* Tag de Categoria */}
+                    {/* Tag Categoria */}
                     <span
                       style={{
                         position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        fontSize: 10,
+                        top: 6,
+                        left: 6,
+                        fontSize: 9,
                         fontWeight: 800,
-                        padding: '2px 7px',
-                        borderRadius: 4,
-                        background: isFEFCO ? '#35a89e' : '#c53236',
-                        color: isFEFCO ? '#000000' : '#FFFFFF',
+                        padding: '1px 5px',
+                        borderRadius: 3,
+                        background: isFEFCO ? 'rgba(0, 210, 180, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                        color: isFEFCO ? 'var(--cad-accent)' : '#ef4444',
+                        border: `1px solid ${isFEFCO ? 'rgba(0, 210, 180, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
                         letterSpacing: 0.5,
                       }}
                     >
                       {item.category}
                     </span>
+
+                    {isSelected && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: 6,
+                          right: 6,
+                          background: 'var(--cad-accent)',
+                          color: '#000000',
+                          borderRadius: '50%',
+                          width: 18,
+                          height: 18,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Check size={11} strokeWidth={3} />
+                      </span>
+                    )}
                   </div>
 
                   {/* Informações Técnicas */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#F8FAFC' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--cad-text-primary)' }}>
                       {item.code}
                     </div>
                     <div
                       style={{
-                        fontSize: 12,
-                        color: '#94A3B8',
+                        fontSize: 11,
+                        color: 'var(--cad-text-secondary)',
                         lineHeight: 1.3,
                         display: '-webkit-box',
-                        WebkitLineClamp: 2,
+                        WebkitLineClamp: 1,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                       }}
                     >
                       {item.name}
                     </div>
-                    <div style={{ fontSize: 10, color: '#64748B', marginTop: 'auto' }}>
-                      {item.series}
-                    </div>
+                    {item.defaultParams && (
+                      <div
+                        className="cad-mono"
+                        style={{ fontSize: 10, color: 'var(--cad-text-muted)', marginTop: 2 }}
+                      >
+                        Base: {item.defaultParams.L} × {item.defaultParams.B} × {item.defaultParams.H} mm
+                      </div>
+                    )}
                   </div>
 
-                  {/* Botão de Seleção com Handler Direto */}
+                  {/* Botão de Carga */}
                   <button
                     type="button"
-                    onClick={handleCardClick}
+                    className={`cad-btn ${isSelected ? 'cad-btn-primary' : ''}`}
                     style={{
-                      marginTop: 4,
                       width: '100%',
-                      padding: '8px 0',
-                      borderRadius: 6,
-                      background: isSelected ? 'linear-gradient(135deg, #35a89e 0%, #1f6e67 100%)' : '#141818',
-                      color: isSelected ? '#FFFFFF' : '#CBD5E1',
-                      border: isSelected ? '1px solid #35a89e' : '1px solid #242c2c',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 6,
-                      boxShadow: isSelected ? '0 2px 8px rgba(53, 168, 158, 0.3)' : 'none',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.background = '#35a89e';
-                        e.currentTarget.style.color = '#000000';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.background = '#141818';
-                        e.currentTarget.style.color = '#CBD5E1';
-                      }
+                      padding: '5px 0',
+                      fontSize: 11,
+                      marginTop: 2,
                     }}
                   >
-                    {isSelected ? 'Em Edição' : 'Carregar Faca'} <ArrowRight size={13} />
+                    <span>{isSelected ? 'Em Edição' : 'Carregar no CAD'}</span>
+                    {!isSelected && <ArrowRight size={11} />}
                   </button>
                 </div>
               );

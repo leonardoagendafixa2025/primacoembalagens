@@ -19,6 +19,7 @@ import { FoldingViewer3D } from './components/FoldingViewer3D';
 import { ImpositionView } from './components/ImpositionView';
 import { SavedProjectsModal } from './components/SavedProjectsModal';
 import { CatalogModal } from './components/CatalogModal';
+import { CadStatusBar } from './components/CadStatusBar';
 
 export const App: React.FC = () => {
   // 1. Estados Centrais
@@ -30,6 +31,11 @@ export const App: React.FC = () => {
   }));
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
 
+  // Estados de Visualização & Viewport CAD
+  const [cursorMm, setCursorMm] = useState({ x: 0, y: 0 });
+  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   // 2. Catálogo & Projetos Salvos
   const [isCatalogOpen, setIsCatalogOpen] = useState<boolean>(false);
   const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
@@ -37,6 +43,18 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     getSavedProjects().then(setSavedProjects);
+  }, []);
+
+  // Atalho de teclado CAD (Ctrl+K / Cmd+K para abrir a biblioteca de modelos)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCatalogOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Quando troca o modelo, redefine os parâmetros para os padrões dele
@@ -56,7 +74,6 @@ export const App: React.FC = () => {
 
   // Atualização em tempo real de um parâmetro dimensional
   const handleParamChange = (key: string, value: number) => {
-    console.log(`[UI] ${key} changed`, value);
     setParams((prev) => ({
       ...prev,
       [key]: value,
@@ -132,8 +149,17 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {/* Header Superior */}
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        background: 'var(--cad-bg-app)',
+      }}
+    >
+      {/* 1. Header / Top Application Bar */}
       <Header
         currentModel={currentModel}
         onSelectModel={handleSelectModel}
@@ -148,9 +174,9 @@ export const App: React.FC = () => {
         isSupabaseConnected={isSupabaseConfigured}
       />
 
-      {/* Conteúdo Principal */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Painel Esquerdo de Parâmetros */}
+      {/* 2. Workspace Central */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {/* Painel de Parâmetros e Propriedades (CAD Inspector) */}
         <ParameterPanel
           model={currentModel}
           params={params}
@@ -158,15 +184,46 @@ export const App: React.FC = () => {
           onParamChange={handleParamChange}
           onProfileChange={setSelectedProfile}
           bounds={dieline.bounds}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         />
 
-        {/* Área Central / Visualizador Alternável */}
-        <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-          {activeTab === '2d' && <CadViewer2D dieline={dieline} model={currentModel} />}
-          {activeTab === '3d' && <FoldingViewer3D model={currentModel} dieline={dieline} params={params} profile={selectedProfile} />}
+        {/* Viewport Central (Canvas 2D / 3D / Imposição) */}
+        <main style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--cad-bg-workspace)' }}>
+          {activeTab === '2d' && (
+            <CadViewer2D
+              dieline={dieline}
+              model={currentModel}
+              onViewportUpdate={({ cursorMm: c, zoom: z }) => {
+                setCursorMm(c);
+                setZoomLevel(z);
+              }}
+            />
+          )}
+
+          {activeTab === '3d' && (
+            <FoldingViewer3D
+              model={currentModel}
+              dieline={dieline}
+              params={params}
+              profile={selectedProfile}
+            />
+          )}
+
           {activeTab === 'imposition' && <ImpositionView dieline={dieline} />}
         </main>
       </div>
+
+      {/* 3. Status Bar Inferior Profissional */}
+      <CadStatusBar
+        model={currentModel}
+        bounds={dieline.bounds}
+        cursorMm={cursorMm}
+        zoomLevel={zoomLevel}
+        segmentsCount={dieline.segments?.length || 0}
+        arcsCount={dieline.arcs?.length || 0}
+        activeTab={activeTab}
+      />
 
       {/* Modal de Catálogo Completo (472 Modelos FEFCO e ECMA) */}
       <CatalogModal

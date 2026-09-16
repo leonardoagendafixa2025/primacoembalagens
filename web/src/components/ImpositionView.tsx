@@ -55,44 +55,46 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
   };
 
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', background: 'var(--cad-bg-app)' }}>
       {/* 1. Painel Esquerdo de Configuração de Imposição */}
       <div
-        className="glass-panel"
+        className="cad-panel"
         style={{
-          width: 360,
+          width: 'var(--cad-sidebar-width)',
           height: '100%',
-          padding: 20,
+          padding: '16px 18px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 18,
+          gap: 16,
           overflowY: 'auto',
-          borderRight: '1px solid var(--border-color)',
+          borderRight: '1px solid var(--cad-border-subtle)',
+          userSelect: 'none',
         }}
       >
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Scissors size={18} color="#35a89e" />
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--cad-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Scissors size={15} color="var(--cad-accent)" />
             Imposição Técnica na Chapa
           </h3>
-          <p style={{ fontSize: 13, color: '#94A3B8', marginTop: 4 }}>
-            Distribuição de facas com geometria vetorial real na chapa/folha.
+          <p style={{ fontSize: 11, color: 'var(--cad-text-muted)', marginTop: 4, lineHeight: 1.4 }}>
+            Distribuição e aproveitamento de facas na folha gráfica com rotação e encaixe ótimo.
           </p>
         </div>
 
         {/* Seletor de Formato de Chapa */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label style={{ fontSize: 12, fontWeight: 500, color: '#94A3B8' }}>Formato da Chapa / Folha</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--cad-text-secondary)' }}>Formato da Chapa / Folha</label>
           <select
             value={selectedSheetId}
             onChange={(e) => setSelectedSheetId(e.target.value)}
             style={{
-              padding: '10px 12px',
-              borderRadius: 8,
-              background: '#121616',
-              border: '1px solid #242c2c',
-              color: '#F8FAFC',
-              fontSize: 13,
+              padding: '8px 10px',
+              borderRadius: 'var(--cad-radius-sm)',
+              background: 'var(--cad-bg-input)',
+              border: '1px solid var(--cad-border-default)',
+              color: 'var(--cad-text-primary)',
+              fontSize: 12,
+              outline: 'none',
             }}
           >
             {STANDARD_SHEETS.map((s: SheetFormat) => (

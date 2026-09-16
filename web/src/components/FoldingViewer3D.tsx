@@ -319,153 +319,138 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     <div style={{ position: 'relative', width: '100%', height: '100%', background: '#0B0F17' }}>
       <div ref={mountRef} style={{ width: '100%', height: '100%', cursor: 'grab' }} />
 
-
-      {/* Barra de Controle de Dobra e Vistas Rápidas */}
+      {/* Estação de Controle CAD de Dobra e Câmera 3D */}
       <div
-        className="glass-panel"
         style={{
           position: 'absolute',
-          bottom: 24,
+          bottom: 16,
           left: '50%',
           transform: 'translateX(-50%)',
+          width: '90%',
+          maxWidth: 680,
+          background: 'var(--cad-bg-panel)',
+          border: '1px solid var(--cad-border-default)',
+          borderRadius: 'var(--cad-radius-md)',
+          boxShadow: 'var(--cad-shadow-panel)',
+          padding: '12px 18px',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
           gap: 10,
-          padding: '12px 24px',
-          borderRadius: 24,
-          background: 'rgba(15, 23, 42, 0.88)',
-          border: '1px solid rgba(53, 168, 158, 0.25)',
-          backdropFilter: 'blur(12px)',
-          zIndex: 10,
-          minWidth: 560,
+          zIndex: 15,
+          userSelect: 'none',
         }}
       >
-        {/* Botões de Estágio de Dobra Rápido (0%, 25%, 50%, 75%, 100%) */}
-        <div style={{ display: 'flex', gap: 8, width: '100%', justifyContent: 'center' }}>
-          {[
-            { label: '0% Plana', val: 0.0 },
-            { label: '25%', val: 0.25 },
-            { label: '50%', val: 0.50 },
-            { label: '75%', val: 0.75 },
-            { label: '100% Montada', val: 1.0 },
-          ].map((step) => (
+        {/* Linha Superior: Presets de Ângulo de Dobra e Câmera */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+          {/* Presets de Dobra */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[
+              { label: '0% Aberta', val: 0.0 },
+              { label: '25%', val: 0.25 },
+              { label: '50%', val: 0.50 },
+              { label: '75%', val: 0.75 },
+              { label: '100% Montada', val: 1.0 },
+            ].map((step) => {
+              const isActive = Math.abs(foldProgress - step.val) < 0.05;
+              return (
+                <button
+                  key={step.label}
+                  type="button"
+                  onClick={() => {
+                    setIsPlaying(false);
+                    setFoldProgress(step.val);
+                  }}
+                  className="cad-btn"
+                  style={{
+                    padding: '3px 9px',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    background: isActive ? 'var(--cad-accent-dim)' : 'transparent',
+                    borderColor: isActive ? 'var(--cad-accent)' : 'var(--cad-border-subtle)',
+                    color: isActive ? 'var(--cad-accent)' : 'var(--cad-text-muted)',
+                  }}
+                >
+                  {step.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Vistas Rápidas de Câmera CAD */}
+          <div style={{ display: 'flex', gap: 4 }}>
             <button
-              key={step.label}
-              onClick={() => {
-                setIsPlaying(false);
-                setFoldProgress(step.val);
-              }}
-              style={{
-                padding: '4px 12px',
-                fontSize: 11,
-                fontWeight: 600,
-                borderRadius: 14,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                border: '1px solid',
-                borderColor: Math.abs(foldProgress - step.val) < 0.05 ? '#35a89e' : 'rgba(148, 163, 184, 0.2)',
-                background: Math.abs(foldProgress - step.val) < 0.05 ? 'rgba(53, 168, 158, 0.2)' : 'transparent',
-                color: Math.abs(foldProgress - step.val) < 0.05 ? '#35a89e' : '#94A3B8',
-              }}
+              type="button"
+              onClick={snapToPerspective}
+              title="Câmera Isométrica 3D"
+              className="cad-btn"
+              style={{ padding: '3px 8px', fontSize: 10 }}
             >
-              {step.label}
+              <Box size={11} color="var(--cad-accent)" />
+              <span>3D</span>
             </button>
-          ))}
 
-          {/* Vistas de Câmera 360° */}
-          <button
-            onClick={snapToTopView}
-            title="Vista Superior (Comparação 2D Plana)"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 10px',
-              fontSize: 11,
-              borderRadius: 14,
-              border: '1px solid rgba(148, 163, 184, 0.3)',
-              background: 'transparent',
-              color: '#CBD5E1',
-              cursor: 'pointer',
-            }}
-          >
-            <Eye size={13} />
-            <span>Topo</span>
-          </button>
+            <button
+              type="button"
+              onClick={snapToTopView}
+              title="Vista Superior (Planta/Topo)"
+              className="cad-btn"
+              style={{ padding: '3px 8px', fontSize: 10 }}
+            >
+              <Eye size={11} />
+              <span>Topo</span>
+            </button>
 
-          <button
-            onClick={snapToPerspective}
-            title="Vista em Perspectiva 3D"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 10px',
-              fontSize: 11,
-              borderRadius: 14,
-              border: '1px solid rgba(148, 163, 184, 0.3)',
-              background: 'transparent',
-              color: '#CBD5E1',
-              cursor: 'pointer',
-            }}
-          >
-            <Box size={13} />
-            <span>3D</span>
-          </button>
-
-          <button
-            onClick={snapToBottomView}
-            title="Vista Inferior (Inspeção do Fundo)"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 10px',
-              fontSize: 11,
-              borderRadius: 14,
-              border: '1px solid rgba(148, 163, 184, 0.3)',
-              background: 'transparent',
-              color: '#CBD5E1',
-              cursor: 'pointer',
-            }}
-          >
-            <Eye size={13} />
-            <span>Fundo</span>
-          </button>
+            <button
+              type="button"
+              onClick={snapToBottomView}
+              title="Vista Inferior (Inspeção de Fundo)"
+              className="cad-btn"
+              style={{ padding: '3px 8px', fontSize: 10 }}
+            >
+              <Eye size={11} />
+              <span>Fundo</span>
+            </button>
+          </div>
         </div>
 
-        {/* Slider e Play/AutoRotate */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%' }}>
+        {/* Linha Inferior: Slider Tátil de Dobra e Botões de Ação */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%' }}>
           <button
+            type="button"
             onClick={() => setIsPlaying((p) => !p)}
-            title={isPlaying ? 'Pausar Simulação' : 'Animar Dobra'}
+            title={isPlaying ? 'Pausar Simulação' : 'Animar Sequência de Dobra'}
+            className="cad-tool-btn"
             style={{
-              background: '#35a89e',
-              color: '#000000',
-              padding: '8px',
+              width: 32,
+              height: 32,
               borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 14px rgba(53, 168, 158, 0.45)',
+              background: 'var(--cad-accent)',
+              color: '#000000',
               border: 'none',
-              cursor: 'pointer',
+              boxShadow: '0 0 10px rgba(0, 210, 180, 0.4)',
             }}
           >
-            {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: 2 }} />}
+            {isPlaying ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
           </button>
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#94A3B8' }}>
-              <span>Faca Aberta (0%)</span>
-              <span style={{ color: '#35a89e', fontWeight: 700 }}>
-                Dobra: {Math.round(foldProgress * 100)}%
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: 10,
+                color: 'var(--cad-text-muted)',
+              }}
+            >
+              <span>0% Aberta</span>
+              <span className="cad-mono" style={{ color: 'var(--cad-accent)', fontWeight: 700 }}>
+                DOBRA: {Math.round(foldProgress * 100)}%
               </span>
-              <span>Embalagem Montada (100%)</span>
+              <span>100% Fechada</span>
             </div>
             <input
               type="range"
+              className="cad-slider"
               min="0"
               max="1"
               step="0.005"
@@ -474,27 +459,17 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
                 setIsPlaying(false);
                 setFoldProgress(parseFloat(e.target.value));
               }}
-              style={{
-                width: '100%',
-                cursor: 'pointer',
-                accentColor: '#35a89e',
-              }}
             />
           </div>
 
           <button
+            type="button"
             onClick={() => setAutoRotate((r) => !r)}
             title="Girar 360° Automaticamente"
-            style={{
-              padding: 8,
-              borderRadius: 8,
-              color: autoRotate ? '#35a89e' : '#64748B',
-              background: autoRotate ? 'rgba(53, 168, 158, 0.15)' : 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-            }}
+            className={`cad-tool-btn ${autoRotate ? 'active' : ''}`}
+            style={{ width: 32, height: 32 }}
           >
-            <RotateCw size={18} />
+            <RotateCw size={15} />
           </button>
         </div>
       </div>

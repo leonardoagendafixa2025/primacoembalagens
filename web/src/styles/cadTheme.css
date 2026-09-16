@@ -1,0 +1,266 @@
+/* ==========================================================================
+   PRIMACOR CAD DESIGN SYSTEM - TECHNICAL INDUSTRIAL THEME
+   SoftCAD Premium Architecture: ArtiosCAD / SolidWorks / Figma Precision
+   ========================================================================== */
+
+:root {
+  /* 1. Core Surfaces & Backgrounds */
+  --cad-bg-app: #0a0c10;
+  --cad-bg-workspace: #060709;
+  --cad-bg-panel: #11141a;
+  --cad-bg-panel-elevated: #161a22;
+  --cad-bg-header: #0f1217;
+  --cad-bg-status: #090b0e;
+  --cad-bg-input: #0b0d12;
+  --cad-bg-input-hover: #131720;
+  --cad-bg-dropdown: #141821;
+
+  /* 2. Precision Borders & Dividers */
+  --cad-border-subtle: #1a1f2c;
+  --cad-border-default: #232a3b;
+  --cad-border-hover: #364159;
+  --cad-border-focus: #00d2b4;
+  --cad-border-active: #00d2b4;
+
+  /* 3. Typography Colors */
+  --cad-text-primary: #f3f6fc;
+  --cad-text-secondary: #9aa5b9;
+  --cad-text-muted: #5e6b82;
+  --cad-text-dim: #3e4859;
+  --cad-text-accent: #00d2b4;
+
+  /* 4. Industrial CAD Color Tokens */
+  --cad-accent: #00d2b4;
+  --cad-accent-hover: #00e6c5;
+  --cad-accent-dim: rgba(0, 210, 180, 0.12);
+  --cad-accent-border: rgba(0, 210, 180, 0.35);
+
+  --cad-cut: #ef4444;        /* Linhas de Corte (Vermelho Primacor ISO) */
+  --cad-crease: #00d2b4;     /* Linhas de Vinco (Verde-água Primacor) */
+  --cad-perfo: #10b981;      /* Linhas de Picote */
+  --cad-dim: #f59e0b;        /* Cotas Técnicas (Âmbar Normativo) */
+
+  /* 5. Typography Specs */
+  --cad-font-ui: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --cad-font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', Menlo, monospace;
+
+  /* 6. Precision Dimensions & Radius */
+  --cad-header-height: 52px;
+  --cad-status-height: 32px;
+  --cad-sidebar-width: 340px;
+  --cad-toolbar-width: 48px;
+
+  --cad-radius-xs: 3px;
+  --cad-radius-sm: 5px;
+  --cad-radius-md: 8px;
+  --cad-radius-lg: 12px;
+
+  /* 7. Shadows & Overlays */
+  --cad-shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --cad-shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --cad-shadow-glow: 0 0 16px rgba(0, 210, 180, 0.2);
+}
+
+/* Custom CAD Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cad-bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: #252c3d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #39445d;
+}
+
+/* Base Body Style */
+body {
+  font-family: var(--cad-font-ui);
+  background-color: var(--cad-bg-app);
+  color: var(--cad-text-primary);
+  user-select: none;
+  overflow: hidden;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Numeric Values Monospace */
+.cad-mono {
+  font-family: var(--cad-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* CAD Button Standard */
+.cad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--cad-radius-sm);
+  border: 1px solid var(--cad-border-default);
+  background: var(--cad-bg-panel);
+  color: var(--cad-text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease-in-out;
+  outline: none;
+  white-space: nowrap;
+}
+.cad-btn:hover {
+  background: var(--cad-bg-panel-elevated);
+  border-color: var(--cad-border-hover);
+  color: var(--cad-text-primary);
+}
+.cad-btn:active {
+  transform: translateY(1px);
+}
+.cad-btn:focus-visible {
+  border-color: var(--cad-border-focus);
+  box-shadow: 0 0 0 1px var(--cad-border-focus);
+}
+
+.cad-btn-primary {
+  background: var(--cad-accent);
+  border-color: var(--cad-accent);
+  color: #06080a;
+  font-weight: 600;
+}
+.cad-btn-primary:hover {
+  background: var(--cad-accent-hover);
+  border-color: var(--cad-accent-hover);
+  color: #000000;
+  box-shadow: 0 0 12px rgba(0, 210, 180, 0.35);
+}
+
+/* Tool Button Icon-Only */
+.cad-tool-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cad-radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--cad-text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.cad-tool-btn:hover {
+  background: var(--cad-bg-panel-elevated);
+  border-color: var(--cad-border-default);
+  color: var(--cad-text-primary);
+}
+.cad-tool-btn.active {
+  background: var(--cad-accent-dim);
+  border-color: var(--cad-accent-border);
+  color: var(--cad-accent);
+}
+
+/* CAD Inputs & Steppers */
+.cad-input-number {
+  font-family: var(--cad-font-mono);
+  font-variant-numeric: tabular-nums;
+  background: var(--cad-bg-input);
+  border: 1px solid var(--cad-border-default);
+  border-radius: var(--cad-radius-sm);
+  color: var(--cad-text-primary);
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.cad-input-number:focus {
+  border-color: var(--cad-border-focus);
+  box-shadow: 0 0 0 1px rgba(0, 210, 180, 0.25);
+  background: var(--cad-bg-input-hover);
+}
+
+/* CAD Range Sliders */
+input[type="range"].cad-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #1c2230;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+input[type="range"].cad-slider:hover {
+  background: #273044;
+}
+input[type="range"].cad-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--cad-accent);
+  cursor: ew-resize;
+  border: 2px solid #0a0c10;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+input[type="range"].cad-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(0, 210, 180, 0.6);
+}
+
+/* Panel Containers */
+.cad-panel {
+  background: var(--cad-bg-panel);
+  border: 1px solid var(--cad-border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.cad-panel-header {
+  padding: 10px 14px;
+  background: var(--cad-bg-header);
+  border-bottom: 1px solid var(--cad-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--cad-text-secondary);
+}
+
+/* Precision Tooltip */
+.cad-tooltip {
+  position: relative;
+}
+.cad-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #191e29;
+  border: 1px solid var(--cad-border-default);
+  color: var(--cad-text-primary);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: var(--cad-font-ui);
+  white-space: nowrap;
+  border-radius: var(--cad-radius-xs);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.cad-tooltip:hover::after {
+  opacity: 1;
+}
