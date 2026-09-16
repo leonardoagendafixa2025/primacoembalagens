@@ -109,42 +109,70 @@ export const ecmaA6020: PackagingModel = {
     segments.push({ id: 'cut-lid-r', type: 'cut', x0: x4, y0: yLidCrease, x1: x4, y1: yLidTop });
 
     // Aba de inserção da tampa (Tuck Flap)
-    const insetTuck = Math.min(7.0, L * 0.07);
+    const insetLock = 3.0; // Recuo lateral para engate
+    const xTuckLeft = x3 + insetLock;
+    const xTuckRight = x4 - insetLock;
+    const wTuck = xTuckRight - xTuckLeft;
+
     const hTuck = Math.min(22.0, Math.max(15.0, B * 0.35));
-    const yTuckCrease = yLidTop - 1.0;
+    const yTuckCrease = yLidTop;
     const yTuckTop = yLidTop + hTuck;
 
-    segments.push({ id: 'cr-tuck', type: 'crease', x0: x3 + insetTuck, y0: yTuckCrease, x1: x4 - insetTuck, y1: yTuckCrease });
+    // Vinco da aba de inserção
+    const creaseInset = Math.min(6.0, wTuck * 0.08);
+    segments.push({
+      id: 'cr-tuck',
+      type: 'crease',
+      x0: xTuckLeft + creaseInset,
+      y0: yTuckCrease,
+      x1: xTuckRight - creaseInset,
+      y1: yTuckCrease,
+    });
 
-    // Locks e entalhes laterais da lingueta
-    segments.push({ id: 'cut-tl1', type: 'cut', x0: x3, y0: yLidTop, x1: x3 + insetTuck, y1: yLidTop });
-    segments.push({ id: 'cut-tl2', type: 'cut', x0: x3 + insetTuck, y0: yLidTop, x1: x3 + insetTuck, y1: yTuckCrease - 1.0 });
-    segments.push({ id: 'cut-tl3', type: 'cut', x0: x4, y0: yLidTop, x1: x4 - insetTuck, y1: yLidTop });
-    segments.push({ id: 'cut-tl4', type: 'cut', x0: x4 - insetTuck, y0: yLidTop, x1: x4 - insetTuck, y1: yTuckCrease - 1.0 });
+    // Entalhes laterais de travamento (tuck locks)
+    segments.push({ id: 'cut-tl1', type: 'cut', x0: x3, y0: yLidTop, x1: xTuckLeft, y1: yLidTop });
+    segments.push({ id: 'cut-tl2', type: 'cut', x0: x4, y0: yLidTop, x1: xTuckRight, y1: yLidTop });
 
-    // Cantos arredondados tangentes da aba de inserção
-    const rTuck = Math.min(22.0, Math.max(12.0, (L - 2 * insetTuck) / 3.0));
+    // Raio dos cantos arredondados do tuck flap
+    const rTuck = Math.min(18.0, Math.max(8.0, wTuck * 0.22));
+
+    // Laterais verticais da aba de inserção (tangentes aos arcos)
+    const yArcCenter = yTuckTop - rTuck;
+    segments.push({ id: 'cut-tuck-side-l', type: 'cut', x0: xTuckLeft, y0: yLidTop, x1: xTuckLeft, y1: yArcCenter });
+    segments.push({ id: 'cut-tuck-side-r', type: 'cut', x0: xTuckRight, y0: yLidTop, x1: xTuckRight, y1: yArcCenter });
+
+    // Arcos tangentes perfeitos nos cantos superiores
+    // Canto esquerdo: do topo (90°) à lateral (180°)
     arcs.push({
       id: 'arc-tuck-l',
       type: 'cut',
-      cx: x3 + 25.0 * scaleL,
-      cy: yLidTop + 0.5,
+      cx: xTuckLeft + rTuck,
+      cy: yArcCenter,
       r: rTuck,
-      startAngle: 122.8,
+      startAngle: 90.0,
       endAngle: 180.0,
     });
+
+    // Canto direito: da lateral (0°) ao topo (90°)
     arcs.push({
       id: 'arc-tuck-r',
       type: 'cut',
-      cx: x4 - 25.0 * scaleL,
-      cy: yLidTop + 0.5,
+      cx: xTuckRight - rTuck,
+      cy: yArcCenter,
       r: rTuck,
       startAngle: 0.0,
-      endAngle: 57.2,
+      endAngle: 90.0,
     });
-    segments.push({ id: 'cut-tuck-edge-l', type: 'cut', x0: x3 + 3.0, y0: yLidTop + 0.5, x1: x3 + 3.0, y1: yLidTop });
-    segments.push({ id: 'cut-tuck-edge-r', type: 'cut', x0: x4 - 3.0, y0: yLidTop + 0.5, x1: x4 - 3.0, y1: yLidTop });
-    segments.push({ id: 'cut-tuck-top', type: 'cut', x0: x3 + 13.0 + (L - 100) * 0.5, y0: yTuckTop, x1: x4 - 13.0 - (L - 100) * 0.5, y1: yTuckTop });
+
+    // Topo horizontal contínuo: conecta exatamente o topo do arco esquerdo ao topo do arco direito!
+    segments.push({
+      id: 'cut-tuck-top',
+      type: 'cut',
+      x0: xTuckLeft + rTuck,
+      y0: yTuckTop,
+      x1: xTuckRight - rTuck,
+      y1: yTuckTop,
+    });
 
     // --- Aba de Poeira Direita (Parede 4, entre x4 e x5) ---
     const dustInsetR = 2.5;
