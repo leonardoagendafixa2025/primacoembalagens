@@ -16,7 +16,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
   const mountRef = useRef<HTMLDivElement | null>(null);
 
   // Progresso da dobra: 0 (aberta) a 1 (montada)
-  const [foldProgress, setFoldProgress] = useState(0.85);
+  const [foldProgress, setFoldProgress] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
   const [showDiagnostic] = useState(true);

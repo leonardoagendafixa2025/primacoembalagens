@@ -20,22 +20,6 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   onProfileChange,
   bounds,
 }) => {
-  // Presets rápidos para facilitar o operador
-  const applyPreset = (size: 'P' | 'M' | 'G') => {
-    if (size === 'P') {
-      onParamChange('L', 200);
-      onParamChange('B', 150);
-      onParamChange('H', 100);
-    } else if (size === 'M') {
-      onParamChange('L', 300);
-      onParamChange('B', 200);
-      onParamChange('H', 150);
-    } else if (size === 'G') {
-      onParamChange('L', 450);
-      onParamChange('B', 300);
-      onParamChange('H', 250);
-    }
-  };
 
   return (
     <div
@@ -145,31 +129,13 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
         })()}
       </div>
 
-      {/* 4. Botões de Presets Rápidos */}
+      {/* 4. Parâmetros Dimensionais */}
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ marginBottom: 8 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#E2E8F0', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Sliders size={14} color="#35a89e" />
             Parâmetros Dimensionais
           </label>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {(['P', 'M', 'G'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => applyPreset(s)}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                  fontSize: 11,
-                  background: '#121616',
-                  color: '#94A3B8',
-                  border: '1px solid #242c2c',
-                }}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Sliders e Inputs de Cada Parâmetro */}
