@@ -17,6 +17,7 @@ import { ecmaA20 } from './models/ecmaA20';
 import { ecmaA1075 } from './models/ecmaA1075';
 import { ecmaB1001 } from './models/ecmaB1001';
 import { ecmaB1506_53 } from './models/ecmaB1506_53';
+import { ecmaA6020 } from './models/ecmaA6020';
 
 export interface CatalogItem {
   id: string;
@@ -66,6 +67,8 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   ecma_b1506_53: ecmaB1506_53,
   ecma_b1506: ecmaB1506_53,
   ecma_b1506_60: ecmaB1506_53,
+  ecma_a6020: ecmaA6020,
+  ecma_a60_20: ecmaA6020,
 };
 
 
