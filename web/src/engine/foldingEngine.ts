@@ -91,7 +91,7 @@ export function buildFoldable3DTree(
   roughness: number = 0.28
 ): FoldableTreeResult {
   const rootGroup = new THREE.Group();
-  const topology = buildFoldingTopology(dieline);
+  const topology: DielineTopology = dieline.customTopology || buildFoldingTopology(dieline);
   const panels = topology.panels;
 
   if (!panels || panels.length === 0) {

@@ -18,6 +18,7 @@ import { ecmaA1075 } from './models/ecmaA1075';
 import { ecmaB1001 } from './models/ecmaB1001';
 import { ecmaB1506_53 } from './models/ecmaB1506_53';
 import { ecmaA0115 } from './models/ecmaA0115';
+import { ecmaX85 } from './models/ecmaX85';
 import { computeParametricDieline } from './parametricMorph';
 
 export interface CatalogItem {
@@ -70,6 +71,7 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   ecma_b1506_60: ecmaB1506_53,
   ecma_a0115: ecmaA0115,
   ecma_a115: ecmaA0115,
+  ecma_x85: ecmaX85,
 };
 
 /**

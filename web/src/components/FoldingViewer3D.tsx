@@ -203,15 +203,19 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
           codeStr.startsWith('ECMA A') ||
           codeStr.startsWith('ECMA B') ||
           codeStr.startsWith('ECMA E') ||
+          codeStr.startsWith('ECMA X') ||
           codeStr.startsWith('ECMA_A') ||
           codeStr.startsWith('ECMA_B') ||
           codeStr.startsWith('ECMA_E') ||
+          codeStr.startsWith('ECMA_X') ||
           Boolean(model.series && (
             model.series.includes('0200') ||
             model.series.includes('0700') ||
             model.series.includes('Grupo A') ||
             model.series.includes('Grupo B') ||
-            model.series.includes('Grupo E')
+            model.series.includes('Grupo E') ||
+            model.series.includes('Série X') ||
+            model.series.includes('Serie X')
           ));
 
         if (isTubular) {

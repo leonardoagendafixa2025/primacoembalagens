@@ -50,6 +50,7 @@ export interface DielineResult {
   dimensions: DimensionLine[];
   bounds: BoundingBox2D;
   error?: string;
+  customTopology?: any;
 }
 
 export interface ParamDef {

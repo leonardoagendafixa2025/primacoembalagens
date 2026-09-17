@@ -1,4 +1,4 @@
-﻿import type { Point2D, DielineResult } from './types';
+import type { Point2D, DielineResult } from './types';
 
 export interface TopologicalHinge {
   id: string;
@@ -444,18 +444,9 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     allFaces.push(faceObj);
   }
 
-  // 6. Separa pain├®is de furos internos (mortises, rasgos, recortes vazados)
-  // IMPORTANTE: threshold de 800 mm┬▓ para furos ÔÇö furos reais (dedo, mortise) s├úo pequenos;
-  // abas do fundo semi-autom├ítico (snap-lock, 1-2-3 bottom) t├¬m ├írea > 800 mm┬▓ e devem ser pain├®is.
-  const holeFaces = allFaces.filter(
-    (f) => !f.isExternal && f.edges.every((e) => e.type === 'cut') && f.area > 0 && f.area < 800
-  );
-  // ├ürea m├¡nima de 10 mm┬▓ para incluir abas estreitas (aba de cola, lingueta, abas de poeira)
-  const panelFaces = allFaces.filter(
-    (f) => !f.isExternal && !holeFaces.includes(f) && f.area > 10
-  );
-
-  // Mapeia furos para seus pain├®is hospedeiros
+  // 6. Separa painéis de furos internos (mortises, rasgos, recortes vazados, janelas e alças)
+  // Um furo é qualquer ciclo interno fechado composto 100% de arestas de corte (sem vincos)
+  // e que esteja contido geometricamente dentro de outro painel hospedeiro maior.
   function pointInPolygon(pt: Point2D, poly: Point2D[]): boolean {
     let inside = false;
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -468,19 +459,34 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     return inside;
   }
 
+  const cutOnlyFaces = allFaces.filter(
+    (f) => !f.isExternal && f.edges.every((e) => e.type === 'cut') && f.area > 0
+  );
+  const potentialPanels = allFaces.filter((f) => !f.isExternal && f.area > 10);
+
+  const holeFaces: InternalFace[] = [];
   const panelHolesMap = new Map<number, Point2D[][]>();
-  for (const pf of panelFaces) {
+  for (const pf of potentialPanels) {
     panelHolesMap.set(pf.id, []);
   }
 
-  for (const hf of holeFaces) {
-    for (const pf of panelFaces) {
-      if (pointInPolygon(hf.centroid, pf.points)) {
-        panelHolesMap.get(pf.id)!.push(hf.points);
+  for (const cf of cutOnlyFaces) {
+    let isInternalHole = false;
+    for (const pf of potentialPanels) {
+      if (pf.id !== cf.id && pf.area > cf.area && pointInPolygon(cf.centroid, pf.points)) {
+        holeFaces.push(cf);
+        panelHolesMap.get(pf.id)!.push(cf.points);
+        isInternalHole = true;
         break;
       }
     }
+    // Alívios de canto e recortes estreitos de corte (< 800 mm²) que não contêm vincos
+    if (!isInternalHole && cf.area < 800) {
+      holeFaces.push(cf);
+    }
   }
+
+  const panelFaces = potentialPanels.filter((f) => !holeFaces.includes(f));
 
   // 7. Encontra todas as conex├Áes de vinco entre pain├®is
   interface RawHingeEdge {
