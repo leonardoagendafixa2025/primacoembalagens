@@ -6153,8 +6153,8 @@
           "cx": 24,
           "cy": -415,
           "r": 20,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         },
         {
           "type": "cut",
@@ -6728,8 +6728,8 @@
           "cx": 733,
           "cy": -415,
           "r": 20,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         }
       ]
     }
@@ -22421,16 +22421,16 @@
           "cx": 273.2,
           "cy": -155.941,
           "r": 4.7,
-          "startAngle": 261.634,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 261.634
         },
         {
           "type": "cut",
           "cx": -273.2,
           "cy": 155.941,
           "r": 4.7,
-          "startAngle": 81.634,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 81.634
         },
         {
           "type": "cut",
@@ -22453,16 +22453,16 @@
           "cx": 1034.2,
           "cy": -155.941,
           "r": 4.7,
-          "startAngle": 261.634,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 261.634
         },
         {
           "type": "cut",
           "cx": 487.8,
           "cy": 155.941,
           "r": 4.7,
-          "startAngle": 81.634,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 81.634
         },
         {
           "type": "cut",
@@ -28335,16 +28335,16 @@
           "cx": -311,
           "cy": 155.561,
           "r": 3,
-          "startAngle": 78.232,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 78.232
         },
         {
           "type": "cut",
           "cx": 311,
           "cy": -155.561,
           "r": 3,
-          "startAngle": 258.232,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 258.232
         },
         {
           "type": "cut",
@@ -29122,8 +29122,8 @@
           "cx": -311,
           "cy": 155.561,
           "r": 3,
-          "startAngle": 78.232,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 78.232
         },
         {
           "type": "cut",
@@ -29138,16 +29138,16 @@
           "cx": 311,
           "cy": -155.561,
           "r": 3,
-          "startAngle": 258.232,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 258.232
         },
         {
           "type": "cut",
           "cx": 207,
           "cy": -254,
           "r": 3,
-          "startAngle": 180,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 180
         },
         {
           "type": "cut",
@@ -29901,32 +29901,32 @@
           "cx": -205.561,
           "cy": -261,
           "r": 3,
-          "startAngle": 168.232,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 168.232
         },
         {
           "type": "cut",
           "cx": -304,
           "cy": -157,
           "r": 3,
-          "startAngle": 90,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 90
         },
         {
           "type": "cut",
           "cx": 205.561,
           "cy": 261,
           "r": 3,
-          "startAngle": 348.232,
-          "endAngle": 630
+          "startAngle": 270,
+          "endAngle": 348.232
         },
         {
           "type": "cut",
           "cx": 304,
           "cy": 157,
           "r": 3,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         },
         {
           "type": "cut",
@@ -31016,16 +31016,16 @@
           "cx": -155,
           "cy": -311,
           "r": 3,
-          "startAngle": 180,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 180
         },
         {
           "type": "cut",
           "cx": -253,
           "cy": -206,
           "r": 2,
-          "startAngle": 90,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 90
         },
         {
           "type": "cut",
@@ -31040,8 +31040,8 @@
           "cx": 253,
           "cy": 206,
           "r": 2,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         },
         {
           "type": "cut",
@@ -32652,40 +32652,40 @@
           "cx": -189.5,
           "cy": 287.570752,
           "r": 10,
-          "startAngle": 254.999971,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 255
         },
         {
           "type": "cut",
           "cx": -189.5,
           "cy": 435.429248,
           "r": 10,
-          "startAngle": 180,
-          "endAngle": 465.000029
+          "startAngle": 105,
+          "endAngle": 180
         },
         {
           "type": "cut",
           "cx": 0,
           "cy": 616.5,
           "r": 10,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         },
         {
           "type": "cut",
           "cx": -156.5,
           "cy": 466.5,
           "r": 147,
-          "startAngle": 144.504456,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 144.504
         },
         {
           "type": "cut",
           "cx": -265.116344,
           "cy": 531.316619,
           "r": 20,
-          "startAngle": 250.000023,
-          "endAngle": 509.298714
+          "startAngle": 149.299,
+          "endAngle": 250
         }
       ]
     }
@@ -54756,8 +54756,8 @@
           "cx": 350,
           "cy": 325,
           "r": 14.644,
-          "startAngle": 141.321,
-          "endAngle": 398.679
+          "startAngle": 38.679,
+          "endAngle": 141.321
         },
         {
           "type": "cut",
@@ -54780,8 +54780,8 @@
           "cx": 350,
           "cy": 325,
           "r": 14.643,
-          "startAngle": 321.325,
-          "endAngle": 578.675
+          "startAngle": 218.675,
+          "endAngle": 321.325
         },
         {
           "type": "cut",
@@ -54796,8 +54796,8 @@
           "cx": 350,
           "cy": 375,
           "r": 14.643,
-          "startAngle": 321.325,
-          "endAngle": 578.675
+          "startAngle": 218.675,
+          "endAngle": 321.325
         },
         {
           "type": "cut",
@@ -54812,8 +54812,8 @@
           "cx": 350,
           "cy": 375,
           "r": 14.645,
-          "startAngle": 141.316,
-          "endAngle": 398.68399999999997
+          "startAngle": 38.684,
+          "endAngle": 141.316
         },
         {
           "type": "cut",
@@ -62469,8 +62469,8 @@
           "cx": 190,
           "cy": -128.5,
           "r": 22,
-          "startAngle": 237.236,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 237.236
         },
         {
           "type": "cut",
@@ -63156,8 +63156,8 @@
           "cx": 40,
           "cy": -128.5,
           "r": 22,
-          "startAngle": 237.236,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 237.236
         },
         {
           "type": "cut",
@@ -63787,8 +63787,8 @@
           "cx": 40,
           "cy": -128.5,
           "r": 22,
-          "startAngle": 237.236,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 237.236
         },
         {
           "type": "cut",
@@ -64418,8 +64418,8 @@
           "cx": 190,
           "cy": -128.5,
           "r": 22,
-          "startAngle": 237.236,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 237.236
         },
         {
           "type": "cut",
@@ -65041,8 +65041,8 @@
           "cx": 44,
           "cy": -108,
           "r": 4,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         },
         {
           "type": "cut",
@@ -65065,8 +65065,8 @@
           "cx": 244,
           "cy": -108,
           "r": 4,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         },
         {
           "type": "cut",
@@ -65081,8 +65081,8 @@
           "cx": 295.5,
           "cy": -105,
           "r": 7,
-          "startAngle": 270,
-          "endAngle": 517.38
+          "startAngle": 157.38,
+          "endAngle": 270
         }
       ]
     }
@@ -65735,16 +65735,16 @@
           "cx": 115.074,
           "cy": -60.397,
           "r": 1,
-          "startAngle": 130.534,
-          "endAngle": 390.382
+          "startAngle": 30.382,
+          "endAngle": 130.534
         },
         {
           "type": "cut",
           "cx": 265.074,
           "cy": -60.397,
           "r": 1,
-          "startAngle": 130.534,
-          "endAngle": 390.382
+          "startAngle": 30.382,
+          "endAngle": 130.534
         }
       ]
     }
@@ -105985,16 +105985,16 @@
           "cx": 503.061,
           "cy": 431.5,
           "r": 243.061,
-          "startAngle": 233.944,
-          "endAngle": 486.056
+          "startAngle": 126.056,
+          "endAngle": 233.944
         },
         {
           "type": "cut",
           "cx": 503.061,
           "cy": 1341.5,
           "r": 243.061,
-          "startAngle": 233.944,
-          "endAngle": 486.056
+          "startAngle": 126.056,
+          "endAngle": 233.944
         },
         {
           "type": "cut",
@@ -106025,32 +106025,32 @@
           "cx": 479.257,
           "cy": 1800,
           "r": 187.257,
-          "startAngle": 231.231,
-          "endAngle": 488.769
+          "startAngle": 128.769,
+          "endAngle": 231.231
         },
         {
           "type": "cut",
           "cx": 483.457,
           "cy": 1347,
           "r": 191.457,
-          "startAngle": 230.626,
-          "endAngle": 489.374
+          "startAngle": 129.374,
+          "endAngle": 230.626
         },
         {
           "type": "cut",
           "cx": 483.457,
           "cy": 892,
           "r": 191.457,
-          "startAngle": 230.626,
-          "endAngle": 489.374
+          "startAngle": 129.374,
+          "endAngle": 230.626
         },
         {
           "type": "cut",
           "cx": 483.457,
           "cy": 437,
           "r": 191.457,
-          "startAngle": 230.626,
-          "endAngle": 489.374
+          "startAngle": 129.374,
+          "endAngle": 230.626
         },
         {
           "type": "cut",
@@ -106762,16 +106762,16 @@
           "cx": 503.061,
           "cy": 936.5,
           "r": 243.061,
-          "startAngle": 233.944,
-          "endAngle": 486.056
+          "startAngle": 126.056,
+          "endAngle": 233.944
         },
         {
           "type": "cut",
           "cx": 503.061,
           "cy": 481.5,
           "r": 243.061,
-          "startAngle": 233.944,
-          "endAngle": 486.056
+          "startAngle": 126.056,
+          "endAngle": 233.944
         },
         {
           "type": "cut",
@@ -106794,24 +106794,24 @@
           "cx": 479.257,
           "cy": 1395,
           "r": 187.257,
-          "startAngle": 231.231,
-          "endAngle": 488.769
+          "startAngle": 128.769,
+          "endAngle": 231.231
         },
         {
           "type": "cut",
           "cx": 483.457,
           "cy": 942,
           "r": 191.457,
-          "startAngle": 230.626,
-          "endAngle": 489.374
+          "startAngle": 129.374,
+          "endAngle": 230.626
         },
         {
           "type": "cut",
           "cx": 483.457,
           "cy": 487,
           "r": 191.457,
-          "startAngle": 230.626,
-          "endAngle": 489.374
+          "startAngle": 129.374,
+          "endAngle": 230.626
         },
         {
           "type": "cut",
@@ -126685,8 +126685,8 @@
           "cx": 47.5,
           "cy": 1428.903,
           "r": 3,
-          "startAngle": 81.754,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 81.754
         },
         {
           "type": "cut",
@@ -126701,16 +126701,16 @@
           "cx": 672.5,
           "cy": 1045.097,
           "r": 3,
-          "startAngle": 261.754,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 261.754
         },
         {
           "type": "cut",
           "cx": 608.5,
           "cy": 986.5,
           "r": 3,
-          "startAngle": 180,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 180
         },
         {
           "type": "cut",
@@ -127968,8 +127968,8 @@
           "cx": 47.5,
           "cy": 1418.903,
           "r": 3,
-          "startAngle": 81.754,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 81.754
         },
         {
           "type": "cut",
@@ -127984,16 +127984,16 @@
           "cx": 672.5,
           "cy": 1035.097,
           "r": 3,
-          "startAngle": 261.754,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 261.754
         },
         {
           "type": "cut",
           "cx": 608.5,
           "cy": 976.5,
           "r": 3,
-          "startAngle": 180,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 180
         },
         {
           "type": "cut",
@@ -129333,8 +129333,8 @@
           "cx": 47.5,
           "cy": 1418.903,
           "r": 3,
-          "startAngle": 81.754,
-          "endAngle": 360
+          "startAngle": 0,
+          "endAngle": 81.754
         },
         {
           "type": "cut",
@@ -129349,16 +129349,16 @@
           "cx": 672.5,
           "cy": 1035.097,
           "r": 3,
-          "startAngle": 261.754,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 261.754
         },
         {
           "type": "cut",
           "cx": 608.5,
           "cy": 976.5,
           "r": 3,
-          "startAngle": 180,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 180
         },
         {
           "type": "cut",
@@ -134780,40 +134780,40 @@
           "cx": -189.5,
           "cy": 287.570752,
           "r": 10,
-          "startAngle": 254.999971,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 255
         },
         {
           "type": "cut",
           "cx": -189.5,
           "cy": 435.429248,
           "r": 10,
-          "startAngle": 180,
-          "endAngle": 465.000029
+          "startAngle": 105,
+          "endAngle": 180
         },
         {
           "type": "cut",
           "cx": 0,
           "cy": 616.5,
           "r": 10,
-          "startAngle": 270,
-          "endAngle": 540
+          "startAngle": 180,
+          "endAngle": 270
         },
         {
           "type": "cut",
           "cx": -156.5,
           "cy": 466.5,
           "r": 147,
-          "startAngle": 144.504456,
-          "endAngle": 450
+          "startAngle": 90,
+          "endAngle": 144.504
         },
         {
           "type": "cut",
           "cx": -265.116344,
           "cy": 531.316619,
           "r": 20,
-          "startAngle": 250.000023,
-          "endAngle": 509.298714
+          "startAngle": 149.299,
+          "endAngle": 250
         }
       ]
     }

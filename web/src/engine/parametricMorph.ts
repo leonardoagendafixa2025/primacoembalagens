@@ -49,7 +49,27 @@ export function computeParametricDieline(
   prefix: string = 'par'
 ): DielineResult {
   const origSegs = rawGeom.segments || [];
-  const origArcs = rawGeom.arcs || [];
+  const origArcs = (rawGeom.arcs || []).map((a) => {
+    if (!a.r || a.r <= 0) return a;
+    let span = a.endAngle - a.startAngle;
+    while (span < 0) span += 360;
+    while (span > 360) span -= 360;
+
+    // Normalização defensiva: se o arco não for círculo fechado (span ~ 360°) e tiver span > 180°,
+    // foi exportado no sentido horário (com ângulos invertidos e endAngle += 360).
+    // Normaliza para o arco geométrico menor (span < 180°).
+    if (span > 180.1 && Math.abs(span - 360) > 1.0) {
+      let invStart = a.endAngle >= 360 ? a.endAngle - 360 : a.endAngle;
+      let invEnd = a.startAngle >= 360 ? a.startAngle - 360 : a.startAngle;
+      if (invEnd < invStart) invEnd += 360;
+      return {
+        ...a,
+        startAngle: invStart,
+        endAngle: invEnd,
+      };
+    }
+    return a;
+  });
 
   if (origSegs.length === 0) {
     const emptyBox: BoundingBox2D = { minX: 0, minY: 0, maxX: 100, maxY: 100, width: 100, height: 100 };
