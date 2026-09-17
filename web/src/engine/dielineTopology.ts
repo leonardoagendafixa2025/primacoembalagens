@@ -1,4 +1,4 @@
-import type { Point2D, DielineResult } from './types';
+﻿import type { Point2D, DielineResult } from './types';
 
 export interface TopologicalHinge {
   id: string;
@@ -58,8 +58,8 @@ interface InternalFace {
 }
 
 /**
- * Constrói a topologia planar exata (painéis, furos e vincos) a partir da faca 2D real
- * sem nenhuma aproximação ou modelo genérico de caixa.
+ * Constr├│i a topologia planar exata (pain├®is, furos e vincos) a partir da faca 2D real
+ * sem nenhuma aproxima├º├úo ou modelo gen├®rico de caixa.
  */
 export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   // 1. Coleta todos os segmentos e discretiza arcos (preservando cantos arredondados e fillets)
@@ -76,7 +76,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
 
   for (const arc of dieline.arcs) {
     if (arc.type === 'dimension') continue;
-    // Ângulos podem vir em graus (PLMPackLib) ou radianos
+    // ├éngulos podem vir em graus (PLMPackLib) ou radianos
     const isDegrees = Math.abs(arc.startAngle) > 2 * Math.PI || Math.abs(arc.endAngle) > 2 * Math.PI || (Math.abs(arc.endAngle - arc.startAngle) >= 10);
     const startRad = isDegrees ? (arc.startAngle * Math.PI) / 180 : arc.startAngle;
     const endRad = isDegrees ? (arc.endAngle * Math.PI) / 180 : arc.endAngle;
@@ -95,51 +95,190 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 1.5 Fechamento inteligente de alívios industriais (Die-making relief gaps):
-  // Em embalagens com fundo automático ou alívios circulares (notches/punch), as facas industriais
-  // propositalmente deixam folga de 0.4mm a 1.6mm entre o término do vinco vertical e a aresta adjacente.
-  // Projetamos endpoints de vincos com gap <= 1.6mm até a aresta mais próxima para que o DCEL
-  // feche os polígonos de cada parede individual sem vazamento planar.
-  const MAX_RELIEF_GAP = 1.6;
-  for (const s of rawSegs) {
-    if (s.type !== 'crease') continue;
-    for (const other of rawSegs) {
-      if (other === s) continue;
-      const ox0 = other.p0.x, oy0 = other.p0.y, ox1 = other.p1.x, oy1 = other.p1.y;
-      const l2 = (ox1 - ox0) ** 2 + (oy1 - oy0) ** 2;
-      if (l2 < 1e-6) continue;
+  // 1.5 Cura universal de al├¡vios de vinco industriais, degraus e recuos (Relief Notches & Crease Setback Healer)
+  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente s├úo interrompidos
+  // por furos/entalhes de al├¡vio circular (relief punch), recuados por toler├óncia de fabrica├º├úo (setback <= 3.5mm),
+  // ou apresentam micro-defeitos de corte em jun├º├Áes de abas (slits) e degraus de borda (boundary steps).
 
-      const t0 = ((s.p0.x - ox0) * (ox1 - ox0) + (s.p0.y - oy0) * (oy1 - oy0)) / l2;
-      if (t0 >= -0.05 && t0 <= 1.05) {
-        const projX = ox0 + t0 * (ox1 - ox0);
-        const projY = oy0 + t0 * (oy1 - oy0);
-        const dist = Math.hypot(s.p0.x - projX, s.p0.y - projY);
-        if (dist > 0.04 && dist <= MAX_RELIEF_GAP) {
-          s.p0 = { x: projX, y: projY };
-          break;
-        }
-      }
-    }
-    for (const other of rawSegs) {
-      if (other === s) continue;
-      const ox0 = other.p0.x, oy0 = other.p0.y, ox1 = other.p1.x, oy1 = other.p1.y;
-      const l2 = (ox1 - ox0) ** 2 + (oy1 - oy0) ** 2;
-      if (l2 < 1e-6) continue;
+  // 1.5a: Clamping de micro-invas├úo de recortes de al├¡vio (Relief Notch Micro-Intrusion Clamp)
+  // Arcos e pequenos cortes de entalhes circulares em jun├º├Áes de vinco n├úo devem invadir os pain├®is al├®m do vinco.
+  // Se uma ponta de corte estiver a <= 1.2mm de uma linha de vinco horizontal ou vertical, clampeia para a linha do vinco.
+  const creaseLines = rawSegs.filter((s) => s.type === 'crease');
+  for (const c of creaseLines) {
+    const isHoriz = Math.abs(c.p0.y - c.p1.y) < 1e-3;
+    const isVert = Math.abs(c.p0.x - c.p1.x) < 1e-3;
+    if (!isHoriz && !isVert) continue;
 
-      const t1 = ((s.p1.x - ox0) * (ox1 - ox0) + (s.p1.y - oy0) * (oy1 - oy0)) / l2;
-      if (t1 >= -0.05 && t1 <= 1.05) {
-        const projX = ox0 + t1 * (ox1 - ox0);
-        const projY = oy0 + t1 * (oy1 - oy0);
-        const dist = Math.hypot(s.p1.x - projX, s.p1.y - projY);
-        if (dist > 0.04 && dist <= MAX_RELIEF_GAP) {
-          s.p1 = { x: projX, y: projY };
-          break;
+    const minX = Math.min(c.p0.x, c.p1.x) - 3.5;
+    const maxX = Math.max(c.p0.x, c.p1.x) + 3.5;
+    const minY = Math.min(c.p0.y, c.p1.y) - 3.5;
+    const maxY = Math.max(c.p0.y, c.p1.y) + 3.5;
+
+    for (const s of rawSegs) {
+      if (s.type !== 'cut') continue;
+      const segLen = Math.hypot(s.p1.x - s.p0.x, s.p1.y - s.p0.y);
+      if (segLen > 15.0) continue; // Apenas segmentos de detalhe / entalhe / al├¡vio
+
+      for (const ep of ['p0', 'p1'] as const) {
+        const pt = s[ep];
+        if (isHoriz) {
+          const cy = (c.p0.y + c.p1.y) / 2;
+          const dy = Math.abs(pt.y - cy);
+          if (dy > 0.001 && dy <= 1.2 && pt.x >= minX && pt.x <= maxX) {
+            pt.y = cy;
+          }
+        } else if (isVert) {
+          const cx = (c.p0.x + c.p1.x) / 2;
+          const dx = Math.abs(pt.x - cx);
+          if (dx > 0.001 && dx <= 1.2 && pt.y >= minY && pt.y <= maxY) {
+            pt.x = cx;
+          }
         }
       }
     }
   }
 
-  // 2. Unifica vértices próximos (tolerância numérica de 0.05 mm)
+  // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de al├¡vio / relief notches <= 3.5mm)
+  const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
+  const bridgeCreases: { p0: Point2D; p1: Point2D; type: string }[] = [];
+  for (let i = 0; i < creaseSegs.length; i++) {
+    const c1 = creaseSegs[i];
+    const dx1 = c1.p1.x - c1.p0.x;
+    const dy1 = c1.p1.y - c1.p0.y;
+    const l1 = Math.hypot(dx1, dy1);
+    if (l1 < 1e-4) continue;
+    const u1x = dx1 / l1, u1y = dy1 / l1;
+
+    for (let j = i + 1; j < creaseSegs.length; j++) {
+      const c2 = creaseSegs[j];
+      const dx2 = c2.p1.x - c2.p0.x;
+      const dy2 = c2.p1.y - c2.p0.y;
+      const l2 = Math.hypot(dx2, dy2);
+      if (l2 < 1e-4) continue;
+      const u2x = dx2 / l2, u2y = dy2 / l2;
+
+      // Devem ser paralelos (produto vetorial ~ 0)
+      const cross = Math.abs(u1x * u2y - u1y * u2x);
+      if (cross > 0.05) continue;
+
+      // Devem estar na mesma reta colinear
+      const v0x = c2.p0.x - c1.p0.x;
+      const v0y = c2.p0.y - c1.p0.y;
+      if (Math.abs(v0x * u1y - v0y * u1x) > 0.15) continue;
+
+      // Testa os 4 pares de pontas para encontrar a ponte entre os segmentos
+      const pairs: [Point2D, Point2D][] = [
+        [c1.p0, c2.p0],
+        [c1.p0, c2.p1],
+        [c1.p1, c2.p0],
+        [c1.p1, c2.p1],
+      ];
+      for (const [pA, pB] of pairs) {
+        const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+        if (d > 0.05 && d <= 3.5) {
+          const bdx = (pB.x - pA.x) / d;
+          const bdy = (pB.y - pA.y) / d;
+          if (Math.abs(Math.abs(bdx * u1x + bdy * u1y) - 1.0) < 0.1) {
+            bridgeCreases.push({
+              p0: { x: pA.x, y: pA.y },
+              p1: { x: pB.x, y: pB.y },
+              type: 'crease',
+            });
+          }
+        }
+      }
+    }
+  }
+  rawSegs.push(...bridgeCreases);
+
+  // 1.5c: Fechamento de fendas verticais/horizontais entre vincos e linhas transversais (Flap Slit Closures <= 3.5mm)
+  // Em jun├º├Áes entre abas (ex: abas de poeira vs tampa), o vinco da aba e o vinco da tampa t├¬m alturas ligeiramente diferentes
+  // gerando uma fenda vertical aberta (slit) entre o topo da divis├│ria de paredes e a linha da tampa.
+  const slitBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
+  for (const s of rawSegs) {
+    for (const ep of ['p0', 'p1'] as const) {
+      const pt = s[ep];
+      const otherPt = ep === 'p0' ? s.p1 : s.p0;
+
+      let count = 0;
+      for (const o of rawSegs) {
+        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.08 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.08) {
+          count++;
+        }
+      }
+      if (count <= 2) {
+        const dirx = pt.x - otherPt.x;
+        const diry = pt.y - otherPt.y;
+        const dlen = Math.hypot(dirx, diry);
+        if (dlen < 1e-4) continue;
+        const udx = dirx / dlen;
+        const udy = diry / dlen;
+
+        let bestT = 9999;
+        let bestInter: Point2D | null = null;
+        for (const o of rawSegs) {
+          if (o === s) continue;
+          const x3 = o.p0.x, y3 = o.p0.y;
+          const x4 = o.p1.x, y4 = o.p1.y;
+          const denom = udx * (y4 - y3) - udy * (x4 - x3);
+          if (Math.abs(denom) < 1e-5) continue;
+          const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
+          const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
+          if (t > 0.02 && t <= 3.5 && u >= -0.01 && u <= 1.01) {
+            if (t < bestT) {
+              bestT = t;
+              bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
+            }
+          }
+        }
+        if (bestInter) {
+          slitBridges.push({
+            p0: { x: pt.x, y: pt.y },
+            p1: bestInter,
+            type: 'cut',
+          });
+        }
+      }
+    }
+  }
+  rawSegs.push(...slitBridges);
+
+  // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 3.5mm)
+  // Se duas pontas soltas de corte (dead-ends no contorno exterior) est├úo a uma dist├óncia curta, conecta com segmento de corte.
+  const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
+  for (const s of rawSegs) {
+    if (s.type !== 'cut') continue;
+    for (const ep of ['p0', 'p1'] as const) {
+      const pt = s[ep];
+      let meets = 0;
+      for (const o of rawSegs) {
+        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.08 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.08) {
+          meets++;
+        }
+      }
+      if (meets <= 1) {
+        cutEndpoints.push({ pt, seg: s });
+      }
+    }
+  }
+  const boundaryBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
+  for (let i = 0; i < cutEndpoints.length; i++) {
+    for (let j = i + 1; j < cutEndpoints.length; j++) {
+      const pA = cutEndpoints[i].pt;
+      const pB = cutEndpoints[j].pt;
+      const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+      if (d > 0.05 && d <= 3.5) {
+        boundaryBridges.push({
+          p0: { x: pA.x, y: pA.y },
+          p1: { x: pB.x, y: pB.y },
+          type: 'cut',
+        });
+      }
+    }
+  }
+  rawSegs.push(...boundaryBridges);
+
+  // 2. Unifica v├®rtices pr├│ximos (toler├óncia num├®rica de 0.05 mm)
   const EPS = 0.05;
   const uniquePoints: Point2D[] = [];
 
@@ -190,8 +329,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 3.5 Deduplica segmentos idênticos ou sobrepostos (mesmo par de vértices)
-  // Evita arestas duplas no grafo DCEL que geram ciclos de área zero e corrompem as faces
+  // 3.5 Deduplica segmentos id├¬nticos ou sobrepostos (mesmo par de v├®rtices)
+  // Evita arestas duplas no grafo DCEL que geram ciclos de ├írea zero e corrompem as faces
   const edgeKeyMap = new Map<string, { p0: Point2D; p1: Point2D; type: string }>();
   for (const s of cleanSegs) {
     const idx0 = uniquePoints.indexOf(s.p0);
@@ -202,7 +341,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     if (!existing) {
       edgeKeyMap.set(key, s);
     } else {
-      // Se houver conflito entre corte e vinco na mesma aresta, 'cut' tem precedência
+      // Se houver conflito entre corte e vinco na mesma aresta, 'cut' tem preced├¬ncia
       if (s.type === 'cut' || existing.type === 'cut') {
         existing.type = 'cut';
       }
@@ -210,7 +349,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   const finalSegs = Array.from(edgeKeyMap.values());
 
-  // 4. Constrói o grafo Half-Edge (DCEL)
+  // 4. Constr├│i o grafo Half-Edge (DCEL)
   const vertexOutgoing = new Map<Point2D, InternalHalfEdge[]>();
   const halfEdges: InternalHalfEdge[] = [];
   let heIdCounter = 0;
@@ -240,12 +379,12 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     vertexOutgoing.get(s.p1)!.push(he2);
   }
 
-  // Ordena arestas de saída no sentido anti-horário (CCW)
+  // Ordena arestas de sa├¡da no sentido anti-hor├írio (CCW)
   for (const [, list] of vertexOutgoing.entries()) {
     list.sort((a, b) => a.angle - b.angle);
   }
 
-  // Liga os ponteiros next de cada half-edge (curva máxima à esquerda = menor face CCW)
+  // Liga os ponteiros next de cada half-edge (curva m├íxima ├á esquerda = menor face CCW)
   for (const he of halfEdges) {
     const v = he.v;
     const outList = vertexOutgoing.get(v)!;
@@ -254,7 +393,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     he.next = outList[nextIdx];
   }
 
-  // 5. Rastreia ciclos mínimos para extrair todas as faces planares
+  // 5. Rastreia ciclos m├¡nimos para extrair todas as faces planares
   const allFaces: InternalFace[] = [];
   let faceIdCounter = 0;
 
@@ -273,7 +412,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       if (curr === he) break;
     }
 
-    // Cálculo de área com sinal e centroide
+    // C├ílculo de ├írea com sinal e centroide
     let area = 0;
     let cx = 0, cy = 0;
     for (let i = 0; i < cycle.length; i++) {
@@ -305,18 +444,18 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     allFaces.push(faceObj);
   }
 
-  // 6. Separa painéis de furos internos (mortises, rasgos, recortes vazados)
-  // IMPORTANTE: threshold de 800 mm² para furos — furos reais (dedo, mortise) são pequenos;
-  // abas do fundo semi-automático (snap-lock, 1-2-3 bottom) têm área > 800 mm² e devem ser painéis.
+  // 6. Separa pain├®is de furos internos (mortises, rasgos, recortes vazados)
+  // IMPORTANTE: threshold de 800 mm┬▓ para furos ÔÇö furos reais (dedo, mortise) s├úo pequenos;
+  // abas do fundo semi-autom├ítico (snap-lock, 1-2-3 bottom) t├¬m ├írea > 800 mm┬▓ e devem ser pain├®is.
   const holeFaces = allFaces.filter(
     (f) => !f.isExternal && f.edges.every((e) => e.type === 'cut') && f.area > 0 && f.area < 800
   );
-  // Área mínima de 10 mm² para incluir abas estreitas (aba de cola, lingueta, abas de poeira)
+  // ├ürea m├¡nima de 10 mm┬▓ para incluir abas estreitas (aba de cola, lingueta, abas de poeira)
   const panelFaces = allFaces.filter(
     (f) => !f.isExternal && !holeFaces.includes(f) && f.area > 10
   );
 
-  // Mapeia furos para seus painéis hospedeiros
+  // Mapeia furos para seus pain├®is hospedeiros
   function pointInPolygon(pt: Point2D, poly: Point2D[]): boolean {
     let inside = false;
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -343,7 +482,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 7. Encontra todas as conexões de vinco entre painéis
+  // 7. Encontra todas as conex├Áes de vinco entre pain├®is
   interface RawHingeEdge {
     panelAId: number;
     panelBId: number;
@@ -373,7 +512,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // Agrupa e une sub-vincos colineares entre o mesmo par de painéis (ex: vincos particionados por interseções)
+  // Agrupa e une sub-vincos colineares entre o mesmo par de pain├®is (ex: vincos particionados por interse├º├Áes)
   const mergedHingeMap = new Map<string, RawHingeEdge[]>();
   for (const h of rawHingesList) {
     const key = `${Math.min(h.panelAId, h.panelBId)}_${Math.max(h.panelAId, h.panelBId)}`;
@@ -414,7 +553,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     });
   }
 
-  // 8. Constrói o Grafo de Adjacência / Dobras entre Painéis
+  // 8. Constr├│i o Grafo de Adjac├¬ncia / Dobras entre Pain├®is
   const adjMap = new Map<number, { neighborId: number; hinge: RawHingeEdge }[]>();
   for (const pf of panelFaces) {
     adjMap.set(pf.id, []);
@@ -425,30 +564,54 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
 
   // 9. Escolhe o Painel Raiz (Base/Fundo/Corpo Central da Embalagem)
-  // REGRA UNIVERSAL DE CAD DE EMBALAGENS:
-  // A base/fundo é o centro estrutural da árvore de dobras.
-  // 1. Grau topológico: número de paredes conectadas por vinco à base.
-  // 2. Centralidade de 2ª ordem: a soma dos graus dos vizinhos garante que o hub central
-  //    (que conecta às 4 paredes) vença a tampa (cujos vizinhos são abas terminais de grau 1).
-  // 3. Área e proporção da base.
+  // REGRA DE ENGENHARIA: O fechamento 3D DEVE iniciar a partir da BASE / PAINEL CENTRAL.
+  // Abas laterais de colagem, abas terminais e abas de poeira (deg <= 1) NUNCA podem ser raiz.
+  let bMinX = Infinity, bMaxX = -Infinity, bMinY = Infinity, bMaxY = -Infinity;
+  for (const pf of panelFaces) {
+    for (const pt of pf.points) {
+      if (pt.x < bMinX) bMinX = pt.x;
+      if (pt.x > bMaxX) bMaxX = pt.x;
+      if (pt.y < bMinY) bMinY = pt.y;
+      if (pt.y > bMaxY) bMaxY = pt.y;
+    }
+  }
+  const blankCenterX = (bMinX + bMaxX) / 2;
+  const blankCenterY = (bMinY + bMaxY) / 2;
+  const blankDiag = Math.hypot(bMaxX - bMinX, bMaxY - bMinY) || 1;
+
   let maxArea = 0;
+  let maxDeg = 0;
   for (const pf of panelFaces) {
     if (pf.area > maxArea) maxArea = pf.area;
+    const deg = adjMap.get(pf.id)?.length || 0;
+    if (deg > maxDeg) maxDeg = deg;
   }
 
-  let rootFace = panelFaces[0];
+  // Descarta abas terminais / abas laterais (deg <= 1) se houver pain├®is centrais estruturais
+  const minDegAllowed = maxDeg >= 2 ? 2 : 1;
+  const minAreaAllowed = maxArea * 0.2; // descarta tiras ou abas menores
+
+  let candidates = panelFaces.filter(
+    (pf) => (adjMap.get(pf.id)?.length || 0) >= minDegAllowed && pf.area >= minAreaAllowed
+  );
+  if (candidates.length === 0) {
+    candidates = panelFaces.filter((pf) => (adjMap.get(pf.id)?.length || 0) >= minDegAllowed);
+  }
+  if (candidates.length === 0) {
+    candidates = panelFaces;
+  }
+
+  let rootFace = candidates[0];
   let bestScore = -Infinity;
 
-  for (const pf of panelFaces) {
-    const neighbors = adjMap.get(pf.id) || [];
-    const deg = neighbors.length;
-    let neighborDegSum = 0;
-    for (const n of neighbors) {
-      neighborDegSum += (adjMap.get(n.neighborId)?.length || 0);
-    }
-    const normArea = maxArea > 0 ? pf.area / maxArea : 1;
-    // Grau tem peso preponderante (1000), seguido pela conectividade dos vizinhos (100) e área (50)
-    const score = deg * 1000 + neighborDegSum * 100 + normArea * 50;
+  for (const pf of candidates) {
+    const distToCenter = Math.hypot(pf.centroid.x - blankCenterX, pf.centroid.y - blankCenterY);
+    const normDist = distToCenter / (blankDiag / 2); // 0 no centro, ~1 na borda
+    const normArea = pf.area / (maxArea || 1);
+    const deg = adjMap.get(pf.id)?.length || 0;
+
+    // Prioriza conex├Áes estruturais (deg), ├írea da base/fundo e proximidade do centro real da faca
+    const score = deg * 250 + normArea * 500 + (1.0 - normDist) * 400;
     if (score > bestScore) {
       bestScore = score;
       rootFace = pf;
@@ -484,7 +647,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 10. Constrói os objetos TopologicalPanel e TopologicalHinge com eixos vetoriais 3D
+  // 10. Constr├│i os objetos TopologicalPanel e TopologicalHinge com eixos vetoriais 3D
   const topologicalPanels: TopologicalPanel[] = [];
   const topologicalHinges: TopologicalHinge[] = [];
 
@@ -528,12 +691,12 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
         az = -az;
       }
 
-      // TODAS as dobras de caixas industriais são de 90° relativas para o interior da embalagem!
-      // Dobras de parede dupla alcançam 180° pela composição de duas dobras consecutivas de 90° (Parede->Topo a 90° + Topo->Retorno a 90° = 180°).
-      // A tampa alcança 180° em relação à base pela composição (Base->Parede a 90° + Parede->Tampa a 90° = 180° horizontal).
+      // TODAS as dobras de caixas industriais s├úo de 90┬░ relativas para o interior da embalagem!
+      // Dobras de parede dupla alcan├ºam 180┬░ pela composi├º├úo de duas dobras consecutivas de 90┬░ (Parede->Topo a 90┬░ + Topo->Retorno a 90┬░ = 180┬░).
+      // A tampa alcan├ºa 180┬░ em rela├º├úo ├á base pela composi├º├úo (Base->Parede a 90┬░ + Parede->Tampa a 90┬░ = 180┬░ horizontal).
       const targetAngle = 90;
 
-      // Ordem física sequencial de montagem:
+      // Ordem f├¡sica sequencial de montagem:
       let foldOrder = 1;
       if (parentInfo.depth === 1) {
         foldOrder = 1;
