@@ -361,3 +361,86 @@ export function toPackagingGeometry(dieline: DielineResult): PackagingGeometry {
     bounds: dieline.bounds || computeBoundingBox(dieline),
   };
 }
+
+export interface DielineMetrics {
+  totalCutMm: number;
+  totalCutM: number;
+  totalCreaseMm: number;
+  totalCreaseM: number;
+  totalPerfoMm: number;
+  totalPerfoM: number;
+  totalSteelMm: number;
+  totalSteelM: number;
+  sheetWidthMm: number;
+  sheetHeightMm: number;
+  sheetAreaM2: number;
+  cutsCount: number;
+  creasesCount: number;
+}
+
+/**
+ * Calcula a metragem linear de lâminas de aço (Corte, Vinco, Picote) e área industrial da faca
+ */
+export function computeDielineMetrics(dieline: DielineResult): DielineMetrics {
+  let cutMm = 0;
+  let creaseMm = 0;
+  let perfoMm = 0;
+  let cutsCount = 0;
+  let creasesCount = 0;
+
+  for (const s of dieline.segments) {
+    const len = Math.hypot(s.x1 - s.x0, s.y1 - s.y0);
+    if (s.type === 'cut') {
+      cutMm += len;
+      cutsCount++;
+    } else if (s.type === 'crease') {
+      creaseMm += len;
+      creasesCount++;
+    } else if (s.type === 'perfo') {
+      perfoMm += len;
+      cutsCount++;
+    }
+  }
+
+  for (const a of dieline.arcs || []) {
+    let spanDeg = Math.abs(a.endAngle - a.startAngle);
+    if (spanDeg > 360) spanDeg = spanDeg % 360;
+    if (spanDeg === 0 && a.r > 0 && a.startAngle === a.endAngle) {
+      spanDeg = 360;
+    }
+    const arcLen = a.r * ((spanDeg * Math.PI) / 180);
+    if (a.type === 'cut') {
+      cutMm += arcLen;
+      cutsCount++;
+    } else if (a.type === 'crease') {
+      creaseMm += arcLen;
+      creasesCount++;
+    } else if (a.type === 'perfo') {
+      perfoMm += arcLen;
+      cutsCount++;
+    }
+  }
+
+  const b = dieline.bounds || computeBoundingBox(dieline);
+  const totalSteelMm = cutMm + creaseMm + perfoMm;
+  const sheetWidthMm = b.width;
+  const sheetHeightMm = b.height;
+  const sheetAreaM2 = (sheetWidthMm * sheetHeightMm) / 1_000_000;
+
+  return {
+    totalCutMm: Math.round(cutMm * 10) / 10,
+    totalCutM: Math.round((cutMm / 1000) * 100) / 100,
+    totalCreaseMm: Math.round(creaseMm * 10) / 10,
+    totalCreaseM: Math.round((creaseMm / 1000) * 100) / 100,
+    totalPerfoMm: Math.round(perfoMm * 10) / 10,
+    totalPerfoM: Math.round((perfoMm / 1000) * 100) / 100,
+    totalSteelMm: Math.round(totalSteelMm * 10) / 10,
+    totalSteelM: Math.round((totalSteelMm / 1000) * 100) / 100,
+    sheetWidthMm: Math.round(sheetWidthMm * 10) / 10,
+    sheetHeightMm: Math.round(sheetHeightMm * 10) / 10,
+    sheetAreaM2: Math.round(sheetAreaM2 * 1000) / 1000,
+    cutsCount,
+    creasesCount,
+  };
+}
+

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import type { PackagingModel, CardboardProfile, BoundingBox2D } from '../engine/types';
+import React, { useState, useMemo } from 'react';
+import type { PackagingModel, CardboardProfile, BoundingBox2D, DielineResult } from '../engine/types';
 import { STANDARD_PROFILES } from '../engine/types';
+import { computeDielineMetrics } from '../engine/geometry';
 import {
   Sliders,
   Layers,
@@ -17,6 +18,7 @@ interface ParameterPanelProps {
   onParamChange: (key: string, value: number) => void;
   onProfileChange: (profile: CardboardProfile) => void;
   bounds: BoundingBox2D;
+  dieline?: DielineResult;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   activeMode?: '2d' | '3d' | 'imposition';
@@ -31,6 +33,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   onParamChange,
   onProfileChange,
   bounds,
+  dieline,
   isCollapsed = false,
   onToggleCollapse,
   activeSubTab,
@@ -84,6 +87,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
 
   const areaM2 = ((bounds.width * bounds.height) / 1_000_000).toFixed(3);
   const currentProfile = STANDARD_PROFILES.find((p) => p.id === selectedProfileId) || STANDARD_PROFILES[0];
+  const metrics = useMemo(() => dieline ? computeDielineMetrics(dieline) : null, [dieline]);
 
   return (
     <aside
@@ -174,7 +178,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
         )}
       </div>
 
-      {/* 3. Card Industrial de Formato Mínimo da Faca Aberta */}
+      {/* 3. Card Industrial de Formato Mínimo da Faca Aberta & Métricas de Aço */}
       <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--cad-border-subtle)' }}>
         <div
           style={{
@@ -227,6 +231,9 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
               marginTop: 3,
               display: 'flex',
               justifyContent: 'space-between',
+              borderBottom: metrics ? '1px solid var(--cad-border-subtle)' : 'none',
+              paddingBottom: metrics ? 8 : 0,
+              marginBottom: metrics ? 8 : 0,
             }}
           >
             <span>Área da folha aberta:</span>
@@ -234,6 +241,75 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
               {areaM2} m²
             </span>
           </div>
+
+          {metrics && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: 10,
+                  color: 'var(--cad-text-dim)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444' }} />
+                  <span>Aço de Corte:</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span className="cad-mono" style={{ color: '#ef4444', fontWeight: 600 }}>
+                    {metrics.totalCutM} m
+                  </span>
+                  <span style={{ fontSize: 9, color: 'var(--cad-text-dim)' }}>
+                    ({metrics.totalCutMm} mm)
+                  </span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: 10,
+                  color: 'var(--cad-text-dim)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }} />
+                  <span>Aço de Vinco:</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span className="cad-mono" style={{ color: '#3b82f6', fontWeight: 600 }}>
+                    {metrics.totalCreaseM} m
+                  </span>
+                  <span style={{ fontSize: 9, color: 'var(--cad-text-dim)' }}>
+                    ({metrics.totalCreaseMm} mm)
+                  </span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: 10,
+                  marginTop: 2,
+                  paddingTop: 6,
+                  borderTop: '1px dashed var(--cad-border-subtle)',
+                }}
+              >
+                <span style={{ fontWeight: 600, color: 'var(--cad-text-secondary)' }}>
+                  Total Lâminas de Aço:
+                </span>
+                <span className="cad-mono" style={{ fontWeight: 700, color: 'var(--cad-accent)' }}>
+                  {metrics.totalSteelM} m
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

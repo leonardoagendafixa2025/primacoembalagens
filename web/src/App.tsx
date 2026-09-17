@@ -272,6 +272,7 @@ export const App: React.FC = () => {
             onParamChange={handleParamChange}
             onProfileChange={setSelectedProfile}
             bounds={dieline.bounds}
+            dieline={dieline}
             activeMode={activeTab}
             hinges={hingeList}
             selectedPanelId={selectedPanelId}

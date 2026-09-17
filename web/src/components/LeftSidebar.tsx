@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { PackagingModel, CardboardProfile, BoundingBox2D } from '../engine/types';
+import type { PackagingModel, CardboardProfile, BoundingBox2D, DielineResult } from '../engine/types';
 import type { HingeControlInfo } from '../engine/foldingEngine';
 import { ParameterPanel } from './ParameterPanel';
 import { FlapAngleInspector } from './FlapAngleInspector';
@@ -12,6 +12,7 @@ interface LeftSidebarProps {
   onParamChange: (key: string, value: number) => void;
   onProfileChange: (profile: CardboardProfile) => void;
   bounds: BoundingBox2D;
+  dieline?: DielineResult;
   activeMode: '2d' | '3d' | 'imposition';
   hinges?: HingeControlInfo[];
   selectedPanelId?: string | null;
@@ -30,6 +31,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onParamChange,
   onProfileChange,
   bounds,
+  dieline,
   activeMode,
   hinges = [],
   selectedPanelId = null,
@@ -267,6 +269,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             onParamChange={onParamChange}
             onProfileChange={onProfileChange}
             bounds={bounds}
+            dieline={dieline}
             isCollapsed={false}
             activeMode={activeMode}
           />
