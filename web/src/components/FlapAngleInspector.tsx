@@ -7,6 +7,7 @@ import {
   Search,
   MousePointerClick,
   Info,
+  ChevronLeft,
 } from 'lucide-react';
 
 interface FlapAngleInspectorProps {
@@ -17,6 +18,7 @@ interface FlapAngleInspectorProps {
   onResetAngle: (panelId: string) => void;
   onResetAll: () => void;
   onClose?: () => void;
+  onToggleCollapse?: () => void;
   isOpen?: boolean;
   embedded?: boolean;
 }
@@ -39,6 +41,7 @@ export const FlapAngleInspector: React.FC<FlapAngleInspectorProps> = ({
   onResetAngle,
   onResetAll,
   onClose,
+  onToggleCollapse,
   isOpen = true,
   embedded = false,
 }) => {
@@ -135,6 +138,17 @@ export const FlapAngleInspector: React.FC<FlapAngleInspectorProps> = ({
             >
               {modifiedCount} modif.
             </span>
+          )}
+          {onToggleCollapse && (
+            <button
+              type="button"
+              className="cad-tool-btn"
+              style={{ width: 22, height: 22 }}
+              onClick={onToggleCollapse}
+              title="Recolher Painel de Dobras"
+            >
+              <ChevronLeft size={14} />
+            </button>
           )}
           {!embedded && onClose && (
             <button

@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import type { PackagingModel, CardboardProfile, BoundingBox2D } from '../engine/types';
 import { STANDARD_PROFILES } from '../engine/types';
 import type { HingeControlInfo } from '../engine/foldingEngine';
-import { FlapAngleInspector } from './FlapAngleInspector';
 import {
   Sliders,
   Layers,
@@ -52,10 +51,10 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   onResetAngle,
   onResetAllAngles,
 }) => {
-  const [localTab, setLocalTab] = useState<'dims' | 'mat' | 'folds'>('dims');
-  const activeTab = activeSubTab || localTab;
+  const [localTab, setLocalTab] = useState<'dims' | 'mat'>('dims');
+  const activeTab = (activeSubTab === 'dims' || activeSubTab === 'mat' ? activeSubTab : null) || localTab;
 
-  const handleTabChange = (tab: 'dims' | 'mat' | 'folds') => {
+  const handleTabChange = (tab: 'dims' | 'mat') => {
     setLocalTab(tab);
     onSubTabChange?.(tab);
   };
@@ -109,10 +108,12 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
     <aside
       className="cad-panel"
       style={{
-        width: 'var(--cad-sidebar-width)',
+        width: '100%',
         height: '100%',
-        borderRight: '1px solid var(--cad-border-subtle)',
+        borderRight: 'none',
         userSelect: 'none',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* 1. Header do Painel de Propriedades */}
@@ -301,43 +302,6 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
           <span>Material</span>
         </button>
 
-        {(activeMode === '3d' || hinges.length > 0) && (
-          <button
-            type="button"
-            onClick={() => handleTabChange('folds')}
-            className="cad-btn"
-            style={{
-              flex: 1,
-              padding: '5px 0',
-              fontSize: 11,
-              fontWeight: 600,
-              background: activeTab === 'folds' ? 'var(--cad-bg-input)' : 'transparent',
-              borderColor: activeTab === 'folds' ? 'var(--cad-accent-border)' : 'transparent',
-              color: activeTab === 'folds' ? 'var(--cad-accent)' : 'var(--cad-text-muted)',
-              position: 'relative',
-            }}
-            title="Editar Ângulos das Abas em Graus (ArtiosCAD / Prinect)"
-          >
-            <Sliders size={12} />
-            <span>Dobras (°)</span>
-            {modifiedCount > 0 && (
-              <span
-                className="cad-mono"
-                style={{
-                  fontSize: 8.5,
-                  fontWeight: 800,
-                  padding: '0 4px',
-                  borderRadius: 6,
-                  background: 'var(--cad-accent)',
-                  color: '#000000',
-                  marginLeft: 3,
-                }}
-              >
-                {modifiedCount}
-              </span>
-            )}
-          </button>
-        )}
       </div>
 
       {/* 5. Conteúdo com Scroll */}
@@ -345,23 +309,13 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: activeTab === 'folds' ? 0 : '14px',
+          padding: '14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: activeTab === 'folds' ? 0 : 16,
+          gap: 16,
         }}
       >
-        {activeTab === 'folds' ? (
-          <FlapAngleInspector
-            embedded
-            hinges={hinges}
-            selectedPanelId={selectedPanelId}
-            onSelectPanel={onSelectPanel || (() => {})}
-            onAngleChange={onAngleChange || (() => {})}
-            onResetAngle={onResetAngle || (() => {})}
-            onResetAll={onResetAllAngles || (() => {})}
-          />
-        ) : activeTab === 'dims' ? (
+        {activeTab === 'dims' ? (
           /* Parâmetros Dimensionais */
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {model.paramDefs.map((def) => {

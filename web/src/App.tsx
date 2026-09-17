@@ -14,7 +14,7 @@ import {
 
 import type { ActiveTab } from './components/Header';
 import { Header } from './components/Header';
-import { ParameterPanel } from './components/ParameterPanel';
+import { LeftSidebar } from './components/LeftSidebar';
 import { CadViewer2D } from './components/CadViewer2D';
 import { FoldingViewer3D } from './components/FoldingViewer3D';
 import { ImpositionView } from './components/ImpositionView';
@@ -33,10 +33,13 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
 
   // Estados do Inspetor de Dobras das Abas (ArtiosCAD / Prinect) integrado ao painel esquerdo
-  const [sidebarTab, setSidebarTab] = useState<'dims' | 'mat' | 'folds'>('dims');
   const [customAngles, setCustomAngles] = useState<Record<string, number>>({});
   const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
   const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
+
+  // Estados de Recolhimento da Barra Lateral Esquerda CAD (Independente para Parâmetros e Dobras)
+  const [isParamsCollapsed, setIsParamsCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [isFoldsCollapsed, setIsFoldsCollapsed] = useState(false);
 
   // Handlers para controle individual de ângulos de dobra (em graus)
   const handleAngleChange = (panelId: string, angleDeg: number) => {
@@ -59,15 +62,13 @@ export const App: React.FC = () => {
   };
 
   const handleOpenFoldInspector = () => {
-    setIsSidebarCollapsed(false);
-    setSidebarTab('folds');
+    setIsFoldsCollapsed((prev) => !prev);
   };
 
   // Estados de Visualização & Viewport CAD
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [cursorMm, setCursorMm] = useState({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(1.0);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
     const handleResize = () => {
@@ -241,10 +242,10 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Painel de Parâmetros e Propriedades (CAD Inspector) */}
+        {/* Barra Lateral Esquerda CAD (Parâmetros + Ângulos de Dobra Empilhados e Recolhíveis) */}
         <div
           style={
-            isMobile && !isSidebarCollapsed
+            isMobile && (!isParamsCollapsed || (activeTab === '3d' && !isFoldsCollapsed))
               ? {
                   position: 'absolute',
                   top: 0,
@@ -258,24 +259,24 @@ export const App: React.FC = () => {
               : { display: 'flex', height: '100%' }
           }
         >
-          <ParameterPanel
+          <LeftSidebar
             model={currentModel}
             params={params}
             selectedProfileId={selectedProfile.id}
             onParamChange={handleParamChange}
             onProfileChange={setSelectedProfile}
             bounds={dieline.bounds}
-            isCollapsed={isSidebarCollapsed}
-            onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
             activeMode={activeTab}
-            activeSubTab={sidebarTab}
-            onSubTabChange={setSidebarTab}
             hinges={hingeList}
             selectedPanelId={selectedPanelId}
             onSelectPanel={setSelectedPanelId}
             onAngleChange={handleAngleChange}
             onResetAngle={handleResetAngle}
             onResetAllAngles={handleResetAllAngles}
+            isParamsCollapsed={isParamsCollapsed}
+            onToggleParamsCollapse={() => setIsParamsCollapsed((prev) => !prev)}
+            isFoldsCollapsed={isFoldsCollapsed}
+            onToggleFoldsCollapse={() => setIsFoldsCollapsed((prev) => !prev)}
           />
         </div>
 
@@ -300,13 +301,12 @@ export const App: React.FC = () => {
               onSelectPanel={(panelId) => {
                 setSelectedPanelId(panelId);
                 if (panelId) {
-                  setIsSidebarCollapsed(false);
-                  setSidebarTab('folds');
+                  setIsFoldsCollapsed(false);
                 }
               }}
               onHingeListUpdate={setHingeList}
               onOpenFoldInspector={handleOpenFoldInspector}
-              isFoldInspectorActive={!isSidebarCollapsed && sidebarTab === 'folds'}
+              isFoldInspectorActive={!isFoldsCollapsed}
             />
           )}
 
