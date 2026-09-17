@@ -16,8 +16,9 @@ interface FlapAngleInspectorProps {
   onAngleChange: (panelId: string, angleDeg: number) => void;
   onResetAngle: (panelId: string) => void;
   onResetAll: () => void;
-  onClose: () => void;
-  isOpen: boolean;
+  onClose?: () => void;
+  isOpen?: boolean;
+  embedded?: boolean;
 }
 
 const PRESET_ANGLES = [
@@ -38,7 +39,8 @@ export const FlapAngleInspector: React.FC<FlapAngleInspectorProps> = ({
   onResetAngle,
   onResetAll,
   onClose,
-  isOpen,
+  isOpen = true,
+  embedded = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -61,32 +63,44 @@ export const FlapAngleInspector: React.FC<FlapAngleInspectorProps> = ({
     );
   }, [hinges, searchTerm]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !embedded) return null;
 
   return (
     <div
-      style={{
-        position: 'absolute',
-        top: 14,
-        right: 14,
-        bottom: 14,
-        width: 380,
-        maxWidth: 'calc(100% - 28px)',
-        background: 'var(--cad-bg-panel)',
-        border: '1px solid var(--cad-border-default)',
-        borderRadius: 'var(--cad-radius-md)',
-        boxShadow: 'var(--cad-shadow-panel)',
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 20,
-        overflow: 'hidden',
-        userSelect: 'none',
-      }}
+      style={
+        embedded
+          ? {
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              userSelect: 'none',
+              background: 'transparent',
+            }
+          : {
+              position: 'absolute',
+              top: 14,
+              right: 14,
+              bottom: 14,
+              width: 380,
+              maxWidth: 'calc(100% - 28px)',
+              background: 'var(--cad-bg-panel)',
+              border: '1px solid var(--cad-border-default)',
+              borderRadius: 'var(--cad-radius-md)',
+              boxShadow: 'var(--cad-shadow-panel)',
+              display: 'flex',
+              flexDirection: 'column',
+              zIndex: 20,
+              overflow: 'hidden',
+              userSelect: 'none',
+            }
+      }
     >
       {/* 1. Header do Inspetor */}
       <div
         style={{
-          padding: '12px 16px',
+          padding: embedded ? '10px 14px' : '12px 16px',
           background: 'var(--cad-bg-header)',
           borderBottom: '1px solid var(--cad-border-subtle)',
           display: 'flex',
@@ -95,13 +109,13 @@ export const FlapAngleInspector: React.FC<FlapAngleInspectorProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Sliders size={15} color="var(--cad-accent)" />
+          <Sliders size={14} color="var(--cad-accent)" />
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: 'var(--cad-text-primary)' }}>
               ÂNGULOS DE DOBRA (GRAUS)
             </div>
-            <div style={{ fontSize: 10, color: 'var(--cad-text-muted)' }}>
-              Padrão ArtiosCAD & Prinect Package Design
+            <div style={{ fontSize: 9.5, color: 'var(--cad-text-muted)' }}>
+              ArtiosCAD / Prinect Package Design
             </div>
           </div>
         </div>
@@ -122,15 +136,17 @@ export const FlapAngleInspector: React.FC<FlapAngleInspectorProps> = ({
               {modifiedCount} modif.
             </span>
           )}
-          <button
-            type="button"
-            className="cad-tool-btn"
-            style={{ width: 24, height: 24 }}
-            onClick={onClose}
-            title="Fechar Inspetor"
-          >
-            <X size={14} />
-          </button>
+          {!embedded && onClose && (
+            <button
+              type="button"
+              className="cad-tool-btn"
+              style={{ width: 24, height: 24 }}
+              onClick={onClose}
+              title="Fechar Inspetor"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
 

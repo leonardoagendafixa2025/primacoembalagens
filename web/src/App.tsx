@@ -3,6 +3,7 @@ import type { PackagingModel, CardboardProfile } from './engine/types';
 import { STANDARD_PROFILES } from './engine/types';
 import { MODELS, getModelById } from './engine/models';
 import { exportToDXF, exportToSVG } from './engine/dxfExporter';
+import type { HingeControlInfo } from './engine/foldingEngine';
 import type { SavedProject } from './lib/supabaseClient';
 import {
   getSavedProjects,
@@ -30,6 +31,37 @@ export const App: React.FC = () => {
     Ep: STANDARD_PROFILES[0].thickness,
   }));
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
+
+  // Estados do Inspetor de Dobras das Abas (ArtiosCAD / Prinect) integrado ao painel esquerdo
+  const [sidebarTab, setSidebarTab] = useState<'dims' | 'mat' | 'folds'>('dims');
+  const [customAngles, setCustomAngles] = useState<Record<string, number>>({});
+  const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
+  const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
+
+  // Handlers para controle individual de ângulos de dobra (em graus)
+  const handleAngleChange = (panelId: string, angleDeg: number) => {
+    setCustomAngles((prev) => ({
+      ...prev,
+      [panelId]: angleDeg,
+    }));
+  };
+
+  const handleResetAngle = (panelId: string) => {
+    setCustomAngles((prev) => {
+      const next = { ...prev };
+      delete next[panelId];
+      return next;
+    });
+  };
+
+  const handleResetAllAngles = () => {
+    setCustomAngles({});
+  };
+
+  const handleOpenFoldInspector = () => {
+    setIsSidebarCollapsed(false);
+    setSidebarTab('folds');
+  };
 
   // Estados de Visualização & Viewport CAD
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
@@ -75,6 +107,9 @@ export const App: React.FC = () => {
   // Quando troca o modelo, redefine os parâmetros para os padrões dele
   const handleSelectModel = (model: PackagingModel) => {
     setCurrentModel(model);
+    setCustomAngles({});
+    setSelectedPanelId(null);
+    setHingeList([]);
     setParams({
       L: model.defaultParams?.L || 300,
       B: model.defaultParams?.B || 200,
@@ -232,6 +267,15 @@ export const App: React.FC = () => {
             bounds={dieline.bounds}
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+            activeMode={activeTab}
+            activeSubTab={sidebarTab}
+            onSubTabChange={setSidebarTab}
+            hinges={hingeList}
+            selectedPanelId={selectedPanelId}
+            onSelectPanel={setSelectedPanelId}
+            onAngleChange={handleAngleChange}
+            onResetAngle={handleResetAngle}
+            onResetAllAngles={handleResetAllAngles}
           />
         </div>
 
@@ -251,6 +295,18 @@ export const App: React.FC = () => {
               dieline={dieline}
               params={params}
               profile={selectedProfile}
+              customAngles={customAngles}
+              selectedPanelId={selectedPanelId}
+              onSelectPanel={(panelId) => {
+                setSelectedPanelId(panelId);
+                if (panelId) {
+                  setIsSidebarCollapsed(false);
+                  setSidebarTab('folds');
+                }
+              }}
+              onHingeListUpdate={setHingeList}
+              onOpenFoldInspector={handleOpenFoldInspector}
+              isFoldInspectorActive={!isSidebarCollapsed && sidebarTab === 'folds'}
             />
           )}
 
