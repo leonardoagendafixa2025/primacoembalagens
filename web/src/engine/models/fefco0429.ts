@@ -51,10 +51,11 @@ function intersectSegments(s0p0: Pt2D, s0p1: Pt2D, s1p0: Pt2D, s1p1: Pt2D): Pt2D
   if (Math.abs(den) < 1e-10) return null;
   const r = ((s0p0.y - s1p0.y) * (s1p1.x - s1p0.x) - (s0p0.x - s1p0.x) * (s1p1.y - s1p0.y)) / den;
   const s = ((s0p0.y - s1p0.y) * (s0p1.x - s0p0.x) - (s0p0.x - s1p0.x) * (s0p1.y - s0p0.y)) / den;
-  if (r >= 0.0 && r <= 1.0 && s >= 0.0 && s <= 1.0) {
+  if (r >= -1e-5 && r <= 1.0 + 1e-5 && s >= -1e-5 && s <= 1.0 + 1e-5) {
+    const clampedR = Math.max(0, Math.min(1, r));
     return {
-      x: s0p0.x + r * (s0p1.x - s0p0.x),
-      y: s0p0.y + r * (s0p1.y - s0p0.y),
+      x: s0p0.x + clampedR * (s0p1.x - s0p0.x),
+      y: s0p0.y + clampedR * (s0p1.y - s0p0.y),
     };
   }
   return null;
