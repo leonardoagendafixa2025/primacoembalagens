@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { DielineResult, PackagingModel } from '../engine/types';
-import { ZoomIn, ZoomOut, Maximize2, Grid, Ruler, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Grid, Ruler, RotateCcw, Crop, Crosshair } from 'lucide-react';
+import { generateCadAnnotations } from '../engine/cadMarks';
 
 interface CadViewer2DProps {
   dieline: DielineResult;
@@ -21,6 +22,8 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
   // Opções visuais
   const [showGrid, setShowGrid] = useState(true);
   const [showDimensions, setShowDimensions] = useState(true);
+  const [showBleed, setShowBleed] = useState(true);
+  const [showRegMarks, setShowRegMarks] = useState(true);
   const [mouseMm, setMouseMm] = useState({ x: 0, y: 0 });
 
   // Ajusta a visualização para enquadrar perfeitamente a faca
@@ -151,6 +154,72 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
       ctx.moveTo(axisY, 0);
       ctx.lineTo(axisY, height);
       ctx.stroke();
+    }
+
+    // 3.5. Camadas de Sangria (Bleed) e Cruzes de Registro Óptico CNC
+    if (dieline.bounds && (showBleed || showRegMarks)) {
+      const annotations = generateCadAnnotations(dieline.bounds, { bleedOffset: 5 });
+
+      // Sangria Gráfica (+5mm)
+      if (showBleed) {
+        ctx.save();
+        ctx.strokeStyle = '#22c55e'; // Verde Sangria
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.035)';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([4 * Math.max(0.5, zoom * 0.4), 4 * Math.max(0.5, zoom * 0.4)]);
+
+        const b = annotations.bleedBox;
+        const sx = toScreenX(b.minX);
+        const sy = toScreenY(b.maxY);
+        const sw = b.width * zoom;
+        const sh = b.height * zoom;
+
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.strokeRect(sx, sy, sw, sh);
+
+        // Rótulo técnico no canto superior da sangria
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#22c55e';
+        ctx.textAlign = 'left';
+        ctx.fillText('SANGRIA (+5mm)', sx + 4, sy - 5);
+        ctx.restore();
+      }
+
+      // Marcas de Registro Óptico CNC
+      if (showRegMarks) {
+        ctx.save();
+        ctx.strokeStyle = '#c084fc'; // Magenta / Roxo Registro
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([]);
+
+        for (const rm of annotations.registrationMarks) {
+          const scx = toScreenX(rm.center.x);
+          const scy = toScreenY(rm.center.y);
+          const sr = Math.max(1.5, rm.radius * zoom);
+
+          // Círculo central do alvo
+          ctx.beginPath();
+          ctx.arc(scx, scy, sr, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Segmentos da cruz de registro
+          for (const seg of rm.segments) {
+            ctx.beginPath();
+            ctx.moveTo(toScreenX(seg.x0), toScreenY(seg.y0));
+            ctx.lineTo(toScreenX(seg.x1), toScreenY(seg.y1));
+            ctx.stroke();
+          }
+        }
+
+        // Marcas nos centros cardeais
+        for (const cm of annotations.centerMarks) {
+          ctx.beginPath();
+          ctx.moveTo(toScreenX(cm.x0), toScreenY(cm.y0));
+          ctx.lineTo(toScreenX(cm.x1), toScreenY(cm.y1));
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
     }
 
     // 4. Desenho dos Segmentos da Faca
@@ -294,7 +363,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
       ctx.fillText('X', ox + 28, oy + 3);
       ctx.fillText('Y', ox - 2, oy - 28);
     }
-  }, [dieline, zoom, pan, showGrid, showDimensions]);
+  }, [dieline, zoom, pan, showGrid, showDimensions, showBleed, showRegMarks]);
 
   // Interação Mouse: Drag Pan
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -521,6 +590,24 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
 
         <button
           type="button"
+          className={`cad-tool-btn cad-tooltip ${showBleed ? 'active' : ''}`}
+          data-tooltip={showBleed ? 'Ocultar Sangria (Bleed)' : 'Exibir Sangria (+5mm)'}
+          onClick={() => setShowBleed((b) => !b)}
+        >
+          <Crop size={15} />
+        </button>
+
+        <button
+          type="button"
+          className={`cad-tool-btn cad-tooltip ${showRegMarks ? 'active' : ''}`}
+          data-tooltip={showRegMarks ? 'Ocultar Registro CNC' : 'Exibir Registro CNC'}
+          onClick={() => setShowRegMarks((m) => !m)}
+        >
+          <Crosshair size={15} />
+        </button>
+
+        <button
+          type="button"
           className="cad-tool-btn cad-tooltip"
           data-tooltip="Resetar Visão"
           onClick={() => {
@@ -570,7 +657,21 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 14, height: 2, background: '#f59e0b', borderRadius: 1 }} />
-          <span>Cotas Técnicas</span>
+          <span>Cotas</span>
+        </div>
+
+        <div style={{ width: 1, height: 12, background: 'var(--cad-border-subtle)' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 14, height: 2, borderTop: '2px dashed #22c55e' }} />
+          <span>Sangria (+5mm)</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid #c084fc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 3, height: 3, background: '#c084fc', borderRadius: '50%' }} />
+          </div>
+          <span>Registro CNC</span>
         </div>
       </div>
     </div>
