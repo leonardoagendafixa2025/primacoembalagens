@@ -3,7 +3,7 @@ import type { PackagingModel, CardboardProfile, BoundingBox2D } from '../engine/
 import type { HingeControlInfo } from '../engine/foldingEngine';
 import { ParameterPanel } from './ParameterPanel';
 import { FlapAngleInspector } from './FlapAngleInspector';
-import { ChevronRight, Sliders } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Sliders } from 'lucide-react';
 
 interface LeftSidebarProps {
   model: PackagingModel;
@@ -19,10 +19,8 @@ interface LeftSidebarProps {
   onAngleChange?: (panelId: string, angleDeg: number) => void;
   onResetAngle?: (panelId: string) => void;
   onResetAllAngles?: () => void;
-  isParamsCollapsed: boolean;
-  onToggleParamsCollapse: () => void;
-  isFoldsCollapsed: boolean;
-  onToggleFoldsCollapse: () => void;
+  activePanel: 'params' | 'folds' | null;
+  onSelectActivePanel: (panel: 'params' | 'folds' | null) => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -39,23 +37,20 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onAngleChange,
   onResetAngle,
   onResetAllAngles,
-  isParamsCollapsed,
-  onToggleParamsCollapse,
-  isFoldsCollapsed,
-  onToggleFoldsCollapse,
+  activePanel,
+  onSelectActivePanel,
 }) => {
   const is3D = activeMode === '3d';
-  const showFoldsPanel = is3D;
 
   const modifiedCount = useMemo(() => {
     return hinges.filter((h) => h.isModified).length;
   }, [hinges]);
 
-  // CASO 1: Ambos recolhidos (ou Parâmetros recolhido quando fora do 3D)
-  // Exibe a barra vertical esguia de 32px com abas verticais para cada inspetor
-  const isBothCollapsed = isParamsCollapsed && (!showFoldsPanel || isFoldsCollapsed);
+  // Se estiver fora do 3D e o painel ativo for 'folds', força 'params'
+  const currentPanel = !is3D && activePanel === 'folds' ? 'params' : activePanel;
 
-  if (isBothCollapsed) {
+  // ESTADO 1: Recolhido (Barra lateral de 32px com abas verticais)
+  if (!currentPanel) {
     return (
       <aside
         style={{
@@ -73,14 +68,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       >
         {/* Aba Vertical 1: Parâmetros CAD */}
         <div
-          onClick={onToggleParamsCollapse}
-          title="Expandir Parâmetros CAD"
+          onClick={() => onSelectActivePanel('params')}
+          title="Abrir Inspetor de Parâmetros CAD"
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             cursor: 'pointer',
-            padding: '4px 0',
+            padding: '6px 0',
             width: '100%',
           }}
         >
@@ -104,7 +99,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         </div>
 
         {/* Separador e Aba Vertical 2: Ângulos de Dobra (abaixo de Parâmetros CAD no 3D) */}
-        {showFoldsPanel && (
+        {is3D && (
           <>
             <div
               style={{
@@ -115,14 +110,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               }}
             />
             <div
-              onClick={onToggleFoldsCollapse}
-              title="Expandir Ângulos de Dobra (Graus)"
+              onClick={() => onSelectActivePanel('folds')}
+              title="Abrir Ângulos de Dobra (Graus)"
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 cursor: 'pointer',
-                padding: '4px 0',
+                padding: '6px 0',
                 width: '100%',
               }}
             >
@@ -166,7 +161,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     );
   }
 
-  // CASO 2: Pelo menos um painel está expandido (largura de 340px)
+  // ESTADO 2: Expandido (Largura CAD de 340px com abas superiores limpas e sem conflito)
   return (
     <aside
       className="cad-panel"
@@ -181,46 +176,90 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         zIndex: 30,
       }}
     >
-      {/* SEÇÃO SUPERIOR: PARÂMETROS CAD */}
-      {isParamsCollapsed ? (
-        /* Barra compacta recolhida de Parâmetros CAD no topo */
-        <div
-          onClick={onToggleParamsCollapse}
-          title="Expandir Parâmetros CAD"
-          style={{
-            height: 38,
-            padding: '0 12px',
-            background: 'var(--cad-bg-header)',
-            borderBottom: '1px solid var(--cad-border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Sliders size={13} color="var(--cad-accent)" />
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: 'var(--cad-text-muted)' }}>
-              PARÂMETROS CAD
-            </span>
-          </div>
-          <button type="button" className="cad-tool-btn" style={{ width: 22, height: 22 }}>
-            <ChevronRight size={13} />
+      {/* Cabeçalho Unificado com Seleção de Aba e Botão de Recolher */}
+      <div
+        style={{
+          padding: '8px 10px 8px 12px',
+          background: 'var(--cad-bg-header)',
+          borderBottom: '1px solid var(--cad-border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+        }}
+      >
+        {/* Abas de Navegação */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+          <button
+            type="button"
+            onClick={() => onSelectActivePanel('params')}
+            className="cad-btn"
+            style={{
+              padding: '4px 9px',
+              fontSize: 11,
+              fontWeight: 700,
+              background: currentPanel === 'params' ? 'var(--cad-bg-input)' : 'transparent',
+              borderColor: currentPanel === 'params' ? 'var(--cad-accent-border)' : 'transparent',
+              color: currentPanel === 'params' ? 'var(--cad-accent)' : 'var(--cad-text-muted)',
+              gap: 6,
+            }}
+          >
+            <Sliders size={12} />
+            <span>Parâmetros</span>
           </button>
+
+          {is3D && (
+            <button
+              type="button"
+              onClick={() => onSelectActivePanel('folds')}
+              className="cad-btn"
+              style={{
+                padding: '4px 9px',
+                fontSize: 11,
+                fontWeight: 700,
+                background: currentPanel === 'folds' ? 'var(--cad-bg-input)' : 'transparent',
+                borderColor: currentPanel === 'folds' ? 'var(--cad-accent-border)' : 'transparent',
+                color: currentPanel === 'folds' ? 'var(--cad-accent)' : 'var(--cad-text-muted)',
+                gap: 6,
+                position: 'relative',
+              }}
+            >
+              <Sliders size={12} />
+              <span>Dobras (°)</span>
+              {modifiedCount > 0 && (
+                <span
+                  className="cad-mono"
+                  style={{
+                    fontSize: 8.5,
+                    fontWeight: 800,
+                    padding: '0 4px',
+                    borderRadius: 6,
+                    background: 'var(--cad-accent)',
+                    color: '#000000',
+                  }}
+                >
+                  {modifiedCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
-      ) : (
-        /* Conteúdo completo de Parâmetros CAD */
-        <div
-          style={{
-            flex: showFoldsPanel && !isFoldsCollapsed ? 1 : 1,
-            height: showFoldsPanel && !isFoldsCollapsed ? '50%' : '100%',
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}
+
+        {/* Botão de Recolher para a Barra Lateral */}
+        <button
+          type="button"
+          className="cad-tool-btn"
+          style={{ width: 24, height: 24, flexShrink: 0, marginLeft: 6 }}
+          onClick={() => onSelectActivePanel(null)}
+          title="Recolher Painel Lateral"
         >
+          <ChevronLeft size={14} />
+        </button>
+      </div>
+
+      {/* Conteúdo 100% Dedicado à Aba Ativa (Zero Conflito, Zero Sobreposição!) */}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {currentPanel === 'params' ? (
           <ParameterPanel
             model={model}
             params={params}
@@ -229,84 +268,20 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             onProfileChange={onProfileChange}
             bounds={bounds}
             isCollapsed={false}
-            onToggleCollapse={onToggleParamsCollapse}
             activeMode={activeMode}
           />
-        </div>
-      )}
-
-      {/* SEÇÃO INFERIOR: ÂNGULOS DE DOBRA (Abaixo de Parâmetros CAD no 3D) */}
-      {showFoldsPanel && (
-        <>
-          {isFoldsCollapsed ? (
-            /* Barra compacta recolhida de Ângulos de Dobra no rodapé da barra lateral */
-            <div
-              onClick={onToggleFoldsCollapse}
-              title="Expandir Ângulos de Dobra (Graus)"
-              style={{
-                height: 38,
-                padding: '0 12px',
-                background: 'var(--cad-bg-header)',
-                borderTop: '1px solid var(--cad-border-subtle)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Sliders size={13} color="var(--cad-accent)" />
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: 'var(--cad-text-primary)' }}>
-                  ÂNGULOS DE DOBRA (GRAUS)
-                </span>
-                {modifiedCount > 0 && (
-                  <span
-                    className="cad-mono"
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 800,
-                      padding: '1px 5px',
-                      borderRadius: 8,
-                      background: 'var(--cad-accent)',
-                      color: '#000000',
-                    }}
-                  >
-                    {modifiedCount}
-                  </span>
-                )}
-              </div>
-              <button type="button" className="cad-tool-btn" style={{ width: 22, height: 22 }}>
-                <ChevronRight size={13} />
-              </button>
-            </div>
-          ) : (
-            /* Conteúdo completo de Ângulos de Dobra */
-            <div
-              style={{
-                flex: !isParamsCollapsed ? 1 : 1,
-                height: !isParamsCollapsed ? '50%' : 'calc(100% - 38px)',
-                minHeight: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                borderTop: !isParamsCollapsed ? '1px solid var(--cad-border-default)' : 'none',
-              }}
-            >
-              <FlapAngleInspector
-                embedded
-                hinges={hinges}
-                selectedPanelId={selectedPanelId}
-                onSelectPanel={onSelectPanel || (() => {})}
-                onAngleChange={onAngleChange || (() => {})}
-                onResetAngle={onResetAngle || (() => {})}
-                onResetAll={onResetAllAngles || (() => {})}
-                onToggleCollapse={onToggleFoldsCollapse}
-              />
-            </div>
-          )}
-        </>
-      )}
+        ) : (
+          <FlapAngleInspector
+            embedded
+            hinges={hinges}
+            selectedPanelId={selectedPanelId}
+            onSelectPanel={onSelectPanel || (() => {})}
+            onAngleChange={onAngleChange || (() => {})}
+            onResetAngle={onResetAngle || (() => {})}
+            onResetAll={onResetAllAngles || (() => {})}
+          />
+        )}
+      </div>
     </aside>
   );
 };

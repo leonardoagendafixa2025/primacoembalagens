@@ -37,9 +37,10 @@ export const App: React.FC = () => {
   const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
   const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
 
-  // Estados de Recolhimento da Barra Lateral Esquerda CAD (Independente para Parâmetros e Dobras)
-  const [isParamsCollapsed, setIsParamsCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
-  const [isFoldsCollapsed, setIsFoldsCollapsed] = useState(false);
+  // Estado do Painel Ativo na Barra Lateral Esquerda ('params', 'folds' ou null quando recolhida)
+  const [sidebarPanel, setSidebarPanel] = useState<'params' | 'folds' | null>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? null : 'params'
+  );
 
   // Handlers para controle individual de ângulos de dobra (em graus)
   const handleAngleChange = (panelId: string, angleDeg: number) => {
@@ -62,7 +63,7 @@ export const App: React.FC = () => {
   };
 
   const handleOpenFoldInspector = () => {
-    setIsFoldsCollapsed((prev) => !prev);
+    setSidebarPanel((prev) => (prev === 'folds' ? null : 'folds'));
   };
 
   // Estados de Visualização & Viewport CAD
@@ -228,12 +229,9 @@ export const App: React.FC = () => {
       {/* 2. Workspace Central */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         {/* Backdrop para mobile quando painel estiver aberto */}
-        {isMobile && (!isParamsCollapsed || (activeTab === '3d' && !isFoldsCollapsed)) && (
+        {isMobile && sidebarPanel !== null && (
           <div
-            onClick={() => {
-              setIsParamsCollapsed(true);
-              setIsFoldsCollapsed(true);
-            }}
+            onClick={() => setSidebarPanel(null)}
             style={{
               position: 'absolute',
               inset: 0,
@@ -245,10 +243,10 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Barra Lateral Esquerda CAD (Parâmetros + Ângulos de Dobra Empilhados e Recolhíveis) */}
+        {/* Barra Lateral Esquerda CAD (Parâmetros e Ângulos de Dobra sem conflito) */}
         <div
           style={
-            isMobile && (!isParamsCollapsed || (activeTab === '3d' && !isFoldsCollapsed))
+            isMobile && sidebarPanel !== null
               ? {
                   position: 'absolute',
                   top: 0,
@@ -276,10 +274,8 @@ export const App: React.FC = () => {
             onAngleChange={handleAngleChange}
             onResetAngle={handleResetAngle}
             onResetAllAngles={handleResetAllAngles}
-            isParamsCollapsed={isParamsCollapsed}
-            onToggleParamsCollapse={() => setIsParamsCollapsed((prev) => !prev)}
-            isFoldsCollapsed={isFoldsCollapsed}
-            onToggleFoldsCollapse={() => setIsFoldsCollapsed((prev) => !prev)}
+            activePanel={sidebarPanel}
+            onSelectActivePanel={setSidebarPanel}
           />
         </div>
 
@@ -304,12 +300,12 @@ export const App: React.FC = () => {
               onSelectPanel={(panelId) => {
                 setSelectedPanelId(panelId);
                 if (panelId) {
-                  setIsFoldsCollapsed(false);
+                  setSidebarPanel('folds');
                 }
               }}
               onHingeListUpdate={setHingeList}
               onOpenFoldInspector={handleOpenFoldInspector}
-              isFoldInspectorActive={!isFoldsCollapsed}
+              isFoldInspectorActive={sidebarPanel === 'folds'}
             />
           )}
 
