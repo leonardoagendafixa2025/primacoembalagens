@@ -39,7 +39,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
   // Lista interna de vincos para contagem e status
   const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
-  const modifiedCount = Object.keys(customAngles).length;
 
   // Refs Three.js
   const sceneRef = useRef<THREE.Scene | null>(null);

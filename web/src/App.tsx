@@ -228,9 +228,12 @@ export const App: React.FC = () => {
       {/* 2. Workspace Central */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         {/* Backdrop para mobile quando painel estiver aberto */}
-        {isMobile && !isSidebarCollapsed && (
+        {isMobile && (!isParamsCollapsed || (activeTab === '3d' && !isFoldsCollapsed)) && (
           <div
-            onClick={() => setIsSidebarCollapsed(true)}
+            onClick={() => {
+              setIsParamsCollapsed(true);
+              setIsFoldsCollapsed(true);
+            }}
             style={{
               position: 'absolute',
               inset: 0,

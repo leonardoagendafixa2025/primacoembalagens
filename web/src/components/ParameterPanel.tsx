@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import type { PackagingModel, CardboardProfile, BoundingBox2D } from '../engine/types';
 import { STANDARD_PROFILES } from '../engine/types';
-import type { HingeControlInfo } from '../engine/foldingEngine';
 import {
   Sliders,
   Layers,
@@ -20,16 +19,9 @@ interface ParameterPanelProps {
   bounds: BoundingBox2D;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
-  // Integração com Dobras 3D no padrão Inspetor de Parâmetros
   activeMode?: '2d' | '3d' | 'imposition';
-  activeSubTab?: 'dims' | 'mat' | 'folds';
-  onSubTabChange?: (tab: 'dims' | 'mat' | 'folds') => void;
-  hinges?: HingeControlInfo[];
-  selectedPanelId?: string | null;
-  onSelectPanel?: (panelId: string | null) => void;
-  onAngleChange?: (panelId: string, angleDeg: number) => void;
-  onResetAngle?: (panelId: string) => void;
-  onResetAllAngles?: () => void;
+  activeSubTab?: 'dims' | 'mat';
+  onSubTabChange?: (tab: 'dims' | 'mat') => void;
 }
 
 export const ParameterPanel: React.FC<ParameterPanelProps> = ({
@@ -41,27 +33,16 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   bounds,
   isCollapsed = false,
   onToggleCollapse,
-  activeMode = '2d',
   activeSubTab,
   onSubTabChange,
-  hinges = [],
-  selectedPanelId = null,
-  onSelectPanel,
-  onAngleChange,
-  onResetAngle,
-  onResetAllAngles,
 }) => {
   const [localTab, setLocalTab] = useState<'dims' | 'mat'>('dims');
-  const activeTab = (activeSubTab === 'dims' || activeSubTab === 'mat' ? activeSubTab : null) || localTab;
+  const activeTab = activeSubTab || localTab;
 
   const handleTabChange = (tab: 'dims' | 'mat') => {
     setLocalTab(tab);
     onSubTabChange?.(tab);
   };
-
-  const modifiedCount = useMemo(() => {
-    return hinges.filter((h) => h.isModified).length;
-  }, [hinges]);
 
   if (isCollapsed) {
     return (
