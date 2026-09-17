@@ -95,10 +95,24 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 1.5 Cura universal de al├¡vios de vinco industriais, degraus e recuos (Relief Notches & Crease Setback Healer)
-  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente s├úo interrompidos
-  // por furos/entalhes de al├¡vio circular (relief punch), recuados por toler├óncia de fabrica├º├úo (setback <= 3.5mm),
-  // ou apresentam micro-defeitos de corte em jun├º├Áes de abas (slits) e degraus de borda (boundary steps).
+  // 1.5 Cura universal de alivios de vinco industriais, degraus e recuos (Relief Notches & Crease Setback Healer)
+  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente sao interrompidos
+  // por furos/entalhes de alivio circular (relief punch), recuados por tolerancia de fabricacao (setback <= 3.5mm),
+  // ou apresentam micro-defeitos de corte em juncoes de abas (slits) e degraus de borda (boundary steps).
+
+  // Calcula limiares adaptativos baseados no comprimento mediano dos vincos do modelo.
+  // Isso evita que limites fixos sejam agressivos demais em modelos pequenos (< L=150mm).
+  const allCreaseLengths: number[] = rawSegs
+    .filter((s) => s.type === 'crease')
+    .map((s) => Math.hypot(s.p1.x - s.p0.x, s.p1.y - s.p0.y))
+    .filter((l) => l > 5);
+  allCreaseLengths.sort((a, b) => a - b);
+  const medianCreaseLen = allCreaseLengths.length > 0
+    ? allCreaseLengths[Math.floor(allCreaseLengths.length / 2)]
+    : 150;
+  // Limiar de cura: maximo de 3.5mm (padrao industrial), minimo de 0.5mm
+  // Para modelos pequenos (vincos < 80mm), o limiar escala com o tamanho.
+  const HEAL_GAP = Math.min(3.5, Math.max(0.5, medianCreaseLen * 0.025));
 
   // 1.5a: Clamping de micro-invas├úo de recortes de al├¡vio (Relief Notch Micro-Intrusion Clamp)
   // Arcos e pequenos cortes de entalhes circulares em jun├º├Áes de vinco n├úo devem invadir os pain├®is al├®m do vinco.
@@ -109,10 +123,10 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     const isVert = Math.abs(c.p0.x - c.p1.x) < 1e-3;
     if (!isHoriz && !isVert) continue;
 
-    const minX = Math.min(c.p0.x, c.p1.x) - 3.5;
-    const maxX = Math.max(c.p0.x, c.p1.x) + 3.5;
-    const minY = Math.min(c.p0.y, c.p1.y) - 3.5;
-    const maxY = Math.max(c.p0.y, c.p1.y) + 3.5;
+    const minX = Math.min(c.p0.x, c.p1.x) - HEAL_GAP;
+    const maxX = Math.max(c.p0.x, c.p1.x) + HEAL_GAP;
+    const minY = Math.min(c.p0.y, c.p1.y) - HEAL_GAP;
+    const maxY = Math.max(c.p0.y, c.p1.y) + HEAL_GAP;
 
     for (const s of rawSegs) {
       if (s.type !== 'cut') continue;
@@ -138,7 +152,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de al├¡vio / relief notches <= 3.5mm)
+  // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de alivio / relief notches <= HEAL_GAP)
   const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
   const bridgeCreases: { p0: Point2D; p1: Point2D; type: string }[] = [];
   for (let i = 0; i < creaseSegs.length; i++) {
@@ -175,7 +189,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       ];
       for (const [pA, pB] of pairs) {
         const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-        if (d > 0.05 && d <= 3.5) {
+        if (d > 0.05 && d <= HEAL_GAP) {
           const bdx = (pB.x - pA.x) / d;
           const bdy = (pB.y - pA.y) / d;
           if (Math.abs(Math.abs(bdx * u1x + bdy * u1y) - 1.0) < 0.1) {
@@ -191,11 +205,13 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   rawSegs.push(...bridgeCreases);
 
-  // 1.5c: Fechamento de fendas verticais/horizontais entre vincos e linhas transversais (Flap Slit Closures <= 3.5mm)
-  // Em jun├º├Áes entre abas (ex: abas de poeira vs tampa), o vinco da aba e o vinco da tampa t├¬m alturas ligeiramente diferentes
-  // gerando uma fenda vertical aberta (slit) entre o topo da divis├│ria de paredes e a linha da tampa.
+  // 1.5c: Fechamento de fendas entre pontas soltas de CORTE e segmentos transversais (Flap Slit Closures <= 2.0mm)
+  // IMPORTANTE: Só aplica a segmentos de CORTE com ponta solta — nunca a vincos (creases).
+  // Vincos com ponta solta indicam relief notches ou falhas de digitalização, não slits de aba.
+  // Threshold reduzido para 2.0mm para evitar pontes acidentais entre painéis adjacentes.
   const slitBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
   for (const s of rawSegs) {
+    if (s.type !== 'cut') continue; // Apenas cortes — nunca pontes em vincos!
     for (const ep of ['p0', 'p1'] as const) {
       const pt = s[ep];
       const otherPt = ep === 'p0' ? s.p1 : s.p0;
@@ -224,7 +240,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
           if (Math.abs(denom) < 1e-5) continue;
           const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
           const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
-          if (t > 0.02 && t <= 3.5 && u >= -0.01 && u <= 1.01) {
+          // Threshold conservador: HEAL_GAP (max 2.0mm) — suficiente para slits industriais, sem pontes espurias
+          if (t > 0.02 && t <= Math.min(HEAL_GAP, 2.0) && u >= -0.01 && u <= 1.01) {
             if (t < bestT) {
               bestT = t;
               bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
@@ -243,8 +260,10 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   rawSegs.push(...slitBridges);
 
-  // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 3.5mm)
-  // Se duas pontas soltas de corte (dead-ends no contorno exterior) est├úo a uma dist├óncia curta, conecta com segmento de corte.
+  // 1.5d: Fechamento de degraus no contorno externo (Boundary Step Closures <= 1.5mm)
+  // THRESHOLD CONSERVADOR: 1.5mm. Suficiente para gaps de tolerância de faca industrial, mas evita pontes
+  // entre painéis propositalmente separados (ex: abas de colagem com folga, nick de separação, aba-janela).
+  // REQUISITO EXTRA: a ponte deve ser perpendicular ou colinear ao par de arestas adjacentes, evitando diagonais espúrias.
   const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
   for (const s of rawSegs) {
     if (s.type !== 'cut') continue;
@@ -267,18 +286,25 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       const pA = cutEndpoints[i].pt;
       const pB = cutEndpoints[j].pt;
       const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-      if (d > 0.05 && d <= 3.5) {
-        boundaryBridges.push({
-          p0: { x: pA.x, y: pA.y },
-          p1: { x: pB.x, y: pB.y },
-          type: 'cut',
-        });
+      if (d > 0.05 && d <= Math.min(HEAL_GAP, 1.5)) {
+        // Verifica que a ponte é horizontal ou vertical (corte de degrau ortogonal)
+        // Pontes diagonais seriam incorretas pois criariam faces triangulares espúrias
+        const bridgeDx = Math.abs(pB.x - pA.x);
+        const bridgeDy = Math.abs(pB.y - pA.y);
+        const isOrtho = bridgeDx < 0.5 || bridgeDy < 0.5; // quase horizontal ou quase vertical
+        if (isOrtho) {
+          boundaryBridges.push({
+            p0: { x: pA.x, y: pA.y },
+            p1: { x: pB.x, y: pB.y },
+            type: 'cut',
+          });
+        }
       }
     }
   }
   rawSegs.push(...boundaryBridges);
 
-  // 2. Unifica v├®rtices pr├│ximos (toler├óncia num├®rica de 0.05 mm)
+  // 2. Unifica vértices próximos (tolerância numérica de 0.05 mm)
   const EPS = 0.05;
   const uniquePoints: Point2D[] = [];
 
@@ -329,8 +355,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 3.5 Deduplica segmentos id├¬nticos ou sobrepostos (mesmo par de v├®rtices)
-  // Evita arestas duplas no grafo DCEL que geram ciclos de ├írea zero e corrompem as faces
+  // 3.5 Deduplica segmentos idênticos ou sobrepostos (mesmo par de vértices)
+  // Evita arestas duplas no grafo DCEL que geram ciclos de área zero e corrompem as faces
   const edgeKeyMap = new Map<string, { p0: Point2D; p1: Point2D; type: string }>();
   for (const s of cleanSegs) {
     const idx0 = uniquePoints.indexOf(s.p0);
@@ -341,7 +367,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     if (!existing) {
       edgeKeyMap.set(key, s);
     } else {
-      // Se houver conflito entre corte e vinco na mesma aresta, 'cut' tem preced├¬ncia
+      // Se houver conflito entre corte e vinco na mesma aresta, 'cut' tem precedência
       if (s.type === 'cut' || existing.type === 'cut') {
         existing.type = 'cut';
       }
@@ -349,7 +375,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   const finalSegs = Array.from(edgeKeyMap.values());
 
-  // 4. Constr├│i o grafo Half-Edge (DCEL)
+  // 4. Constrói o grafo Half-Edge (DCEL)
   const vertexOutgoing = new Map<Point2D, InternalHalfEdge[]>();
   const halfEdges: InternalHalfEdge[] = [];
   let heIdCounter = 0;
@@ -379,12 +405,12 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     vertexOutgoing.get(s.p1)!.push(he2);
   }
 
-  // Ordena arestas de sa├¡da no sentido anti-hor├írio (CCW)
+  // Ordena arestas de saída no sentido anti-horário (CCW)
   for (const [, list] of vertexOutgoing.entries()) {
     list.sort((a, b) => a.angle - b.angle);
   }
 
-  // Liga os ponteiros next de cada half-edge (curva m├íxima ├á esquerda = menor face CCW)
+  // Liga os ponteiros next de cada half-edge (curva máxima à esquerda = menor face CCW)
   for (const he of halfEdges) {
     const v = he.v;
     const outList = vertexOutgoing.get(v)!;
@@ -393,7 +419,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     he.next = outList[nextIdx];
   }
 
-  // 5. Rastreia ciclos m├¡nimos para extrair todas as faces planares
+  // 5. Rastreia ciclos mínimos para extrair todas as faces planares
   const allFaces: InternalFace[] = [];
   let faceIdCounter = 0;
 
@@ -412,7 +438,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       if (curr === he) break;
     }
 
-    // C├ílculo de ├írea com sinal e centroide
+    // Cálculo de área com sinal e centroide
     let area = 0;
     let cx = 0, cy = 0;
     for (let i = 0; i < cycle.length; i++) {
@@ -470,25 +496,30 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     panelHolesMap.set(pf.id, []);
   }
 
+  // Threshold adaptativo para classificação de furos: <= 2% da maior face, min 50mm2, max 800mm2.
+  // Isso evita que paredes de caixas pequenas (L<150mm) sejam tratadas como recortes/furos.
+  const maxPotentialArea = potentialPanels.reduce((m, f) => Math.max(m, f.area), 1);
+  const holeAreaThreshold = Math.min(800, Math.max(50, maxPotentialArea * 0.02));
+
   for (const cf of cutOnlyFaces) {
     let isInternalHole = false;
     for (const pf of potentialPanels) {
-      if (pf.id !== cf.id && pf.area > cf.area && pointInPolygon(cf.centroid, pf.points)) {
+      if (pf.id !== cf.id && pf.area > cf.area && !cf.edges.some((e) => e.type === 'crease') && pointInPolygon(cf.centroid, pf.points)) {
         holeFaces.push(cf);
         panelHolesMap.get(pf.id)!.push(cf.points);
         isInternalHole = true;
         break;
       }
     }
-    // Alívios de canto e recortes estreitos de corte (< 800 mm²) que não contêm vincos
-    if (!isInternalHole && cf.area < 800) {
+    // Alívio de canto e recortes estreitos de corte sem vincos adjacentes.
+    if (!isInternalHole && cf.area < holeAreaThreshold && !cf.edges.some((e) => e.type === 'crease')) {
       holeFaces.push(cf);
     }
   }
 
   const panelFaces = potentialPanels.filter((f) => !holeFaces.includes(f));
 
-  // 7. Encontra todas as conex├Áes de vinco entre pain├®is
+  // 7. Encontra todas as conexões de vinco entre painéis
   interface RawHingeEdge {
     panelAId: number;
     panelBId: number;
@@ -518,7 +549,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // Agrupa e une sub-vincos colineares entre o mesmo par de pain├®is (ex: vincos particionados por interse├º├Áes)
+  // Agrupa e une sub-vincos colineares entre o mesmo par de painéis (ex: vincos particionados por interseções)
   const mergedHingeMap = new Map<string, RawHingeEdge[]>();
   for (const h of rawHingesList) {
     const key = `${Math.min(h.panelAId, h.panelBId)}_${Math.max(h.panelAId, h.panelBId)}`;
@@ -559,7 +590,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     });
   }
 
-  // 8. Constr├│i o Grafo de Adjac├¬ncia / Dobras entre Pain├®is
+  // 8. Constrói o Grafo de Adjacência / Dobras entre Painéis
   const adjMap = new Map<number, { neighborId: number; hinge: RawHingeEdge }[]>();
   for (const pf of panelFaces) {
     adjMap.set(pf.id, []);
@@ -593,7 +624,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     if (deg > maxDeg) maxDeg = deg;
   }
 
-  // Descarta abas terminais / abas laterais (deg <= 1) se houver pain├®is centrais estruturais
+  // Descarta abas terminais / abas laterais (deg <= 1) se houver painéis centrais estruturais
   const minDegAllowed = maxDeg >= 2 ? 2 : 1;
   const minAreaAllowed = maxArea * 0.2; // descarta tiras ou abas menores
 
@@ -607,20 +638,31 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     candidates = panelFaces;
   }
 
+  // REGRA DE DOMINÂNCIA DE ÁREA: Se algum painel tiver área >= 35% da área total de todos os candidatos,
+  // esse painel é inequivocamente a base/corpo central e vence independente do score.
+  // Isso evita que o algoritmo de pontuação escolha uma parede lateral com muitas conexões.
+  const totalCandidateArea = candidates.reduce((s, pf) => s + pf.area, 0);
+  const dominantPanel = candidates.find((pf) => pf.area / totalCandidateArea >= 0.35);
+
   let rootFace = candidates[0];
   let bestScore = -Infinity;
 
-  for (const pf of candidates) {
-    const distToCenter = Math.hypot(pf.centroid.x - blankCenterX, pf.centroid.y - blankCenterY);
-    const normDist = distToCenter / (blankDiag / 2); // 0 no centro, ~1 na borda
-    const normArea = pf.area / (maxArea || 1);
-    const deg = adjMap.get(pf.id)?.length || 0;
+  if (dominantPanel) {
+    // Painel dominante em área — é inequivocamente a base/fundo/corpo
+    rootFace = dominantPanel;
+  } else {
+    for (const pf of candidates) {
+      const distToCenter = Math.hypot(pf.centroid.x - blankCenterX, pf.centroid.y - blankCenterY);
+      const normDist = distToCenter / (blankDiag / 2); // 0 no centro, ~1 na borda
+      const normArea = pf.area / (maxArea || 1);
+      const deg = adjMap.get(pf.id)?.length || 0;
 
-    // Prioriza conex├Áes estruturais (deg), ├írea da base/fundo e proximidade do centro real da faca
-    const score = deg * 250 + normArea * 500 + (1.0 - normDist) * 400;
-    if (score > bestScore) {
-      bestScore = score;
-      rootFace = pf;
+      // Prioriza conexões estruturais (deg), área da base/fundo e proximidade do centro real da faca
+      const score = deg * 250 + normArea * 500 + (1.0 - normDist) * 400;
+      if (score > bestScore) {
+        bestScore = score;
+        rootFace = pf;
+      }
     }
   }
 

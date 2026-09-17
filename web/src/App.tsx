@@ -107,7 +107,7 @@ export const App: React.FC = () => {
   }, []);
 
   // Quando troca o modelo, redefine os parâmetros para os padrões dele
-  const handleSelectModel = (model: PackagingModel) => {
+  const handleSelectModel = useCallback((model: PackagingModel) => {
     setCurrentModel(model);
     setCustomAngles({});
     setSelectedPanelId(null);
@@ -122,7 +122,12 @@ export const App: React.FC = () => {
       ...model.defaultParams,
       Ep: selectedProfile.thickness,
     });
-  };
+  }, [selectedProfile.thickness]);
+
+  useEffect(() => {
+    (window as any).__PRIMACOR_SET_MODEL_ID__ = (id: string) => handleSelectModel(getModelById(id));
+    (window as any).__PRIMACOR_SET_TAB__ = (tab: ActiveTab) => setActiveTab(tab);
+  }, [handleSelectModel]);
 
   // Atualização em tempo real de um parâmetro dimensional
   const handleParamChange = (key: string, value: number) => {
