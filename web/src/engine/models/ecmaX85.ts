@@ -93,6 +93,25 @@ export const ecmaX85: PackagingModel = {
       }
     }
 
+    // Nomes técnicos semânticos para inspeção CAD de abas
+    const panelNameMap: Record<string, string> = {
+      panel_0: 'Base / Fundo Principal',
+      panel_1: 'Teto Frontal Inclinado (Gable)',
+      panel_8: 'Alça Frontal com Pega Vazada',
+      panel_9: 'Alça Traseira com Pega Vazada',
+      panel_14: 'Teto Traseiro Inclinado (Gable)',
+      panel_24: 'Aba Superior de Trava Interna',
+      panel_15: 'Fole Triangular Lateral Direito',
+      panel_16: 'Fole Triangular Lateral Esquerdo',
+      panel_19: 'Aba de Fundo Automático 1',
+      panel_23: 'Aba de Fundo Automático 2',
+    };
+    for (const p of topo.panels) {
+      if (panelNameMap[p.id]) {
+        p.name = panelNameMap[p.id];
+      }
+    }
+
     dieline.customTopology = topo;
     return dieline;
   },

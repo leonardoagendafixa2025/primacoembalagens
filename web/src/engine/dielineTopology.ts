@@ -736,7 +736,28 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
 
     const holes = panelHolesMap.get(pf.id) || [];
-    const panelName = isRoot ? 'Base (Fundo)' : `Painel ${pf.id}`;
+    let panelName = isRoot ? 'Base (Fundo)' : `Painel ${pf.id}`;
+    if (!isRoot && parentInfo && rootFace) {
+      const dx = pf.centroid.x - rootFace.centroid.x;
+      const dy = pf.centroid.y - rootFace.centroid.y;
+      if (parentInfo.depth === 1) {
+        if (Math.abs(dy) > Math.abs(dx)) {
+          panelName = dy > 0 ? `Parede Superior / Traseira (P${pf.id})` : `Parede Inferior / Frontal (P${pf.id})`;
+        } else {
+          panelName = dx > 0 ? `Parede Lateral Direita (P${pf.id})` : `Parede Lateral Esquerda (P${pf.id})`;
+        }
+      } else if (parentInfo.depth === 2) {
+        if (Math.abs(dy) > Math.abs(dx)) {
+          panelName = dy > 0 ? `Tampa Superior (P${pf.id})` : `Aba Frontal (P${pf.id})`;
+        } else {
+          panelName = dx > 0 ? `Aba de Poeira Direita (P${pf.id})` : `Aba de Poeira Esquerda (P${pf.id})`;
+        }
+      } else if (parentInfo.depth === 3) {
+        panelName = `Aba de Encaixe / Trava (P${pf.id})`;
+      } else {
+        panelName = `Aba de Fechamento (P${pf.id})`;
+      }
+    }
 
     topologicalPanels.push({
       id: panelId,

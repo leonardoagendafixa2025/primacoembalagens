@@ -2,11 +2,28 @@ import * as THREE from 'three';
 import type { DielineResult } from './types';
 import { buildFoldingTopology, type TopologicalPanel, type DielineTopology } from './dielineTopology';
 
+export interface HingeControlInfo {
+  panelId: string;
+  panelName: string;
+  parentId?: string;
+  parentName?: string;
+  creaseLength: number;
+  foldOrder: number;
+  nominalAngleDeg: number;
+  currentAngleDeg: number;
+  isModified: boolean;
+}
+
 export interface FoldableTreeResult {
   rootGroup: THREE.Group;
   panelsCount: number;
   topology: DielineTopology;
   updateProgress: (progress: number) => void;
+  setHingeAngle: (panelId: string, angleDeg: number) => void;
+  resetHingeAngle: (panelId: string) => void;
+  resetAllHingeAngles: () => void;
+  getHingeInfoList: () => HingeControlInfo[];
+  highlightPanel: (panelId: string | null) => void;
 }
 
 /**
@@ -56,7 +73,8 @@ export function createPanelMesh(
   const mesh = new THREE.Mesh(geom, materials);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
-  mesh.name = panel.name;
+  mesh.name = panel.id;
+  mesh.userData = { panelId: panel.id, panelName: panel.name, isPanel: true };
 
   // Arestas CAD da faca para visualização nítida de vincos, cortes e abas sobre o papel branco
   const edgeGeo = new THREE.EdgesGeometry(geom, 20);
@@ -66,6 +84,7 @@ export function createPanelMesh(
     opacity: 0.5,
   });
   const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
+  edgeLines.name = `edges_${panel.id}`;
   mesh.add(edgeLines);
 
   return mesh;
@@ -76,6 +95,7 @@ interface KinematicNodeItem {
   pivotGroup: THREE.Group;
   mesh: THREE.Mesh;
   hingeAxis: THREE.Vector3;
+  nominalAngleRad: number;
   targetAngleRad: number;
   foldOrder: number;
 }
@@ -88,7 +108,8 @@ export function buildFoldable3DTree(
   thickness: number,
   outerColor: string = '#FFFFFF',
   innerColor: string = '#FFFFFF',
-  roughness: number = 0.28
+  roughness: number = 0.28,
+  customAngles?: Record<string, number>
 ): FoldableTreeResult {
   const rootGroup = new THREE.Group();
   const topology: DielineTopology = dieline.customTopology || buildFoldingTopology(dieline);
@@ -100,51 +121,62 @@ export function buildFoldable3DTree(
       panelsCount: 0,
       topology,
       updateProgress: () => {},
+      setHingeAngle: () => {},
+      resetHingeAngle: () => {},
+      resetAllHingeAngles: () => {},
+      getHingeInfoList: () => [],
+      highlightPanel: () => {},
     };
   }
-
-  // Materiais de acabamento Cartão BRANCO Duplex / Triplex
-  // Face principal (Couchê Branco acetinado)
-  const matFace = new THREE.MeshStandardMaterial({
-    color: outerColor,
-    roughness: roughness,
-    metalness: 0.01,
-    side: THREE.DoubleSide,
-  });
-  // Miolo e bordas de corte da celulose
-  const matEdge = new THREE.MeshStandardMaterial({
-    color: innerColor,
-    roughness: Math.min(1.0, roughness + 0.15),
-    metalness: 0.01,
-    side: THREE.DoubleSide,
-  });
-  const materials = [matFace, matEdge];
 
   // Painel Raiz (Base/Fundo)
   const rootPanel = panels.find((p) => p.isRoot) || panels[0];
   const itemsMap = new Map<string, KinematicNodeItem>();
 
   for (const p of panels) {
+    // Cada painel possui materiais individuais para permitir realce emissivo CAD independente
+    const matFace = new THREE.MeshStandardMaterial({
+      color: outerColor,
+      roughness: roughness,
+      metalness: 0.01,
+      side: THREE.DoubleSide,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0,
+    });
+    const matEdge = new THREE.MeshStandardMaterial({
+      color: innerColor,
+      roughness: Math.min(1.0, roughness + 0.15),
+      metalness: 0.01,
+      side: THREE.DoubleSide,
+    });
+    const materials = [matFace, matEdge];
+
     const mesh = createPanelMesh(p, thickness, materials);
     const pivotGroup = new THREE.Group();
     pivotGroup.name = `pivot_${p.id}`;
 
     let hingeAxis = new THREE.Vector3(1, 0, 0);
-    let targetAngleRad = 0;
+    let nominalAngleRad = 0;
     let foldOrder = 1;
 
     if (p.hingeToParent) {
       const h = p.hingeToParent;
       hingeAxis = new THREE.Vector3(h.axis.x, h.axis.y, h.axis.z).normalize();
-      targetAngleRad = (h.targetAngleDeg * Math.PI) / 180;
+      nominalAngleRad = (h.targetAngleDeg * Math.PI) / 180;
       foldOrder = h.foldOrder;
     }
+
+    const overrideDeg = customAngles?.[p.id];
+    const targetAngleRad = overrideDeg !== undefined
+      ? (overrideDeg * Math.PI) / 180
+      : nominalAngleRad;
 
     itemsMap.set(p.id, {
       panel: p,
       pivotGroup,
       mesh,
       hingeAxis,
+      nominalAngleRad,
       targetAngleRad,
       foldOrder,
     });
@@ -189,14 +221,15 @@ export function buildFoldable3DTree(
   }
 
   // Centraliza o rootGroup exatamente na BASE da embalagem (Root Panel)
-  // Dessa forma, a base física da caixa fica perfeitamente ancorada em (0, 0, 0)
-  // e todas as rotações 360° orbitam exatamente em torno do centro da sua base!
   const baseCx = rootPanel.centroid.x;
   const baseCz = -rootPanel.centroid.y;
   rootGroup.position.set(-baseCx, 0, -baseCz);
 
+  let currentProgress = 0;
+
   // Atualização contínua e 100% reversível de 0% a 100%
   const updateProgress = (progress: number) => {
+    currentProgress = progress;
     const t = Math.max(0, Math.min(1, progress));
 
     for (const [id, item] of itemsMap.entries()) {
@@ -228,6 +261,72 @@ export function buildFoldable3DTree(
     }
   };
 
+  const setHingeAngle = (panelId: string, angleDeg: number) => {
+    const item = itemsMap.get(panelId);
+    if (!item || !item.panel.hingeToParent) return;
+    item.targetAngleRad = (angleDeg * Math.PI) / 180;
+    updateProgress(currentProgress);
+  };
+
+  const resetHingeAngle = (panelId: string) => {
+    const item = itemsMap.get(panelId);
+    if (!item || !item.panel.hingeToParent) return;
+    item.targetAngleRad = item.nominalAngleRad;
+    updateProgress(currentProgress);
+  };
+
+  const resetAllHingeAngles = () => {
+    for (const item of itemsMap.values()) {
+      item.targetAngleRad = item.nominalAngleRad;
+    }
+    updateProgress(currentProgress);
+  };
+
+  const getHingeInfoList = (): HingeControlInfo[] => {
+    const list: HingeControlInfo[] = [];
+    for (const p of panels) {
+      if (p.isRoot || !p.hingeToParent) continue;
+      const item = itemsMap.get(p.id);
+      if (!item) continue;
+      const parent = panels.find((pp) => pp.id === p.parentId);
+      const nominalDeg = Math.round((item.nominalAngleRad * 180) / Math.PI * 10) / 10;
+      const currentDeg = Math.round((item.targetAngleRad * 180) / Math.PI * 10) / 10;
+      const isModified = Math.abs(nominalDeg - currentDeg) > 0.05;
+
+      list.push({
+        panelId: p.id,
+        panelName: p.name,
+        parentId: p.parentId,
+        parentName: parent?.name,
+        creaseLength: Math.round(p.hingeToParent.length * 10) / 10,
+        foldOrder: p.hingeToParent.foldOrder,
+        nominalAngleDeg: nominalDeg,
+        currentAngleDeg: currentDeg,
+        isModified,
+      });
+    }
+    return list;
+  };
+
+  const highlightPanel = (panelId: string | null) => {
+    for (const [id, item] of itemsMap.entries()) {
+      const isTarget = id === panelId;
+      const mats = Array.isArray(item.mesh.material) ? item.mesh.material : [item.mesh.material];
+      for (const m of mats) {
+        if (m instanceof THREE.MeshStandardMaterial) {
+          m.emissive.set(isTarget ? 0x00d2b4 : 0x000000);
+          m.emissiveIntensity = isTarget ? 0.35 : 0.0;
+        }
+      }
+      // Destaque das linhas de aresta
+      const edges = item.mesh.getObjectByName(`edges_${id}`) as THREE.LineSegments | undefined;
+      if (edges && edges.material instanceof THREE.LineBasicMaterial) {
+        edges.material.color.set(isTarget ? 0x00ffff : 0x64748b);
+        edges.material.opacity = isTarget ? 1.0 : 0.5;
+      }
+    }
+  };
+
   // Inicializa aberto em 0%
   updateProgress(0);
 
@@ -236,5 +335,10 @@ export function buildFoldable3DTree(
     panelsCount: panels.length,
     topology,
     updateProgress,
+    setHingeAngle,
+    resetHingeAngle,
+    resetAllHingeAngles,
+    getHingeInfoList,
+    highlightPanel,
   };
 }

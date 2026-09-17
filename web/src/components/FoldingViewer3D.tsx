@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
-import { buildFoldable3DTree } from '../engine/foldingEngine';
-import { Play, Pause, RotateCw, Box, Eye } from 'lucide-react';
+import { buildFoldable3DTree, type FoldableTreeResult, type HingeControlInfo } from '../engine/foldingEngine';
+import { Play, Pause, RotateCw, Box, Eye, Sliders } from 'lucide-react';
+import { FlapAngleInspector } from './FlapAngleInspector';
 
 interface FoldingViewer3DProps {
   model: PackagingModel;
@@ -20,6 +21,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
 
+  // Controle de abas individuais em graus (ArtiosCAD / Prinect)
+  const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [customAngles, setCustomAngles] = useState<Record<string, number>>({});
+  const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
 
   // Refs Three.js
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -28,6 +34,14 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
   const controlsRef = useRef<OrbitControls | null>(null);
   const boxGroupRef = useRef<THREE.Group | null>(null);
   const updateProgressRef = useRef<((progress: number) => void) | null>(null);
+  const treeRef = useRef<FoldableTreeResult | null>(null);
+  const downPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Reseta personalizações ao trocar de modelo
+  useEffect(() => {
+    setCustomAngles({});
+    setSelectedPanelId(null);
+  }, [model.id]);
 
   // Configuração inicial da cena Three.js com OrbitControls profissional
   useEffect(() => {
@@ -115,7 +129,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     scene.add(boxGroup);
     boxGroupRef.current = boxGroup;
 
-
     // Observador de Redimensionamento
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -178,6 +191,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
       model.status !== 'NON_FOLDABLE';
 
     if (!isFoldable) {
+      treeRef.current = null;
+      setHingeList([]);
       updateProgressRef.current = null;
       return;
     }
@@ -188,7 +203,19 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
       const outerColor = profile?.outerColor || '#FFFFFF';
       const innerColor = profile?.innerColor || '#FFFFFF';
       const roughness = profile?.roughness ?? 0.28;
-      const tree = buildFoldable3DTree(currentDieline, Ep, outerColor, innerColor, roughness);
+      const tree = buildFoldable3DTree(
+        currentDieline,
+        Ep,
+        outerColor,
+        innerColor,
+        roughness,
+        customAngles
+      );
+      treeRef.current = tree;
+      setHingeList(tree.getHingeInfoList());
+      if (selectedPanelId) {
+        tree.highlightPanel(selectedPanelId);
+      }
 
       if (tree.panelsCount > 0) {
         // Verifica se é modelo tubular (FEFCO 02xx / 07xx / ECMA A, B, E) para manter a caixa em pé com o fundo no chão
@@ -258,12 +285,16 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
         }
         return;
       }
+      treeRef.current = null;
+      setHingeList([]);
       updateProgressRef.current = null;
     } catch (e) {
       console.warn('[FoldingViewer3D] Erro na interpretação topológica:', e);
+      treeRef.current = null;
+      setHingeList([]);
       updateProgressRef.current = null;
     }
-  }, [model, params, dieline, profile]);
+  }, [model, params, dieline, profile, customAngles]);
 
   // Atualiza as rotações de dobra conforme o foldProgress (0% = aberta, 100% = montada)
   useEffect(() => {
@@ -319,9 +350,138 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
     controls.update();
   };
 
+  // Handlers para controle individual de ângulos das abas (ArtiosCAD / Prinect)
+  const handleAngleChange = (panelId: string, angleDeg: number) => {
+    setCustomAngles((prev) => ({ ...prev, [panelId]: angleDeg }));
+    if (treeRef.current) {
+      treeRef.current.setHingeAngle(panelId, angleDeg);
+      setHingeList(treeRef.current.getHingeInfoList());
+      if (updateProgressRef.current) {
+        updateProgressRef.current(foldProgress);
+      }
+    }
+  };
+
+  const handleResetAngle = (panelId: string) => {
+    setCustomAngles((prev) => {
+      const next = { ...prev };
+      delete next[panelId];
+      return next;
+    });
+    if (treeRef.current) {
+      treeRef.current.resetHingeAngle(panelId);
+      setHingeList(treeRef.current.getHingeInfoList());
+      if (updateProgressRef.current) {
+        updateProgressRef.current(foldProgress);
+      }
+    }
+  };
+
+  const handleResetAll = () => {
+    setCustomAngles({});
+    if (treeRef.current) {
+      treeRef.current.resetAllHingeAngles();
+      setHingeList(treeRef.current.getHingeInfoList());
+      if (updateProgressRef.current) {
+        updateProgressRef.current(foldProgress);
+      }
+    }
+  };
+
+  const handleSelectPanelFromInspector = (panelId: string | null) => {
+    setSelectedPanelId(panelId);
+    if (treeRef.current) {
+      treeRef.current.highlightPanel(panelId);
+    }
+  };
+
+  // Raycasting 3D interativo para seleção de abas via clique
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    downPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const dx = Math.abs(e.clientX - downPos.current.x);
+    const dy = Math.abs(e.clientY - downPos.current.y);
+    if (dx > 5 || dy > 5) return; // Orbit/pan da câmera, não conta como clique
+
+    const mount = mountRef.current;
+    const camera = cameraRef.current;
+    const boxGroup = boxGroupRef.current;
+    if (!mount || !camera || !boxGroup) return;
+
+    const rect = mount.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(boxGroup.children, true);
+
+    let hitPanelId: string | null = null;
+    for (const hit of intersects) {
+      if (hit.object.userData && hit.object.userData.isPanel) {
+        hitPanelId = hit.object.userData.panelId;
+        break;
+      }
+    }
+
+    setSelectedPanelId(hitPanelId);
+    if (hitPanelId) {
+      setIsInspectorOpen(true);
+    }
+    if (treeRef.current) {
+      treeRef.current.highlightPanel(hitPanelId);
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const mount = mountRef.current;
+    const camera = cameraRef.current;
+    const boxGroup = boxGroupRef.current;
+    if (!mount || !camera || !boxGroup) return;
+
+    const rect = mount.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(boxGroup.children, true);
+
+    const hasPanel = intersects.some((hit) => hit.object.userData && hit.object.userData.isPanel);
+    mount.style.cursor = hasPanel ? 'pointer' : 'grab';
+  };
+
+  const modifiedCount = useMemo(() => {
+    return hingeList.filter((h) => h.isModified).length;
+  }, [hingeList]);
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', background: '#0B0F17' }}>
-      <div ref={mountRef} style={{ width: '100%', height: '100%', cursor: 'grab' }} />
+      <div
+        ref={mountRef}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerMove={handlePointerMove}
+        style={{ width: '100%', height: '100%', cursor: 'grab' }}
+      />
+
+      {/* Inspetor Lateral de Ângulos de Dobra (Estilo ArtiosCAD & Prinect) */}
+      <FlapAngleInspector
+        hinges={hingeList}
+        selectedPanelId={selectedPanelId}
+        onSelectPanel={handleSelectPanelFromInspector}
+        onAngleChange={handleAngleChange}
+        onResetAngle={handleResetAngle}
+        onResetAll={handleResetAll}
+        onClose={() => setIsInspectorOpen(false)}
+        isOpen={isInspectorOpen}
+      />
 
       {/* Estação de Controle CAD de Dobra e Câmera 3D */}
       <div
@@ -331,7 +491,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
           left: '50%',
           transform: 'translateX(-50%)',
           width: '90%',
-          maxWidth: 680,
+          maxWidth: 720,
           background: 'var(--cad-bg-panel)',
           border: '1px solid var(--cad-border-default)',
           borderRadius: 'var(--cad-radius-md)',
@@ -344,9 +504,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
           userSelect: 'none',
         }}
       >
-        {/* Linha Superior: Presets de Ângulo de Dobra e Câmera */}
+        {/* Linha Superior: Presets de Ângulo de Dobra, Inspetor de Abas e Câmera */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-          {/* Presets de Dobra */}
+          {/* Presets de Dobra Global */}
           <div style={{ display: 'flex', gap: 4 }}>
             {[
               { label: '0% Aberta', val: 0.0 },
@@ -380,8 +540,42 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({ model, params,
             })}
           </div>
 
-          {/* Vistas Rápidas de Câmera CAD */}
-          <div style={{ display: 'flex', gap: 4 }}>
+          {/* Botão de Abrir Inspetor de Ângulos de Abas (ArtiosCAD / Prinect) e Câmera */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => setIsInspectorOpen((open) => !open)}
+              title="Editar Ângulos das Abas em Graus (ArtiosCAD / Prinect)"
+              className="cad-btn"
+              style={{
+                padding: '3px 9px',
+                fontSize: 10,
+                gap: 5,
+                background: isInspectorOpen ? 'var(--cad-accent-dim)' : 'transparent',
+                borderColor: isInspectorOpen ? 'var(--cad-accent)' : 'var(--cad-border-default)',
+                color: isInspectorOpen ? 'var(--cad-accent)' : 'var(--cad-text-primary)',
+              }}
+            >
+              <Sliders size={11} color="var(--cad-accent)" />
+              <span>Ângulos das Abas</span>
+              {modifiedCount > 0 && (
+                <span
+                  className="cad-mono"
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 800,
+                    padding: '1px 5px',
+                    borderRadius: 8,
+                    background: 'var(--cad-accent)',
+                    color: '#000000',
+                  }}
+                >
+                  {modifiedCount}
+                </span>
+              )}
+            </button>
+
+            {/* Vistas Rápidas de Câmera CAD */}
             <button
               type="button"
               onClick={snapToPerspective}
