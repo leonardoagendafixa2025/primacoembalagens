@@ -1,4 +1,4 @@
-﻿import type { Point2D, DielineResult } from './types';
+import type { Point2D, DielineResult } from './types';
 
 export interface TopologicalHinge {
   id: string;
@@ -100,43 +100,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   // por furos/entalhes de al├¡vio circular (relief punch), recuados por toler├óncia de fabrica├º├úo (setback <= 3.5mm),
   // ou apresentam micro-defeitos de corte em jun├º├Áes de abas (slits) e degraus de borda (boundary steps).
 
-  // 1.5a: Clamping de micro-invas├úo de recortes de al├¡vio (Relief Notch Micro-Intrusion Clamp)
-  // Arcos e pequenos cortes de entalhes circulares em jun├º├Áes de vinco n├úo devem invadir os pain├®is al├®m do vinco.
-  // Se uma ponta de corte estiver a <= 1.2mm de uma linha de vinco horizontal ou vertical, clampeia para a linha do vinco.
-  const creaseLines = rawSegs.filter((s) => s.type === 'crease');
-  for (const c of creaseLines) {
-    const isHoriz = Math.abs(c.p0.y - c.p1.y) < 1e-3;
-    const isVert = Math.abs(c.p0.x - c.p1.x) < 1e-3;
-    if (!isHoriz && !isVert) continue;
-
-    const minX = Math.min(c.p0.x, c.p1.x) - 3.5;
-    const maxX = Math.max(c.p0.x, c.p1.x) + 3.5;
-    const minY = Math.min(c.p0.y, c.p1.y) - 3.5;
-    const maxY = Math.max(c.p0.y, c.p1.y) + 3.5;
-
-    for (const s of rawSegs) {
-      if (s.type !== 'cut') continue;
-      const segLen = Math.hypot(s.p1.x - s.p0.x, s.p1.y - s.p0.y);
-      if (segLen > 15.0) continue; // Apenas segmentos de detalhe / entalhe / al├¡vio
-
-      for (const ep of ['p0', 'p1'] as const) {
-        const pt = s[ep];
-        if (isHoriz) {
-          const cy = (c.p0.y + c.p1.y) / 2;
-          const dy = Math.abs(pt.y - cy);
-          if (dy > 0.001 && dy <= 1.2 && pt.x >= minX && pt.x <= maxX) {
-            pt.y = cy;
-          }
-        } else if (isVert) {
-          const cx = (c.p0.x + c.p1.x) / 2;
-          const dx = Math.abs(pt.x - cx);
-          if (dx > 0.001 && dx <= 1.2 && pt.y >= minY && pt.y <= maxY) {
-            pt.x = cx;
-          }
-        }
-      }
-    }
-  }
+  // 1.5a: Preservação de fidelidade geométrica analítica de cortes e vincos
+  // (Micro-offsets e entalhes de alívio intencionais de projeto < 1.2mm são preservados com exatidão)
 
   // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de al├¡vio / relief notches <= 3.5mm)
   const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
@@ -610,8 +575,11 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     const normArea = pf.area / (maxArea || 1);
     const deg = adjMap.get(pf.id)?.length || 0;
 
-    // Prioriza conex├Áes estruturais (deg), ├írea da base/fundo e proximidade do centro real da faca
-    const score = deg * 250 + normArea * 500 + (1.0 - normDist) * 400;
+    // Prioriza conexões estruturais (deg), área da base/fundo e proximidade do centro real da faca
+    // Em embalagens CAD paramétricas industriais, a BASE da caixa é construída centrada em (0, 0)
+    const isOriginBase = Math.hypot(pf.centroid.x, pf.centroid.y) < 25.0 || pointInPolygon({ x: 0, y: 0 }, pf.points);
+    const originBonus = isOriginBase ? 10000 : 0;
+    const score = originBonus + deg * 250 + normArea * 500 + (1.0 - normDist) * 400;
     if (score > bestScore) {
       bestScore = score;
       rootFace = pf;

@@ -1,5 +1,6 @@
 import type { PackagingModel, DielineResult, Segment2D, Arc2D, DimensionLine } from '../types';
 import { computeBoundingBox } from '../geometry';
+import { buildFoldingTopology } from '../dielineTopology';
 
 /**
  * FEFCO 0429 - Caixa Postal / Envoltório com Paredes Duplas e Travas Mortise/Tenon
@@ -488,11 +489,43 @@ export const fefco0429: PackagingModel = {
 
     const bounds = computeBoundingBox({ segments, arcs });
 
-    return {
+    const dieline: DielineResult = {
       segments,
       arcs,
       dimensions,
       bounds,
     };
+
+    // Constrói topologia cinemática 3D e atribui nomes semânticos aos 17 painéis industriais
+    const topo = buildFoldingTopology(dieline);
+    for (const p of topo.panels) {
+      const cx = p.centroid.x;
+      const cy = p.centroid.y;
+      if (p.isRoot || (Math.abs(cx) < 25 && Math.abs(cy) < 25)) {
+        p.name = 'Base (Fundo)';
+      } else if (Math.abs(cx) < 25) {
+        if (cy > 400) p.name = 'Aba Frontal da Tampa';
+        else if (cy > 250) p.name = 'Tampa Superior';
+        else if (cy > 0) p.name = 'Parede Traseira';
+        else p.name = 'Parede Frontal';
+      } else if (cx > 0) {
+        if (cy > 250) p.name = 'Aba Lateral Direita da Tampa';
+        else if (cy > 50) p.name = 'Aba de Canto Traseira Direita';
+        else if (cy < -50) p.name = 'Aba de Canto Frontal Direita';
+        else if (cx > 340) p.name = 'Parede Lateral Direita Interna (Trava Tenon)';
+        else if (Math.abs(cx) > 280) p.name = 'Ponte Superior Parede Direita';
+        else p.name = 'Parede Lateral Direita Externa';
+      } else {
+        if (cy > 250) p.name = 'Aba Lateral Esquerda da Tampa';
+        else if (cy > 50) p.name = 'Aba de Canto Traseira Esquerda';
+        else if (cy < -50) p.name = 'Aba de Canto Frontal Esquerda';
+        else if (cx < -340) p.name = 'Parede Lateral Esquerda Interna (Trava Tenon)';
+        else if (Math.abs(cx) > 280) p.name = 'Ponte Superior Parede Esquerda';
+        else p.name = 'Parede Lateral Esquerda Externa';
+      }
+    }
+
+    dieline.customTopology = topo;
+    return dieline;
   },
 };
