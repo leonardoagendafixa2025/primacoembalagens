@@ -41,7 +41,7 @@ export const CadStatusBar: React.FC<CadStatusBarProps> = ({
       }}
     >
       {/* 1. Coordenadas e Modo de Visualização */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div className="hide-on-mobile" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Compass size={12} color="var(--cad-accent)" />
           <span style={{ color: 'var(--cad-text-secondary)' }}>CURSOR:</span>

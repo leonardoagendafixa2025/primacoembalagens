@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { PackagingModel, CardboardProfile } from './engine/types';
 import { STANDARD_PROFILES } from './engine/types';
 import { MODELS, getModelById } from './engine/models';
@@ -32,9 +32,24 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
 
   // Estados de Visualização & Viewport CAD
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [cursorMm, setCursorMm] = useState({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(1.0);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleViewportUpdate = useCallback((info: { cursorMm: { x: number; y: number }; zoom: number }) => {
+    setCursorMm((prev) => (prev.x === info.cursorMm.x && prev.y === info.cursorMm.y ? prev : info.cursorMm));
+    setZoomLevel((prev) => (Math.abs(prev - info.zoom) < 0.001 ? prev : info.zoom));
+  }, []);
 
   // 2. Catálogo & Projetos Salvos
   const [isCatalogOpen, setIsCatalogOpen] = useState<boolean>(false);
@@ -154,7 +169,7 @@ export const App: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         width: '100vw',
-        height: '100vh',
+        height: '100dvh',
         overflow: 'hidden',
         background: 'var(--cad-bg-app)',
       }}
@@ -176,17 +191,49 @@ export const App: React.FC = () => {
 
       {/* 2. Workspace Central */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {/* Backdrop para mobile quando painel estiver aberto */}
+        {isMobile && !isSidebarCollapsed && (
+          <div
+            onClick={() => setIsSidebarCollapsed(true)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
+              zIndex: 35,
+            }}
+          />
+        )}
+
         {/* Painel de Parâmetros e Propriedades (CAD Inspector) */}
-        <ParameterPanel
-          model={currentModel}
-          params={params}
-          selectedProfileId={selectedProfile.id}
-          onParamChange={handleParamChange}
-          onProfileChange={setSelectedProfile}
-          bounds={dieline.bounds}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
-        />
+        <div
+          style={
+            isMobile && !isSidebarCollapsed
+              ? {
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  width: 'min(340px, 88vw)',
+                  zIndex: 40,
+                  boxShadow: '4px 0 24px rgba(0,0,0,0.8)',
+                  display: 'flex',
+                }
+              : { display: 'flex', height: '100%' }
+          }
+        >
+          <ParameterPanel
+            model={currentModel}
+            params={params}
+            selectedProfileId={selectedProfile.id}
+            onParamChange={handleParamChange}
+            onProfileChange={setSelectedProfile}
+            bounds={dieline.bounds}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+          />
+        </div>
 
         {/* Viewport Central (Canvas 2D / 3D / Imposição) */}
         <main style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--cad-bg-workspace)' }}>
@@ -194,10 +241,7 @@ export const App: React.FC = () => {
             <CadViewer2D
               dieline={dieline}
               model={currentModel}
-              onViewportUpdate={({ cursorMm: c, zoom: z }) => {
-                setCursorMm(c);
-                setZoomLevel(z);
-              }}
+              onViewportUpdate={handleViewportUpdate}
             />
           )}
 

@@ -22,6 +22,36 @@ export interface SavedProject {
 
 const LOCAL_STORAGE_KEY = 'primacor_saved_projects';
 
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    try {
+      return crypto.randomUUID();
+    } catch (_) {}
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn('LocalStorage não acessível:', e);
+    return null;
+  }
+}
+
+function safeSetItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn('LocalStorage falha ao gravar:', e);
+  }
+}
+
 export async function getSavedProjects(): Promise<SavedProject[]> {
   if (supabase) {
     try {
@@ -35,15 +65,20 @@ export async function getSavedProjects(): Promise<SavedProject[]> {
     }
   }
 
-  // Fallback LocalStorage
-  const local = localStorage.getItem(LOCAL_STORAGE_KEY);
-  return local ? JSON.parse(local) : [];
+  // Fallback LocalStorage seguro
+  const local = safeGetItem(LOCAL_STORAGE_KEY);
+  if (!local) return [];
+  try {
+    return JSON.parse(local);
+  } catch (_) {
+    return [];
+  }
 }
 
 export async function saveProject(project: Omit<SavedProject, 'id' | 'created_at'>): Promise<SavedProject> {
   const newProject: SavedProject = {
     ...project,
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -61,10 +96,10 @@ export async function saveProject(project: Omit<SavedProject, 'id' | 'created_at
     }
   }
 
-  // Fallback LocalStorage
+  // Fallback LocalStorage seguro
   const list = await getSavedProjects();
   list.unshift(newProject);
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+  safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
   return newProject;
 }
 
@@ -79,5 +114,5 @@ export async function deleteProject(id: string): Promise<void> {
 
   const list = await getSavedProjects();
   const filtered = list.filter((p) => p.id !== id);
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+  safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
 }

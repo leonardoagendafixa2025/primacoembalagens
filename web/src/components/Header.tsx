@@ -106,11 +106,11 @@ export const Header: React.FC<HeaderProps> = ({
             src="/primacor-logo-horizontal.png"
             alt="Primacor Gráfica"
             style={{
-              height: 30,
+              height: 28,
               objectFit: 'contain',
             }}
           />
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
+          <div className="hide-on-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
             <span
               style={{
                 fontSize: 9,
@@ -129,13 +129,13 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Separador Vertical */}
-        <div style={{ width: 1, height: 24, background: 'var(--cad-border-subtle)' }} />
+        <div className="hide-on-mobile" style={{ width: 1, height: 24, background: 'var(--cad-border-subtle)' }} />
 
         {/* Botão da Biblioteca Geral */}
         <button
           type="button"
           onClick={onOpenCatalog}
-          className="cad-btn"
+          className="cad-btn icon-only-mobile"
           style={{
             background: 'var(--cad-bg-panel)',
             border: '1px solid var(--cad-border-default)',
@@ -148,6 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
           <BookOpen size={14} color="var(--cad-accent)" />
           <span style={{ fontWeight: 600 }}>Biblioteca</span>
           <span
+            className="keep-badge"
             style={{
               background: 'var(--cad-accent-dim)',
               color: 'var(--cad-accent)',
@@ -170,7 +171,7 @@ export const Header: React.FC<HeaderProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            padding: '4px 10px',
+            padding: '4px 8px',
             borderRadius: 'var(--cad-radius-sm)',
             background: 'var(--cad-bg-input)',
             border: '1px solid var(--cad-border-subtle)',
@@ -184,12 +185,13 @@ export const Header: React.FC<HeaderProps> = ({
           <span style={{ color: 'var(--cad-accent)', fontWeight: 700, letterSpacing: 0.3 }}>
             {currentModel.code}
           </span>
-          <span style={{ color: 'var(--cad-border-hover)' }}>|</span>
+          <span className="hide-on-mobile" style={{ color: 'var(--cad-border-hover)' }}>|</span>
           <span
+            className="hide-on-mobile"
             style={{
               color: 'var(--cad-text-secondary)',
               fontWeight: 500,
-              maxWidth: 180,
+              maxWidth: 140,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -214,6 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           type="button"
           onClick={() => onSelectTab('2d')}
+          className="compact-on-mobile"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -231,12 +234,13 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         >
           <FileCode size={14} />
-          <span>Faca 2D</span>
+          <span>2D</span>
         </button>
 
         <button
           type="button"
           onClick={() => onSelectTab('3d')}
+          className="compact-on-mobile"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -254,12 +258,13 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         >
           <Box size={14} />
-          <span>Dobra 3D</span>
+          <span>3D</span>
         </button>
 
         <button
           type="button"
           onClick={() => onSelectTab('imposition')}
+          className="compact-on-mobile"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -277,17 +282,18 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         >
           <LayoutGrid size={14} />
-          <span>Imposição</span>
+          <span className="hide-on-mobile">Imposição</span>
+          <span style={{ display: 'none' }} className="keep-badge">Imp.</span>
         </button>
       </div>
 
       {/* 3. Ações Técnicas: Projetos, Salvar e Exportações */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {/* Projetos Salvos */}
         <button
           type="button"
           onClick={onOpenProjectsModal}
-          className="cad-btn"
+          className="cad-btn icon-only-mobile"
           title={isSupabaseConnected ? 'Projetos sincronizados na Nuvem' : 'Projetos salvos localmente'}
         >
           <FolderOpen size={14} />
@@ -299,7 +305,7 @@ export const Header: React.FC<HeaderProps> = ({
           type="button"
           onClick={handleSaveClick}
           disabled={isSaving}
-          className="cad-btn"
+          className="cad-btn icon-only-mobile"
           style={{
             background: saveSuccess ? 'rgba(16, 185, 129, 0.2)' : 'var(--cad-bg-panel)',
             borderColor: saveSuccess ? '#10b981' : 'var(--cad-border-default)',
@@ -319,7 +325,7 @@ export const Header: React.FC<HeaderProps> = ({
             title="Opções de Exportação CAD (DXF / SVG)"
           >
             <Download size={14} />
-            <span>Exportar</span>
+            <span className="hide-on-mobile">Exportar</span>
             <ChevronDown size={12} />
           </button>
 

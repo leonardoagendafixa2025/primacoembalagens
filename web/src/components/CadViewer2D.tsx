@@ -28,32 +28,45 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
     if (!canvasRef.current || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
 
-    const padding = 70;
-    const availW = rect.width - padding * 2;
-    const availH = rect.height - padding * 2;
+    if (!rect.width || !rect.height || rect.width < 10 || rect.height < 10) return;
 
-    const b = dieline.bounds;
-    const scaleX = availW / (b.width || 1);
-    const scaleY = availH / (b.height || 1);
-    const fitZoom = Math.min(scaleX, scaleY, 2.0);
+    const padding = Math.min(30, Math.max(10, Math.min(rect.width, rect.height) * 0.08));
+    const availW = Math.max(30, rect.width - padding * 2);
+    const availH = Math.max(30, rect.height - padding * 2);
+
+    const b = dieline.bounds || { minX: -150, minY: -100, maxX: 150, maxY: 100, width: 300, height: 200 };
+    const modelW = Math.max(1, b.width || 300);
+    const modelH = Math.max(1, b.height || 200);
+    const scaleX = availW / modelW;
+    const scaleY = availH / modelH;
+    const fitZoom = Math.max(0.02, Math.min(scaleX, scaleY, 2.0));
 
     setZoom(fitZoom);
     // Centraliza o ponto médio do dieline no centro do canvas
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const dielineCenterX = b.minX + b.width / 2;
-    const dielineCenterY = b.minY + b.height / 2;
+    const dielineCenterX = b.minX + modelW / 2;
+    const dielineCenterY = b.minY + modelH / 2;
 
     setPan({
       x: centerX - dielineCenterX * fitZoom,
       y: centerY + dielineCenterY * fitZoom, // No canvas Y cresce para baixo
     });
 
-    onViewportUpdate?.({ cursorMm: mouseMm, zoom: fitZoom });
-  }, [dieline, mouseMm, onViewportUpdate]);
+    onViewportUpdate?.({ cursorMm: { x: 0, y: 0 }, zoom: fitZoom });
+  }, [dieline, onViewportUpdate]);
 
   useEffect(() => {
     fitToScreen();
+  }, [fitToScreen]);
+
+  // Listener para redimensionamento e rotação em dispositivos móveis
+  useEffect(() => {
+    const handleResize = () => {
+      fitToScreen();
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [fitToScreen]);
 
   // Render Loop Canvas
@@ -63,9 +76,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = Math.max(1, canvas.clientWidth || 300);
+    const height = Math.max(1, canvas.clientHeight || 300);
 
     canvas.width = width * dpr;
     canvas.height = height * dpr;
@@ -147,6 +160,8 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
       const sx1 = toScreenX(seg.x1);
       const sy1 = toScreenY(seg.y1);
 
+      if (!isFinite(sx0) || !isFinite(sy0) || !isFinite(sx1) || !isFinite(sy1)) continue;
+
       ctx.beginPath();
       ctx.moveTo(sx0, sy0);
       ctx.lineTo(sx1, sy1);
@@ -171,11 +186,13 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
     // 5. Desenho dos Arcos da Faca com Tangência Perfeita
     if (dieline.arcs && dieline.arcs.length > 0) {
       for (const arc of dieline.arcs) {
-        ctx.beginPath();
         const sx = toScreenX(arc.cx);
         const sy = toScreenY(arc.cy);
-        const sr = arc.r * zoom;
+        const sr = Math.max(0.1, Math.abs(arc.r * zoom));
 
+        if (!isFinite(sx) || !isFinite(sy) || !isFinite(sr) || sr <= 0) continue;
+
+        ctx.beginPath();
         const isFull =
           Math.abs(Math.abs(arc.endAngle - arc.startAngle) - 360) < 1 ||
           (arc.startAngle === 0 && arc.endAngle === 360);
@@ -332,6 +349,73 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
     }
   };
 
+  // Touch gestures para Smartphones e Tablets
+  const lastTouchPosRef = useRef<{ x: number; y: number } | null>(null);
+  const lastTouchDistRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      lastTouchDistRef.current = null;
+    } else if (e.touches.length === 2) {
+      setIsDragging(false);
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchDistRef.current = Math.hypot(dx, dy);
+      lastTouchPosRef.current = null;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && lastTouchPosRef.current) {
+      const touch = e.touches[0];
+      const dx = touch.clientX - lastTouchPosRef.current.x;
+      const dy = touch.clientY - lastTouchPosRef.current.y;
+      setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      lastTouchPosRef.current = { x: touch.clientX, y: touch.clientY };
+
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        const mouseX = touch.clientX - rect.left;
+        const mouseY = touch.clientY - rect.top;
+        const mmX = (mouseX - pan.x) / zoom;
+        const mmY = (pan.y - mouseY) / zoom;
+        const newCoords = { x: Math.round(mmX * 10) / 10, y: Math.round(mmY * 10) / 10 };
+        setMouseMm(newCoords);
+        onViewportUpdate?.({ cursorMm: newCoords, zoom });
+      }
+    } else if (e.touches.length === 2 && lastTouchDistRef.current) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const factor = dist / lastTouchDistRef.current;
+      if (factor > 0.6 && factor < 1.8) {
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const newZoom = Math.min(Math.max(zoom * factor, 0.05), 15);
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (rect) {
+          const mouseX = midX - rect.left;
+          const mouseY = midY - rect.top;
+          setPan({
+            x: mouseX - (mouseX - pan.x) * (newZoom / zoom),
+            y: mouseY - (mouseY - pan.y) * (newZoom / zoom),
+          });
+          setZoom(newZoom);
+          onViewportUpdate?.({ cursorMm: mouseMm, zoom: newZoom });
+        }
+      }
+      lastTouchDistRef.current = dist;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    lastTouchPosRef.current = null;
+    lastTouchDistRef.current = null;
+  };
+
   return (
     <div
       ref={containerRef}
@@ -351,11 +435,16 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         style={{
           width: '100%',
           height: '100%',
           display: 'block',
           cursor: isDragging ? 'grabbing' : 'crosshair',
+          touchAction: 'none',
         }}
       />
 

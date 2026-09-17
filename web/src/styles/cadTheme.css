@@ -264,3 +264,30 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
 .cad-tooltip:hover::after {
   opacity: 1;
 }
+
+/* Responsive Mobile Layout Adaptations */
+@media (max-width: 768px) {
+  :root {
+    --cad-header-height: 48px;
+    --cad-status-height: 32px;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .compact-on-mobile {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+  }
+
+  .cad-btn {
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .icon-only-mobile span:not(.keep-badge) {
+    display: none !important;
+  }
+}
+
