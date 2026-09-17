@@ -358,6 +358,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     const dist = camera.position.length() || 800;
     camera.position.set(0, -dist * 0.9, 0.01);
     controls.update();
+  };
+
   // Sincroniza destaque 3D quando a seleção vem do painel lateral esquerdo
   useEffect(() => {
     if (treeRef.current) {
