@@ -232,10 +232,10 @@ for (const tm of testModels) {
 // TESTE 5: Sincronização Paramétrica Dinâmica
 // -----------------------------------------------------------------------------
 console.log('\n--- TESTE: SINCRONIZAÇÃO PARAMÉTRICA (2D <-> 3D) ---');
-const dParamA = fefco0429.calculate({ L: 200, B: 150, H: 100, Ep: 2 });
+const dParamA = fefco0429.calculate({ L: 200, B: 150, H: 100, Ep: 2, H7: 66 });
 const treeParamA = buildFoldable3DTree(dParamA, 2.0);
 
-const dParamB = fefco0429.calculate({ L: 400, B: 300, H: 200, Ep: 4 });
+const dParamB = fefco0429.calculate({ L: 400, B: 300, H: 200, Ep: 4, H7: 133 });
 const treeParamB = buildFoldable3DTree(dParamB, 4.0);
 
 assert(
