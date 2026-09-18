@@ -4,21 +4,22 @@ import { fefco0201 } from '../src/engine/models/fefco0201';
 import { fefco0203 } from '../src/engine/models/fefco0203';
 import { fefco0427 } from '../src/engine/models/fefco0427';
 import { fefco0429 } from '../src/engine/models/fefco0429';
+import { getModelById } from '../src/engine/registry';
 import { buildFoldable3DTree } from '../src/engine/foldingEngine';
 
 const models = [
-  { name: 'FEFCO 0429', model: fefco0429 },
-  { name: 'FEFCO 0427', model: fefco0427 },
-  { name: 'FEFCO 0201', model: fefco0201 },
-  { name: 'FEFCO 0200', model: fefco0200 },
-  { name: 'FEFCO 0203', model: fefco0203 },
+  { name: 'ECMA A2120', model: getModelById('ecma_a2120'), params: { L: 100, B: 50, H: 52, Ep: 0.5 } },
+  { name: 'FEFCO 0429', model: fefco0429, params: { L: 300, B: 200, H: 150, Ep: 3 } },
+  { name: 'FEFCO 0201', model: fefco0201, params: { L: 300, B: 200, H: 150, Ep: 3 } },
+  { name: 'FEFCO 0200', model: fefco0200, params: { L: 300, B: 200, H: 150, Ep: 3 } },
+  { name: 'FEFCO 0203', model: fefco0203, params: { L: 300, B: 200, H: 150, Ep: 3 } },
 ];
 
 console.log('=== TESTE DE MONTAGEM E FECHAMENTO 3D EM TODOS OS MODELOS ===');
 
 for (const m of models) {
-  const d = m.model.calculate({ L: 300, B: 200, H: 150, Ep: 3 });
-  const tree = buildFoldable3DTree(d, 3.0);
+  const d = m.model.calculate(m.params);
+  const tree = buildFoldable3DTree(d, m.params.Ep || 1.0);
 
   // 0% Flat
   tree.updateProgress(0);

@@ -67,6 +67,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
 
   for (const seg of dieline.segments) {
     if (seg.type === 'dimension') continue;
+    if (Math.hypot(seg.x1 - seg.x0, seg.y1 - seg.y0) < 0.001) continue;
     rawSegs.push({
       p0: { x: seg.x0, y: seg.y0 },
       p1: { x: seg.x1, y: seg.y1 },
@@ -76,7 +77,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
 
   for (const arc of dieline.arcs) {
     if (arc.type === 'dimension') continue;
-    // ├éngulos podem vir em graus (PLMPackLib) ou radianos
+    if (!arc.r || arc.r < 0.001) continue;
+    // Ângulos podem vir em graus (PLMPackLib) ou radianos
     const isDegrees = Math.abs(arc.startAngle) > 2 * Math.PI || Math.abs(arc.endAngle) > 2 * Math.PI || (Math.abs(arc.endAngle - arc.startAngle) >= 10);
     const startRad = isDegrees ? (arc.startAngle * Math.PI) / 180 : arc.startAngle;
     const endRad = isDegrees ? (arc.endAngle * Math.PI) / 180 : arc.endAngle;
@@ -95,15 +97,24 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 1.5 Cura universal de al├¡vios de vinco industriais, degraus e recuos (Relief Notches & Crease Setback Healer)
-  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente s├úo interrompidos
-  // por furos/entalhes de al├¡vio circular (relief punch), recuados por toler├óncia de fabrica├º├úo (setback <= 3.5mm),
-  // ou apresentam micro-defeitos de corte em jun├º├Áes de abas (slits) e degraus de borda (boundary steps).
+  // Helper: distância euclidiana de um ponto a um segmento
+  function distToSeg(p: Point2D, s: { p0: Point2D; p1: Point2D }): number {
+    const dx = s.p1.x - s.p0.x;
+    const dy = s.p1.y - s.p0.y;
+    const l2 = dx * dx + dy * dy;
+    if (l2 < 1e-6) return Math.hypot(p.x - s.p0.x, p.y - s.p0.y);
+    const t = Math.max(0, Math.min(1, ((p.x - s.p0.x) * dx + (p.y - s.p0.y) * dy) / l2));
+    const px = s.p0.x + t * dx;
+    const py = s.p0.y + t * dy;
+    return Math.hypot(p.x - px, p.y - py);
+  }
 
-  // 1.5a: Preservação de fidelidade geométrica analítica de cortes e vincos
-  // (Micro-offsets e entalhes de alívio intencionais de projeto < 1.2mm são preservados com exatidão)
+  // 1.5 Cura universal de alívios de vinco industriais, degraus e recuos (Relief Notches & Crease Setback Healer)
+  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente são interrompidos
+  // por furos/entalhes de alívio circular (relief punch), recuados por tolerância de fabricação (setback <= 3.5mm),
+  // ou apresentam micro-defeitos de corte em junções de abas (slits) e degraus de borda (boundary steps).
 
-  // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de al├¡vio / relief notches <= 3.5mm)
+  // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de alívio / relief notches <= 3.5mm)
   const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
   const bridgeCreases: { p0: Point2D; p1: Point2D; type: string }[] = [];
   for (let i = 0; i < creaseSegs.length; i++) {
@@ -156,41 +167,33 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   rawSegs.push(...bridgeCreases);
 
-  // 1.5c: Cura de pontas soltas de vincos e fendas de abas (Slit & Crease Setback Healer <= 3.5mm)
+  // 1.5c: Cura de pontas soltas de vincos (Crease Setback Healer <= 3.5mm)
   // Em modelos industriais reais (ECMA/FEFCO), lâminas de vinco terminam a 0.5-3.5mm dos cantos para alívio de matriz.
-  // Apenas pontas genuinamente soltas (meets <= 1) são curadas, estendendo na própria direção e preservando seu tipo nativo (vinco ou corte).
+  // Apenas pontas genuinamente soltas de VINCO (que não tocam nenhum vértice ou aresta) são estendidas
+  // na própria direção até encontrar a linha transversal mais próxima.
+  // Cortes e detalhes finos (< 1.5mm) são estritamente preservados sem colapso.
   for (const s of rawSegs) {
+    if (s.type !== 'crease') continue;
     for (const ep of ['p0', 'p1'] as const) {
       const pt = s[ep];
       const otherPt = ep === 'p0' ? s.p1 : s.p0;
 
-      let meets = 0;
+      // Verifica se pt já toca algum vértice ou aresta
+      let touchesAny = false;
       for (const o of rawSegs) {
-        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
-          meets++;
+        if (o === s) continue;
+        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.15 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.15) {
+          touchesAny = true;
+          break;
+        }
+        if (distToSeg(pt, o) < 0.15) {
+          touchesAny = true;
+          break;
         }
       }
-      if (meets > 1) continue;
+      if (touchesAny) continue;
 
-      // 1. Se há um vértice existente próximo (<= 1.5mm), faz o snap direto da ponta para esse vértice
-      let bestV: Point2D | null = null;
-      let bestVDist = 1.5;
-      for (const o of rawSegs) {
-        for (const oPt of [o.p0, o.p1]) {
-          const d = Math.hypot(oPt.x - pt.x, oPt.y - pt.y);
-          if (d > 0.05 && d < bestVDist) {
-            bestVDist = d;
-            bestV = oPt;
-          }
-        }
-      }
-      if (bestV) {
-        pt.x = bestV.x;
-        pt.y = bestV.y;
-        continue;
-      }
-
-      // 2. Se não, projeta e estende na direção do próprio segmento até interceptar a linha transversal mais próxima (<= 3.5mm)
+      // Ponto verdadeiramente solto: estende na direção do vinco até interceptar linha transversal mais próxima (<= 3.5mm)
       const dirx = pt.x - otherPt.x;
       const diry = pt.y - otherPt.y;
       const dlen = Math.hypot(dirx, diry);
@@ -220,8 +223,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 3.5mm)
-  // Se duas pontas soltas de corte (dead-ends no contorno exterior) estão a uma distância curta, conecta com segmento de corte.
+  // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 2.5mm)
+  // Se duas pontas soltas de corte estão a uma distância curta, conecta com segmento de corte.
   const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
   for (const s of rawSegs) {
     if (s.type !== 'cut') continue;
@@ -230,6 +233,9 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       let meets = 0;
       for (const o of rawSegs) {
         if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
+          meets++;
+        }
+        if (o !== s && distToSeg(pt, o) < 0.1) {
           meets++;
         }
       }
@@ -244,7 +250,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       const pA = cutEndpoints[i].pt;
       const pB = cutEndpoints[j].pt;
       const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-      if (d > 0.05 && d <= 3.5) {
+      if (d > 0.05 && d <= 2.5) {
         boundaryBridges.push({
           p0: { x: pA.x, y: pA.y },
           p1: { x: pB.x, y: pB.y },
