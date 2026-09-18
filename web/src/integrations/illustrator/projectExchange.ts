@@ -128,6 +128,8 @@ export function createProjectExchangePackage(
     },
     dieline: {
       bounds: { ...dieline.bounds },
+      customTopology: dieline.customTopology || topology,
+      segments: dieline.segments || [],
       lines: [
         ...(dieline.segments || []).map((s) => ({
           x1: s.x0,

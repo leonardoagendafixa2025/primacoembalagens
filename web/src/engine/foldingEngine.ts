@@ -246,8 +246,8 @@ export function buildFoldable3DTree(
   }
 
   // Centraliza o rootGroup exatamente na BASE da embalagem (Root Panel)
-  const baseCx = rootPanel.centroid.x;
-  const baseCz = -rootPanel.centroid.y;
+  const baseCx = rootPanel.centroid?.x ?? 0;
+  const baseCz = -(rootPanel.centroid?.y ?? 0);
   rootGroup.position.set(-baseCx, 0, -baseCz);
 
   let currentProgress = 0;

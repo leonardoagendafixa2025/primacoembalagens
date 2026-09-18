@@ -53,6 +53,8 @@
     setStatus('Estúdio 3D pronto para visualização.');
   }
 
+  var lastLoadedArtworkUri = null;
+
   // 2. Carrega ou Atualiza Modelo 3D a partir da Bridge
   function fetchProjectGeometry() {
     fetch(BRIDGE_URL + '/api/request-geometry')
@@ -67,6 +69,10 @@
 
         if (window.PLMStudio) {
           window.PLMStudio.loadModel(data.project);
+          var artUri = (data.project.artwork && data.project.artwork.textureDataUri) || lastLoadedArtworkUri;
+          if (artUri) {
+            window.PLMStudio.updateArtwork(artUri);
+          }
           setStatus('Modelo ' + (data.project.modelCode || '') + ' carregado no 3D.');
         }
       })
@@ -74,6 +80,9 @@
         setStatus('Aguardando ponte PLMPackLib: ' + e.message);
       });
   }
+
+  // Carrega imediatamente ao abrir o painel
+  fetchProjectGeometry();
 
   // 3. Captura Rápida e Fotorrealista de Arte do Illustrator e Projeção no 3D
   function syncArtwork() {
@@ -298,6 +307,12 @@
         if (data.activeProject) {
           if (!currentProject || currentProject.projectId !== data.activeProject) {
             fetchProjectGeometry();
+          }
+        }
+        if (data.latestArtworkDataUri && data.latestArtworkDataUri !== lastLoadedArtworkUri) {
+          lastLoadedArtworkUri = data.latestArtworkDataUri;
+          if (window.PLMStudio) {
+            window.PLMStudio.updateArtwork(data.latestArtworkDataUri);
           }
         }
       })

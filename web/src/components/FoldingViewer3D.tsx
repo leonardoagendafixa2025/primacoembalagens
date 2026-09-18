@@ -57,7 +57,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const treeRef = useRef<FoldableTreeResult | null>(null);
   const downPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Carrega textura sincronizada da arte do Illustrator quando fornecida
+  // Carrega textura sincronizada da arte do Illustrator quando fornecida,
+  // compondo sobre a cor do papel/substrato para eliminar qualquer fundo preto indesejado
   useEffect(() => {
     if (!artworkTextureUri) {
       setArtworkTexture(null);
@@ -65,22 +66,35 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       return;
     }
 
-    const loader = new THREE.TextureLoader();
-    loader.load(
-      artworkTextureUri,
-      (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.flipY = true;
-        tex.needsUpdate = true;
-        setArtworkTexture(tex);
-        treeRef.current?.updateArtwork?.(tex);
-      },
-      undefined,
-      (err) => {
-        console.warn('[FoldingViewer3D] Erro ao carregar textura do Illustrator:', err);
-      }
-    );
-  }, [artworkTextureUri]);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // 1. Pinta o fundo com a cor real do substrato (ex: Branco do Cartão ou Bege/Marrom do Kraft)
+      const substrateColor = profile?.outerColor || '#FFFFFF';
+      ctx.fillStyle = substrateColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 2. Desenha a arte vetorial/impressa com sua transparência sobreposta ao papel
+      ctx.drawImage(img, 0, 0);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.flipY = true;
+      tex.needsUpdate = true;
+      setArtworkTexture(tex);
+      treeRef.current?.updateArtwork?.(tex);
+    };
+    img.onerror = (err) => {
+      console.warn('[FoldingViewer3D] Erro ao carregar imagem de arte do Illustrator:', err);
+    };
+    img.src = artworkTextureUri;
+  }, [artworkTextureUri, profile?.outerColor]);
 
   // Configuração inicial da cena Three.js com OrbitControls profissional
   useEffect(() => {

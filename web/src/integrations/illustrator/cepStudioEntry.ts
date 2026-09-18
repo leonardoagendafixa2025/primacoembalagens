@@ -136,8 +136,45 @@ class PLMStudioViewer {
     window.removeEventListener('resize', this.onResize);
   }
 
+  private lastArtworkDataUri: string | null = null;
+
   public loadModel(project: StudioProjectData) {
     this.currentProject = project;
+
+    if (!project.dieline) {
+      console.warn('[PLMStudio] Objeto project.dieline ausente no payload');
+      return;
+    }
+
+    if (!project.dieline.bounds) {
+      project.dieline.bounds = { minX: 0, minY: 0, maxX: 500, maxY: 500, width: 500, height: 500 };
+    }
+
+    // Se project.dieline não tiver customTopology mas tiver project.panels, reconstrói customTopology com centroid
+    if (!project.dieline.customTopology && (project as any).panels) {
+      const pList = (project as any).panels;
+      project.dieline.customTopology = {
+        panels: pList.map((p: any) => {
+          const pts = (p.polygon || []).map((pt: any) => ({ x: pt.x, y: pt.y }));
+          let cx = 0, cy = 0;
+          if (pts.length > 0) {
+            for (const pt of pts) { cx += pt.x; cy += pt.y; }
+            cx /= pts.length;
+            cy /= pts.length;
+          }
+          return {
+            id: p.id,
+            name: p.name,
+            isRoot: !!p.isRoot,
+            boundary: pts,
+            centroid: { x: cx, y: cy },
+            holes: [],
+            hingeToParent: p.hingeToParent || null,
+          };
+        }),
+        hinges: [],
+      };
+    }
 
     // Limpa a malha anterior
     while (this.boxGroup.children.length > 0) {
@@ -177,28 +214,50 @@ class PLMStudioViewer {
         this.controls.target.set(0, 0, 0);
         this.controls.update();
       }
+
+      // Se houver arte anterior, reaplica com a cor atual do substrato
+      if (this.lastArtworkDataUri) {
+        this.updateArtwork(this.lastArtworkDataUri);
+      }
     } catch (err) {
       console.error('[PLMStudio] Erro ao construir árvore 3D do modelo:', err);
     }
   }
 
   public updateArtwork(dataUri: string) {
-    const loader = new THREE.TextureLoader();
-    loader.load(
-      dataUri,
-      (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.flipY = true;
-        tex.needsUpdate = true;
-        this.currentTexture = tex;
+    this.lastArtworkDataUri = dataUri;
+    const isKraft = this.substrateMode === 'kraft';
+    const substrateColor = isKraft ? '#C89D68' : '#FFFFFF';
 
-        if (this.currentTree) {
-          this.currentTree.updateArtwork(tex);
-        }
-      },
-      undefined,
-      (err) => console.error('[PLMStudio] Erro ao carregar textura de arte:', err)
-    );
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // 1. Pinta todo o fundo com a cor do papel/substrato (elimina o fundo preto)
+      ctx.fillStyle = substrateColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 2. Desenha a arte impressa com transparência preservada por cima
+      ctx.drawImage(img, 0, 0);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.flipY = true;
+      tex.needsUpdate = true;
+      this.currentTexture = tex;
+
+      if (this.currentTree) {
+        this.currentTree.updateArtwork(tex);
+      }
+    };
+    img.onerror = (err) => {
+      console.error('[PLMStudio] Erro ao carregar imagem de arte:', err);
+    };
+    img.src = dataUri;
   }
 
   public setFoldProgress(val: number) {
