@@ -243,41 +243,28 @@ export const App: React.FC = () => {
     exportToSVG(dieline, filename);
   };
 
-  // Integração Oficial Adobe Illustrator 2025
+  // Integração Oficial Adobe Illustrator
   const handleOpenInIllustrator = async () => {
     setIsOpeningIllustrator(true);
     try {
-      const client = IllustratorBridgeClient.getInstance();
-      const status = await client.checkStatus();
-      setBridgeStatus(status);
-
-      if (!status.bridgeOnline) {
-        // Tenta mais uma verificação de conexão rápida
-        await new Promise((r) => setTimeout(r, 400));
-        const retryStatus = await client.checkStatus();
-        setBridgeStatus(retryStatus);
-        if (!retryStatus.bridgeOnline) {
-          alert(
-            'Illustrator Offline.\n\nA ponte local (localhost:18080) ainda não está ativa.\n\nPara ficar online:\n1. Abra o Adobe Illustrator.\n2. No menu Janela > Extensões, abra o painel Primacor Embalagens Studio.\n3. O status mudará automaticamente para Online!'
-          );
-          return;
-        }
-      }
-
       const exchangePkg = createProjectExchangePackage(
         currentModel,
         params,
         selectedProfile,
         dieline
       );
+      const client = IllustratorBridgeClient.getInstance();
       const res = await client.openInIllustrator(exchangePkg);
       if (res.success) {
         confetti({ particleCount: 35, spread: 45, origin: { y: 0.1 } });
       } else {
-        alert(res.message);
+        // Se a ponte estiver offline, abre o modal explicativo
+        // SEM BAIXAR NENHUM ARQUIVO .JSX AUTOMATICAMENTE
+        setIsIllustratorPluginModalOpen(true);
       }
     } catch (e: any) {
-      alert('Erro ao comunicar com Illustrator: ' + (e?.message || e));
+      console.warn('Falha na comunicação com Illustrator:', e);
+      setIsIllustratorPluginModalOpen(true);
     } finally {
       setIsOpeningIllustrator(false);
     }

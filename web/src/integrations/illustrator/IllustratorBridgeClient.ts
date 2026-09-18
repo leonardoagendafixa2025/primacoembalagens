@@ -15,8 +15,8 @@ export type BridgeEventHandler = (event: {
 
 export class IllustratorBridgeClient {
   private static instance: IllustratorBridgeClient;
-  private bridgeUrl = 'http://127.0.0.1:48123';
-  private wsUrl = 'ws://127.0.0.1:48123/ws';
+  private bridgeUrls = ['http://127.0.0.1:48123', 'http://localhost:48123'];
+  private currentBridgeUrl = 'http://127.0.0.1:48123';
   private ws: WebSocket | null = null;
   private listeners: Set<BridgeEventHandler> = new Set();
   private status: BridgeStatus = { bridgeOnline: false, illustratorDetected: false };
@@ -27,7 +27,7 @@ export class IllustratorBridgeClient {
   private constructor() {
     this.initWebSocket();
     this.checkStatus();
-    setInterval(() => this.checkStatus(), 2000);
+    setInterval(() => this.checkStatus(), 2500);
   }
 
   public static getInstance(): IllustratorBridgeClient {
@@ -53,8 +53,19 @@ export class IllustratorBridgeClient {
   }
 
   private initWebSocket() {
+    // Em páginas HTTPS, conexões ws:// inseguras para localhost podem ser bloqueadas pelo browser
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      // Deixamos a comunicação acontecer via HTTP fetch polling resiliente
+      return;
+    }
+
     try {
-      this.ws = new WebSocket(this.wsUrl);
+      if (this.ws) {
+        try { this.ws.close(); } catch {}
+        this.ws = null;
+      }
+
+      this.ws = new WebSocket('ws://127.0.0.1:48123/ws');
 
       this.ws.onopen = () => {
         this.status.bridgeOnline = true;
@@ -96,24 +107,41 @@ export class IllustratorBridgeClient {
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.initWebSocket();
-    }, 4000);
+    }, 5000);
   }
 
   public async checkStatus(): Promise<BridgeStatus> {
-    try {
-      const res = await fetch(`${this.bridgeUrl}/api/status`, { method: 'GET' });
-      if (res.ok) {
-        const data = await res.json();
-        this.status = { bridgeOnline: true, ...data };
-        if (data.latestArtworkDataUri && data.latestArtworkDataUri !== this.lastArtworkUri) {
-          this.lastArtworkUri = data.latestArtworkDataUri;
-          this.notify('ARTWORK_UPDATED', { textureDataUri: data.latestArtworkDataUri });
+    for (const url of this.bridgeUrls) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1800);
+        const res = await fetch(`${url}/api/status`, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' },
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          this.currentBridgeUrl = url;
+          const wasOnline = this.status.bridgeOnline;
+          this.status = { bridgeOnline: true, ...data };
+          if (!wasOnline) {
+            this.notify('STATUS_CHANGED', this.status);
+          }
+          if (data.latestArtworkDataUri && data.latestArtworkDataUri !== this.lastArtworkUri) {
+            this.lastArtworkUri = data.latestArtworkDataUri;
+            this.notify('ARTWORK_UPDATED', { textureDataUri: data.latestArtworkDataUri });
+          }
+          return this.status;
         }
-      } else {
-        this.status.bridgeOnline = false;
-      }
-    } catch {
+      } catch {}
+    }
+
+    if (this.status.bridgeOnline) {
       this.status.bridgeOnline = false;
+      this.notify('STATUS_CHANGED', this.status);
     }
     return this.status;
   }
@@ -122,36 +150,43 @@ export class IllustratorBridgeClient {
    * Envia o projeto para abertura imediata no Adobe Illustrator 2025
    */
   public async openInIllustrator(project: PLMPackProjectExchange): Promise<{ success: boolean; message: string; isFallback?: boolean }> {
-    // 1. Tenta envio direto para o Bridge Server Local
-    try {
-      const res = await fetch(`${this.bridgeUrl}/api/open`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(project),
-      });
+    // Tenta envio direto para a Bridge Local
+    const urlsToTry = [this.currentBridgeUrl, ...this.bridgeUrls.filter(u => u !== this.currentBridgeUrl)];
 
-      if (res.ok) {
-        const result = await res.json();
-        if (result.success) {
+    for (const url of urlsToTry) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(`${url}/api/open`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(project),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const result = await res.json();
+          this.currentBridgeUrl = url;
+          this.status.bridgeOnline = true;
+          this.notify('STATUS_CHANGED', this.status);
+
           return {
             success: true,
-            message: result.message || 'Projeto aberto com sucesso no Adobe Illustrator 2025!',
-          };
-        } else {
-          return {
-            success: false,
-            isFallback: true,
-            message: result.message || 'Falha ao processar abertura no Illustrator.',
+            message: result.message || 'Projeto aberto com sucesso no Adobe Illustrator!',
           };
         }
+      } catch (e) {
+        // Tenta próxima URL
       }
-    } catch (e) {
-      console.warn('Bridge local não respondeu:', e);
     }
+
+    this.status.bridgeOnline = false;
+    this.notify('STATUS_CHANGED', this.status);
 
     return {
       success: false,
-      message: 'Ponte com Illustrator offline. Abra a extensão no Adobe Illustrator (Janela > Extensões > Primacor Embalagens Studio) para conectar.',
+      message: 'Extensão local do Illustrator offline.',
       isFallback: true,
     };
   }
@@ -181,7 +216,7 @@ export class IllustratorBridgeClient {
    */
   public async requestArtworkSync(projectId: string): Promise<{ success: boolean; message: string; textureDataUri?: string }> {
     try {
-      const res = await fetch(`${this.bridgeUrl}/api/sync-artwork`, {
+      const res = await fetch(`${this.currentBridgeUrl}/api/sync-artwork`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId }),
