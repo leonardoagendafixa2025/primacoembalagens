@@ -1,0 +1,32 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="633.848" height="380.619" viewBox="-1.33333 -1.33333 633.848 380.619">
+	<g transform="translate(-212.344,629.413) scale(1,-1) ">
+		<line x1="212.344" y1="251.46" x2="843.525" y2="251.46" stroke="rgb(255,0,0)" stroke-width="1.6437" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="843.525" y1="251.46" x2="843.525" y2="629.413" stroke="rgb(255,0,0)" stroke-width="1.6437" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="843.525" y1="629.413" x2="212.344" y2="629.413" stroke="rgb(255,0,0)" stroke-width="1.6437" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="212.344" y1="629.413" x2="212.344" y2="251.46" stroke="rgb(255,0,0)" stroke-width="1.6437" ev-style="Cutting" ev-style-annotation="false"/>
+		<g id="evml.1.1" stroke="rgb(128,0,128)" stroke-width="0.65748" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(421.969,361.452) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="7.39665" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">A [167.00]</text>
+			</g>
+			<line x1="212.344" y1="353.061" x2="217.004" y2="352.239"/>
+			<line x1="217.004" y1="352.239" x2="217.004" y2="353.882"/>
+			<line x1="217.004" y1="353.882" x2="212.344" y2="353.061"/>
+			<line x1="843.525" y1="353.061" x2="838.866" y2="353.882"/>
+			<line x1="838.866" y1="353.882" x2="838.866" y2="352.239"/>
+			<line x1="838.866" y1="352.239" x2="843.525" y2="353.061"/>
+			<line x1="212.344" y1="353.061" x2="843.525" y2="353.061"/>
+		</g>
+		<g id="evml.1.2" stroke="rgb(128,0,128)" stroke-width="0.65748" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(541.724,509.836) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="7.39665" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">H [100.00]</text>
+			</g>
+			<line x1="550.115" y1="251.46" x2="550.936" y2="256.12"/>
+			<line x1="550.936" y1="256.12" x2="549.293" y2="256.12"/>
+			<line x1="549.293" y1="256.12" x2="550.115" y2="251.46"/>
+			<line x1="550.115" y1="629.413" x2="549.293" y2="624.754"/>
+			<line x1="549.293" y1="624.754" x2="550.936" y2="624.754"/>
+			<line x1="550.936" y1="624.754" x2="550.115" y2="629.413"/>
+			<line x1="550.115" y1="251.46" x2="550.115" y2="629.413"/>
+		</g>
+	</g>
+</svg>

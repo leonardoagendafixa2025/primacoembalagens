@@ -1,0 +1,558 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1340.28" height="1307.92" viewBox="-54.0726 -126.398 1340.28 1307.92">
+	<g transform="translate(-239.089,1114.06) scale(1,-1) ">
+		<line x1="1191.53" y1="263.667" x2="1191.53" y2="830.596" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="830.596" x2="1416.41" y2="263.667" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="830.596" x2="851.372" y2="263.667" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="624.601" y1="263.667" x2="624.601" y2="830.596" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="624.601" y1="830.596" x2="284.443" y2="830.596" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="284.443" y1="263.667" x2="624.601" y2="263.667" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="284.443" y1="830.596" x2="284.443" y2="263.667" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="284.443" y1="263.667" x2="239.089" y2="284.816" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="239.089" y1="284.816" x2="239.089" y2="809.447" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="239.089" y1="809.447" x2="284.443" y2="830.596" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="1000.67" x2="851.372" y2="1057.37" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="832.486" x2="851.372" y2="832.486" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="1189.64" y1="1057.37" x2="1189.64" y2="1085.71" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1161.29" y1="1114.06" x2="881.608" y2="1114.06" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="853.262" y1="1085.71" x2="853.262" y2="1057.37" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="1057.37" x2="853.262" y2="1057.37" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="853.262" y1="1057.37" x2="1189.64" y2="1057.37" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="1189.64" y1="1057.37" x2="1191.53" y2="1057.37" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M1161.29,1114.06 a28.3465 28.3465 0 0 0 28.3465,-28.3465" fill="none" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M881.608,1114.06 a28.3465 28.3465 0 0 1 -28.3465,-28.3465" fill="none" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="624.601" y1="830.596" x2="627.435" y2="830.596" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="676.805" y1="1057.37" x2="627.435" y2="873.116" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="764.443" y1="1057.37" x2="676.805" y2="1057.37" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M764.443,1000.67 a28.3465 28.3465 0 0 1 0,56.6929" fill="none" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="627.435" y1="830.596" x2="627.435" y2="873.116" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="1000.67" x2="736.097" y2="1000.67" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="627.435" y1="830.596" x2="851.372" y2="830.596" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="851.372" y1="830.596" x2="851.372" y2="830.596" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="830.596" x2="851.372" y2="1000.67" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1333.26" y1="1057.37" x2="1191.53" y2="1057.37" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1382.23" y1="1000.67" x2="1304.92" y2="1000.67" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="873.116" x2="1382.23" y2="1000.67" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M1333.26,1000.67 a28.3465 28.3465 0 0 1 0,56.6929" fill="none" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="830.596" x2="1416.41" y2="873.116" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="830.596" x2="1191.53" y2="830.596" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="830.596" x2="1191.53" y2="1057.37" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="830.596" x2="1416.41" y2="830.596" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="830.596" x2="1416.41" y2="830.596" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="121.935" x2="1191.53" y2="36.8954" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="36.8954" x2="851.372" y2="121.935" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="261.777" x2="1191.53" y2="261.777" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="853.262" y1="36.8954" x2="853.262" y2="8.5489" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="881.608" y1="-19.7976" x2="1161.29" y2="-19.7976" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1189.64" y1="8.5489" x2="1189.64" y2="36.8954" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="36.8954" x2="1189.64" y2="36.8954" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1189.64" y1="36.8954" x2="853.262" y2="36.8954" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="853.262" y1="36.8954" x2="851.372" y2="36.8954" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M881.608,-19.7976 a28.3465 28.3465 0 0 0 -28.3465,28.3465" fill="none" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M1161.29,-19.7976 a28.3465 28.3465 0 0 1 28.3465,28.3465" fill="none" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="237.21" x2="1416.41" y2="263.667" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="121.935" x2="1385.52" y2="121.935" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="252.328" x2="1191.53" y2="121.935" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1191.53" y1="263.667" x2="1191.53" y2="252.328" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="263.667" x2="1416.41" y2="263.667" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="263.667" x2="1191.53" y2="263.667" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="237.21" x2="1385.52" y2="121.935" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="627.435" y1="237.21" x2="627.435" y2="263.667" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="121.935" x2="658.323" y2="121.935" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="252.328" x2="851.372" y2="121.935" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="851.372" y1="263.667" x2="851.372" y2="252.328" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="624.601" y1="263.667" x2="627.435" y2="263.667" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="627.435" y1="263.667" x2="851.372" y2="263.667" stroke="rgb(0,255,0)" stroke-width="4.54506" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="627.435" y1="237.21" x2="658.323" y2="121.935" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="830.596" x2="1416.41" y2="830.596" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1416.41" y1="263.667" x2="1416.41" y2="263.667" stroke="rgb(255,0,0)" stroke-width="4.54506" ev-style="Cutting" ev-style-annotation="false"/>
+		<g id="evml.4" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1113.63,280.051) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">0.50</text>
+			</g>
+			<line x1="1123.49" y1="263.667" x2="1125.76" y2="276.551"/>
+			<line x1="1125.76" y1="276.551" x2="1121.21" y2="276.551"/>
+			<line x1="1121.21" y1="276.551" x2="1123.49" y2="263.667"/>
+			<line x1="1123.49" y1="261.777" x2="1121.21" y2="248.894"/>
+			<line x1="1121.21" y1="248.894" x2="1125.76" y2="248.894"/>
+			<line x1="1125.76" y1="248.894" x2="1123.49" y2="261.777"/>
+			<line x1="1123.49" y1="273.667" x2="1123.49" y2="263.667"/>
+			<line x1="1123.49" y1="251.777" x2="1123.49" y2="261.777"/>
+			<line x1="1185.09" y1="263.667" x2="1110.6" y2="263.667"/>
+			<line x1="1123.49" y1="263.667" x2="1123.49" y2="299.992"/>
+		</g>
+		<g id="evml.5" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1502.55,515.771) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">300.00</text>
+			</g>
+			<line x1="1512.41" y1="1114.06" x2="1510.14" y2="1101.18"/>
+			<line x1="1510.14" y1="1101.18" x2="1514.68" y2="1101.18"/>
+			<line x1="1514.68" y1="1101.18" x2="1512.41" y2="1114.06"/>
+			<line x1="1512.41" y1="-19.7976" x2="1514.68" y2="-6.91392"/>
+			<line x1="1514.68" y1="-6.91392" x2="1510.14" y2="-6.91392"/>
+			<line x1="1510.14" y1="-6.91392" x2="1512.41" y2="-19.7976"/>
+			<line x1="1512.41" y1="1114.06" x2="1512.41" y2="-19.7976"/>
+			<line x1="1423.81" y1="1114.06" x2="1525.3" y2="1114.06"/>
+			<line x1="1423.81" y1="-19.7976" x2="1525.3" y2="-19.7976"/>
+		</g>
+		<g id="evml.6" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(796.389,1219.92) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">311.50</text>
+			</g>
+			<line x1="239.089" y1="1210.06" x2="251.972" y2="1207.79"/>
+			<line x1="251.972" y1="1207.79" x2="251.972" y2="1212.33"/>
+			<line x1="251.972" y1="1212.33" x2="239.089" y2="1210.06"/>
+			<line x1="1416.41" y1="1210.06" x2="1403.53" y2="1212.33"/>
+			<line x1="1403.53" y1="1212.33" x2="1403.53" y2="1207.79"/>
+			<line x1="1403.53" y1="1207.79" x2="1416.41" y2="1210.06"/>
+			<line x1="239.089" y1="1210.06" x2="1416.41" y2="1210.06"/>
+			<line x1="239.089" y1="1121.46" x2="239.089" y2="1222.94"/>
+			<line x1="1416.41" y1="1121.46" x2="1416.41" y2="1222.94"/>
+		</g>
+		<g id="evml.1.35" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1250.26,596.195) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">B-GLC [59.50]</text>
+			</g>
+			<line x1="1416.41" y1="586.335" x2="1403.53" y2="588.606"/>
+			<line x1="1403.53" y1="588.606" x2="1403.53" y2="584.063"/>
+			<line x1="1403.53" y1="584.063" x2="1416.41" y2="586.335"/>
+			<line x1="1191.53" y1="586.335" x2="1204.41" y2="584.063"/>
+			<line x1="1204.41" y1="584.063" x2="1204.41" y2="588.606"/>
+			<line x1="1204.41" y1="588.606" x2="1191.53" y2="586.335"/>
+			<line x1="1416.41" y1="586.335" x2="1191.53" y2="586.335"/>
+		</g>
+		<g id="evml.1.36" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(705.841,594.317) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">B [60.00]</text>
+			</g>
+			<line x1="851.372" y1="584.457" x2="838.489" y2="586.728"/>
+			<line x1="838.489" y1="586.728" x2="838.489" y2="582.185"/>
+			<line x1="838.489" y1="582.185" x2="851.372" y2="584.457"/>
+			<line x1="624.601" y1="584.457" x2="637.484" y2="582.185"/>
+			<line x1="637.484" y1="582.185" x2="637.484" y2="586.728"/>
+			<line x1="637.484" y1="586.728" x2="624.601" y2="584.457"/>
+			<line x1="851.372" y1="584.457" x2="624.601" y2="584.457"/>
+		</g>
+		<g id="evml.1.37" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(993.758,594.317) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">A [90.00]</text>
+			</g>
+			<line x1="1191.53" y1="584.457" x2="1178.65" y2="586.728"/>
+			<line x1="1178.65" y1="586.728" x2="1178.65" y2="582.185"/>
+			<line x1="1178.65" y1="582.185" x2="1191.53" y2="584.457"/>
+			<line x1="851.372" y1="584.457" x2="864.256" y2="582.185"/>
+			<line x1="864.256" y1="582.185" x2="864.256" y2="586.728"/>
+			<line x1="864.256" y1="586.728" x2="851.372" y2="584.457"/>
+			<line x1="1191.53" y1="584.457" x2="851.372" y2="584.457"/>
+		</g>
+		<g id="evml.1.38" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(919.396,444.502) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">H [150.00]</text>
+			</g>
+			<line x1="929.256" y1="830.596" x2="926.985" y2="817.713"/>
+			<line x1="926.985" y1="817.713" x2="931.528" y2="817.713"/>
+			<line x1="931.528" y1="817.713" x2="929.256" y2="830.596"/>
+			<line x1="929.256" y1="263.667" x2="931.528" y2="276.551"/>
+			<line x1="931.528" y1="276.551" x2="926.985" y2="276.551"/>
+			<line x1="926.985" y1="276.551" x2="929.256" y2="263.667"/>
+			<line x1="929.256" y1="830.596" x2="929.256" y2="263.667"/>
+		</g>
+		<g id="evml.1.39" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(415.393,594.317) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">A [90.00]</text>
+			</g>
+			<line x1="624.601" y1="584.457" x2="611.717" y2="586.728"/>
+			<line x1="611.717" y1="586.728" x2="611.717" y2="582.185"/>
+			<line x1="611.717" y1="582.185" x2="624.601" y2="584.457"/>
+			<line x1="284.443" y1="584.457" x2="297.327" y2="582.185"/>
+			<line x1="297.327" y1="582.185" x2="297.327" y2="586.728"/>
+			<line x1="297.327" y1="586.728" x2="284.443" y2="584.457"/>
+			<line x1="624.601" y1="584.457" x2="284.443" y2="584.457"/>
+		</g>
+		<g id="evml.34.2" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(308.728,501.574) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">GL [12.00]</text>
+			</g>
+			<line x1="239.089" y1="491.714" x2="251.972" y2="489.442"/>
+			<line x1="251.972" y1="489.442" x2="251.972" y2="493.986"/>
+			<line x1="251.972" y1="493.986" x2="239.089" y2="491.714"/>
+			<line x1="284.443" y1="491.714" x2="271.559" y2="493.986"/>
+			<line x1="271.559" y1="493.986" x2="271.559" y2="489.442"/>
+			<line x1="271.559" y1="489.442" x2="284.443" y2="491.714"/>
+			<line x1="239.089" y1="491.714" x2="284.443" y2="491.714"/>
+			<line x1="284.443" y1="491.714" x2="356.451" y2="491.714"/>
+		</g>
+		<g id="evml.34.3" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(196.051,279.993) rotate(32.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">GLA1 [65.00]</text>
+			</g>
+			<g transform="translate(297.681,344.738) rotate(32.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Symbol" text-anchor="start" dominant-baseline="baseline"></text>
+			</g>
+			<line x1="284.443" y1="315.089" x2="271.376" y2="315.729"/>
+			<line x1="271.376" y1="315.729" x2="271.945" y2="311.221"/>
+			<line x1="271.945" y1="311.221" x2="284.443" y2="315.089"/>
+			<line x1="237.839" y1="285.399" x2="246.626" y2="295.091"/>
+			<line x1="246.626" y1="295.091" x2="242.781" y2="297.512"/>
+			<line x1="242.781" y1="297.512" x2="237.839" y2="285.399"/>
+			<path d="M284.443,315.089 a51.4219 51.4219 0 0 1 -46.6041,-29.6901" fill="none"/>
+			<line x1="233.25" y1="287.539" x2="226.162" y2="290.844"/>
+		</g>
+		<g id="evml.34.4" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(214.851,829.868) rotate(327.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">GLA [65.00]</text>
+			</g>
+			<g transform="translate(306.849,771.258) rotate(327.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Symbol" text-anchor="start" dominant-baseline="baseline"></text>
+			</g>
+			<line x1="241.061" y1="810.367" x2="246.116" y2="798.301"/>
+			<line x1="246.116" y1="798.301" x2="249.938" y2="800.757"/>
+			<line x1="249.938" y1="800.757" x2="241.061" y2="810.367"/>
+			<line x1="284.443" y1="782.729" x2="271.982" y2="786.714"/>
+			<line x1="271.982" y1="786.714" x2="271.371" y2="782.212"/>
+			<line x1="271.371" y1="782.212" x2="284.443" y2="782.729"/>
+			<path d="M241.061,810.367 a47.8673 47.8673 0 0 1 43.3825,-27.6377" fill="none"/>
+		</g>
+		<g id="evml.47.2" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(920.04,890.078) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">PH [59.50]</text>
+			</g>
+			<line x1="929.9" y1="832.486" x2="932.172" y2="845.37"/>
+			<line x1="932.172" y1="845.37" x2="927.628" y2="845.37"/>
+			<line x1="927.628" y1="845.37" x2="929.9" y2="832.486"/>
+			<line x1="929.9" y1="1057.37" x2="927.628" y2="1044.48"/>
+			<line x1="927.628" y1="1044.48" x2="932.172" y2="1044.48"/>
+			<line x1="932.172" y1="1044.48" x2="929.9" y2="1057.37"/>
+			<line x1="929.9" y1="832.486" x2="929.9" y2="1057.37"/>
+		</g>
+		<g id="evml.47.4" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1122.93,760.291) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">0.50</text>
+			</g>
+			<line x1="1132.79" y1="832.486" x2="1135.06" y2="845.37"/>
+			<line x1="1135.06" y1="845.37" x2="1130.52" y2="845.37"/>
+			<line x1="1130.52" y1="845.37" x2="1132.79" y2="832.486"/>
+			<line x1="1132.79" y1="830.596" x2="1130.52" y2="817.713"/>
+			<line x1="1130.52" y1="817.713" x2="1135.06" y2="817.713"/>
+			<line x1="1135.06" y1="817.713" x2="1132.79" y2="830.596"/>
+			<line x1="1132.79" y1="842.486" x2="1132.79" y2="832.486"/>
+			<line x1="1132.79" y1="820.596" x2="1132.79" y2="830.596"/>
+			<line x1="1185.09" y1="830.596" x2="1119.91" y2="830.596"/>
+			<line x1="1132.79" y1="830.596" x2="1132.79" y2="780.232"/>
+		</g>
+		<g id="evml.48.2" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1066.97,930.075) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">TEH [15.00]</text>
+			</g>
+			<line x1="1076.83" y1="1114.06" x2="1074.56" y2="1101.18"/>
+			<line x1="1074.56" y1="1101.18" x2="1079.11" y2="1101.18"/>
+			<line x1="1079.11" y1="1101.18" x2="1076.83" y2="1114.06"/>
+			<line x1="1076.83" y1="1057.37" x2="1079.11" y2="1070.25"/>
+			<line x1="1079.11" y1="1070.25" x2="1074.56" y2="1070.25"/>
+			<line x1="1074.56" y1="1070.25" x2="1076.83" y2="1057.37"/>
+			<line x1="1076.83" y1="1114.06" x2="1076.83" y2="1057.37"/>
+			<line x1="1076.83" y1="1057.37" x2="1076.83" y2="984.616"/>
+		</g>
+		<g id="evml.48.3" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1113.05,1143.69) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">TEC [0.50]</text>
+			</g>
+			<line x1="1189.64" y1="1133.83" x2="1176.76" y2="1136.1"/>
+			<line x1="1176.76" y1="1136.1" x2="1176.76" y2="1131.56"/>
+			<line x1="1176.76" y1="1131.56" x2="1189.64" y2="1133.83"/>
+			<line x1="1191.53" y1="1133.83" x2="1204.41" y2="1131.56"/>
+			<line x1="1204.41" y1="1131.56" x2="1204.41" y2="1136.1"/>
+			<line x1="1204.41" y1="1136.1" x2="1191.53" y2="1133.83"/>
+			<line x1="1179.64" y1="1133.83" x2="1189.64" y2="1133.83"/>
+			<line x1="1201.53" y1="1133.83" x2="1191.53" y2="1133.83"/>
+			<line x1="1189.64" y1="1092.16" x2="1189.64" y2="1146.72"/>
+			<line x1="1191.53" y1="1063.81" x2="1191.53" y2="1146.72"/>
+			<line x1="1189.64" y1="1133.83" x2="1161.88" y2="1133.83"/>
+		</g>
+		<g id="evml.48.6" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(772.792,1184.37) rotate(321.7) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">R </text>
+			</g>
+			<g transform="translate(788.833,1171.68) rotate(321.7) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">TER [7.50]</text>
+			</g>
+			<line x1="859.377" y1="1103.3" x2="850.682" y2="1113.08"/>
+			<line x1="850.682" y1="1113.08" x2="847.863" y2="1109.51"/>
+			<line x1="847.863" y1="1109.51" x2="859.377" y2="1103.3"/>
+			<line x1="812.992" y1="1140" x2="859.377" y2="1103.3"/>
+		</g>
+		<g id="evml.49.6" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(643.905,788.617) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">LFC1 [0.75]</text>
+			</g>
+			<line x1="627.435" y1="778.757" x2="640.319" y2="776.485"/>
+			<line x1="640.319" y1="776.485" x2="640.319" y2="781.029"/>
+			<line x1="640.319" y1="781.029" x2="627.435" y2="778.757"/>
+			<line x1="624.601" y1="778.757" x2="611.717" y2="781.029"/>
+			<line x1="611.717" y1="781.029" x2="611.717" y2="776.485"/>
+			<line x1="611.717" y1="776.485" x2="624.601" y2="778.757"/>
+			<line x1="637.435" y1="778.757" x2="627.435" y2="778.757"/>
+			<line x1="614.601" y1="778.757" x2="624.601" y2="778.757"/>
+			<line x1="627.435" y1="824.154" x2="627.435" y2="765.873"/>
+			<line x1="624.601" y1="824.154" x2="624.601" y2="765.873"/>
+			<line x1="627.435" y1="778.757" x2="697.338" y2="778.757"/>
+		</g>
+		<g id="evml.49.7" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(572.282,1096.7) rotate(352.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">LFA [15.00]</text>
+			</g>
+			<g transform="translate(677.051,1082.9) rotate(352.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Symbol" text-anchor="start" dominant-baseline="baseline"></text>
+			</g>
+			<line x1="680.849" y1="1072.46" x2="668.825" y2="1077.61"/>
+			<line x1="668.825" y1="1077.61" x2="667.787" y2="1073.19"/>
+			<line x1="667.787" y1="1073.19" x2="680.849" y2="1072.46"/>
+			<line x1="627.435" y1="1079.49" x2="640.242" y2="1076.82"/>
+			<line x1="640.242" y1="1076.82" x2="640.383" y2="1081.36"/>
+			<line x1="640.383" y1="1081.36" x2="627.435" y2="1079.49"/>
+			<path d="M680.849,1072.46 a206.374 206.374 0 0 1 -53.4134,7.03201" fill="none"/>
+			<line x1="678.473" y1="1063.59" x2="684.183" y2="1084.9"/>
+			<line x1="627.435" y1="879.558" x2="627.435" y2="1092.37"/>
+		</g>
+		<g id="evml.49.13" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(725.292,1026.83) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">LFTW [15.00]</text>
+			</g>
+			<line x1="735.152" y1="1057.37" x2="732.88" y2="1044.48"/>
+			<line x1="732.88" y1="1044.48" x2="737.423" y2="1044.48"/>
+			<line x1="737.423" y1="1044.48" x2="735.152" y2="1057.37"/>
+			<line x1="735.152" y1="1000.67" x2="737.423" y2="1013.56"/>
+			<line x1="737.423" y1="1013.56" x2="732.88" y2="1013.56"/>
+			<line x1="732.88" y1="1013.56" x2="735.152" y2="1000.67"/>
+			<line x1="735.152" y1="1057.37" x2="735.152" y2="1000.67"/>
+			<line x1="729.655" y1="1000.67" x2="722.268" y2="1000.67"/>
+			<line x1="735.152" y1="1057.37" x2="735.152" y2="1088.96"/>
+		</g>
+		<g id="evml.49.19" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(729.544,871.725) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">SO [45.00]</text>
+			</g>
+			<line x1="739.404" y1="1000.67" x2="737.132" y2="987.791"/>
+			<line x1="737.132" y1="987.791" x2="741.675" y2="987.791"/>
+			<line x1="741.675" y1="987.791" x2="739.404" y2="1000.67"/>
+			<line x1="739.404" y1="830.596" x2="741.675" y2="843.48"/>
+			<line x1="741.675" y1="843.48" x2="737.132" y2="843.48"/>
+			<line x1="737.132" y1="843.48" x2="739.404" y2="830.596"/>
+			<line x1="739.404" y1="1000.67" x2="739.404" y2="830.596"/>
+		</g>
+		<g id="evml.49.20" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(648.097,858.811) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">BO [11.25]</text>
+			</g>
+			<line x1="657.957" y1="873.116" x2="655.685" y2="860.232"/>
+			<line x1="655.685" y1="860.232" x2="660.228" y2="860.232"/>
+			<line x1="660.228" y1="860.232" x2="657.957" y2="873.116"/>
+			<line x1="657.957" y1="830.596" x2="660.228" y2="843.48"/>
+			<line x1="660.228" y1="843.48" x2="655.685" y2="843.48"/>
+			<line x1="655.685" y1="843.48" x2="657.957" y2="830.596"/>
+			<line x1="657.957" y1="873.116" x2="657.957" y2="830.596"/>
+			<line x1="633.877" y1="873.116" x2="670.84" y2="873.116"/>
+			<line x1="657.957" y1="873.116" x2="657.957" y2="907.642"/>
+		</g>
+		<g id="evml.50.21" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1285.4,1089.09) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">LFTL [15.00]</text>
+			</g>
+			<line x1="1361.61" y1="1079.23" x2="1348.72" y2="1081.5"/>
+			<line x1="1348.72" y1="1081.5" x2="1348.72" y2="1076.95"/>
+			<line x1="1348.72" y1="1076.95" x2="1361.61" y2="1079.23"/>
+			<line x1="1304.92" y1="1079.23" x2="1317.8" y2="1076.95"/>
+			<line x1="1317.8" y1="1076.95" x2="1317.8" y2="1081.5"/>
+			<line x1="1317.8" y1="1081.5" x2="1304.92" y2="1079.23"/>
+			<line x1="1361.61" y1="1079.23" x2="1304.92" y2="1079.23"/>
+			<line x1="1361.61" y1="1035.46" x2="1361.61" y2="1092.11"/>
+			<line x1="1304.92" y1="1007.12" x2="1304.92" y2="1092.11"/>
+		</g>
+		<g id="evml.50.25" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1362.98,887.962) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">LFC2 [0.00]</text>
+			</g>
+			<line x1="1416.41" y1="878.102" x2="1429.3" y2="875.83"/>
+			<line x1="1429.3" y1="875.83" x2="1429.3" y2="880.373"/>
+			<line x1="1429.3" y1="880.373" x2="1416.41" y2="878.102"/>
+			<line x1="1416.41" y1="878.102" x2="1403.53" y2="880.373"/>
+			<line x1="1403.53" y1="880.373" x2="1403.53" y2="875.83"/>
+			<line x1="1403.53" y1="875.83" x2="1416.41" y2="878.102"/>
+			<line x1="1426.41" y1="878.102" x2="1416.41" y2="878.102"/>
+			<line x1="1406.41" y1="878.102" x2="1416.41" y2="878.102"/>
+			<line x1="1416.41" y1="879.558" x2="1416.42" y2="890.985"/>
+			<line x1="1416.41" y1="837.038" x2="1416.41" y2="890.985"/>
+		</g>
+		<g id="evml.50.26" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1352.89,1019.06) rotate(7.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">LFA [15.00]</text>
+			</g>
+			<g transform="translate(1457.66,1032.85) rotate(7.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Symbol" text-anchor="start" dominant-baseline="baseline"></text>
+			</g>
+			<line x1="1416.41" y1="1016.83" x2="1403.44" y2="1018.52"/>
+			<line x1="1403.44" y1="1018.52" x2="1403.64" y2="1013.98"/>
+			<line x1="1403.64" y1="1013.98" x2="1416.41" y2="1016.83"/>
+			<line x1="1379.22" y1="1011.93" x2="1392.29" y2="1012.49"/>
+			<line x1="1392.29" y1="1012.49" x2="1391.31" y2="1016.93"/>
+			<line x1="1391.31" y1="1016.93" x2="1379.22" y2="1011.93"/>
+			<path d="M1416.41,1016.83 a143.716 143.716 0 0 1 -37.1964,-4.89699" fill="none"/>
+			<line x1="1416.41" y1="879.558" x2="1416.41" y2="1029.72"/>
+			<line x1="1380.56" y1="1006.9" x2="1375.88" y2="1024.38"/>
+		</g>
+		<g id="evml.50.29" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1189.93,1010.53) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">SO1 [30.00]</text>
+			</g>
+			<line x1="1304.92" y1="1000.67" x2="1292.03" y2="1002.95"/>
+			<line x1="1292.03" y1="1002.95" x2="1292.03" y2="998.403"/>
+			<line x1="1292.03" y1="998.403" x2="1304.92" y2="1000.67"/>
+			<line x1="1191.53" y1="1000.67" x2="1204.41" y2="998.403"/>
+			<line x1="1204.41" y1="998.403" x2="1204.41" y2="1002.95"/>
+			<line x1="1204.41" y1="1002.95" x2="1191.53" y2="1000.67"/>
+			<line x1="1304.92" y1="1000.67" x2="1191.53" y2="1000.67"/>
+			<line x1="1191.53" y1="837.038" x2="1191.53" y2="1013.56"/>
+		</g>
+		<g id="evml.50.30" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1329.85,867.48) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">SO [45.00]</text>
+			</g>
+			<line x1="1339.71" y1="1000.67" x2="1337.44" y2="987.791"/>
+			<line x1="1337.44" y1="987.791" x2="1341.98" y2="987.791"/>
+			<line x1="1341.98" y1="987.791" x2="1339.71" y2="1000.67"/>
+			<line x1="1339.71" y1="830.596" x2="1341.98" y2="843.48"/>
+			<line x1="1341.98" y1="843.48" x2="1337.44" y2="843.48"/>
+			<line x1="1337.44" y1="843.48" x2="1339.71" y2="830.596"/>
+			<line x1="1339.71" y1="1000.67" x2="1339.71" y2="830.596"/>
+		</g>
+		<g id="evml.51.2" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(966.678,95.2917) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">PH [59.50]</text>
+			</g>
+			<line x1="976.538" y1="261.777" x2="974.266" y2="248.894"/>
+			<line x1="974.266" y1="248.894" x2="978.809" y2="248.894"/>
+			<line x1="978.809" y1="248.894" x2="976.538" y2="261.777"/>
+			<line x1="976.538" y1="36.8954" x2="978.809" y2="49.779"/>
+			<line x1="978.809" y1="49.779" x2="974.266" y2="49.779"/>
+			<line x1="974.266" y1="49.779" x2="976.538" y2="36.8954"/>
+			<line x1="976.538" y1="261.777" x2="976.538" y2="36.8954"/>
+		</g>
+		<g id="evml.52.2" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1083.23,37.3655) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">TEH [15.00]</text>
+			</g>
+			<line x1="1093.09" y1="-19.7976" x2="1095.36" y2="-6.91392"/>
+			<line x1="1095.36" y1="-6.91392" x2="1090.82" y2="-6.91392"/>
+			<line x1="1090.82" y1="-6.91392" x2="1093.09" y2="-19.7976"/>
+			<line x1="1093.09" y1="36.8954" x2="1090.82" y2="24.0117"/>
+			<line x1="1090.82" y1="24.0117" x2="1095.36" y2="24.0117"/>
+			<line x1="1095.36" y1="24.0117" x2="1093.09" y2="36.8954"/>
+			<line x1="1093.09" y1="-19.7976" x2="1093.09" y2="36.8954"/>
+			<line x1="1093.09" y1="36.8954" x2="1093.09" y2="91.9063"/>
+		</g>
+		<g id="evml.52.3" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(842.333,-42.4416) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">TEC [0.50]</text>
+			</g>
+			<line x1="853.262" y1="-52.3016" x2="866.146" y2="-54.5733"/>
+			<line x1="866.146" y1="-54.5733" x2="866.146" y2="-50.0298"/>
+			<line x1="866.146" y1="-50.0298" x2="853.262" y2="-52.3016"/>
+			<line x1="851.372" y1="-52.3016" x2="838.489" y2="-50.0298"/>
+			<line x1="838.489" y1="-50.0298" x2="838.489" y2="-54.5733"/>
+			<line x1="838.489" y1="-54.5733" x2="851.372" y2="-52.3016"/>
+			<line x1="863.262" y1="-52.3016" x2="853.262" y2="-52.3016"/>
+			<line x1="841.372" y1="-52.3016" x2="851.372" y2="-52.3016"/>
+			<line x1="853.262" y1="2.10708" x2="853.262" y2="-65.1852"/>
+			<line x1="851.372" y1="30.4535" x2="851.372" y2="-65.1852"/>
+			<line x1="853.262" y1="-52.3016" x2="891.164" y2="-52.3016"/>
+		</g>
+		<g id="evml.52.6" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1182.33,5.1274) rotate(323.2) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">R </text>
+			</g>
+			<g transform="translate(1198.71,-7.12243) rotate(323.2) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">TER [7.50]</text>
+			</g>
+			<line x1="1183.99" y1="-8.42872" x2="1192.95" y2="-17.9644"/>
+			<line x1="1192.95" y1="-17.9644" x2="1195.67" y2="-14.326"/>
+			<line x1="1195.67" y1="-14.326" x2="1183.99" y2="-8.42872"/>
+			<line x1="1223.72" y1="-38.1399" x2="1183.99" y2="-8.42872"/>
+		</g>
+		<g id="evml.53.11" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1432.52,158.496) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">Z [7.00]</text>
+			</g>
+			<line x1="1442.38" y1="263.667" x2="1440.11" y2="250.783"/>
+			<line x1="1440.11" y1="250.783" x2="1444.65" y2="250.783"/>
+			<line x1="1444.65" y1="250.783" x2="1442.38" y2="263.667"/>
+			<line x1="1442.38" y1="237.21" x2="1444.65" y2="250.094"/>
+			<line x1="1444.65" y1="250.094" x2="1440.11" y2="250.094"/>
+			<line x1="1440.11" y1="250.094" x2="1442.38" y2="237.21"/>
+			<line x1="1442.38" y1="263.667" x2="1442.38" y2="237.21"/>
+			<line x1="1422.85" y1="263.667" x2="1455.27" y2="263.667"/>
+			<line x1="1422.85" y1="237.21" x2="1455.27" y2="237.21"/>
+			<line x1="1442.38" y1="237.21" x2="1442.38" y2="193.096"/>
+		</g>
+		<g id="evml.53.17" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1361.27,310.396) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">DFC1 [0.00]</text>
+			</g>
+			<line x1="1416.41" y1="300.536" x2="1429.3" y2="298.264"/>
+			<line x1="1429.3" y1="298.264" x2="1429.3" y2="302.807"/>
+			<line x1="1429.3" y1="302.807" x2="1416.41" y2="300.536"/>
+			<line x1="1416.41" y1="300.536" x2="1403.53" y2="302.807"/>
+			<line x1="1403.53" y1="302.807" x2="1403.53" y2="298.264"/>
+			<line x1="1403.53" y1="298.264" x2="1416.41" y2="300.536"/>
+			<line x1="1426.41" y1="300.536" x2="1416.41" y2="300.536"/>
+			<line x1="1406.41" y1="300.536" x2="1416.41" y2="300.536"/>
+			<line x1="1416.41" y1="270.109" x2="1416.41" y2="313.419"/>
+			<line x1="1416.41" y1="270.109" x2="1416.41" y2="313.419"/>
+		</g>
+		<g id="evml.54.13" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(766.396,140.068) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">DFH [37.50]</text>
+			</g>
+			<line x1="776.256" y1="121.935" x2="778.527" y2="134.818"/>
+			<line x1="778.527" y1="134.818" x2="773.984" y2="134.818"/>
+			<line x1="773.984" y1="134.818" x2="776.256" y2="121.935"/>
+			<line x1="776.256" y1="263.667" x2="773.984" y2="250.783"/>
+			<line x1="773.984" y1="250.783" x2="778.527" y2="250.783"/>
+			<line x1="778.527" y1="250.783" x2="776.256" y2="263.667"/>
+			<line x1="776.256" y1="121.935" x2="776.256" y2="263.667"/>
+			<line x1="844.93" y1="263.667" x2="763.372" y2="263.667"/>
+		</g>
+		<g id="evml.54.15" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(523.565,86.7589) rotate(7.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">beta [15.00]</text>
+			</g>
+			<g transform="translate(630.699,100.863) rotate(7.5) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Symbol" text-anchor="start" dominant-baseline="baseline"></text>
+			</g>
+			<line x1="627.435" y1="78.0856" x2="640.4" y2="76.3373"/>
+			<line x1="640.4" y1="76.3373" x2="640.216" y2="80.877"/>
+			<line x1="640.216" y1="80.877" x2="627.435" y2="78.0856"/>
+			<line x1="668.62" y1="83.5076" x2="655.552" y2="82.8959"/>
+			<line x1="655.552" y1="82.8959" x2="656.549" y2="78.4633"/>
+			<line x1="656.549" y1="78.4633" x2="668.62" y2="83.5076"/>
+			<path d="M627.435,78.0856 a159.125 159.125 0 0 1 41.1845,5.42204" fill="none"/>
+			<line x1="627.435" y1="230.769" x2="627.435" y2="65.2019"/>
+			<line x1="659.99" y1="115.712" x2="671.954" y2="71.063"/>
+			<path d="M582.475,84.5694 a159.125 159.125 0 0 1 44.9606,-6.48388" fill="none"/>
+		</g>
+		<g id="evml.54.17" stroke="rgb(128,0,128)" stroke-width="1.81802" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(629.97,314.144) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="20.4528" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">DFC [0.75]</text>
+			</g>
+			<line x1="627.435" y1="304.284" x2="640.319" y2="302.013"/>
+			<line x1="640.319" y1="302.013" x2="640.319" y2="306.556"/>
+			<line x1="640.319" y1="306.556" x2="627.435" y2="304.284"/>
+			<line x1="624.601" y1="304.284" x2="611.717" y2="306.556"/>
+			<line x1="611.717" y1="306.556" x2="611.717" y2="302.013"/>
+			<line x1="611.717" y1="302.013" x2="624.601" y2="304.284"/>
+			<line x1="637.435" y1="304.284" x2="627.435" y2="304.284"/>
+			<line x1="614.601" y1="304.284" x2="624.601" y2="304.284"/>
+			<line x1="627.435" y1="270.109" x2="627.435" y2="317.168"/>
+			<line x1="624.601" y1="270.109" x2="624.601" y2="317.168"/>
+			<line x1="627.435" y1="304.284" x2="679.398" y2="304.284"/>
+		</g>
+	</g>
+</svg>

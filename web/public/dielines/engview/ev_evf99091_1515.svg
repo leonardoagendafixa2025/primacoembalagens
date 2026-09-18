@@ -1,0 +1,11 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1187.45" height="636.026" viewBox="-1.33333 -1.33333 1187.45 636.026">
+	<g transform="translate(-95.6945,685.623) scale(1,-1) ">
+		<path d="M95.6945,470.737 a626.007 626.007 0 0 1 1181.21,1.20792e-10" fill="none" stroke="rgb(255,0,0)" stroke-width="3.08537" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M677.213,675.078 a9.63087 9.63087 0 0 1 18.1725,0" fill="none" stroke="rgb(255,0,0)" stroke-width="3.08537" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="95.6945" y1="470.737" x2="677.213" y2="675.078" stroke="rgb(255,0,0)" stroke-width="3.08537" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="695.386" y1="675.078" x2="1276.9" y2="470.737" stroke="rgb(0,255,0)" stroke-width="3.08537" ev-style="Creasing" ev-style-annotation="false"/>
+		<line x1="1276.9" y1="470.737" x2="1280.48" y2="517.556" stroke="rgb(255,0,0)" stroke-width="3.08537" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1280.48" y1="517.556" x2="802.184" y2="685.623" stroke="rgb(255,0,0)" stroke-width="3.08537" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="802.184" y1="685.623" x2="695.386" y2="675.078" stroke="rgb(255,0,0)" stroke-width="3.08537" ev-style="Cutting" ev-style-annotation="false"/>
+	</g>
+</svg>

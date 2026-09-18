@@ -1,0 +1,20 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="380.619" height="380.619" viewBox="-1.33333 -1.33333 380.619 380.619">
+	<g transform="translate(-41.0051,402.017) scale(1,-1) ">
+		<circle cx="229.981" cy="213.041" r="188.976" fill="none" stroke="rgb(255,0,0)" stroke-width="1.31234" ev-style="Cutting" ev-style-annotation="false"/>
+		<g id="evml.2.1" stroke="rgb(128,0,128)" stroke-width="0.524934" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(208.402,221.264) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="5.90551" font-weight="400" font-family="Symbol" text-anchor="start" dominant-baseline="baseline"></text>
+			</g>
+			<g transform="translate(214.75,221.264) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="5.90551" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">Diam [100.00]</text>
+			</g>
+			<line x1="418.958" y1="213.041" x2="415.238" y2="213.697"/>
+			<line x1="415.238" y1="213.697" x2="415.238" y2="212.385"/>
+			<line x1="415.238" y1="212.385" x2="418.958" y2="213.041"/>
+			<line x1="41.0051" y1="213.041" x2="44.7251" y2="212.385"/>
+			<line x1="44.7251" y1="212.385" x2="44.7251" y2="213.697"/>
+			<line x1="44.7251" y1="213.697" x2="41.0051" y2="213.041"/>
+			<line x1="418.958" y1="213.041" x2="41.0051" y2="213.041"/>
+		</g>
+	</g>
+</svg>

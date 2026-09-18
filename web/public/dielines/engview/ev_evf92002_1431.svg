@@ -1,0 +1,49 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1136.52" height="947.549" viewBox="-1.33333 -1.33333 1136.52 947.549">
+	<g transform="translate(-217.202,1186.17) scale(1,-1) ">
+		<line x1="292.792" y1="241.286" x2="1275.47" y2="241.286" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1351.06" y1="316.877" x2="1351.06" y2="1110.58" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="1275.47" y1="1186.17" x2="292.792" y2="1186.17" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<line x1="217.202" y1="1110.58" x2="217.202" y2="316.877" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M217.202,1110.58 a75.5906 75.5906 0 0 0 75.5906,75.5906" fill="none" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M292.792,241.286 a75.5906 75.5906 0 0 0 -75.5906,75.5906" fill="none" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M1351.06,316.877 a75.5906 75.5906 0 0 0 -75.5906,-75.5906" fill="none" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<path d="M1275.47,1186.17 a75.5906 75.5906 0 0 0 75.5906,-75.5906" fill="none" stroke="rgb(255,0,0)" stroke-width="3.28084" ev-style="Cutting" ev-style-annotation="false"/>
+		<g id="evml.1.1" stroke="rgb(128,0,128)" stroke-width="1.31234" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(591.207,962.692) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="14.7638" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">L [300.00]</text>
+			</g>
+			<line x1="217.202" y1="953.472" x2="226.502" y2="951.832"/>
+			<line x1="226.502" y1="951.832" x2="226.502" y2="955.112"/>
+			<line x1="226.502" y1="955.112" x2="217.202" y2="953.472"/>
+			<line x1="1351.06" y1="953.472" x2="1341.76" y2="955.112"/>
+			<line x1="1341.76" y1="955.112" x2="1341.76" y2="951.832"/>
+			<line x1="1341.76" y1="951.832" x2="1351.06" y2="953.472"/>
+			<line x1="217.202" y1="953.472" x2="1351.06" y2="953.472"/>
+		</g>
+		<g id="evml.1.2" stroke="rgb(128,0,128)" stroke-width="1.31234" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(1060.15,894.046) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="14.7638" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">W [250.00]</text>
+			</g>
+			<line x1="1069.37" y1="241.286" x2="1071.01" y2="250.586"/>
+			<line x1="1071.01" y1="250.586" x2="1067.73" y2="250.586"/>
+			<line x1="1067.73" y1="250.586" x2="1069.37" y2="241.286"/>
+			<line x1="1069.37" y1="1186.17" x2="1067.73" y2="1176.87"/>
+			<line x1="1067.73" y1="1176.87" x2="1071.01" y2="1176.87"/>
+			<line x1="1071.01" y1="1176.87" x2="1069.37" y2="1186.17"/>
+			<line x1="1069.37" y1="241.286" x2="1069.37" y2="1186.17"/>
+		</g>
+		<g id="evml.2.2" stroke="rgb(128,0,128)" stroke-width="1.31234" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(345.811,1070.6) rotate(315) scale(1,-1) ">
+				<text x="0" y="0" font-size="14.7638" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">R </text>
+			</g>
+			<g transform="translate(356.25,1060.16) rotate(315) scale(1,-1) ">
+				<text x="0" y="0" font-size="14.7638" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">FR [20.00]</text>
+			</g>
+			<line x1="239.342" y1="1164.03" x2="244.758" y2="1156.29"/>
+			<line x1="244.758" y1="1156.29" x2="247.077" y2="1158.61"/>
+			<line x1="247.077" y1="1158.61" x2="239.342" y2="1164.03"/>
+			<line x1="292.792" y1="1110.58" x2="239.342" y2="1164.03"/>
+			<line x1="292.792" y1="1110.58" x2="368.87" y2="1034.5"/>
+		</g>
+	</g>
+</svg>

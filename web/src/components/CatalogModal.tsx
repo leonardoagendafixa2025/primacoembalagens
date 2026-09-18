@@ -20,6 +20,8 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'FEFCO' | 'ECMA'>('ALL');
   const [selectedSeries, setSelectedSeries] = useState<string>('ALL');
 
+  const [displayLimit, setDisplayLimit] = useState(60);
+
   // Séries disponíveis baseadas na categoria
   const availableSeries = useMemo(() => {
     const set = new Set<string>();
@@ -47,6 +49,10 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
       return true;
     });
   }, [search, selectedCategory, selectedSeries]);
+
+  const visibleModels = useMemo(() => {
+    return filteredModels.slice(0, displayLimit);
+  }, [filteredModels, displayLimit]);
 
   if (!isOpen) return null;
 
@@ -284,7 +290,7 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
               Nenhum modelo encontrado para "{search}".
             </div>
           ) : (
-            filteredModels.map((item) => {
+            visibleModels.map((item) => {
               const isSelected =
                 item.id === currentModelId ||
                 item.code.toLowerCase().replace(/\s+/g, '') === currentModelId.toLowerCase().replace(/\s+/g, '');
@@ -442,6 +448,34 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                 </div>
               );
             })
+          )}
+
+          {filteredModels.length > displayLimit && (
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                display: 'flex',
+                justifyContent: 'center',
+                padding: '20px 0 10px 0',
+              }}
+            >
+              <button
+                type="button"
+                className="cad-btn cad-btn-primary"
+                onClick={() => setDisplayLimit((prev) => prev + 60)}
+                style={{
+                  padding: '10px 24px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <span>Carregar Mais Modelos (+60) — Exibindo {visibleModels.length} de {filteredModels.length}</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
           )}
         </div>
       </div>

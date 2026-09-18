@@ -1,0 +1,29 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="380.619" height="191.643" viewBox="-1.5281 -1.30692 380.619 191.643">
+	<g transform="translate(-62.4175,238.838) scale(1,-1) ">
+		<ellipse cx="251.199" cy="144.323" rx="188.976" ry="94.4882" fill="none" stroke="rgb(255,0,0)" stroke-width="0.984252" ev-style="Cutting" ev-style-annotation="false"/>
+		<g id="evml.1.1" stroke="rgb(128,0,128)" stroke-width="0.393701" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(344.629,152.38) rotate(0) scale(1,-1) ">
+				<text x="0" y="0" font-size="4.42913" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">L/2 [50.00]</text>
+			</g>
+			<line x1="251.199" y1="144.323" x2="253.989" y2="143.831"/>
+			<line x1="253.989" y1="143.831" x2="253.989" y2="144.815"/>
+			<line x1="253.989" y1="144.815" x2="251.199" y2="144.323"/>
+			<line x1="440.176" y1="144.323" x2="437.386" y2="144.815"/>
+			<line x1="437.386" y1="144.815" x2="437.386" y2="143.831"/>
+			<line x1="437.386" y1="143.831" x2="440.176" y2="144.323"/>
+			<line x1="251.199" y1="144.323" x2="440.176" y2="144.323"/>
+		</g>
+		<g id="evml.1.2" stroke="rgb(128,0,128)" stroke-width="0.393701" fill="rgb(128,0,128)" ev-style="Dimensions" ev-style-annotation="true">
+			<g transform="translate(243.142,79.7655) rotate(90) scale(1,-1) ">
+				<text x="0" y="0" font-size="4.42913" font-weight="400" font-family="Arial" text-anchor="start" dominant-baseline="baseline">W/2 [25.00]</text>
+			</g>
+			<line x1="251.199" y1="144.323" x2="250.707" y2="141.533"/>
+			<line x1="250.707" y1="141.533" x2="251.691" y2="141.533"/>
+			<line x1="251.691" y1="141.533" x2="251.199" y2="144.323"/>
+			<line x1="251.199" y1="49.8347" x2="251.691" y2="52.6247"/>
+			<line x1="251.691" y1="52.6247" x2="250.707" y2="52.6247"/>
+			<line x1="250.707" y1="52.6247" x2="251.199" y2="49.8347"/>
+			<line x1="251.199" y1="144.323" x2="251.199" y2="49.8347"/>
+		</g>
+	</g>
+</svg>

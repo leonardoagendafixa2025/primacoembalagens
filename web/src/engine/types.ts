@@ -64,8 +64,8 @@ export interface ParamDef {
 }
 
 export type ModelStatus = 'PASS' | 'NON_FOLDABLE' | 'FAIL' | 'PENDING_PORTING';
-export type OriginalSourceType = 'C#_PARAMETRIC_DLL' | 'DES_VECTOR_DRAWING' | 'NONE';
-export type ImplementationType = 'NATIVE_TS' | 'DES_GEOMETRY_PARSER' | 'CSHARP_EVALUATED' | 'NONE';
+export type OriginalSourceType = 'C#_PARAMETRIC_DLL' | 'DES_VECTOR_DRAWING' | 'ENGVIEW_PARAMETRIC' | 'NONE';
+export type ImplementationType = 'NATIVE_TS' | 'DES_GEOMETRY_PARSER' | 'CSHARP_EVALUATED' | 'ENGVIEW_SVG_PARSER' | 'NONE';
 
 export interface PackagingModel {
   id: string;

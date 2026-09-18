@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { PackagingModel, CardboardProfile } from './engine/types';
 import { STANDARD_PROFILES } from './engine/types';
-import { MODELS, getModelById } from './engine/models';
+import { MODELS, getModelById, CATALOG } from './engine/models';
+import { fetchAndParseSvgDieline, getLoadedSvgDieline } from './engine/svgDielineParser';
 import { exportToDXF, exportToSVG } from './engine/dxfExporter';
 import type { HingeControlInfo } from './engine/foldingEngine';
 import type { SavedProject } from './lib/supabaseClient';
@@ -159,7 +160,33 @@ export const App: React.FC = () => {
       ...model.defaultParams,
       Ep: selectedProfile.thickness,
     });
+
+    // Carregamento sob demanda se for modelo baseado em SVG (EngView)
+    const catalogItem = CATALOG.find((c) => c.id === model.id);
+    if (catalogItem?.svgDieline && !getLoadedSvgDieline(model.id)) {
+      fetchAndParseSvgDieline(catalogItem.svgDieline, model.id)
+        .then(() => {
+          setParams((prev) => ({ ...prev }));
+        })
+        .catch((err: any) => {
+          console.error('[EngView] Erro ao carregar SVG:', err);
+        });
+    }
   }, [selectedProfile.thickness]);
+
+  // Carrega SVG inicial se o modelo ativo for do EngView
+  useEffect(() => {
+    const catalogItem = CATALOG.find((c) => c.id === currentModel.id);
+    if (catalogItem?.svgDieline && !getLoadedSvgDieline(currentModel.id)) {
+      fetchAndParseSvgDieline(catalogItem.svgDieline, currentModel.id)
+        .then(() => {
+          setParams((prev) => ({ ...prev }));
+        })
+        .catch((err: any) => {
+          console.error('[EngView] Erro ao carregar SVG inicial:', err);
+        });
+    }
+  }, [currentModel.id]);
 
   useEffect(() => {
     (window as any).__PRIMACOR_SET_MODEL_ID__ = (id: string) => handleSelectModel(getModelById(id));
