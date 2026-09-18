@@ -7,7 +7,6 @@ import {
   Layers,
   Sparkles,
   HelpCircle,
-  ExternalLink,
   Monitor,
   Apple,
   FileText

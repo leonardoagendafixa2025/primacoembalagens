@@ -37,6 +37,7 @@ interface HeaderProps {
   bridgeStatus?: { bridgeOnline: boolean; illustratorDetected: boolean };
   onSyncArtwork?: () => void;
   hasArtwork?: boolean;
+  onClearArtwork?: () => void;
   onUploadArtworkFile?: (file: File) => void;
   onOpenIllustratorPluginModal?: () => void;
 }
