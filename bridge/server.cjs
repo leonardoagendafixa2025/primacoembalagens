@@ -38,12 +38,18 @@ function isIllustratorRunning() {
 
 // Executa um script JSX no Adobe Illustrator via PowerShell COM Automation
 function runJsxInIllustrator(scriptPath) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const cleanPath = scriptPath.replace(/\\/g, '/');
     const psCommand = `
       try {
-        $ai = New-Object -ComObject Illustrator.Application;
+        $ai = [System.Runtime.InteropServices.Marshal]::GetActiveObject('Illustrator.Application');
+        if (-not $ai) {
+          $ai = New-Object -ComObject Illustrator.Application;
+        }
+        $ai.UserInteractionLevel = -1;
         $res = $ai.DoJavaScriptFile('${cleanPath}');
+        $wshell = New-Object -ComObject WScript.Shell;
+        $wshell.AppActivate('Adobe Illustrator');
         Write-Output $res;
       } catch {
         Write-Error $_.Exception.Message;
@@ -51,15 +57,12 @@ function runJsxInIllustrator(scriptPath) {
       }
     `;
 
-    exec(`powershell -NoProfile -NonInteractive -Command "${psCommand.replace(/\n/g, ' ')}"`, (error, stdout, stderr) => {
+    exec(`powershell -NoProfile -NonInteractive -Command "${psCommand.replace(/\n/g, ' ')}"`, { timeout: 6000 }, (error, stdout, stderr) => {
       if (error) {
-        // Fallback: se COM der erro ou timeout, aciona via CLI direta do Illustrator
-        console.warn('Tentando fallback via CLI do Illustrator:', stderr || error.message);
-        const cliProcess = spawn(ILLUSTRATOR_EXE, [scriptPath], { detached: true, stdio: 'ignore' });
-        cliProcess.unref();
-        return resolve({ fallbackCli: true });
+        console.warn('[Bridge] Aviso COM:', stderr || error.message);
+        return resolve({ success: false, error: stderr || error.message });
       }
-      resolve({ stdout: stdout.trim() });
+      resolve({ success: true, stdout: stdout.trim() });
     });
   });
 }
@@ -111,15 +114,39 @@ const server = http.createServer(async (req, res) => {
         const jsxCode = generateIllustratorJsx(project);
         fs.writeFileSync(scriptPath, jsxCode, 'utf-8');
 
-        console.log(`[Bridge] Executando script no Illustrator para o projeto ${project.projectId}...`);
-        await runJsxInIllustrator(scriptPath);
+        const isRunning = await isIllustratorRunning();
+        if (!isRunning) {
+          console.log('[Bridge] Illustrator não está rodando no momento.');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: false,
+            illustratorRunning: false,
+            message: 'O Adobe Illustrator 2025 não está aberto no momento. Abra o Illustrator na sua barra de tarefas e clique novamente!',
+            scriptPath: scriptPath,
+          }));
+          return;
+        }
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: true,
-          message: `Projeto ${project.projectName} aberto no Illustrator 2025 com sucesso!`,
-          projectId: project.projectId
-        }));
+        console.log(`[Bridge] Executando script no Illustrator para o projeto ${project.projectId}...`);
+        const execRes = await runJsxInIllustrator(scriptPath);
+
+        if (execRes.success) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            illustratorRunning: true,
+            message: `Projeto ${project.projectName} aberto no Illustrator 2025 com sucesso!`,
+            projectId: project.projectId
+          }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: false,
+            illustratorRunning: true,
+            message: 'Illustrator detectado, mas não respondeu ao comando de automação. Você pode executar o arquivo .jsx gerado diretamente no Illustrator.',
+            scriptPath: scriptPath,
+          }));
+        }
       } catch (err) {
         console.error('[Bridge] Erro ao processar /api/open:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });

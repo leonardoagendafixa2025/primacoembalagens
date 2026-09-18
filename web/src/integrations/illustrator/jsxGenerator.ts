@@ -12,6 +12,33 @@ export function generateIllustratorJsx(project: PLMPackProjectExchange): string 
 // Gerado automaticamente pelo motor CAD PLMPackLib
 #target illustrator
 
+// Polyfill JSON para Adobe ExtendScript (ES3)
+if (typeof JSON !== 'object') {
+  JSON = {
+    stringify: function(o) {
+      if (o === null) return 'null';
+      if (typeof o === 'number' || typeof o === 'boolean') return '' + o;
+      if (typeof o === 'string') return '"' + o.replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\\"').replace(/\\n/g, '\\\\n').replace(/\\r/g, '\\\\r') + '"';
+      if (o instanceof Array) {
+        var a = [];
+        for (var i = 0; i < o.length; i++) a.push(JSON.stringify(o[i]));
+        return '[' + a.join(',') + ']';
+      }
+      if (typeof o === 'object') {
+        var p = [];
+        for (var k in o) {
+          if (o.hasOwnProperty(k)) p.push('"' + k + '":' + JSON.stringify(o[k]));
+        }
+        return '{' + p.join(',') + '}';
+      }
+      return 'null';
+    },
+    parse: function(s) {
+      return eval('(' + s + ')');
+    }
+  };
+}
+
 (function() {
   var projectData = ${jsonPayload};
 
@@ -261,6 +288,29 @@ export function generateArtworkExportJsx(_project: PLMPackProjectExchange, outpu
 
   return `// Script de Exportação da Camada de Arte PLMPackLib
 #target illustrator
+
+if (typeof JSON !== 'object') {
+  JSON = {
+    stringify: function(o) {
+      if (o === null) return 'null';
+      if (typeof o === 'number' || typeof o === 'boolean') return '' + o;
+      if (typeof o === 'string') return '"' + o.replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\\"').replace(/\\n/g, '\\\\n').replace(/\\r/g, '\\\\r') + '"';
+      if (o instanceof Array) {
+        var a = [];
+        for (var i = 0; i < o.length; i++) a.push(JSON.stringify(o[i]));
+        return '[' + a.join(',') + ']';
+      }
+      if (typeof o === 'object') {
+        var p = [];
+        for (var k in o) {
+          if (o.hasOwnProperty(k)) p.push('"' + k + '":' + JSON.stringify(o[k]));
+        }
+        return '{' + p.join(',') + '}';
+      }
+      return 'null';
+    }
+  };
+}
 
 (function() {
   if (app.documents.length === 0) {

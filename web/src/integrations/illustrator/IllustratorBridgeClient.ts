@@ -123,33 +123,52 @@ export class IllustratorBridgeClient {
 
       if (res.ok) {
         const result = await res.json();
-        return {
-          success: true,
-          message: result.message || 'Projeto aberto com sucesso no Adobe Illustrator 2025!',
-        };
+        if (result.success) {
+          return {
+            success: true,
+            message: result.message || 'Projeto aberto com sucesso no Adobe Illustrator 2025!',
+          };
+        } else {
+          this.downloadJsxFile(project);
+          return {
+            success: true,
+            isFallback: true,
+            message: result.message,
+          };
+        }
       }
     } catch (e) {
       console.warn('Bridge local não respondeu. Ativando fallback de script autônomo:', e);
     }
 
     // 2. Fallback de Alta Confiabilidade: Gera e baixa o script oficial .jsx
-    // com instruções de 1 clique caso o serviço de ponte em background ainda não esteja ativo
-    const jsxCode = generateIllustratorJsx(project);
-    const blob = new Blob([jsxCode], { type: 'text/javascript;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${project.modelCode}_${project.parameters.L || 300}x${project.parameters.B || 200}x${project.parameters.H || 150}_1a1.jsx`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    this.downloadJsxFile(project);
 
     return {
       success: true,
-      message: 'Script oficial gerado! Para abrir, dê duplo clique ou arraste o arquivo .jsx para dentro do Illustrator 2025.',
+      message: 'Script oficial da faca gerado com sucesso! Abra o Adobe Illustrator 2025 e arraste ou execute o arquivo .jsx.',
       isFallback: true,
     };
+  }
+
+  /**
+   * Faz o download direto do arquivo de script .jsx compilado para o Illustrator
+   */
+  public downloadJsxFile(project: PLMPackProjectExchange): void {
+    try {
+      const jsxCode = generateIllustratorJsx(project);
+      const blob = new Blob([jsxCode], { type: 'text/javascript;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${project.modelCode}_${project.parameters.L || 300}x${project.parameters.B || 200}x${project.parameters.H || 150}_1a1.jsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Erro ao baixar arquivo .jsx:', e);
+    }
   }
 
   /**

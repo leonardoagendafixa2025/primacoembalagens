@@ -6,6 +6,30 @@ function generateIllustratorJsx(projectData) {
   return '// PLMPackLib Oficial Bridge Script para Adobe Illustrator 2025\n' +
     '// Gerado automaticamente pelo motor CAD PLMPackLib\n' +
     '#target illustrator\n\n' +
+    '// Polyfill JSON para ExtendScript (ES3)\n' +
+    'if (typeof JSON !== "object") {\n' +
+    '  JSON = {\n' +
+    '    stringify: function(o) {\n' +
+    '      if (o === null) return "null";\n' +
+    '      if (typeof o === "number" || typeof o === "boolean") return "" + o;\n' +
+    '      if (typeof o === "string") return "\\"" + o.replace(/\\\\/g, "\\\\\\\\").replace(/"/g, "\\\\\\"").replace(/\\n/g, "\\\\n").replace(/\\r/g, "\\\\r") + "\\"";\n' +
+    '      if (o instanceof Array) {\n' +
+    '        var a = [];\n' +
+    '        for (var i = 0; i < o.length; i++) a.push(JSON.stringify(o[i]));\n' +
+    '        return "[" + a.join(",") + "]";\n' +
+    '      }\n' +
+    '      if (typeof o === "object") {\n' +
+    '        var p = [];\n' +
+    '        for (var k in o) {\n' +
+    '          if (o.hasOwnProperty(k)) p.push("\\"" + k + "\\":" + JSON.stringify(o[k]));\n' +
+    '        }\n' +
+    '        return "{" + p.join(",") + "}";\n' +
+    '      }\n' +
+    '      return "null";\n' +
+    '    },\n' +
+    '    parse: function(s) { return eval("(" + s + ")"); }\n' +
+    '  };\n' +
+    '}\n\n' +
     '(function() {\n' +
     '  var projectData = ' + jsonPayload + ';\n\n' +
     '  var MM_TO_PT = 72.0 / 25.4; // 2.83464567 pt por mm\n' +
