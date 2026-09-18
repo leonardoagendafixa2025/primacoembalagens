@@ -66,9 +66,18 @@ class PLMStudioViewer {
     rimLight.position.set(0, -400, 200);
     this.scene.add(rimLight);
 
-    // Grade de piso de estúdio elegante
-    const grid = new THREE.GridHelper(1000, 40, 0x2a3242, 0x1a202c);
-    grid.position.y = -0.5;
+    // Piso semi-transparente para permitir visualização por baixo da base
+    const floorGeo = new THREE.PlaneGeometry(3000, 3000);
+    const floorMat = new THREE.ShadowMaterial({ opacity: 0.25 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.5;
+    floor.receiveShadow = true;
+    this.scene.add(floor);
+
+    // Grade no chão ancorada em Y=0 (idêntica à Web)
+    const grid = new THREE.GridHelper(2000, 40, 0x35a89e, 0x1a2428);
+    grid.position.y = 0;
     this.scene.add(grid);
   }
 
@@ -198,20 +207,43 @@ class PLMStudioViewer {
         this.currentTexture
       );
 
+      // Verifica se é modelo tubular (FEFCO 02xx / 07xx / ECMA A, B, E, X) para manter a caixa em pé com o fundo no chão
+      const codeStr = (project.modelCode || project.projectName || '').toUpperCase();
+      const isTubular =
+        codeStr.includes('FEFCO 02') ||
+        codeStr.includes('FEFCO 07') ||
+        codeStr.includes('FEFCO_02') ||
+        codeStr.includes('FEFCO_07') ||
+        codeStr.includes('FEFCO_F2') ||
+        codeStr.includes('FEFCO_F7') ||
+        codeStr.startsWith('ECMA A') ||
+        codeStr.startsWith('ECMA B') ||
+        codeStr.startsWith('ECMA E') ||
+        codeStr.startsWith('ECMA X') ||
+        codeStr.startsWith('ECMA_A') ||
+        codeStr.startsWith('ECMA_B') ||
+        codeStr.startsWith('ECMA_E') ||
+        codeStr.startsWith('ECMA_X');
+
+      if (isTubular) {
+        // Rotaciona 90° em torno de X para colocar o fundo (+Z) voltado para o chão (-Y) e a tampa para cima (+Y)
+        this.currentTree.rootGroup.rotation.x = Math.PI / 2;
+      }
+
       this.boxGroup.add(this.currentTree.rootGroup);
-      this.currentTree.updateProgress(this.foldProgress);
+      this.updateWithGrounding(this.foldProgress);
 
-      // Centraliza a caixa na cena
+      // Auto-enquadramento suave da câmera na altura real da caixa
+      this.boxGroup.updateMatrixWorld(true);
       const bbox = new THREE.Box3().setFromObject(this.boxGroup);
-      const center = bbox.getCenter(new THREE.Vector3());
-      this.boxGroup.position.sub(center);
+      const boxH = Math.max(30, bbox.max.y - bbox.min.y);
+      const sphere = new THREE.Sphere();
+      bbox.getBoundingSphere(sphere);
+      const dist = Math.max(250, sphere.radius * 2.2);
 
-      // Ajusta câmera para enquadrar a embalagem
-      const size = bbox.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z, 150);
-      this.camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.7);
+      this.camera.position.set(dist * 0.75, dist * 0.65 + boxH * 0.45, dist * 0.75);
       if (this.controls) {
-        this.controls.target.set(0, 0, 0);
+        this.controls.target.set(0, boxH * 0.45, 0);
         this.controls.update();
       }
 
@@ -222,6 +254,22 @@ class PLMStudioViewer {
     } catch (err) {
       console.error('[PLMStudio] Erro ao construir árvore 3D do modelo:', err);
     }
+  }
+
+  // Função que SEMPRE garante o FUNDO da embalagem em cima do chão a Y = 1.0mm e centralizado em X e Z
+  private updateWithGrounding(progress: number) {
+    if (!this.currentTree) return;
+    this.currentTree.rootGroup.position.set(0, 0, 0);
+    this.currentTree.updateProgress(progress);
+    this.boxGroup.updateMatrixWorld(true);
+    const bbox = new THREE.Box3().setFromObject(this.boxGroup);
+    // Garante o fundo sempre exatamente 1mm acima do chão para evitar corte de plano
+    const groundY = 1.0 - bbox.min.y;
+    const cx = (bbox.min.x + bbox.max.x) / 2;
+    const cz = (bbox.min.z + bbox.max.z) / 2;
+    this.currentTree.rootGroup.position.set(-cx, groundY, -cz);
+    this.boxGroup.position.set(0, 0, 0);
+    this.boxGroup.updateMatrixWorld(true);
   }
 
   public updateArtwork(dataUri: string) {
@@ -262,9 +310,7 @@ class PLMStudioViewer {
 
   public setFoldProgress(val: number) {
     this.foldProgress = Math.max(0, Math.min(1, val));
-    if (this.currentTree) {
-      this.currentTree.updateProgress(this.foldProgress);
-    }
+    this.updateWithGrounding(this.foldProgress);
   }
 
   public getFoldProgress(): number {
@@ -274,18 +320,20 @@ class PLMStudioViewer {
   public setCameraView(preset: 'iso' | 'front' | 'top') {
     if (!this.controls) return;
     const bbox = new THREE.Box3().setFromObject(this.boxGroup);
-    const size = bbox.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z, 150);
+    const boxH = Math.max(30, bbox.max.y - bbox.min.y);
+    const sphere = new THREE.Sphere();
+    bbox.getBoundingSphere(sphere);
+    const dist = Math.max(250, sphere.radius * 2.2);
 
     if (preset === 'iso') {
-      this.camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.7);
+      this.camera.position.set(dist * 0.75, dist * 0.65 + boxH * 0.45, dist * 0.75);
     } else if (preset === 'front') {
-      this.camera.position.set(0, 0, maxDim * 2.2);
+      this.camera.position.set(0, boxH * 0.45, dist * 1.5);
     } else if (preset === 'top') {
-      this.camera.position.set(0, maxDim * 2.4, 0.001);
+      this.camera.position.set(0, dist * 1.8 + boxH * 0.45, 0.001);
     }
 
-    this.controls.target.set(0, 0, 0);
+    this.controls.target.set(0, boxH * 0.45, 0);
     this.controls.update();
   }
 
