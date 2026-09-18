@@ -20,6 +20,7 @@ import { FoldingViewer3D } from './components/FoldingViewer3D';
 import { ImpositionView } from './components/ImpositionView';
 import { SavedProjectsModal } from './components/SavedProjectsModal';
 import { CatalogModal } from './components/CatalogModal';
+import { IllustratorPluginModal } from './components/IllustratorPluginModal';
 import { CadStatusBar } from './components/CadStatusBar';
 import {
   IllustratorBridgeClient,
@@ -103,6 +104,7 @@ export const App: React.FC = () => {
   const [isCatalogOpen, setIsCatalogOpen] = useState<boolean>(false);
   const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
   const [isProjectsModalOpen, setIsProjectsModalOpen] = useState<boolean>(false);
+  const [isIllustratorPluginModalOpen, setIsIllustratorPluginModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     getSavedProjects().then(setSavedProjects);
@@ -211,7 +213,7 @@ export const App: React.FC = () => {
       const client = IllustratorBridgeClient.getInstance();
       const res = await client.openInIllustrator(exchangePkg);
       if (res.isFallback) {
-        alert(res.message);
+        setIsIllustratorPluginModalOpen(true);
       }
     } catch (e: any) {
       alert('Erro ao comunicar com Illustrator: ' + (e?.message || e));
@@ -340,6 +342,7 @@ export const App: React.FC = () => {
         hasArtwork={Boolean(artworkTextureUri)}
         onClearArtwork={() => setArtworkTextureUri(null)}
         onUploadArtworkFile={handleUploadArtworkFile}
+        onOpenIllustratorPluginModal={() => setIsIllustratorPluginModalOpen(true)}
       />
 
       {/* 2. Workspace Central */}
@@ -359,70 +362,62 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Barra Lateral Esquerda CAD (Parâmetros e Ângulos de Dobra sem conflito) */}
-        <div
-          style={
-            isMobile && sidebarPanel !== null
-              ? {
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  width: 'min(340px, 88vw)',
-                  zIndex: 40,
-                  boxShadow: '4px 0 24px rgba(0,0,0,0.8)',
-                  display: 'flex',
-                }
-              : { display: 'flex', height: '100%' }
-          }
-        >
-          <LeftSidebar
-            model={currentModel}
-            params={params}
-            selectedProfileId={selectedProfile.id}
-            onParamChange={handleParamChange}
-            onProfileChange={setSelectedProfile}
-            bounds={dieline.bounds}
-            dieline={dieline}
-            activeMode={activeTab}
-            hinges={hingeList}
-            selectedPanelId={selectedPanelId}
-            onSelectPanel={setSelectedPanelId}
-            onAngleChange={handleAngleChange}
-            onResetAngle={handleResetAngle}
-            onResetAllAngles={handleResetAllAngles}
-            activePanel={sidebarPanel}
-            onSelectActivePanel={setSidebarPanel}
-          />
-        </div>
+        {/* Barra Lateral Esquerda: Dimensões, Parâmetros e Inspeção de Dobras */}
+        <LeftSidebar
+          model={currentModel}
+          params={params}
+          selectedProfile={selectedProfile}
+          profiles={STANDARD_PROFILES}
+          onParamChange={handleParamChange}
+          onProfileChange={handleProfileChange}
+          customAngles={customAngles}
+          onAngleChange={handleAngleChange}
+          onResetAngle={handleResetAngle}
+          onResetAllAngles={handleResetAllAngles}
+          selectedPanelId={selectedPanelId}
+          hingeList={hingeList}
+          activePanel={sidebarPanel}
+          onSelectPanel={(panel) => setSidebarPanel(panel)}
+        />
 
-        {/* Viewport Central (Canvas 2D / 3D / Imposição) */}
-        <main style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--cad-bg-workspace)' }}>
+        {/* Viewport Principal (2D / 3D / Imposição Técnica) */}
+        <main
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
           {activeTab === '2d' && (
             <CadViewer2D
               dieline={dieline}
-              model={currentModel}
               onViewportUpdate={handleViewportUpdate}
+              model={currentModel}
+              selectedProfile={selectedProfile}
             />
           )}
 
           {activeTab === '3d' && (
             <FoldingViewer3D
               model={currentModel}
-              dieline={dieline}
               params={params}
               profile={selectedProfile}
+              dieline={dieline}
+              foldProgress={foldProgress}
+              onProgressChange={setFoldProgress}
+              autoRotate={autoRotate}
+              onToggleAutoRotate={() => setAutoRotate((prev) => !prev)}
+              substrateMode={substrateMode}
+              onSubstrateChange={setSubstrateMode}
+              cameraView={cameraView}
+              onCameraViewChange={setCameraView}
               customAngles={customAngles}
-              selectedPanelId={selectedPanelId}
-              onSelectPanel={(panelId) => {
-                setSelectedPanelId(panelId);
-                if (panelId) {
-                  setSidebarPanel('folds');
-                }
-              }}
-              onHingeListUpdate={setHingeList}
+              onCustomAngleChange={handleAngleChange}
+              onSelectPanel={setSelectedPanelId}
+              onHingeListExtracted={setHingeList}
               onOpenFoldInspector={handleOpenFoldInspector}
-              isFoldInspectorActive={sidebarPanel === 'folds'}
               artworkTextureUri={artworkTextureUri}
             />
           )}
@@ -461,6 +456,12 @@ export const App: React.FC = () => {
         onLoadProject={handleLoadProject}
         onDeleteProject={handleDeleteProject}
         isSupabaseConfigured={isSupabaseConfigured}
+      />
+
+      {/* Modal de Download e Instruções do Plugin Adobe Illustrator */}
+      <IllustratorPluginModal
+        isOpen={isIllustratorPluginModalOpen}
+        onClose={() => setIsIllustratorPluginModalOpen(false)}
       />
     </div>
   );

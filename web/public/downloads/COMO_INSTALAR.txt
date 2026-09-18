@@ -1,0 +1,27 @@
+﻿=====================================================================
+  GUIA RAPIDO â€” INSTALACAO DO PLUGIN PRIMACOR EMBALAGENS
+=====================================================================
+
+Compatibilidade: Adobe Illustrator CC 2019 ate Illustrator 2025 / 2026.
+Sistemas: Windows 10/11 e macOS.
+
+---------------------------------------------------------------------
+INSTALACAO NO WINDOWS (1 CLIQUE):
+---------------------------------------------------------------------
+1. Feche o Adobe Illustrator se estiver aberto.
+2. De um duplo clique no arquivo:
+   "Instalar_Plugin_Windows.bat"
+3. O instalador copiarÃ¡ os arquivos automaticamente para a pasta oficial
+   do Illustrator (%APPDATA%\Adobe\CEP\extensions\com.primacor.plmpacklib)
+   e ativarÃ¡ a permissÃ£o necessÃ¡ria.
+4. Abra o Adobe Illustrator.
+5. No menu superior, clique em:
+   Janela (Window) > ExtensÃµes (Extensions) > PRIMACOR EMBALAGENS.
+6. Pronto! O estÃºdio 3D abrirÃ¡ perfeitamente configurado.
+
+---------------------------------------------------------------------
+INSTALACAO NO MAC:
+---------------------------------------------------------------------
+1. De um duplo clique no arquivo "Instalar_Plugin_Mac.command".
+2. Abra o Illustrator e acesse Janela > ExtensÃµes > PRIMACOR EMBALAGENS.
+=====================================================================

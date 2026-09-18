@@ -11,6 +11,7 @@ import {
   FileCode,
   BookOpen,
   ChevronDown,
+  HelpCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -36,8 +37,8 @@ interface HeaderProps {
   bridgeStatus?: { bridgeOnline: boolean; illustratorDetected: boolean };
   onSyncArtwork?: () => void;
   hasArtwork?: boolean;
-  onClearArtwork?: () => void;
   onUploadArtworkFile?: (file: File) => void;
+  onOpenIllustratorPluginModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -59,6 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
   hasArtwork,
   onClearArtwork,
   onUploadArtworkFile,
+  onOpenIllustratorPluginModal,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -348,56 +350,81 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         />
 
-        {/* Botão Oficial Adobe Illustrator 2025 */}
-        <button
-          type="button"
-          onClick={onOpenInIllustrator}
-          disabled={isOpeningIllustrator}
-          className="cad-btn"
-          title={
-            bridgeStatus?.bridgeOnline
-              ? 'Ponte Ativa: abre o projeto 1:1 e camadas organizadas no Adobe Illustrator 2025'
-              : 'Abrir projeto 1:1 no Adobe Illustrator 2025'
-          }
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 154, 0, 0.14), rgba(51, 0, 0, 0.35))',
-            border: '1px solid rgba(255, 154, 0, 0.55)',
-            color: '#ff9a00',
-            fontWeight: 600,
-            gap: 7,
-            padding: '5px 11px',
-            boxShadow: '0 1px 6px rgba(255, 154, 0, 0.15)',
-          }}
-        >
-          <span
+        {/* Botão Oficial Adobe Illustrator & Baixar Plugin */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <button
+            type="button"
+            onClick={onOpenInIllustrator}
+            disabled={isOpeningIllustrator}
+            className="cad-btn"
+            title={
+              bridgeStatus?.bridgeOnline
+                ? 'Ponte Ativa: abre o projeto 1:1 e camadas organizadas no Adobe Illustrator'
+                : 'Abrir projeto 1:1 no Adobe Illustrator (ou exportar script)'
+            }
             style={{
-              background: '#330000',
+              background: 'linear-gradient(135deg, rgba(255, 154, 0, 0.14), rgba(51, 0, 0, 0.35))',
+              border: '1px solid rgba(255, 154, 0, 0.55)',
               color: '#ff9a00',
-              border: '1px solid #ff9a00',
-              borderRadius: 3,
-              padding: '1px 3px',
-              fontSize: 9,
-              fontWeight: 900,
-              letterSpacing: 0.5,
-              lineHeight: 1,
+              fontWeight: 600,
+              gap: 7,
+              padding: '5px 11px',
+              boxShadow: '0 1px 6px rgba(255, 154, 0, 0.15)',
             }}
           >
-            Ai
-          </span>
-          <span className="hide-on-mobile">{isOpeningIllustrator ? 'Abrindo...' : 'Illustrator'}</span>
-          {bridgeStatus?.bridgeOnline && (
             <span
               style={{
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: '#10b981',
-                boxShadow: '0 0 6px #10b981',
+                background: '#330000',
+                color: '#ff9a00',
+                border: '1px solid #ff9a00',
+                borderRadius: 3,
+                padding: '1px 3px',
+                fontSize: 9,
+                fontWeight: 900,
+                letterSpacing: 0.5,
+                lineHeight: 1,
               }}
-              title="Bridge Conectada ao Illustrator 2025"
-            />
+            >
+              Ai
+            </span>
+            <span className="hide-on-mobile">{isOpeningIllustrator ? 'Abrindo...' : 'Illustrator'}</span>
+            {bridgeStatus?.bridgeOnline && (
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: '#10b981',
+                  boxShadow: '0 0 6px #10b981',
+                }}
+                title="Bridge Conectada ao Illustrator"
+              />
+            )}
+          </button>
+
+          {onOpenIllustratorPluginModal && (
+            <button
+              type="button"
+              onClick={onOpenIllustratorPluginModal}
+              className="cad-btn"
+              title="Baixar Plugin Oficial PRIMACOR EMBALAGENS para Adobe Illustrator (Instalador .ZIP)"
+              style={{
+                background: 'rgba(255, 154, 0, 0.08)',
+                border: '1px solid rgba(255, 154, 0, 0.35)',
+                color: '#ffb347',
+                padding: '5px 9px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                fontSize: 11,
+                fontWeight: 600,
+              }}
+            >
+              <Download size={13} />
+              <span className="hide-on-mobile">Plugin</span>
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Indicador de Arte 3D Ativa */}
         {hasArtwork && (
@@ -523,8 +550,50 @@ export const Header: React.FC<HeaderProps> = ({
                   letterSpacing: 0.5,
                 }}
               >
-                Adobe Illustrator 2025
+                Adobe Illustrator
               </div>
+
+              <a
+                href="/downloads/Plugin_Illustrator_Primacor.zip"
+                download="Plugin_Illustrator_Primacor.zip"
+                className="cad-btn"
+                onClick={() => setIsExportMenuOpen(false)}
+                style={{
+                  width: '100%',
+                  justifyContent: 'flex-start',
+                  background: 'rgba(255, 154, 0, 0.12)',
+                  border: '1px solid rgba(255, 154, 0, 0.4)',
+                  color: '#ff9a00',
+                  fontSize: 12,
+                  textDecoration: 'none',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <Download size={14} color="#ff9a00" />
+                <span style={{ fontWeight: 700 }}>Baixar Plugin Illustrator (.zip)</span>
+              </a>
+
+              {onOpenIllustratorPluginModal && (
+                <button
+                  type="button"
+                  className="cad-btn"
+                  onClick={() => {
+                    onOpenIllustratorPluginModal();
+                    setIsExportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--cad-text-secondary)',
+                    fontSize: 12,
+                  }}
+                >
+                  <HelpCircle size={14} color="#38bdf8" />
+                  <span>Como Instalar o Plugin...</span>
+                </button>
+              )}
 
               {onExportIllustratorJsx && (
                 <button
@@ -544,7 +613,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                 >
                   <FileCode size={14} color="#ff9a00" />
-                  <span style={{ fontWeight: 600 }}>Script Illustrator (.jsx)</span>
+                  <span style={{ fontWeight: 600 }}>Script da Faca (.jsx)</span>
                 </button>
               )}
 
