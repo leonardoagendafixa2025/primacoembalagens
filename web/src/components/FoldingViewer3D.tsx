@@ -306,14 +306,31 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           tree.rootGroup.rotation.x = Math.PI / 2;
         }
 
-        // Função de fechamento que SEMPRE garante o FUNDO no chão a Y = 1.0mm e centralizado em X e Z
+        // Função de fechamento que SEMPRE garante o FUNDO no chão perfeitamente apoiado a Y = 0 e centralizado em X e Z
         const updateWithGrounding = (progress: number) => {
           tree.rootGroup.position.set(0, 0, 0);
           tree.updateProgress(progress);
           boxGroup.updateMatrixWorld(true);
           const bbox = new THREE.Box3().setFromObject(boxGroup);
-          // Garante o fundo sempre exatamente no chão (1mm acima para evitar z-fighting e o chão entrando dentro da embalagem)
-          const groundY = 1.0 - bbox.min.y;
+
+          let groundY = -bbox.min.y;
+          if (isTubular) {
+            const rootId = tree.topology?.panels?.find((p: any) => p.isRoot)?.id;
+            const rootMesh = rootId ? boxGroup.getObjectByName(rootId) : null;
+            if (rootMesh) {
+              const rootBbox = new THREE.Box3().setFromObject(rootMesh);
+              const targetGroundY = -rootBbox.min.y;
+              if (progress >= 0.8) {
+                const t = (progress - 0.8) / 0.2;
+                groundY = THREE.MathUtils.lerp(-bbox.min.y, targetGroundY, t);
+              } else {
+                groundY = -bbox.min.y;
+              }
+            } else {
+              groundY = -bbox.min.y - 3.0;
+            }
+          }
+
           const cx = (bbox.min.x + bbox.max.x) / 2;
           const cz = (bbox.min.z + bbox.max.z) / 2;
           tree.rootGroup.position.set(-cx, groundY, -cz);

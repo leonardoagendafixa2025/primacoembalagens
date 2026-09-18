@@ -159,6 +159,19 @@ class PLMStudioViewer {
       project.dieline.bounds = { minX: 0, minY: 0, maxX: 500, maxY: 500, width: 500, height: 500 };
     }
 
+    if (!project.dieline.segments && (project.dieline as any).lines) {
+      project.dieline.segments = ((project.dieline as any).lines || []).map((l: any) => ({
+        x0: l.x1,
+        y0: l.y1,
+        x1: l.x2,
+        y1: l.y2,
+        type: l.type,
+      }));
+    }
+    if (!project.dieline.arcs) {
+      project.dieline.arcs = [];
+    }
+
     // Se project.dieline não tiver customTopology mas tiver project.panels, reconstrói customTopology com centroid
     if (!project.dieline.customTopology && (project as any).panels) {
       const pList = (project as any).panels;
@@ -256,15 +269,49 @@ class PLMStudioViewer {
     }
   }
 
-  // Função que SEMPRE garante o FUNDO da embalagem em cima do chão a Y = 1.0mm e centralizado em X e Z
+  // Função que SEMPRE garante o FUNDO da embalagem perfeitamente apoiado no chão a Y = 0 e centralizado em X e Z
   private updateWithGrounding(progress: number) {
     if (!this.currentTree) return;
     this.currentTree.rootGroup.position.set(0, 0, 0);
     this.currentTree.updateProgress(progress);
     this.boxGroup.updateMatrixWorld(true);
     const bbox = new THREE.Box3().setFromObject(this.boxGroup);
-    // Garante o fundo sempre exatamente 1mm acima do chão para evitar corte de plano
-    const groundY = 1.0 - bbox.min.y;
+
+    const codeStr = (this.currentProject?.modelCode || this.currentProject?.projectName || '').toUpperCase();
+    const isTubular =
+      codeStr.includes('FEFCO 02') ||
+      codeStr.includes('FEFCO 07') ||
+      codeStr.includes('FEFCO_02') ||
+      codeStr.includes('FEFCO_07') ||
+      codeStr.includes('FEFCO_F2') ||
+      codeStr.includes('FEFCO_F7') ||
+      codeStr.startsWith('ECMA A') ||
+      codeStr.startsWith('ECMA B') ||
+      codeStr.startsWith('ECMA E') ||
+      codeStr.startsWith('ECMA X') ||
+      codeStr.startsWith('ECMA_A') ||
+      codeStr.startsWith('ECMA_B') ||
+      codeStr.startsWith('ECMA_E') ||
+      codeStr.startsWith('ECMA_X');
+
+    let groundY = -bbox.min.y;
+    if (isTubular) {
+      const rootId = this.currentTree.topology?.panels?.find((p: any) => p.isRoot)?.id;
+      const rootMesh = rootId ? this.boxGroup.getObjectByName(rootId) : null;
+      if (rootMesh) {
+        const rootBbox = new THREE.Box3().setFromObject(rootMesh);
+        const targetGroundY = -rootBbox.min.y;
+        if (progress >= 0.8) {
+          const t = (progress - 0.8) / 0.2;
+          groundY = THREE.MathUtils.lerp(-bbox.min.y, targetGroundY, t);
+        } else {
+          groundY = -bbox.min.y;
+        }
+      } else {
+        groundY = -bbox.min.y - 3.0;
+      }
+    }
+
     const cx = (bbox.min.x + bbox.max.x) / 2;
     const cz = (bbox.min.z + bbox.max.z) / 2;
     this.currentTree.rootGroup.position.set(-cx, groundY, -cz);
