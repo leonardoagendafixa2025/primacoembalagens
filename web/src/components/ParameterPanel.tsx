@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { PackagingModel, CardboardProfile, BoundingBox2D, DielineResult } from '../engine/types';
 import { STANDARD_PROFILES } from '../engine/types';
-import { computeDielineMetrics } from '../engine/geometry';
 import { calculateDimensionMatrix } from '../engine/dimensionConverter';
 import type { DimensionMode } from '../engine/dimensionConverter';
 import {
@@ -38,8 +37,8 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   selectedProfileId,
   onParamChange,
   onProfileChange,
-  bounds,
-  dieline,
+  bounds: _bounds,
+  dieline: _dieline,
   isCollapsed = false,
   onToggleCollapse,
   activeSubTab,
@@ -91,9 +90,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
     );
   }
 
-  const areaM2 = ((bounds.width * bounds.height) / 1_000_000).toFixed(3);
   const currentProfile = STANDARD_PROFILES.find((p) => p.id === selectedProfileId) || STANDARD_PROFILES[0];
-  const metrics = useMemo(() => dieline ? computeDielineMetrics(dieline) : null, [dieline]);
 
   // Modo de Referência Dimensional (Interna vs Faca vs Externa)
   const [dimMode, setDimMode] = useState<DimensionMode>('dieline');
@@ -138,198 +135,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
         )}
       </div>
 
-      {/* 2. Informações Técnicas do Modelo Ativo */}
-      <div
-        style={{
-          padding: '12px 14px',
-          background: 'var(--cad-bg-app)',
-          borderBottom: '1px solid var(--cad-border-subtle)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              padding: '2px 7px',
-              borderRadius: 'var(--cad-radius-xs)',
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#ef4444',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              letterSpacing: 0.5,
-            }}
-          >
-            {model.code}
-          </span>
-          <span style={{ fontSize: 11, color: 'var(--cad-accent)', fontWeight: 600 }}>
-            {model.category}
-          </span>
-        </div>
 
-        <h3
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: 'var(--cad-text-primary)',
-            marginTop: 6,
-            lineHeight: 1.3,
-          }}
-        >
-          {model.name}
-        </h3>
-
-        {model.description && (
-          <p
-            style={{
-              fontSize: 11,
-              color: 'var(--cad-text-muted)',
-              marginTop: 4,
-              lineHeight: 1.4,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {model.description}
-          </p>
-        )}
-      </div>
-
-      {/* 3. Card Industrial de Formato Mínimo da Faca Aberta & Métricas de Aço */}
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--cad-border-subtle)' }}>
-        <div
-          style={{
-            background: 'var(--cad-bg-input)',
-            border: '1px solid var(--cad-border-subtle)',
-            borderRadius: 'var(--cad-radius-sm)',
-            padding: '10px 12px',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: 10,
-              fontWeight: 700,
-              color: 'var(--cad-text-muted)',
-              letterSpacing: 0.5,
-              textTransform: 'uppercase',
-            }}
-          >
-            <span>Formato Mínimo da Faca</span>
-            <span style={{ color: 'var(--cad-accent)' }}>1 : 1</span>
-          </div>
-
-          <div
-            className="cad-mono"
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              color: 'var(--cad-accent)',
-              marginTop: 3,
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 4,
-            }}
-          >
-            <span>{Math.round(bounds.width)}</span>
-            <span style={{ fontSize: 12, color: 'var(--cad-text-muted)' }}>×</span>
-            <span>{Math.round(bounds.height)}</span>
-            <span style={{ fontSize: 11, color: 'var(--cad-text-secondary)', fontWeight: 500, marginLeft: 2 }}>
-              mm
-            </span>
-          </div>
-
-          <div
-            style={{
-              fontSize: 10,
-              color: 'var(--cad-text-dim)',
-              marginTop: 3,
-              display: 'flex',
-              justifyContent: 'space-between',
-              borderBottom: metrics ? '1px solid var(--cad-border-subtle)' : 'none',
-              paddingBottom: metrics ? 8 : 0,
-              marginBottom: metrics ? 8 : 0,
-            }}
-          >
-            <span>Área da folha aberta:</span>
-            <span className="cad-mono" style={{ color: 'var(--cad-text-secondary)' }}>
-              {areaM2} m²
-            </span>
-          </div>
-
-          {metrics && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: 10,
-                  color: 'var(--cad-text-dim)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444' }} />
-                  <span>Aço de Corte:</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span className="cad-mono" style={{ color: '#ef4444', fontWeight: 600 }}>
-                    {metrics.totalCutM} m
-                  </span>
-                  <span style={{ fontSize: 9, color: 'var(--cad-text-dim)' }}>
-                    ({metrics.totalCutMm} mm)
-                  </span>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: 10,
-                  color: 'var(--cad-text-dim)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }} />
-                  <span>Aço de Vinco:</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span className="cad-mono" style={{ color: '#3b82f6', fontWeight: 600 }}>
-                    {metrics.totalCreaseM} m
-                  </span>
-                  <span style={{ fontSize: 9, color: 'var(--cad-text-dim)' }}>
-                    ({metrics.totalCreaseMm} mm)
-                  </span>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: 10,
-                  marginTop: 2,
-                  paddingTop: 6,
-                  borderTop: '1px dashed var(--cad-border-subtle)',
-                }}
-              >
-                <span style={{ fontWeight: 600, color: 'var(--cad-text-secondary)' }}>
-                  Total Lâminas de Aço:
-                </span>
-                <span className="cad-mono" style={{ fontWeight: 700, color: 'var(--cad-accent)' }}>
-                  {metrics.totalSteelM} m
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* 4. Sub-Navegação Interna (Dimensões / Material / Dobras 3D) */}
       <div
