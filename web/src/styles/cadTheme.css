@@ -163,6 +163,24 @@ body {
 }
 
 /* CAD Inputs & Steppers */
+.cad-input-group {
+  display: flex;
+  align-items: center;
+  background: var(--cad-bg-input);
+  border: 1px solid var(--cad-border-default);
+  border-radius: var(--cad-radius-sm);
+  height: 26px;
+  width: 78px;
+  padding: 0 6px 0 6px;
+  box-sizing: border-box;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.cad-input-group:focus-within {
+  border-color: var(--cad-border-focus);
+  box-shadow: 0 0 0 1px rgba(0, 210, 180, 0.25);
+  background: var(--cad-bg-input-hover);
+}
+
 .cad-input-number {
   font-family: var(--cad-font-mono);
   font-variant-numeric: tabular-nums;
@@ -170,12 +188,18 @@ body {
   border: 1px solid var(--cad-border-default);
   border-radius: var(--cad-radius-sm);
   color: var(--cad-text-primary);
-  padding: 5px 8px;
-  font-size: 13px;
+  padding: 4px 6px;
+  font-size: 11px;
   font-weight: 600;
   text-align: right;
   outline: none;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  -moz-appearance: textfield;
+}
+.cad-input-number::-webkit-outer-spin-button,
+.cad-input-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .cad-input-number:focus {
   border-color: var(--cad-border-focus);

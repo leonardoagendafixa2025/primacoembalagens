@@ -478,10 +478,9 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                         <Minus size={11} />
                       </button>
 
-                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <div className="cad-input-group">
                         <input
                           type="number"
-                          className="cad-input-number"
                           min={minVal}
                           max={def.max}
                           step={stepVal}
@@ -491,16 +490,26 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                             updateParamValue(isNaN(parsed) ? 0 : parsed);
                           }}
                           style={{
-                            width: 68,
-                            paddingRight: 22,
+                            flex: 1,
+                            minWidth: 0,
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            color: 'var(--cad-text-primary)',
+                            fontFamily: 'var(--cad-font-mono)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            textAlign: 'right',
+                            padding: 0,
+                            margin: 0,
                           }}
                         />
                         <span
                           style={{
-                            position: 'absolute',
-                            right: 6,
                             fontSize: 10,
                             color: 'var(--cad-text-muted)',
+                            marginLeft: 4,
+                            userSelect: 'none',
                             pointerEvents: 'none',
                           }}
                         >
