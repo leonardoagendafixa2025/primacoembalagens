@@ -22,8 +22,12 @@ export class IllustratorBridgeClient {
   private status: BridgeStatus = { bridgeOnline: false, illustratorDetected: false };
   private reconnectTimer: any = null;
 
+  private lastArtworkUri: string | null = null;
+
   private constructor() {
     this.initWebSocket();
+    this.checkStatus();
+    setInterval(() => this.checkStatus(), 2000);
   }
 
   public static getInstance(): IllustratorBridgeClient {
@@ -62,6 +66,7 @@ export class IllustratorBridgeClient {
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === 'ARTWORK_UPDATED') {
+            this.lastArtworkUri = msg.payload?.textureDataUri || msg.payload;
             this.notify('ARTWORK_UPDATED', msg.payload);
           } else if (msg.type === 'STATUS_UPDATE') {
             this.status = { ...this.status, ...msg.payload };
@@ -100,6 +105,10 @@ export class IllustratorBridgeClient {
       if (res.ok) {
         const data = await res.json();
         this.status = { bridgeOnline: true, ...data };
+        if (data.latestArtworkDataUri && data.latestArtworkDataUri !== this.lastArtworkUri) {
+          this.lastArtworkUri = data.latestArtworkDataUri;
+          this.notify('ARTWORK_UPDATED', { textureDataUri: data.latestArtworkDataUri });
+        }
       } else {
         this.status.bridgeOnline = false;
       }

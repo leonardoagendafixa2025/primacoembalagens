@@ -35,13 +35,17 @@
                     <Menu>PLMPackLib CAD Bridge</Menu>
                     <Geometry>
                         <Size>
-                            <Height>380</Height>
-                            <Width>280</Width>
+                            <Height>650</Height>
+                            <Width>420</Width>
                         </Size>
                         <MinSize>
-                            <Height>300</Height>
-                            <Width>240</Width>
+                            <Height>400</Height>
+                            <Width>300</Width>
                         </MinSize>
+                        <MaxSize>
+                            <Height>2160</Height>
+                            <Width>3840</Width>
+                        </MaxSize>
                     </Geometry>
                 </UI>
             </DispatchInfo>

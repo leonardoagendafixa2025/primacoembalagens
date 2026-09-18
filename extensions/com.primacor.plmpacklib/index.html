@@ -2,19 +2,20 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>PLMPackLib CAD Bridge</title>
+  <title>PLMPackLib Studio 3D</title>
   <style>
     :root {
-      --ai-bg: #262626;
-      --ai-card: #1e1e1e;
-      --ai-input: #141414;
-      --ai-border: #383838;
-      --ai-text: #e0e0e0;
-      --ai-muted: #8c8c8c;
+      --ai-bg: #1e2229;
+      --ai-panel: #14171d;
+      --ai-card: #282d37;
+      --ai-border: #383f4d;
+      --ai-text: #f1f5f9;
+      --ai-muted: #94a3b8;
       --ai-accent: #00d2b4;
       --ai-accent-hover: #00b89e;
-      --ai-danger: #ef4444;
+      --ai-primary: #3b82f6;
       --ai-success: #10b981;
+      --ai-danger: #ef4444;
     }
 
     * {
@@ -28,92 +29,263 @@
     body {
       background-color: var(--ai-bg);
       color: var(--ai-text);
-      padding: 12px;
-      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    .header {
+    /* Top Header */
+    .studio-header {
+      background: var(--ai-panel);
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-bottom: 10px;
       border-bottom: 1px solid var(--ai-border);
-      margin-bottom: 12px;
+      flex-shrink: 0;
     }
 
-    .brand {
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing: 0.5px;
-      color: var(--ai-accent);
-    }
-
-    .status-badge {
-      display: inline-flex;
+    .studio-brand {
+      display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
+    }
+
+    .brand-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+
+    .brand-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 210, 180, 0.15);
+      color: var(--ai-accent);
+      border: 1px solid rgba(0, 210, 180, 0.3);
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       font-size: 10px;
       font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 10px;
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--ai-success);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .status-badge.offline {
-      background: rgba(239, 68, 68, 0.15);
-      color: var(--ai-danger);
-      border-color: rgba(239, 68, 68, 0.3);
     }
 
     .status-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: currentColor;
+      background: var(--ai-success);
+      box-shadow: 0 0 6px var(--ai-success);
     }
 
-    .info-card {
+    .status-dot.offline {
+      background: var(--ai-danger);
+      box-shadow: none;
+    }
+
+    /* 3D Viewport Box */
+    .viewport-box {
+      flex: 1;
+      position: relative;
+      background: #13161c;
+      overflow: hidden;
+      min-height: 220px;
+    }
+
+    #studioCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    #studioCanvas:active {
+      cursor: grabbing;
+    }
+
+    /* Floating Viewport Overlays */
+    .overlay-top-left {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .overlay-top-right {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .overlay-chip {
+      background: rgba(20, 23, 29, 0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .overlay-chip:hover {
+      background: rgba(35, 42, 54, 0.95);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .overlay-chip.active {
+      background: rgba(0, 210, 180, 0.2);
+      color: var(--ai-accent);
+      border-color: rgba(0, 210, 180, 0.5);
+    }
+
+    .viewport-hint {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Studio Controls Panel */
+    .studio-panel {
+      background: var(--ai-panel);
+      border-top: 1px solid var(--ai-border);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Folding Slider Row */
+    .folding-control {
       background: var(--ai-card);
       border: 1px solid var(--ai-border);
       border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 12px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    .info-row {
+    .folding-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 11px;
-    }
-
-    .info-label {
-      color: var(--ai-muted);
-    }
-
-    .info-val {
       font-weight: 600;
-      color: var(--ai-text);
     }
 
-    .btn-group {
+    .folding-label {
+      color: var(--ai-text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .folding-pct {
+      color: var(--ai-accent);
+      font-weight: 700;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-input {
+      flex: 1;
+      accent-color: var(--ai-accent);
+      height: 4px;
+      background: #334155;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .btn-anim {
+      background: #334155;
+      border: 1px solid #475569;
+      color: #ffffff;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+
+    .btn-anim:hover {
+      background: #475569;
+    }
+
+    /* Action Buttons */
+    .actions-grid {
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
     }
 
-    .btn {
+    .btn-sync {
       width: 100%;
-      padding: 8px 10px;
-      border-radius: 4px;
+      background: linear-gradient(135deg, #00d2b4 0%, #00a896 100%);
+      color: #041310;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 2px 10px rgba(0, 210, 180, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .btn-sync:hover {
+      box-shadow: 0 4px 16px rgba(0, 210, 180, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-sync:active {
+      transform: translateY(0);
+    }
+
+    .sub-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn-secondary {
+      background: #252b36;
       border: 1px solid var(--ai-border);
-      background: #333333;
-      color: var(--ai-text);
+      color: #cbd5e1;
+      border-radius: 5px;
+      padding: 7px 10px;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
@@ -124,94 +296,111 @@
       transition: all 0.15s ease;
     }
 
-    .btn:hover {
-      background: #404040;
-      border-color: #555555;
+    .btn-secondary:hover {
+      background: #313845;
+      color: #ffffff;
+      border-color: #4b5563;
     }
 
-    .btn-primary {
-      background: var(--ai-accent);
-      color: #000000;
-      border-color: var(--ai-accent);
-    }
-
-    .btn-primary:hover {
-      background: var(--ai-accent-hover);
-    }
-
-    .btn-success {
-      background: rgba(16, 185, 129, 0.2);
-      color: var(--ai-success);
-      border-color: rgba(16, 185, 129, 0.4);
-    }
-
-    .btn-success:hover {
-      background: rgba(16, 185, 129, 0.3);
-    }
-
-    .log-box {
-      margin-top: 12px;
-      padding: 8px;
-      background: var(--ai-input);
-      border-radius: 4px;
-      font-family: monospace;
+    /* Log Box */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 10px;
       color: var(--ai-muted);
-      min-height: 48px;
-      max-height: 80px;
-      overflow-y: auto;
-      border: 1px solid var(--ai-border);
-      white-space: pre-wrap;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .status-msg {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="brand">PLMPACKLIB CAD</div>
-    <div id="statusBadge" class="status-badge">
-      <span class="status-dot"></span>
+  <!-- 1. Top Header -->
+  <header class="studio-header">
+    <div class="studio-brand">
+      <span class="brand-title">PLMPackLib Studio 3D</span>
+      <span id="modelTag" class="brand-badge">ECMA A2120</span>
+    </div>
+    <div class="header-status">
+      <span id="statusDot" class="status-dot"></span>
       <span id="statusText">CONECTADO</span>
     </div>
-  </div>
+  </header>
 
-  <div class="info-card">
-    <div class="info-row">
-      <span class="info-label">Projeto:</span>
-      <span id="txtProjectName" class="info-val">-</span>
+  <!-- 2. Interactive 3D Viewport Box (Esko Studio Style) -->
+  <main class="viewport-box">
+    <!-- Viewport Overlays -->
+    <div class="overlay-top-left">
+      <button id="btnSubstrateCartao" class="overlay-chip active" title="Papel Cartão Duplex/Triplex">⚪ Cartão</button>
+      <button id="btnSubstrateKraft" class="overlay-chip" title="Papel Kraft Ondulado">📦 Kraft</button>
     </div>
-    <div class="info-row">
-      <span class="info-label">Modelo:</span>
-      <span id="txtModelCode" class="info-val" style="color: var(--ai-accent);">-</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Geometria:</span>
-      <span id="txtGeomVersion" class="info-val">v1</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Arte:</span>
-      <span id="txtArtVersion" class="info-val">v0</span>
-    </div>
-  </div>
 
-  <div class="btn-group">
-    <button id="btnSendArtwork" class="btn btn-primary">
-      <span>ENVIAR ARTE PARA PLMPACKLIB</span>
-    </button>
-    <button id="btnUpdateDieline" class="btn">
-      <span>ATUALIZAR FACA CAD</span>
-    </button>
-    <button id="btnUpdate3D" class="btn btn-success">
-      <span>ATUALIZAR VISUALIZAÇÃO 3D</span>
-    </button>
-    <button id="btnOpenWeb" class="btn">
-      <span>ABRIR PLMPACKLIB WEB</span>
-    </button>
-  </div>
+    <div class="overlay-top-right">
+      <button id="btnViewIso" class="overlay-chip" title="Perspectiva Isométrica">📐 Iso</button>
+      <button id="btnViewFront" class="overlay-chip" title="Visão Frontal">👁️ Frente</button>
+      <button id="btnViewTop" class="overlay-chip" title="Visão Superior">⬆️ Topo</button>
+      <button id="btnAutoRotate" class="overlay-chip" title="Girar Automaticamente">🔄</button>
+    </div>
 
-  <div id="logBox" class="log-box">Aguardando sincronização com o PLMPackLib Web...</div>
+    <div class="viewport-hint">Arraste para girar • Scroll para zoom • Botão direito para mover</div>
 
+    <!-- WebGL Canvas Container -->
+    <div id="studioCanvas"></div>
+  </main>
+
+  <!-- 3. Studio Controls Panel -->
+  <footer class="studio-panel">
+    <!-- Folding Animation Slider -->
+    <div class="folding-control">
+      <div class="folding-header">
+        <span class="folding-label">
+          <span>📦</span>
+          <span>Montagem da Embalagem</span>
+        </span>
+        <span id="txtFoldPct" class="folding-pct">100%</span>
+      </div>
+      <div class="slider-row">
+        <input id="sliderFold" class="slider-input" type="range" min="0" max="100" value="100" />
+        <button id="btnPlayFold" class="btn-anim" title="Animar Dobra">▶ Play</button>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-grid">
+      <button id="btnSyncArtwork" class="btn-sync">
+        <span>🔄</span>
+        <span>ATUALIZAR 3D COM ARTE</span>
+      </button>
+
+      <div class="sub-actions">
+        <button id="btnUpdateDieline" class="btn-secondary">
+          <span>📐</span>
+          <span>Atualizar Faca</span>
+        </button>
+        <button id="btnOpenWeb" class="btn-secondary">
+          <span>🌐</span>
+          <span>Abrir na Web</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="txtStatusMsg" class="status-msg">Pronto para visualização 3D.</span>
+      <span id="txtVersion">Arte: v0</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
   <script src="./js/CSInterface.js"></script>
+  <script src="./js/studio.bundle.js"></script>
   <script src="./js/main.js"></script>
 </body>
 </html>

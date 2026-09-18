@@ -103,6 +103,7 @@ const server = http.createServer(async (req, res) => {
       illustratorVersion: 'Adobe Illustrator 2025 (v29.8.2)',
       activeProject: activeProject ? activeProject.projectId : null,
       hasArtwork: !!latestArtworkDataUri,
+      latestArtworkDataUri: latestArtworkDataUri,
     }));
     return;
   }
@@ -258,7 +259,16 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 4. Receber arte enviada diretamente da Extensão CEP do Illustrator
+  // 4. Obter ou Receber arte enviada diretamente da Extensão CEP do Illustrator
+  if (url.pathname === '/api/artwork' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: !!latestArtworkDataUri,
+      textureDataUri: latestArtworkDataUri
+    }));
+    return;
+  }
+
   if (url.pathname === '/api/artwork' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
