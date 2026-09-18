@@ -391,6 +391,24 @@ class PLMStudioViewer {
     }
   }
 
+  public clearModel() {
+    this.currentProject = null;
+    this.currentTree = null;
+    this.lastArtworkDataUri = null;
+    this.currentTexture = null;
+    while (this.boxGroup.children.length > 0) {
+      this.boxGroup.remove(this.boxGroup.children[0]);
+    }
+    if (this.controls) {
+      this.controls.target.set(0, 0, 0);
+      this.controls.update();
+    }
+  }
+
+  public hasModel(): boolean {
+    return this.currentProject !== null && this.currentTree !== null;
+  }
+
   public toggleAutoRotate(): boolean {
     this.isAutoRotating = !this.isAutoRotating;
     return this.isAutoRotating;

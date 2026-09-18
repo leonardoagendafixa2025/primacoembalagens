@@ -111,19 +111,8 @@ const server = http.createServer(async (req, res) => {
   // 1.1 Obter Geometria / Faca atual (para o painel CEP e extensões)
   if ((url.pathname === '/api/request-geometry' || url.pathname === '/api/active-script') && (req.method === 'GET' || req.method === 'POST')) {
     if (!activeProject) {
-      // Tenta recuperar último arquivo .plmpack se activeProject estiver nulo
-      try {
-        const plmFiles = fs.readdirSync(WORKDIR).filter(f => f.endsWith('.plmpack'));
-        if (plmFiles.length > 0) {
-          const lastFile = path.join(WORKDIR, plmFiles[plmFiles.length - 1]);
-          activeProject = JSON.parse(fs.readFileSync(lastFile, 'utf-8'));
-        }
-      } catch(e) {}
-    }
-
-    if (!activeProject) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, message: 'Nenhum projeto ativo na Bridge.' }));
+      res.end(JSON.stringify({ success: false, project: null, message: 'Nenhum projeto ativo na Bridge. Aguardando sincronização com o PLMPackLib Web.' }));
       return;
     }
 
@@ -137,6 +126,15 @@ const server = http.createServer(async (req, res) => {
       jsx: jsxCode,
       projectId: activeProject.projectId
     }));
+    return;
+  }
+
+  // 1.2 Limpar Projeto Ativo (Zerar painel)
+  if (url.pathname === '/api/clear' && (req.method === 'GET' || req.method === 'POST')) {
+    activeProject = null;
+    latestArtworkDataUri = null;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, message: 'Projeto zerado com sucesso.' }));
     return;
   }
 

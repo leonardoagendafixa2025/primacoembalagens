@@ -70,6 +70,82 @@
       border: 1px solid rgba(0, 210, 180, 0.3);
     }
 
+    .brand-badge.waiting {
+      background: rgba(255, 255, 255, 0.07);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    /* Empty State Overlay */
+    .empty-state-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, rgba(20, 24, 34, 0.88) 0%, rgba(10, 12, 16, 0.96) 100%);
+      z-index: 20;
+      padding: 20px;
+      text-align: center;
+      transition: opacity 0.2s ease;
+    }
+
+    .empty-state-card {
+      max-width: 290px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .empty-icon {
+      font-size: 38px;
+      filter: drop-shadow(0 0 14px rgba(0, 210, 180, 0.35));
+    }
+
+    .empty-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.3px;
+    }
+
+    .empty-subtitle {
+      font-size: 10px;
+      font-weight: 700;
+      color: #00d2b4;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .empty-instructions {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    .btn-empty-web {
+      margin-top: 8px;
+      background: rgba(0, 210, 180, 0.15);
+      border: 1px solid rgba(0, 210, 180, 0.4);
+      color: #00d2b4;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-empty-web:hover {
+      background: rgba(0, 210, 180, 0.25);
+      border-color: #00d2b4;
+      color: #ffffff;
+    }
+
     .header-status {
       display: flex;
       align-items: center;
@@ -276,7 +352,7 @@
 
     .sub-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 6px;
     }
 
@@ -327,7 +403,7 @@
   <header class="studio-header">
     <div class="studio-brand">
       <span class="brand-title">PRIMACOR EMBALAGENS</span>
-      <span id="modelTag" class="brand-badge">ECMA A2120</span>
+      <span id="modelTag" class="brand-badge waiting">AGUARDANDO PROJETO</span>
     </div>
     <div class="header-status">
       <span id="statusDot" class="status-dot"></span>
@@ -337,6 +413,19 @@
 
   <!-- 2. Interactive 3D Viewport Box (Esko Studio Style) -->
   <main class="viewport-box">
+    <!-- Empty State Overlay (Exibido enquanto nenhum projeto foi enviado) -->
+    <div id="emptyStateOverlay" class="empty-state-overlay">
+      <div class="empty-state-card">
+        <div class="empty-icon">📦</div>
+        <div class="empty-title">Estúdio 3D Aberto</div>
+        <div class="empty-subtitle">Aguardando Envio da Web</div>
+        <div class="empty-instructions">
+          No <strong>PLMPackLib Web</strong>, configure sua embalagem e clique no botão <strong>Ai Illustrator</strong> para sincronizar a faca técnica e o 3D aqui.
+        </div>
+        <button id="btnOpenWebEmpty" class="btn-empty-web">🌐 ABRIR PLMPACKLIB WEB</button>
+      </div>
+    </div>
+
     <!-- Viewport Overlays -->
     <div class="overlay-top-left">
       <button id="btnSubstrateCartao" class="overlay-chip active" title="Papel Cartão Duplex/Triplex">⚪ Cartão</button>
@@ -381,19 +470,23 @@
       </button>
 
       <div class="sub-actions">
-        <button id="btnUpdateDieline" class="btn-secondary">
+        <button id="btnUpdateDieline" class="btn-secondary" title="Atualizar faca no Illustrator">
           <span>📐</span>
-          <span>Atualizar Faca</span>
+          <span>Faca</span>
         </button>
-        <button id="btnOpenWeb" class="btn-secondary">
+        <button id="btnOpenWeb" class="btn-secondary" title="Abrir plataforma Web">
           <span>🌐</span>
-          <span>Abrir na Web</span>
+          <span>Web</span>
+        </button>
+        <button id="btnClearStudio" class="btn-secondary" title="Zerar e aguardar novo projeto da Web">
+          <span>🗑️</span>
+          <span>Zerar</span>
         </button>
       </div>
     </div>
 
     <div class="status-bar">
-      <span id="txtStatusMsg" class="status-msg">Pronto para visualização 3D.</span>
+      <span id="txtStatusMsg" class="status-msg">Aguardando envio de projeto da Web...</span>
       <span id="txtVersion">Arte: v0</span>
     </div>
   </footer>

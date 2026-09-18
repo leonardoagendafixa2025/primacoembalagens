@@ -1,7 +1,8 @@
-// PLMPackLib Studio 3D - CEP Controller (Esko Studio Style)
+// PRIMACOR EMBALAGENS - Studio 3D CEP Controller (Esko Studio Style)
 (function() {
   var cs = new CSInterface();
   var BRIDGE_URL = 'http://127.0.0.1:48123';
+  var WEB_URL = 'https://primacoembalagens.vercel.app';
   var pollInterval = null;
 
   // Elementos da UI
@@ -10,6 +11,7 @@
   var elModelTag = document.getElementById('modelTag');
   var elStatusMsg = document.getElementById('txtStatusMsg');
   var elVersion = document.getElementById('txtVersion');
+  var elEmptyState = document.getElementById('emptyStateOverlay');
 
   var sliderFold = document.getElementById('sliderFold');
   var txtFoldPct = document.getElementById('txtFoldPct');
@@ -18,6 +20,8 @@
   var btnSyncArtwork = document.getElementById('btnSyncArtwork');
   var btnUpdateDieline = document.getElementById('btnUpdateDieline');
   var btnOpenWeb = document.getElementById('btnOpenWeb');
+  var btnOpenWebEmpty = document.getElementById('btnOpenWebEmpty');
+  var btnClearStudio = document.getElementById('btnClearStudio');
 
   var btnViewIso = document.getElementById('btnViewIso');
   var btnViewFront = document.getElementById('btnViewFront');
@@ -31,6 +35,7 @@
   var isPlayingAnim = false;
   var animInterval = null;
   var artVersion = 0;
+  var lastLoadedArtworkUri = null;
 
   function setStatus(msg) {
     if (elStatusMsg) elStatusMsg.textContent = msg;
@@ -46,22 +51,67 @@
     }
   }
 
-  // 1. Inicializa o Estúdio 3D
+  // Define estado Zerado / Aguardando vs Estado com Modelo Ativo
+  function setEmptyState(isEmpty, message) {
+    if (isEmpty) {
+      currentProject = null;
+      lastLoadedArtworkUri = null;
+      artVersion = 0;
+      if (elVersion) elVersion.textContent = 'Arte: v0';
+
+      if (elEmptyState) elEmptyState.style.display = 'flex';
+      if (elModelTag) {
+        elModelTag.textContent = 'AGUARDANDO PROJETO';
+        elModelTag.className = 'brand-badge waiting';
+      }
+      if (btnSyncArtwork) {
+        btnSyncArtwork.disabled = true;
+        btnSyncArtwork.style.opacity = '0.5';
+        btnSyncArtwork.style.cursor = 'not-allowed';
+      }
+      if (sliderFold) sliderFold.disabled = true;
+      if (btnPlayFold) btnPlayFold.disabled = true;
+      if (btnUpdateDieline) btnUpdateDieline.disabled = true;
+
+      setStatus(message || 'Aguardando envio de projeto do PLMPackLib Web...');
+    } else {
+      if (elEmptyState) elEmptyState.style.display = 'none';
+      if (elModelTag) {
+        elModelTag.className = 'brand-badge';
+      }
+      if (btnSyncArtwork) {
+        btnSyncArtwork.disabled = false;
+        btnSyncArtwork.style.opacity = '1';
+        btnSyncArtwork.style.cursor = 'pointer';
+      }
+      if (sliderFold) sliderFold.disabled = false;
+      if (btnPlayFold) btnPlayFold.disabled = false;
+      if (btnUpdateDieline) btnUpdateDieline.disabled = false;
+    }
+  }
+
+  // 1. Inicializa o Estúdio 3D (começa ZERADO sem malha carregada)
   var container = document.getElementById('studioCanvas');
   if (window.PLMStudio && container) {
     window.PLMStudio.init(container);
-    setStatus('Estúdio 3D pronto para visualização.');
   }
 
-  var lastLoadedArtworkUri = null;
+  // Inicia sempre zerado
+  setEmptyState(true);
 
   // 2. Carrega ou Atualiza Modelo 3D a partir da Bridge
   function fetchProjectGeometry() {
     fetch(BRIDGE_URL + '/api/request-geometry')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (!data || !data.project) return;
+        if (!data || !data.success || !data.project) {
+          // Permanece zerado até o usuário clicar na web
+          setEmptyState(true);
+          return;
+        }
+
         currentProject = data.project;
+        setEmptyState(false);
 
         if (elModelTag) {
           elModelTag.textContent = data.project.modelCode || data.project.modelName || 'EMBALAGEM';
@@ -73,19 +123,21 @@
           if (artUri) {
             window.PLMStudio.updateArtwork(artUri);
           }
-          setStatus('Modelo ' + (data.project.modelCode || '') + ' carregado no 3D.');
+          setStatus('Modelo ' + (data.project.modelCode || '') + ' carregado com sucesso no 3D.');
         }
       })
       .catch(function(e) {
-        setStatus('Aguardando ponte PLMPackLib: ' + e.message);
+        setEmptyState(true, 'Aguardando conexão com a Bridge PLMPackLib...');
       });
   }
 
-  // Carrega imediatamente ao abrir o painel
-  fetchProjectGeometry();
-
-  // 3. Captura Rápida e Fotorrealista de Arte do Illustrator e Projeção no 3D
+  // 3. Captura de Arte do Illustrator e Projeção no 3D
   function syncArtwork() {
+    if (!currentProject) {
+      setStatus('Nenhum modelo 3D carregado para aplicar arte.');
+      return;
+    }
+
     setStatus('Capturando camada de arte do Illustrator...');
     btnSyncArtwork.disabled = true;
     btnSyncArtwork.style.opacity = '0.7';
@@ -136,104 +188,104 @@
         artVersion++;
         if (elVersion) elVersion.textContent = 'Arte: v' + artVersion;
 
-        // Atualiza imediatamente o Estúdio 3D dentro do Illustrator!
+        // Atualiza imediatamente o Estúdio 3D dentro do Illustrator
         if (window.PLMStudio) {
           window.PLMStudio.updateArtwork(dataUri);
         }
 
-        setStatus('Projetando arte no 3D e sincronizando Web...');
+        setStatus('Projetando arte no 3D e sincronizando com a Web...');
 
-        // Envia para a Bridge Server para atualizar a Web ao mesmo tempo!
+        // Envia para a Bridge Server para sincronizar a Web também
         fetch(BRIDGE_URL + '/api/artwork', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            projectId: (currentProject && currentProject.projectId) || 'active',
+            modelId: (currentProject && (currentProject.modelId || currentProject.modelCode)) || 'current',
             textureDataUri: dataUri
           })
         })
         .then(function() {
-          setStatus('Arte aplicada no 3D e sincronizada com sucesso!');
+          setStatus('Arte sincronizada no 3D e com a Web!');
         })
         .catch(function(err) {
-          setStatus('Arte aplicada no 3D local. Aviso Web: ' + err.message);
+          console.warn('Erro ao notificar Bridge da nova arte:', err);
+          setStatus('Arte aplicada no 3D local com sucesso.');
         });
 
-      } catch(e) {
-        setStatus('Erro ao processar arte: ' + e.message);
+      } catch (err) {
+        setStatus('Erro ao processar arte: ' + err.message);
       }
     });
   }
 
-  // 4. Controle de Dobra (Slider & Animação)
+  // 4. Slider de Dobra / Fechamento 3D
   if (sliderFold) {
     sliderFold.addEventListener('input', function(e) {
-      var pct = parseInt(e.target.value, 10);
-      if (txtFoldPct) txtFoldPct.textContent = pct + '%';
+      var val = parseFloat(e.target.value) / 100;
+      if (txtFoldPct) txtFoldPct.textContent = Math.round(val * 100) + '%';
       if (window.PLMStudio) {
-        window.PLMStudio.setFoldProgress(pct / 100);
+        window.PLMStudio.setFoldProgress(val);
       }
     });
   }
 
+  // 5. Botão de Animação de Dobra (Play / Pause)
   if (btnPlayFold) {
     btnPlayFold.addEventListener('click', function() {
       if (isPlayingAnim) {
         clearInterval(animInterval);
         isPlayingAnim = false;
         btnPlayFold.textContent = '▶ Play';
+        btnPlayFold.classList.remove('active');
         return;
       }
 
       isPlayingAnim = true;
-      btnPlayFold.textContent = '⏸ Pausar';
+      btnPlayFold.textContent = '⏸ Pausa';
+      btnPlayFold.classList.add('active');
 
-      var direction = -1; // Começa abrindo
+      var dir = 1;
+      var cur = sliderFold ? parseFloat(sliderFold.value) : 100;
+      if (cur >= 100) cur = 0;
+
       animInterval = setInterval(function() {
-        var current = parseInt(sliderFold.value, 10);
-        var next = current + (direction * 2);
-
-        if (next <= 0) {
-          next = 0;
-          direction = 1; // Volta a fechar
-        } else if (next >= 100) {
-          next = 100;
-          direction = -1; // Volta a abrir
+        cur += dir * 1.5;
+        if (cur >= 100) {
+          cur = 100;
+          dir = -1;
+        } else if (cur <= 0) {
+          cur = 0;
+          dir = 1;
         }
 
-        sliderFold.value = next;
-        if (txtFoldPct) txtFoldPct.textContent = next + '%';
-        if (window.PLMStudio) {
-          window.PLMStudio.setFoldProgress(next / 100);
-        }
-      }, 30);
+        if (sliderFold) sliderFold.value = cur;
+        if (txtFoldPct) txtFoldPct.textContent = Math.round(cur) + '%';
+        if (window.PLMStudio) window.PLMStudio.setFoldProgress(cur / 100);
+      }, 25);
     });
   }
 
-  // 5. Câmeras & Vistas
+  // Câmeras Predefinidas
   if (btnViewIso) {
     btnViewIso.addEventListener('click', function() {
       if (window.PLMStudio) window.PLMStudio.setCameraView('iso');
     });
   }
-
   if (btnViewFront) {
     btnViewFront.addEventListener('click', function() {
       if (window.PLMStudio) window.PLMStudio.setCameraView('front');
     });
   }
-
   if (btnViewTop) {
     btnViewTop.addEventListener('click', function() {
       if (window.PLMStudio) window.PLMStudio.setCameraView('top');
     });
   }
-
   if (btnAutoRotate) {
     btnAutoRotate.addEventListener('click', function() {
       if (window.PLMStudio) {
-        var r = window.PLMStudio.toggleAutoRotate();
-        btnAutoRotate.classList.toggle('active', r);
+        var isRotating = window.PLMStudio.toggleAutoRotate();
+        btnAutoRotate.classList.toggle('active', isRotating);
       }
     });
   }
@@ -263,6 +315,11 @@
   // 8. Botão Atualizar Faca no Documento Illustrator
   if (btnUpdateDieline) {
     btnUpdateDieline.addEventListener('click', function() {
+      if (!currentProject) {
+        setStatus('Aviso: Nenhum projeto ativo para atualizar faca.');
+        return;
+      }
+
       setStatus('Solicitando script de faca à Bridge...');
       fetch(BRIDGE_URL + '/api/request-geometry')
         .then(function(r) { return r.json(); })
@@ -292,13 +349,29 @@
   }
 
   // 9. Abrir Web
+  function openWeb() {
+    cs.openURLInDefaultBrowser(WEB_URL);
+  }
+
   if (btnOpenWeb) {
-    btnOpenWeb.addEventListener('click', function() {
-      cs.openURLInDefaultBrowser('http://localhost:5173');
+    btnOpenWeb.addEventListener('click', openWeb);
+  }
+  if (btnOpenWebEmpty) {
+    btnOpenWebEmpty.addEventListener('click', openWeb);
+  }
+
+  // 10. Botão Zerar Estúdio
+  if (btnClearStudio) {
+    btnClearStudio.addEventListener('click', function() {
+      fetch(BRIDGE_URL + '/api/clear', { method: 'POST' }).catch(function() {});
+      if (window.PLMStudio) {
+        window.PLMStudio.clearModel();
+      }
+      setEmptyState(true, 'Estúdio zerado. Aguardando novo projeto da Web.');
     });
   }
 
-  // 10. Polling de status e sincronização automática
+  // 11. Polling de status e sincronização automática
   function checkBridge() {
     fetch(BRIDGE_URL + '/api/status')
       .then(function(r) { return r.json(); })
@@ -308,6 +381,10 @@
           if (!currentProject || currentProject.projectId !== data.activeProject) {
             fetchProjectGeometry();
           }
+        } else if (!data.activeProject && currentProject) {
+          // Projeto foi limpo na bridge
+          if (window.PLMStudio) window.PLMStudio.clearModel();
+          setEmptyState(true);
         }
         if (data.latestArtworkDataUri && data.latestArtworkDataUri !== lastLoadedArtworkUri) {
           lastLoadedArtworkUri = data.latestArtworkDataUri;
