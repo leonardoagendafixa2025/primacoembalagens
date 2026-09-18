@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionManifest Version="7.0" ExtensionBundleId="com.primacor.plmpacklib" ExtensionBundleVersion="1.0.0"
-    ExtensionBundleName="PLMPackLib CAD Bridge" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    ExtensionBundleName="PRIMACOR EMBALAGENS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
         <Extension Id="com.primacor.plmpacklib.panel" Version="1.0.0" />
     </ExtensionList>
@@ -32,7 +32,7 @@
                 </Lifecycle>
                 <UI>
                     <Type>Panel</Type>
-                    <Menu>PLMPackLib CAD Bridge</Menu>
+                    <Menu>PRIMACOR EMBALAGENS</Menu>
                     <Geometry>
                         <Size>
                             <Height>650</Height>

@@ -33,7 +33,7 @@ node bridge/server.cjs
 3. O projeto é aberto instantaneamente no Adobe Illustrator 2025 com a prancheta sob medida e todas as camadas configuradas.
 
 ### 3. No Adobe Illustrator 2025
-1. Acesse o menu: **Janela (Window) → Extensões (Extensions) → PLMPackLib CAD Bridge**.
+1. Acesse o menu: **Janela (Window) → Extensões (Extensions) → PRIMACOR EMBALAGENS**.
 2. Desenhe rótulos, texturas, logos e grafismos na camada destrancada `PLMPACKLIB_ARTE`.
 3. No painel da extensão, clique em **[ ENVIAR ARTE PARA PLMPACKLIB ]** (ou **[ ATUALIZAR 3D ]**).
 
