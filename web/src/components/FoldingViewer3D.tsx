@@ -16,6 +16,7 @@ interface FoldingViewer3DProps {
   onHingeListUpdate?: (list: HingeControlInfo[]) => void;
   onOpenFoldInspector?: () => void;
   isFoldInspectorActive?: boolean;
+  artworkTextureUri?: string | null;
 }
 
 export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
@@ -29,6 +30,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   onHingeListUpdate,
   onOpenFoldInspector,
   isFoldInspectorActive = false,
+  artworkTextureUri = null,
 }) => {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
@@ -40,6 +42,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   // Lista interna de vincos para contagem e status
   const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
 
+  // Textura de Arte vinda do Adobe Illustrator
+  const [artworkTexture, setArtworkTexture] = useState<THREE.Texture | null>(null);
+  const artworkTextureRef = useRef<THREE.Texture | null>(null);
+  artworkTextureRef.current = artworkTexture;
+
   // Refs Three.js
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -49,6 +56,31 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const updateProgressRef = useRef<((progress: number) => void) | null>(null);
   const treeRef = useRef<FoldableTreeResult | null>(null);
   const downPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Carrega textura sincronizada da arte do Illustrator quando fornecida
+  useEffect(() => {
+    if (!artworkTextureUri) {
+      setArtworkTexture(null);
+      treeRef.current?.updateArtwork(null);
+      return;
+    }
+
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      artworkTextureUri,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.flipY = true;
+        tex.needsUpdate = true;
+        setArtworkTexture(tex);
+        treeRef.current?.updateArtwork(tex);
+      },
+      undefined,
+      (err) => {
+        console.warn('[FoldingViewer3D] Erro ao carregar textura do Illustrator:', err);
+      }
+    );
+  }, [artworkTextureUri]);
 
   // Configuração inicial da cena Three.js com OrbitControls profissional
   useEffect(() => {
@@ -216,7 +248,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
         outerColor,
         innerColor,
         roughness,
-        customAngles
+        customAngles,
+        artworkTexture
       );
       treeRef.current = tree;
       const list = tree.getHingeInfoList();
@@ -303,7 +336,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       setHingeList([]);
       updateProgressRef.current = null;
     }
-  }, [model, params, dieline, profile, customAngles]);
+  }, [model, params, dieline, profile, customAngles, artworkTexture]);
 
   // Atualiza as rotações de dobra conforme o foldProgress (0% = aberta, 100% = montada)
   useEffect(() => {

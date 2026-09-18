@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>PLMPackLib CAD Bridge</title>
+  <style>
+    :root {
+      --ai-bg: #262626;
+      --ai-card: #1e1e1e;
+      --ai-input: #141414;
+      --ai-border: #383838;
+      --ai-text: #e0e0e0;
+      --ai-muted: #8c8c8c;
+      --ai-accent: #00d2b4;
+      --ai-accent-hover: #00b89e;
+      --ai-danger: #ef4444;
+      --ai-success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--ai-bg);
+      color: var(--ai-text);
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--ai-border);
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      color: var(--ai-accent);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--ai-success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-badge.offline {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--ai-danger);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .info-card {
+      background: var(--ai-card);
+      border: 1px solid var(--ai-border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .info-label {
+      color: var(--ai-muted);
+    }
+
+    .info-val {
+      font-weight: 600;
+      color: var(--ai-text);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--ai-border);
+      background: #333333;
+      color: var(--ai-text);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: #404040;
+      border-color: #555555;
+    }
+
+    .btn-primary {
+      background: var(--ai-accent);
+      color: #000000;
+      border-color: var(--ai-accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--ai-accent-hover);
+    }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--ai-success);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-success:hover {
+      background: rgba(16, 185, 129, 0.3);
+    }
+
+    .log-box {
+      margin-top: 12px;
+      padding: 8px;
+      background: var(--ai-input);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--ai-muted);
+      min-height: 48px;
+      max-height: 80px;
+      overflow-y: auto;
+      border: 1px solid var(--ai-border);
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand">PLMPACKLIB CAD</div>
+    <div id="statusBadge" class="status-badge">
+      <span class="status-dot"></span>
+      <span id="statusText">CONECTADO</span>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Projeto:</span>
+      <span id="txtProjectName" class="info-val">-</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Modelo:</span>
+      <span id="txtModelCode" class="info-val" style="color: var(--ai-accent);">-</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Geometria:</span>
+      <span id="txtGeomVersion" class="info-val">v1</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Arte:</span>
+      <span id="txtArtVersion" class="info-val">v0</span>
+    </div>
+  </div>
+
+  <div class="btn-group">
+    <button id="btnSendArtwork" class="btn btn-primary">
+      <span>ENVIAR ARTE PARA PLMPACKLIB</span>
+    </button>
+    <button id="btnUpdateDieline" class="btn">
+      <span>ATUALIZAR FACA CAD</span>
+    </button>
+    <button id="btnUpdate3D" class="btn btn-success">
+      <span>ATUALIZAR VISUALIZAÇÃO 3D</span>
+    </button>
+    <button id="btnOpenWeb" class="btn">
+      <span>ABRIR PLMPACKLIB WEB</span>
+    </button>
+  </div>
+
+  <div id="logBox" class="log-box">Aguardando sincronização com o PLMPackLib Web...</div>
+
+  <script src="./js/CSInterface.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>

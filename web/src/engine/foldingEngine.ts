@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { DielineResult } from './types';
+import type { DielineResult, BoundingBox2D } from './types';
 import { buildFoldingTopology, type TopologicalPanel, type DielineTopology } from './dielineTopology';
 
 export interface HingeControlInfo {
@@ -24,6 +24,7 @@ export interface FoldableTreeResult {
   resetAllHingeAngles: () => void;
   getHingeInfoList: () => HingeControlInfo[];
   highlightPanel: (panelId: string | null) => void;
+  updateArtwork?: (texture: THREE.Texture | null) => void;
 }
 
 /**
@@ -33,7 +34,8 @@ export interface FoldableTreeResult {
 export function createPanelMesh(
   panel: TopologicalPanel,
   thickness: number,
-  materials: THREE.Material | THREE.Material[]
+  materials: THREE.Material | THREE.Material[],
+  dielineBounds?: BoundingBox2D
 ): THREE.Mesh {
   const shape = new THREE.Shape();
 
@@ -63,6 +65,26 @@ export function createPanelMesh(
     depth: Math.max(0.05, thickness),
     bevelEnabled: false,
   });
+
+  // Mapeamento normalizado 1:1 de coordenadas UV da faca 2D no painel (para renderização de arte do Illustrator)
+  if (dielineBounds && dielineBounds.width > 0 && dielineBounds.height > 0) {
+    const pos = geom.attributes.position;
+    const uv = geom.attributes.uv;
+    const margin = 15.0; // Margem de respiro idêntica ao script do Illustrator
+    const totalWidth = dielineBounds.width + margin * 2;
+    const totalHeight = dielineBounds.height + margin * 2;
+    const originX = margin - dielineBounds.minX;
+    const originY = margin - dielineBounds.minY;
+
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const u = (x + originX) / totalWidth;
+      const v = (y + originY) / totalHeight;
+      uv.setXY(i, u, v);
+    }
+    uv.needsUpdate = true;
+  }
 
   // Rotaciona a geometria por -PI/2 em torno de X:
   // - A espessura fica no eixo vertical +Y (de 0 a +thickness)
@@ -109,7 +131,8 @@ export function buildFoldable3DTree(
   outerColor: string = '#FFFFFF',
   innerColor: string = '#FFFFFF',
   roughness: number = 0.28,
-  customAngles?: Record<string, number>
+  customAngles?: Record<string, number>,
+  artworkTexture?: THREE.Texture | null
 ): FoldableTreeResult {
   const rootGroup = new THREE.Group();
   const topology: DielineTopology = dieline.customTopology || buildFoldingTopology(dieline);
@@ -126,6 +149,7 @@ export function buildFoldable3DTree(
       resetAllHingeAngles: () => {},
       getHingeInfoList: () => [],
       highlightPanel: () => {},
+      updateArtwork: () => {},
     };
   }
 
@@ -136,7 +160,8 @@ export function buildFoldable3DTree(
   for (const p of panels) {
     // Cada painel possui materiais individuais para permitir realce emissivo CAD independente
     const matFace = new THREE.MeshStandardMaterial({
-      color: outerColor,
+      color: artworkTexture ? '#FFFFFF' : outerColor,
+      map: artworkTexture || null,
       roughness: roughness,
       metalness: 0.01,
       side: THREE.DoubleSide,
@@ -151,7 +176,7 @@ export function buildFoldable3DTree(
     });
     const materials = [matFace, matEdge];
 
-    const mesh = createPanelMesh(p, thickness, materials);
+    const mesh = createPanelMesh(p, thickness, materials, dieline.bounds);
     const pivotGroup = new THREE.Group();
     pivotGroup.name = `pivot_${p.id}`;
 
@@ -327,6 +352,18 @@ export function buildFoldable3DTree(
     }
   };
 
+  const updateArtwork = (texture: THREE.Texture | null) => {
+    for (const item of itemsMap.values()) {
+      const mesh = item.mesh;
+      if (Array.isArray(mesh.material) && mesh.material[0] instanceof THREE.MeshStandardMaterial) {
+        const mat = mesh.material[0];
+        mat.map = texture;
+        mat.color.set(texture ? '#FFFFFF' : outerColor);
+        mat.needsUpdate = true;
+      }
+    }
+  };
+
   // Inicializa aberto em 0%
   updateProgress(0);
 
@@ -340,5 +377,6 @@ export function buildFoldable3DTree(
     resetAllHingeAngles,
     getHingeInfoList,
     highlightPanel,
+    updateArtwork,
   };
 }

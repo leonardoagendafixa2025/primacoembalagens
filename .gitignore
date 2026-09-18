@@ -241,3 +241,7 @@ web/dist/
 web/.env.local
 *.local
 
+# Illustrator Bridge temp
+bridge/temp/*
+!bridge/temp/.gitkeep
+

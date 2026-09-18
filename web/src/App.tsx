@@ -21,6 +21,12 @@ import { ImpositionView } from './components/ImpositionView';
 import { SavedProjectsModal } from './components/SavedProjectsModal';
 import { CatalogModal } from './components/CatalogModal';
 import { CadStatusBar } from './components/CadStatusBar';
+import {
+  IllustratorBridgeClient,
+  type BridgeStatus,
+} from './integrations/illustrator/IllustratorBridgeClient';
+import { createProjectExchangePackage } from './integrations/illustrator/projectExchange';
+import { generateIllustratorJsx } from './integrations/illustrator/jsxGenerator';
 
 export const App: React.FC = () => {
   // 1. Estados Centrais
@@ -31,6 +37,14 @@ export const App: React.FC = () => {
     Ep: STANDARD_PROFILES[0].thickness,
   }));
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
+
+  // Estados da Integração Oficial Adobe Illustrator 2025
+  const [artworkTextureUri, setArtworkTextureUri] = useState<string | null>(null);
+  const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>({
+    bridgeOnline: false,
+    illustratorDetected: false,
+  });
+  const [isOpeningIllustrator, setIsOpeningIllustrator] = useState(false);
 
   // Estados do Inspetor de Dobras das Abas (ArtiosCAD / Prinect) integrado ao painel esquerdo
   const [customAngles, setCustomAngles] = useState<Record<string, number>>({});
@@ -106,6 +120,27 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Monitora a conexão com o Adobe Illustrator e escuta sincronização de arte
+  useEffect(() => {
+    const client = IllustratorBridgeClient.getInstance();
+    client.checkStatus().then(setBridgeStatus);
+
+    const unsubscribe = client.addListener((event) => {
+      if (event.type === 'ARTWORK_UPDATED') {
+        const uri =
+          event.data?.textureDataUri ||
+          (typeof event.data === 'string' ? event.data : null);
+        if (uri) {
+          setArtworkTextureUri(uri);
+        }
+      } else if (event.type === 'STATUS_CHANGED') {
+        if (event.data) setBridgeStatus(event.data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Quando troca o modelo, redefine os parâmetros para os padrões dele
   const handleSelectModel = useCallback((model: PackagingModel) => {
     setCurrentModel(model);
@@ -161,6 +196,72 @@ export const App: React.FC = () => {
   const handleExportSVG = () => {
     const filename = `${currentModel.code}_${params.L}x${params.B}x${params.H}.svg`;
     exportToSVG(dieline, filename);
+  };
+
+  // Integração Oficial Adobe Illustrator 2025
+  const handleOpenInIllustrator = async () => {
+    setIsOpeningIllustrator(true);
+    try {
+      const exchangePkg = createProjectExchangePackage(
+        currentModel,
+        params,
+        selectedProfile,
+        dieline
+      );
+      const client = IllustratorBridgeClient.getInstance();
+      const res = await client.openInIllustrator(exchangePkg);
+      if (res.isFallback) {
+        alert(res.message);
+      }
+    } catch (e: any) {
+      alert('Erro ao comunicar com Illustrator: ' + (e?.message || e));
+    } finally {
+      setIsOpeningIllustrator(false);
+    }
+  };
+
+  const handleExportIllustratorJsx = () => {
+    const exchangePkg = createProjectExchangePackage(
+      currentModel,
+      params,
+      selectedProfile,
+      dieline
+    );
+    const jsxCode = generateIllustratorJsx(exchangePkg);
+    const blob = new Blob([jsxCode], { type: 'text/javascript;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${currentModel.code}_${params.L}x${params.B}x${params.H}_1a1.jsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSyncArtwork = async () => {
+    try {
+      const client = IllustratorBridgeClient.getInstance();
+      const res = await client.requestArtworkSync(currentModel.id);
+      if (res.success && res.textureDataUri) {
+        setArtworkTextureUri(res.textureDataUri);
+      } else {
+        alert(res.message);
+      }
+    } catch (e: any) {
+      alert('Erro ao sincronizar arte: ' + (e?.message || e));
+    }
+  };
+
+  const handleUploadArtworkFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      if (result) {
+        setArtworkTextureUri(result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Salvar projeto
@@ -227,10 +328,18 @@ export const App: React.FC = () => {
         onSelectTab={setActiveTab}
         onExportDXF={handleExportDXF}
         onExportSVG={handleExportSVG}
+        onExportIllustratorJsx={handleExportIllustratorJsx}
         onSaveProject={handleSaveProject}
         onOpenProjectsModal={() => setIsProjectsModalOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         isSupabaseConnected={isSupabaseConfigured}
+        onOpenInIllustrator={handleOpenInIllustrator}
+        isOpeningIllustrator={isOpeningIllustrator}
+        bridgeStatus={bridgeStatus}
+        onSyncArtwork={handleSyncArtwork}
+        hasArtwork={Boolean(artworkTextureUri)}
+        onClearArtwork={() => setArtworkTextureUri(null)}
+        onUploadArtworkFile={handleUploadArtworkFile}
       />
 
       {/* 2. Workspace Central */}
@@ -314,6 +423,7 @@ export const App: React.FC = () => {
               onHingeListUpdate={setHingeList}
               onOpenFoldInspector={handleOpenFoldInspector}
               isFoldInspectorActive={sidebarPanel === 'folds'}
+              artworkTextureUri={artworkTextureUri}
             />
           )}
 

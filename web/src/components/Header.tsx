@@ -25,11 +25,19 @@ interface HeaderProps {
   onSelectTab: (tab: ActiveTab) => void;
   onExportDXF: () => void;
   onExportSVG: () => void;
+  onExportIllustratorJsx?: () => void;
   onSaveProject: (name: string) => Promise<void>;
   onOpenProjectsModal: () => void;
   onOpenCatalog: () => void;
   isSupabaseConnected: boolean;
   onGoHome?: () => void;
+  onOpenInIllustrator?: () => void;
+  isOpeningIllustrator?: boolean;
+  bridgeStatus?: { bridgeOnline: boolean; illustratorDetected: boolean };
+  onSyncArtwork?: () => void;
+  hasArtwork?: boolean;
+  onClearArtwork?: () => void;
+  onUploadArtworkFile?: (file: File) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,15 +46,24 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectTab,
   onExportDXF,
   onExportSVG,
+  onExportIllustratorJsx,
   onSaveProject,
   onOpenProjectsModal,
   onOpenCatalog,
   isSupabaseConnected,
   onGoHome,
+  onOpenInIllustrator,
+  isOpeningIllustrator,
+  bridgeStatus,
+  onSyncArtwork,
+  hasArtwork,
+  onClearArtwork,
+  onUploadArtworkFile,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const handleSaveClick = async () => {
     const name = prompt(
@@ -316,13 +333,100 @@ export const Header: React.FC<HeaderProps> = ({
           <span>{isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Salvar'}</span>
         </button>
 
+        {/* Input Oculto para upload manual de arte PNG/JPG */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/png,image/jpeg"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              onUploadArtworkFile?.(file);
+              e.target.value = '';
+            }
+          }}
+        />
+
+        {/* Botão Oficial Adobe Illustrator 2025 */}
+        <button
+          type="button"
+          onClick={onOpenInIllustrator}
+          disabled={isOpeningIllustrator}
+          className="cad-btn"
+          title={
+            bridgeStatus?.bridgeOnline
+              ? 'Ponte Ativa: abre o projeto 1:1 e camadas organizadas no Adobe Illustrator 2025'
+              : 'Abrir projeto 1:1 no Adobe Illustrator 2025'
+          }
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 154, 0, 0.14), rgba(51, 0, 0, 0.35))',
+            border: '1px solid rgba(255, 154, 0, 0.55)',
+            color: '#ff9a00',
+            fontWeight: 600,
+            gap: 7,
+            padding: '5px 11px',
+            boxShadow: '0 1px 6px rgba(255, 154, 0, 0.15)',
+          }}
+        >
+          <span
+            style={{
+              background: '#330000',
+              color: '#ff9a00',
+              border: '1px solid #ff9a00',
+              borderRadius: 3,
+              padding: '1px 3px',
+              fontSize: 9,
+              fontWeight: 900,
+              letterSpacing: 0.5,
+              lineHeight: 1,
+            }}
+          >
+            Ai
+          </span>
+          <span className="hide-on-mobile">{isOpeningIllustrator ? 'Abrindo...' : 'Illustrator'}</span>
+          {bridgeStatus?.bridgeOnline && (
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: '#10b981',
+                boxShadow: '0 0 6px #10b981',
+              }}
+              title="Bridge Conectada ao Illustrator 2025"
+            />
+          )}
+        </button>
+
+        {/* Indicador de Arte 3D Ativa */}
+        {hasArtwork && (
+          <button
+            type="button"
+            onClick={onSyncArtwork}
+            className="cad-btn"
+            title="Arte 3D ativa no Three.js! Clique para resincronizar ou use o menu Exportar para remover."
+            style={{
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid #10b981',
+              color: '#10b981',
+              fontWeight: 600,
+              padding: '5px 9px',
+              fontSize: 11,
+              gap: 5,
+            }}
+          >
+            <span>Arte 3D ✓</span>
+          </button>
+        )}
+
         {/* Dropdown de Exportação CAD */}
         <div style={{ position: 'relative' }}>
           <button
             type="button"
             onClick={() => setIsExportMenuOpen((prev) => !prev)}
             className="cad-btn cad-btn-primary"
-            title="Opções de Exportação CAD (DXF / SVG)"
+            title="Opções de Exportação CAD e Integração"
           >
             <Download size={14} />
             <span className="hide-on-mobile">Exportar</span>
@@ -343,7 +447,7 @@ export const Header: React.FC<HeaderProps> = ({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 4,
-                minWidth: 190,
+                minWidth: 220,
                 zIndex: 100,
               }}
               onMouseLeave={() => setIsExportMenuOpen(false)}
@@ -400,6 +504,114 @@ export const Header: React.FC<HeaderProps> = ({
                 <Download size={14} color="#f59e0b" />
                 <span style={{ fontWeight: 600 }}>SVG (Vetor Gráfico)</span>
               </button>
+
+              <div
+                style={{
+                  height: 1,
+                  background: 'var(--cad-border-subtle)',
+                  margin: '4px 0',
+                }}
+              />
+
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: 'var(--cad-text-muted)',
+                  padding: '4px 8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                }}
+              >
+                Adobe Illustrator 2025
+              </div>
+
+              {onExportIllustratorJsx && (
+                <button
+                  type="button"
+                  className="cad-btn"
+                  onClick={() => {
+                    onExportIllustratorJsx();
+                    setIsExportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ff9a00',
+                    fontSize: 12,
+                  }}
+                >
+                  <FileCode size={14} color="#ff9a00" />
+                  <span style={{ fontWeight: 600 }}>Script Illustrator (.jsx)</span>
+                </button>
+              )}
+
+              {onSyncArtwork && (
+                <button
+                  type="button"
+                  className="cad-btn"
+                  onClick={() => {
+                    onSyncArtwork();
+                    setIsExportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--cad-text-primary)',
+                    fontSize: 12,
+                  }}
+                >
+                  <Download size={14} color="#10b981" />
+                  <span>Sincronizar Arte da Ponte</span>
+                </button>
+              )}
+
+              {onUploadArtworkFile && (
+                <button
+                  type="button"
+                  className="cad-btn"
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                    setIsExportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--cad-text-primary)',
+                    fontSize: 12,
+                  }}
+                >
+                  <FolderOpen size={14} color="#38bdf8" />
+                  <span>Carregar Arte PNG / JPG</span>
+                </button>
+              )}
+
+              {hasArtwork && onClearArtwork && (
+                <button
+                  type="button"
+                  className="cad-btn"
+                  onClick={() => {
+                    onClearArtwork();
+                    setIsExportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ef4444',
+                    fontSize: 12,
+                  }}
+                >
+                  <span>Remover Arte 3D</span>
+                </button>
+              )}
             </div>
           )}
         </div>
