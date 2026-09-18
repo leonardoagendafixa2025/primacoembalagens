@@ -332,9 +332,19 @@ server.on('upgrade', (req, socket) => {
   socket.on('error', () => wsClients.delete(socket));
 });
 
+console.log(`[Bridge] Monitor de status do Illustrator ativo.`);
+setInterval(async () => {
+  const isRunning = await isIllustratorRunning();
+  if (!isRunning && activeProject !== null) {
+    console.log('[Bridge] Illustrator foi fechado. Zerando projeto ativo na Bridge.');
+    activeProject = null;
+    latestArtworkDataUri = null;
+  }
+}, 5000);
+
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`=== PLMPackLib Official Illustrator Bridge Server ===`);
-  console.log(`Porta ativa: http://127.0.0.1:${PORT}`);
-  console.log(`Diretório de trabalho: ${WORKDIR}`);
-  console.log(`Illustrator 2025 Alvo: ${ILLUSTRATOR_EXE}`);
+  console.log(`\n======================================================`);
+  console.log(`PLMPackLib Bridge Server v2.4 (Adobe Illustrator 2025)`);
+  console.log(`======================================================`);
+  console.log(`Ouvindo na porta ${PORT}... Mantenha esta janela aberta.\n`);
 });

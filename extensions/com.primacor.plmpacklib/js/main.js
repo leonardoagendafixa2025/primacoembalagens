@@ -361,12 +361,17 @@
   }
 
   // 10. Botão Zerar Estúdio
+  var isClearing = false;
   if (btnClearStudio) {
     btnClearStudio.addEventListener('click', function() {
+      if (isClearing) return;
+      isClearing = true;
       currentProject = null;
       lastLoadedArtworkUri = null;
       artVersion = 0;
-      fetch(BRIDGE_URL + '/api/clear', { method: 'POST' }).catch(function() {});
+      fetch(BRIDGE_URL + '/api/clear', { method: 'POST' })
+        .then(function() { isClearing = false; })
+        .catch(function() { isClearing = false; });
       try {
         if (window.PLMStudio && typeof window.PLMStudio.clearModel === 'function') {
           window.PLMStudio.clearModel();
@@ -380,9 +385,11 @@
 
   // 11. Polling de status e sincronização automática
   function checkBridge() {
+    if (isClearing) return;
     fetch(BRIDGE_URL + '/api/status')
       .then(function(r) { return r.json(); })
       .then(function(data) {
+        if (isClearing) return;
         setOnline(true);
         if (data.activeProject) {
           if (!currentProject || currentProject.projectId !== data.activeProject) {
