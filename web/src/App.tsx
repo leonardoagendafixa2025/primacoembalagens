@@ -179,7 +179,9 @@ export const App: React.FC = () => {
     const model = getModelById(proj.model_id);
     setCurrentModel(model);
     setParams(proj.params);
-    const prof = STANDARD_PROFILES.find((p) => p.id === proj.profile_id);
+    const prof = STANDARD_PROFILES.find(
+      (p) => p.id === proj.profile_id || (proj.profile_id?.includes('kraft') && p.id === 'kraft') || (proj.profile_id?.includes('cartao') && p.id === 'cartao')
+    );
     setSelectedProfile(prof || STANDARD_PROFILES[0]);
   };
 
