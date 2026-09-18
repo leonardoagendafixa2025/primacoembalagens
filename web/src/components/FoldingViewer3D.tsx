@@ -61,7 +61,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   useEffect(() => {
     if (!artworkTextureUri) {
       setArtworkTexture(null);
-      treeRef.current?.updateArtwork(null);
+      treeRef.current?.updateArtwork?.(null);
       return;
     }
 
@@ -73,7 +73,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
         tex.flipY = true;
         tex.needsUpdate = true;
         setArtworkTexture(tex);
-        treeRef.current?.updateArtwork(tex);
+        treeRef.current?.updateArtwork?.(tex);
       },
       undefined,
       (err) => {

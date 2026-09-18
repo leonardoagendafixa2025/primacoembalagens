@@ -256,7 +256,7 @@ export function generateIllustratorJsx(project: PLMPackProjectExchange): string 
 /**
  * Gera o script ExtendScript para exportação fotorrealista de 300 DPI da camada ARTE
  */
-export function generateArtworkExportJsx(project: PLMPackProjectExchange, outputPath: string): string {
+export function generateArtworkExportJsx(_project: PLMPackProjectExchange, outputPath: string): string {
   const cleanOutputPath = outputPath.replace(/\\/g, '/');
 
   return `// Script de Exportação da Camada de Arte PLMPackLib

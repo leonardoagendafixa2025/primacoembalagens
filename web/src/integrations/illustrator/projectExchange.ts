@@ -128,20 +128,29 @@ export function createProjectExchangePackage(
     },
     dieline: {
       bounds: { ...dieline.bounds },
-      lines: dieline.lines.map((l) => ({
-        x1: l.x1,
-        y1: l.y1,
-        x2: l.x2,
-        y2: l.y2,
-        type: l.type as 'cut' | 'crease' | 'bleed' | 'dimension',
-      })),
+      lines: [
+        ...(dieline.segments || []).map((s) => ({
+          x1: s.x0,
+          y1: s.y0,
+          x2: s.x1,
+          y2: s.y1,
+          type: (s.type === 'perfo' ? 'crease' : s.type) as 'cut' | 'crease' | 'bleed' | 'dimension',
+        })),
+        ...(dieline.dimensions || []).map((d) => ({
+          x1: d.x0,
+          y1: d.y0,
+          x2: d.x1,
+          y2: d.y1,
+          type: 'dimension' as const,
+        })),
+      ],
       arcs: (dieline.arcs || []).map((a) => ({
         cx: a.cx,
         cy: a.cy,
         r: a.r,
         startAngle: a.startAngle,
         endAngle: a.endAngle,
-        type: a.type as 'cut' | 'crease',
+        type: (a.type === 'crease' ? 'crease' : 'cut') as 'cut' | 'crease',
       })),
     },
     panels,

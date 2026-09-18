@@ -24,7 +24,7 @@ export interface FoldableTreeResult {
   resetAllHingeAngles: () => void;
   getHingeInfoList: () => HingeControlInfo[];
   highlightPanel: (panelId: string | null) => void;
-  updateArtwork?: (texture: THREE.Texture | null) => void;
+  updateArtwork: (texture: THREE.Texture | null) => void;
 }
 
 /**
