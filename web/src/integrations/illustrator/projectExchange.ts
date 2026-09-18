@@ -29,6 +29,8 @@ export interface PLMPackProjectExchange {
       width: number;
       height: number;
     };
+    customTopology?: DielineTopology;
+    segments?: any[];
     lines: Array<{
       x1: number;
       y1: number;
