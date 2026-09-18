@@ -32350,8 +32350,6 @@ var PLMStudioViewer = class {
     this.currentTree.updateProgress(progress);
     this.boxGroup.updateMatrixWorld(true);
     const bbox = new Box3().setFromObject(this.boxGroup);
-    const codeStr = (this.currentProject?.modelCode || this.currentProject?.projectName || "").toUpperCase();
-    const isTubular = codeStr.includes("FEFCO 02") || codeStr.includes("FEFCO 07") || codeStr.includes("FEFCO_02") || codeStr.includes("FEFCO_07") || codeStr.includes("FEFCO_F2") || codeStr.includes("FEFCO_F7") || codeStr.startsWith("ECMA A") || codeStr.startsWith("ECMA B") || codeStr.startsWith("ECMA E") || codeStr.startsWith("ECMA X") || codeStr.startsWith("ECMA_A") || codeStr.startsWith("ECMA_B") || codeStr.startsWith("ECMA_E") || codeStr.startsWith("ECMA_X");
     const groundY = -bbox.min.y;
     const cx = (bbox.min.x + bbox.max.x) / 2;
     const cz = (bbox.min.z + bbox.max.z) / 2;
