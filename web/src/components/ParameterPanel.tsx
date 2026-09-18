@@ -481,6 +481,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                       <div className="cad-input-group">
                         <input
                           type="number"
+                          className="cad-input-number"
                           min={minVal}
                           max={def.max}
                           step={stepVal}
@@ -499,8 +500,8 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                             fontFamily: 'var(--cad-font-mono)',
                             fontSize: 11.5,
                             fontWeight: 600,
-                            textAlign: 'right',
-                            padding: 0,
+                            textAlign: 'left',
+                            padding: '0 0 0 6px',
                             margin: 0,
                           }}
                         />
@@ -508,7 +509,8 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                           style={{
                             fontSize: 10,
                             color: 'var(--cad-text-muted)',
-                            marginLeft: 6,
+                            marginLeft: 'auto',
+                            paddingRight: 4,
                             userSelect: 'none',
                             pointerEvents: 'none',
                           }}

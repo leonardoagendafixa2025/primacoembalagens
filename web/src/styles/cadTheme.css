@@ -191,20 +191,34 @@ body {
   padding: 4px 6px;
   font-size: 11px;
   font-weight: 600;
-  text-align: right;
+  text-align: left;
   outline: none;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
-  -moz-appearance: textfield;
-}
-.cad-input-number::-webkit-outer-spin-button,
-.cad-input-number::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  -moz-appearance: textfield !important;
 }
 .cad-input-number:focus {
   border-color: var(--cad-border-focus);
   box-shadow: 0 0 0 1px rgba(0, 210, 180, 0.25);
   background: var(--cad-bg-input-hover);
+}
+
+/* Ocultar completamente as setinhas nativas (spin buttons) de input number em todos os navegadores */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+.cad-input-number::-webkit-outer-spin-button,
+.cad-input-number::-webkit-inner-spin-button,
+.cad-input-group input::-webkit-outer-spin-button,
+.cad-input-group input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+input[type="number"],
+.cad-input-number,
+.cad-input-group input {
+  -moz-appearance: textfield !important;
 }
 
 /* CAD Range Sliders */
