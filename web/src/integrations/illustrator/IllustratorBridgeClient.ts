@@ -138,24 +138,20 @@ export class IllustratorBridgeClient {
             message: result.message || 'Projeto aberto com sucesso no Adobe Illustrator 2025!',
           };
         } else {
-          this.downloadJsxFile(project);
           return {
-            success: true,
+            success: false,
             isFallback: true,
-            message: result.message,
+            message: result.message || 'Falha ao processar abertura no Illustrator.',
           };
         }
       }
     } catch (e) {
-      console.warn('Bridge local não respondeu. Ativando fallback de script autônomo:', e);
+      console.warn('Bridge local não respondeu:', e);
     }
 
-    // 2. Fallback de Alta Confiabilidade: Gera e baixa o script oficial .jsx
-    this.downloadJsxFile(project);
-
     return {
-      success: true,
-      message: 'Script oficial da faca gerado com sucesso! Abra o Adobe Illustrator 2025 e arraste ou execute o arquivo .jsx.',
+      success: false,
+      message: 'Ponte com Illustrator offline. Abra a extensão no Adobe Illustrator (Janela > Extensões > Primacor Embalagens Studio) para conectar.',
       isFallback: true,
     };
   }

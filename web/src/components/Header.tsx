@@ -351,7 +351,7 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         />
 
-        {/* Botão Oficial Adobe Illustrator & Baixar Plugin */}
+        {/* Botão Oficial Adobe Illustrator (Ficar Online / Sincronizar) & Download do Plugin */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           <button
             type="button"
@@ -360,24 +360,30 @@ export const Header: React.FC<HeaderProps> = ({
             className="cad-btn"
             title={
               bridgeStatus?.bridgeOnline
-                ? 'Ponte Ativa: abre o projeto 1:1 e camadas organizadas no Adobe Illustrator'
-                : 'Abrir projeto 1:1 no Adobe Illustrator (ou exportar script)'
+                ? 'Illustrator Online: clique para abrir e sincronizar a faca no Illustrator'
+                : 'Conectar ao Adobe Illustrator (Ficar Online)'
             }
             style={{
-              background: 'linear-gradient(135deg, rgba(255, 154, 0, 0.14), rgba(51, 0, 0, 0.35))',
-              border: '1px solid rgba(255, 154, 0, 0.55)',
-              color: '#ff9a00',
+              background: bridgeStatus?.bridgeOnline
+                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 78, 59, 0.45))'
+                : 'linear-gradient(135deg, rgba(255, 154, 0, 0.14), rgba(51, 0, 0, 0.35))',
+              border: bridgeStatus?.bridgeOnline
+                ? '1px solid rgba(16, 185, 129, 0.65)'
+                : '1px solid rgba(255, 154, 0, 0.55)',
+              color: bridgeStatus?.bridgeOnline ? '#34d399' : '#ff9a00',
               fontWeight: 600,
               gap: 7,
               padding: '5px 11px',
-              boxShadow: '0 1px 6px rgba(255, 154, 0, 0.15)',
+              boxShadow: bridgeStatus?.bridgeOnline
+                ? '0 1px 8px rgba(16, 185, 129, 0.3)'
+                : '0 1px 6px rgba(255, 154, 0, 0.15)',
             }}
           >
             <span
               style={{
-                background: '#330000',
-                color: '#ff9a00',
-                border: '1px solid #ff9a00',
+                background: bridgeStatus?.bridgeOnline ? '#064e3b' : '#330000',
+                color: bridgeStatus?.bridgeOnline ? '#34d399' : '#ff9a00',
+                border: bridgeStatus?.bridgeOnline ? '1px solid #34d399' : '1px solid #ff9a00',
                 borderRadius: 3,
                 padding: '1px 3px',
                 fontSize: 9,
@@ -388,43 +394,48 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Ai
             </span>
-            <span className="hide-on-mobile">{isOpeningIllustrator ? 'Abrindo...' : 'Illustrator'}</span>
-            {bridgeStatus?.bridgeOnline && (
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: '#10b981',
-                  boxShadow: '0 0 6px #10b981',
-                }}
-                title="Bridge Conectada ao Illustrator"
-              />
-            )}
+            <span className="hide-on-mobile">
+              {isOpeningIllustrator
+                ? 'Conectando...'
+                : bridgeStatus?.bridgeOnline
+                  ? 'Illustrator (Online)'
+                  : 'Ficar Online'}
+            </span>
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: bridgeStatus?.bridgeOnline ? '#10b981' : '#f59e0b',
+                boxShadow: bridgeStatus?.bridgeOnline ? '0 0 6px #10b981' : '0 0 4px #f59e0b',
+              }}
+              title={bridgeStatus?.bridgeOnline ? 'Bridge Conectada ao Illustrator' : 'Bridge Offline (Clique para conectar)'}
+            />
           </button>
 
-          {onOpenIllustratorPluginModal && (
-            <button
-              type="button"
-              onClick={onOpenIllustratorPluginModal}
-              className="cad-btn"
-              title="Baixar Plugin Oficial PRIMACOR EMBALAGENS para Adobe Illustrator (Instalador .ZIP)"
-              style={{
-                background: 'rgba(255, 154, 0, 0.08)',
-                border: '1px solid rgba(255, 154, 0, 0.35)',
-                color: '#ffb347',
-                padding: '5px 9px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontSize: 11,
-                fontWeight: 600,
-              }}
-            >
-              <Download size={13} />
-              <span className="hide-on-mobile">Plugin</span>
-            </button>
-          )}
+          {/* Botão de Download do Plugin */}
+          <a
+            href="/downloads/Plugin_Illustrator_Primacor.zip"
+            download="Plugin_Illustrator_Primacor.zip"
+            className="cad-btn"
+            title="Baixar Plugin Oficial PRIMACOR EMBALAGENS para Adobe Illustrator (.ZIP)"
+            style={{
+              background: 'rgba(255, 154, 0, 0.08)',
+              border: '1px solid rgba(255, 154, 0, 0.35)',
+              color: '#ffb347',
+              padding: '5px 9px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              fontSize: 11,
+              fontWeight: 600,
+              textDecoration: 'none',
+              boxSizing: 'border-box',
+            }}
+          >
+            <Download size={13} />
+            <span className="hide-on-mobile">Plugin</span>
+          </a>
         </div>
 
         {/* Indicador de Arte 3D Ativa */}

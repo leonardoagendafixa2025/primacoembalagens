@@ -13,6 +13,8 @@ import {
   isSupabaseConfigured,
 } from './lib/supabaseClient';
 
+import confetti from 'canvas-confetti';
+
 import type { ActiveTab } from './components/Header';
 import { Header } from './components/Header';
 import { LeftSidebar } from './components/LeftSidebar';
@@ -245,16 +247,34 @@ export const App: React.FC = () => {
   const handleOpenInIllustrator = async () => {
     setIsOpeningIllustrator(true);
     try {
+      const client = IllustratorBridgeClient.getInstance();
+      const status = await client.checkStatus();
+      setBridgeStatus(status);
+
+      if (!status.bridgeOnline) {
+        // Tenta mais uma verificação de conexão rápida
+        await new Promise((r) => setTimeout(r, 400));
+        const retryStatus = await client.checkStatus();
+        setBridgeStatus(retryStatus);
+        if (!retryStatus.bridgeOnline) {
+          alert(
+            'Illustrator Offline.\n\nA ponte local (localhost:18080) ainda não está ativa.\n\nPara ficar online:\n1. Abra o Adobe Illustrator.\n2. No menu Janela > Extensões, abra o painel Primacor Embalagens Studio.\n3. O status mudará automaticamente para Online!'
+          );
+          return;
+        }
+      }
+
       const exchangePkg = createProjectExchangePackage(
         currentModel,
         params,
         selectedProfile,
         dieline
       );
-      const client = IllustratorBridgeClient.getInstance();
       const res = await client.openInIllustrator(exchangePkg);
-      if (res.isFallback) {
-        setIsIllustratorPluginModalOpen(true);
+      if (res.success) {
+        confetti({ particleCount: 35, spread: 45, origin: { y: 0.1 } });
+      } else {
+        alert(res.message);
       }
     } catch (e: any) {
       alert('Erro ao comunicar com Illustrator: ' + (e?.message || e));
