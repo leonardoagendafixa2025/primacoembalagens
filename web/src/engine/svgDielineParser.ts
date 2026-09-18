@@ -51,7 +51,7 @@ export function parseEngViewSvg(svgText: string): DielineResult {
     if (!x1m || !y1m || !x2m || !y2m || !stylem) continue;
 
     const style = stylem[1];
-    if (style !== 'Cutting' && style !== 'Creasing') continue;
+    if (!style.includes('Cutting') && !style.includes('Creasing')) continue;
 
     const rawX1 = parseFloat(x1m[1]);
     const rawY1 = parseFloat(y1m[1]);
@@ -63,7 +63,7 @@ export function parseEngViewSvg(svgText: string): DielineResult {
       y0: rawY1,
       x1: rawX2 + tx,
       y1: rawY2,
-      type: style === 'Cutting' ? 'cut' : 'crease',
+      type: style.includes('Cutting') ? 'cut' : 'crease',
     });
   }
 
@@ -84,8 +84,8 @@ export function parseEngViewSvg(svgText: string): DielineResult {
       }
     }
 
-    if (style !== 'Cutting' && style !== 'Creasing') continue;
-    const type = style === 'Cutting' ? 'cut' : 'crease';
+    if (!style || (!style.includes('Cutting') && !style.includes('Creasing'))) continue;
+    const type = style.includes('Cutting') ? 'cut' : 'crease';
 
     const d = dm[1];
     const tokens = d.match(/([a-zA-Z]|[-+]?[0-9]*\.?[0-9]+(?:e[-+]?[0-9]+)?)/g) || [];
