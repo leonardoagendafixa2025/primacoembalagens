@@ -127,9 +127,159 @@
         }
       })
       .catch(function(e) {
-        setEmptyState(true, 'Aguardando conexão com a Bridge PLMPackLib...');
+        if (!embeddedServerOnline) {
+          setEmptyState(true, 'Aguardando envio de projeto da Web...');
+        }
       });
   }
+
+  // Processa projeto recebido diretamente da Web pelo servidor embutido CEP
+  function handleIncomingProjectFromWeb(pkg) {
+    if (!pkg) return;
+    currentProject = pkg;
+    setEmptyState(false);
+    setOnline(true);
+
+    if (elModelTag) {
+      elModelTag.textContent = pkg.modelCode || pkg.modelName || 'EMBALAGEM';
+    }
+
+    if (window.PLMStudio) {
+      window.PLMStudio.loadModel(pkg);
+      var artUri = (pkg.artwork && pkg.artwork.textureDataUri) || lastLoadedArtworkUri;
+      if (artUri) {
+        window.PLMStudio.updateArtwork(artUri);
+      }
+    }
+
+    // Se o pacote contém o script da faca vetorial (JSX), executa no Illustrator
+    if (pkg.jsx) {
+      setStatus('Desenhando faca 1:1 no Adobe Illustrator...');
+      cs.evalScript(pkg.jsx, function(resStr) {
+        try {
+          var res = JSON.parse(resStr);
+          if (res && res.error) {
+            setStatus('Aviso ExtendScript: ' + res.error);
+          } else {
+            setStatus('Faca ' + (pkg.modelCode || '') + ' criada com sucesso no Illustrator!');
+          }
+        } catch (e) {
+          setStatus('Faca sincronizada no Illustrator.');
+        }
+      });
+    } else {
+      setStatus('Modelo ' + (pkg.modelCode || '') + ' carregado no Estúdio 3D.');
+    }
+  }
+
+  // Servidor HTTP Embutido no CEP (Node.js) - Ativa a porta 48123 automaticamente ao abrir a extensão
+  var embeddedServerOnline = false;
+  function startEmbeddedServer() {
+    try {
+      if (typeof require === 'function') {
+        var http = require('http');
+        if (!http || !http.createServer) return;
+
+        var server = http.createServer(function(req, res) {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+          res.setHeader('Access-Control-Allow-Private-Network', 'true');
+
+          if (req.method === 'OPTIONS') {
+            res.writeHead(204);
+            res.end();
+            return;
+          }
+
+          var pathname = req.url.split('?')[0];
+
+          if (pathname === '/api/status' && req.method === 'GET') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              bridgeOnline: true,
+              cepExtensionActive: true,
+              illustratorDetected: true,
+              illustratorVersion: 'Adobe Illustrator 2025 (Painel PRIMACOR Ativo)',
+              activeProject: currentProject ? (currentProject.projectId || currentProject.modelCode) : null,
+              hasArtwork: !!lastLoadedArtworkUri,
+              latestArtworkDataUri: lastLoadedArtworkUri,
+            }));
+            return;
+          }
+
+          if (pathname === '/api/open' && req.method === 'POST') {
+            var body = '';
+            req.on('data', function(chunk) { body += chunk; });
+            req.on('end', function() {
+              try {
+                var pkg = JSON.parse(body);
+                handleIncomingProjectFromWeb(pkg);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                  success: true,
+                  message: 'Projeto sincronizado com sucesso no Adobe Illustrator!'
+                }));
+              } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: e.message }));
+              }
+            });
+            return;
+          }
+
+          if (pathname === '/api/request-geometry' && (req.method === 'GET' || req.method === 'POST')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: !!currentProject,
+              project: currentProject,
+              projectId: currentProject ? (currentProject.projectId || currentProject.modelCode) : null,
+              latestArtworkDataUri: lastLoadedArtworkUri
+            }));
+            return;
+          }
+
+          if (pathname === '/api/sync-artwork' && req.method === 'POST') {
+            syncArtwork();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              textureDataUri: lastLoadedArtworkUri
+            }));
+            return;
+          }
+
+          if (pathname === '/api/clear' && req.method === 'POST') {
+            setEmptyState(true, 'Estúdio zerado. Aguardando novo projeto da Web.');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+            return;
+          }
+
+          res.writeHead(404);
+          res.end();
+        });
+
+        server.on('error', function(err) {
+          if (err.code === 'EADDRINUSE') {
+            console.log('[CEP] Porta 48123 já em uso por servidor externo.');
+          } else {
+            console.warn('[CEP] Erro no servidor:', err);
+          }
+        });
+
+        server.listen(48123, '127.0.0.1', function() {
+          embeddedServerOnline = true;
+          setOnline(true);
+          console.log('[CEP] Servidor HTTP local ativo na porta 48123!');
+        });
+      }
+    } catch(e) {
+      console.warn('[CEP] Node.js indisponível:', e);
+    }
+  }
+
+  startEmbeddedServer();
 
   // 3. Captura de Arte do Illustrator e Projeção no 3D
   function syncArtwork() {

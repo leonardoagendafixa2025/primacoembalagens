@@ -150,17 +150,21 @@ export class IllustratorBridgeClient {
    * Envia o projeto para abertura imediata no Adobe Illustrator 2025
    */
   public async openInIllustrator(project: PLMPackProjectExchange): Promise<{ success: boolean; message: string; isFallback?: boolean }> {
-    // Tenta envio direto para a Bridge Local
+    // Garante que o pacote contenha o código ExtendScript vetorial 1:1 pronto para execução
+    const jsxCode = (project as any).jsx || generateIllustratorJsx(project);
+    const payload = { ...project, jsx: jsxCode };
+
+    // Tenta envio direto para a Bridge / Painel CEP Local
     const urlsToTry = [this.currentBridgeUrl, ...this.bridgeUrls.filter(u => u !== this.currentBridgeUrl)];
 
     for (const url of urlsToTry) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const timeoutId = setTimeout(() => controller.abort(), 4500);
         const res = await fetch(`${url}/api/open`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(project),
+          body: JSON.stringify(payload),
           signal: controller.signal,
         });
         clearTimeout(timeoutId);

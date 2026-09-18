@@ -395,20 +395,22 @@ export const Header: React.FC<HeaderProps> = ({
               Ai
             </span>
             <span className="hide-on-mobile">
-              {isOpeningIllustrator ? 'Abrindo...' : 'Illustrator'}
+              {isOpeningIllustrator
+                ? 'Conectando...'
+                : bridgeStatus?.bridgeOnline
+                  ? 'Illustrator (Online)'
+                  : 'Ficar Online'}
             </span>
-            {bridgeStatus?.bridgeOnline && (
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: '#10b981',
-                  boxShadow: '0 0 6px #10b981',
-                }}
-                title="Bridge Conectada ao Illustrator"
-              />
-            )}
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: bridgeStatus?.bridgeOnline ? '#10b981' : '#f59e0b',
+                boxShadow: bridgeStatus?.bridgeOnline ? '0 0 6px #10b981' : '0 0 4px #f59e0b',
+              }}
+              title={bridgeStatus?.bridgeOnline ? 'Illustrator Conectado e Online' : 'Clique para Ficar Online com o Illustrator'}
+            />
           </button>
 
           {/* Botão de Download do Plugin */}
