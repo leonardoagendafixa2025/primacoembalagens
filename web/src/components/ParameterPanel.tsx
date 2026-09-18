@@ -793,11 +793,29 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                 color: 'var(--cad-text-secondary)',
               }}
             >
-              <div style={{ fontWeight: 600, color: 'var(--cad-text-primary)', marginBottom: 4 }}>
-                Especificação do Material:
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ fontWeight: 600, color: 'var(--cad-text-primary)' }}>
+                  Especificação do Material:
+                </div>
+                {currentProfile.outerColor && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--cad-text-dim)' }}>
+                    <span
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: '50%',
+                        background: currentProfile.outerColor,
+                        border: '1px solid rgba(255,255,255,0.25)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+                        display: 'inline-block',
+                      }}
+                    />
+                    <span>Visual 3D</span>
+                  </div>
+                )}
               </div>
               <div>{currentProfile.description}</div>
-              <div style={{ marginTop: 8, display: 'flex', gap: 12 }}>
+              <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <span style={{ color: 'var(--cad-text-dim)' }}>Espessura base: </span>
                   <span className="cad-mono" style={{ color: 'var(--cad-accent)', fontWeight: 600 }}>
@@ -806,8 +824,18 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                 </div>
                 <div>
                   <span style={{ color: 'var(--cad-text-dim)' }}>Acabamento: </span>
-                  <span style={{ color: 'var(--cad-text-secondary)' }}>Frente Couchê</span>
+                  <span style={{ color: 'var(--cad-text-secondary)', fontWeight: 500 }}>
+                    {currentProfile.finish || 'Padrão'}
+                  </span>
                 </div>
+                {currentProfile.grammage && (
+                  <div>
+                    <span style={{ color: 'var(--cad-text-dim)' }}>Gramatura: </span>
+                    <span style={{ color: 'var(--cad-text-secondary)', fontWeight: 500 }}>
+                      {currentProfile.grammage}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -95,6 +95,8 @@ export interface CardboardProfile {
   innerColor?: string;
   roughness?: number;
   minThickness?: number;
+  finish?: string;
+  grammage?: string;
 }
 
 export const STANDARD_PROFILES: CardboardProfile[] = [
@@ -108,6 +110,21 @@ export const STANDARD_PROFILES: CardboardProfile[] = [
     innerColor: '#FFFFFF',
     roughness: 0.28,
     minThickness: 0.1,
+    finish: 'Frente Couchê Branca / Verso Branco-Pardo',
+    grammage: '250 - 400 g/m²',
+  },
+  {
+    id: 'papel_kraft',
+    name: 'Papel Kraft / Cartão Kraft Natural',
+    code: 'KRAFT',
+    thickness: 0.45,
+    description: 'Papel kraft pardo de fibras virgens ou recicladas para embalagens sustentáveis, delivery, e-commerce e cartuchos ecológicos (0,30mm a 0,60mm)',
+    outerColor: '#b58855',
+    innerColor: '#a87844',
+    roughness: 0.72,
+    minThickness: 0.1,
+    finish: 'Kraft Pardo Natural (Fosco / Sem Revestimento)',
+    grammage: '250 - 450 g/m²',
   },
   {
     id: 'micro_onda_e',
@@ -119,6 +136,8 @@ export const STANDARD_PROFILES: CardboardProfile[] = [
     innerColor: '#c8a876',
     roughness: 0.45,
     minThickness: 1.0,
+    finish: 'Capa Kraft / Miolo Micro-Ondulado',
+    grammage: '380 - 480 g/m²',
   },
   {
     id: 'papelao_onda_b',
@@ -130,6 +149,8 @@ export const STANDARD_PROFILES: CardboardProfile[] = [
     innerColor: '#b89662',
     roughness: 0.5,
     minThickness: 2.0,
+    finish: 'Capa Kraft / Testliner Pardo',
+    grammage: '420 - 550 g/m²',
   },
   {
     id: 'papelao_onda_c',
@@ -141,6 +162,8 @@ export const STANDARD_PROFILES: CardboardProfile[] = [
     innerColor: '#a88652',
     roughness: 0.55,
     minThickness: 3.0,
+    finish: 'Capa Kraft Pesada / Onda Alta',
+    grammage: '480 - 650 g/m²',
   },
   {
     id: 'papelao_onda_bc',
@@ -152,6 +175,8 @@ export const STANDARD_PROFILES: CardboardProfile[] = [
     innerColor: '#987642',
     roughness: 0.6,
     minThickness: 5.0,
+    finish: 'Parede Dupla Kraft Reforçada',
+    grammage: '750 - 1100 g/m²',
   },
 ];
 
