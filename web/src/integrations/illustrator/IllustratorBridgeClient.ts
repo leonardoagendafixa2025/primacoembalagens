@@ -27,7 +27,7 @@ export class IllustratorBridgeClient {
   private constructor() {
     this.initWebSocket();
     this.checkStatus();
-    setInterval(() => this.checkStatus(), 2500);
+    setInterval(() => this.checkStatus(), 1500);
   }
 
   public static getInstance(): IllustratorBridgeClient {
@@ -219,27 +219,33 @@ export class IllustratorBridgeClient {
    * Solicita ao Illustrator que capture a camada de arte e devolva para o PLMPackLib 3D
    */
   public async requestArtworkSync(projectId: string): Promise<{ success: boolean; message: string; textureDataUri?: string }> {
-    try {
-      const res = await fetch(`${this.currentBridgeUrl}/api/sync-artwork`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId }),
-      });
+    const urlsToTry = [this.currentBridgeUrl, ...this.bridgeUrls.filter(u => u !== this.currentBridgeUrl)];
+    for (const url of urlsToTry) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 9000);
+        const res = await fetch(`${url}/api/sync-artwork`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.textureDataUri) {
-          this.notify('ARTWORK_UPDATED', { textureDataUri: data.textureDataUri });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.textureDataUri) {
+            this.lastArtworkUri = data.textureDataUri;
+            this.notify('ARTWORK_UPDATED', { textureDataUri: data.textureDataUri });
+          }
+          return {
+            success: true,
+            message: 'Arte sincronizada com sucesso do Adobe Illustrator!',
+            textureDataUri: data.textureDataUri,
+          };
         }
-        return {
-          success: true,
-          message: 'Arte sincronizada com sucesso do Adobe Illustrator!',
-          textureDataUri: data.textureDataUri,
-        };
-      }
-      return { success: false, message: 'Illustrator não respondeu ao pedido de captura da arte.' };
-    } catch (e) {
-      return { success: false, message: 'Serviço de ponte local indisponível no momento.' };
+      } catch (e) {}
     }
+    return { success: false, message: 'Illustrator não respondeu ao pedido de captura da arte.' };
   }
 }

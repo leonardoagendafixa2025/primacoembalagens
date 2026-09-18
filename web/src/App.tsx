@@ -137,6 +137,9 @@ export const App: React.FC = () => {
           (typeof event.data === 'string' ? event.data : null);
         if (uri) {
           setArtworkTextureUri(uri);
+          try {
+            confetti({ particleCount: 30, spread: 50, origin: { y: 0.2 } });
+          } catch {}
         }
       } else if (event.type === 'STATUS_CHANGED') {
         if (event.data) setBridgeStatus(event.data);

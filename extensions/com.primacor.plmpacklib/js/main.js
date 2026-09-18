@@ -239,13 +239,54 @@
             return;
           }
 
-          if (pathname === '/api/sync-artwork' && req.method === 'POST') {
-            syncArtwork();
+          // Obter ou enviar arte diretamente para a Web
+          if (pathname === '/api/artwork' && req.method === 'GET') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
-              success: true,
-              textureDataUri: lastLoadedArtworkUri
+              success: !!lastLoadedArtworkUri,
+              textureDataUri: lastLoadedArtworkUri,
+              artworkVersion: artVersion
             }));
+            return;
+          }
+
+          if (pathname === '/api/artwork' && req.method === 'POST') {
+            var artBody = '';
+            req.on('data', function(chunk) { artBody += chunk; });
+            req.on('end', function() {
+              try {
+                var payload = JSON.parse(artBody);
+                if (payload.textureDataUri) {
+                  lastLoadedArtworkUri = payload.textureDataUri;
+                  artVersion++;
+                  if (elVersion) elVersion.textContent = 'Arte: v' + artVersion;
+                  if (window.PLMStudio) window.PLMStudio.updateArtwork(lastLoadedArtworkUri);
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, message: 'Arte atualizada com sucesso!' }));
+              } catch(e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: e.message }));
+              }
+            });
+            return;
+          }
+
+          // Solicitação de captura sob demanda vinda da Web
+          if (pathname === '/api/sync-artwork' && req.method === 'POST') {
+            syncArtwork(function(err, dataUri) {
+              if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: err }));
+              } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                  success: true,
+                  textureDataUri: dataUri,
+                  artworkVersion: artVersion
+                }));
+              }
+            });
             return;
           }
 
@@ -281,30 +322,37 @@
 
   startEmbeddedServer();
 
-  // 3. Captura de Arte do Illustrator e Projeção no 3D
-  function syncArtwork() {
+  // 3. Captura de Arte do Illustrator e Projeção no 3D (com suporte a callback)
+  function syncArtwork(callback) {
     if (!currentProject) {
       setStatus('Nenhum modelo 3D carregado para aplicar arte.');
+      if (typeof callback === 'function') callback('Nenhum modelo ativo');
       return;
     }
 
     setStatus('Capturando camada de arte do Illustrator...');
-    btnSyncArtwork.disabled = true;
-    btnSyncArtwork.style.opacity = '0.7';
+    if (btnSyncArtwork) {
+      btnSyncArtwork.disabled = true;
+      btnSyncArtwork.style.opacity = '0.7';
+    }
 
     cs.evalScript('exportArtworkFromIllustrator()', function(resStr) {
-      btnSyncArtwork.disabled = false;
-      btnSyncArtwork.style.opacity = '1';
+      if (btnSyncArtwork) {
+        btnSyncArtwork.disabled = false;
+        btnSyncArtwork.style.opacity = '1';
+      }
 
       try {
         var res = JSON.parse(resStr);
         if (res.error) {
           setStatus('Erro no Illustrator: ' + res.error);
+          if (typeof callback === 'function') callback(res.error);
           return;
         }
 
         if (!res.filePath) {
           setStatus('Arquivo de arte não gerado.');
+          if (typeof callback === 'function') callback('Arquivo não gerado');
           return;
         }
 
@@ -332,9 +380,12 @@
 
         if (!dataUri) {
           setStatus('Não foi possível carregar a imagem exportada.');
+          if (typeof callback === 'function') callback('Falha ao ler PNG');
           return;
         }
 
+        // ATUALIZA VARIÁVEL GLOBAL DA ARTE
+        lastLoadedArtworkUri = dataUri;
         artVersion++;
         if (elVersion) elVersion.textContent = 'Arte: v' + artVersion;
 
@@ -343,9 +394,9 @@
           window.PLMStudio.updateArtwork(dataUri);
         }
 
-        setStatus('Projetando arte no 3D e sincronizando com a Web...');
+        setStatus('Arte projetada no 3D! Sincronizando com a Web...');
 
-        // Envia para a Bridge Server para sincronizar a Web também
+        // Notifica bridge server se houver porta aberta externa
         fetch(BRIDGE_URL + '/api/artwork', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -357,13 +408,18 @@
         .then(function() {
           setStatus('Arte sincronizada no 3D e com a Web!');
         })
-        .catch(function(err) {
-          console.warn('Erro ao notificar Bridge da nova arte:', err);
-          setStatus('Arte aplicada no 3D local com sucesso.');
+        .catch(function() {
+          // Servidor embutido já possui a arte em lastLoadedArtworkUri
+          setStatus('Arte aplicada no 3D e pronta para a Web!');
         });
+
+        if (typeof callback === 'function') {
+          callback(null, dataUri);
+        }
 
       } catch (err) {
         setStatus('Erro ao processar arte: ' + err.message);
+        if (typeof callback === 'function') callback(err.message);
       }
     });
   }
