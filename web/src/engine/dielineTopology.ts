@@ -156,60 +156,72 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   rawSegs.push(...bridgeCreases);
 
-  // 1.5c: Fechamento de fendas verticais/horizontais entre vincos e linhas transversais (Flap Slit Closures <= 3.5mm)
-  // Em jun├º├Áes entre abas (ex: abas de poeira vs tampa), o vinco da aba e o vinco da tampa t├¬m alturas ligeiramente diferentes
-  // gerando uma fenda vertical aberta (slit) entre o topo da divis├│ria de paredes e a linha da tampa.
-  const slitBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
+  // 1.5c: Cura de pontas soltas de vincos e fendas de abas (Slit & Crease Setback Healer <= 3.5mm)
+  // Em modelos industriais reais (ECMA/FEFCO), lâminas de vinco terminam a 0.5-3.5mm dos cantos para alívio de matriz.
+  // Apenas pontas genuinamente soltas (meets <= 1) são curadas, estendendo na própria direção e preservando seu tipo nativo (vinco ou corte).
   for (const s of rawSegs) {
     for (const ep of ['p0', 'p1'] as const) {
       const pt = s[ep];
       const otherPt = ep === 'p0' ? s.p1 : s.p0;
 
-      let count = 0;
+      let meets = 0;
       for (const o of rawSegs) {
-        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.08 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.08) {
-          count++;
+        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
+          meets++;
         }
       }
-      if (count <= 2) {
-        const dirx = pt.x - otherPt.x;
-        const diry = pt.y - otherPt.y;
-        const dlen = Math.hypot(dirx, diry);
-        if (dlen < 1e-4) continue;
-        const udx = dirx / dlen;
-        const udy = diry / dlen;
+      if (meets > 1) continue;
 
-        let bestT = 9999;
-        let bestInter: Point2D | null = null;
-        for (const o of rawSegs) {
-          if (o === s) continue;
-          const x3 = o.p0.x, y3 = o.p0.y;
-          const x4 = o.p1.x, y4 = o.p1.y;
-          const denom = udx * (y4 - y3) - udy * (x4 - x3);
-          if (Math.abs(denom) < 1e-5) continue;
-          const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
-          const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
-          if (t > 0.02 && t <= 3.5 && u >= -0.01 && u <= 1.01) {
-            if (t < bestT) {
-              bestT = t;
-              bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
-            }
+      // 1. Se há um vértice existente próximo (<= 1.5mm), faz o snap direto da ponta para esse vértice
+      let bestV: Point2D | null = null;
+      let bestVDist = 1.5;
+      for (const o of rawSegs) {
+        for (const oPt of [o.p0, o.p1]) {
+          const d = Math.hypot(oPt.x - pt.x, oPt.y - pt.y);
+          if (d > 0.05 && d < bestVDist) {
+            bestVDist = d;
+            bestV = oPt;
           }
         }
-        if (bestInter) {
-          slitBridges.push({
-            p0: { x: pt.x, y: pt.y },
-            p1: bestInter,
-            type: 'cut',
-          });
+      }
+      if (bestV) {
+        pt.x = bestV.x;
+        pt.y = bestV.y;
+        continue;
+      }
+
+      // 2. Se não, projeta e estende na direção do próprio segmento até interceptar a linha transversal mais próxima (<= 3.5mm)
+      const dirx = pt.x - otherPt.x;
+      const diry = pt.y - otherPt.y;
+      const dlen = Math.hypot(dirx, diry);
+      if (dlen < 1e-4) continue;
+      const udx = dirx / dlen;
+      const udy = diry / dlen;
+
+      let bestT = 3.5;
+      let bestInter: Point2D | null = null;
+      for (const o of rawSegs) {
+        if (o === s) continue;
+        const x3 = o.p0.x, y3 = o.p0.y;
+        const x4 = o.p1.x, y4 = o.p1.y;
+        const denom = udx * (y4 - y3) - udy * (x4 - x3);
+        if (Math.abs(denom) < 1e-5) continue;
+        const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
+        const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
+        if (t > 0.02 && t <= bestT && u >= -0.01 && u <= 1.01) {
+          bestT = t;
+          bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
         }
+      }
+      if (bestInter) {
+        pt.x = bestInter.x;
+        pt.y = bestInter.y;
       }
     }
   }
-  rawSegs.push(...slitBridges);
 
   // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 3.5mm)
-  // Se duas pontas soltas de corte (dead-ends no contorno exterior) est├úo a uma dist├óncia curta, conecta com segmento de corte.
+  // Se duas pontas soltas de corte (dead-ends no contorno exterior) estão a uma distância curta, conecta com segmento de corte.
   const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
   for (const s of rawSegs) {
     if (s.type !== 'cut') continue;
@@ -217,7 +229,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       const pt = s[ep];
       let meets = 0;
       for (const o of rawSegs) {
-        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.08 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.08) {
+        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
           meets++;
         }
       }
@@ -243,8 +255,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   rawSegs.push(...boundaryBridges);
 
-  // 2. Unifica v├®rtices pr├│ximos (toler├óncia num├®rica de 0.05 mm)
-  const EPS = 0.05;
+  // 2. Unifica vértices próximos (tolerância numérica padrão de CAD 0.15 mm)
+  const EPS = 0.15;
   const uniquePoints: Point2D[] = [];
 
   function getUniquePoint(x: number, y: number): Point2D {
