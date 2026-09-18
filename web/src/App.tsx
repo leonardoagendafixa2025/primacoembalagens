@@ -150,23 +150,33 @@ export const App: React.FC = () => {
     setCustomAngles({});
     setSelectedPanelId(null);
     setHingeList([]);
+
+    const cached = getLoadedSvgDieline(model.id);
+    const initialL = cached ? Math.round(cached.bounds.width) : (model.defaultParams?.L || 300);
+    const initialB = cached ? Math.round(cached.bounds.height) : (model.defaultParams?.B || 200);
+
     setParams({
-      L: model.defaultParams?.L || 300,
-      B: model.defaultParams?.B || 200,
+      L: initialL,
+      B: initialB,
       H: model.defaultParams?.H || 150,
       M: model.defaultParams?.M || 35,
       Ec: model.defaultParams?.Ec || 6,
       Cut: model.defaultParams?.Cut ?? 1,
       ...model.defaultParams,
       Ep: selectedProfile.thickness,
+      ...(cached ? { L: initialL, B: initialB } : {}),
     });
 
     // Carregamento sob demanda se for modelo baseado em SVG (EngView)
     const catalogItem = CATALOG.find((c) => c.id === model.id);
-    if (catalogItem?.svgDieline && !getLoadedSvgDieline(model.id)) {
+    if (catalogItem?.svgDieline && !cached) {
       fetchAndParseSvgDieline(catalogItem.svgDieline, model.id)
-        .then(() => {
-          setParams((prev) => ({ ...prev }));
+        .then((loaded) => {
+          setParams((prev) => ({
+            ...prev,
+            L: Math.round(loaded.bounds.width),
+            B: Math.round(loaded.bounds.height),
+          }));
         })
         .catch((err: any) => {
           console.error('[EngView] Erro ao carregar SVG:', err);
@@ -179,8 +189,12 @@ export const App: React.FC = () => {
     const catalogItem = CATALOG.find((c) => c.id === currentModel.id);
     if (catalogItem?.svgDieline && !getLoadedSvgDieline(currentModel.id)) {
       fetchAndParseSvgDieline(catalogItem.svgDieline, currentModel.id)
-        .then(() => {
-          setParams((prev) => ({ ...prev }));
+        .then((loaded) => {
+          setParams((prev) => ({
+            ...prev,
+            L: Math.round(loaded.bounds.width),
+            B: Math.round(loaded.bounds.height),
+          }));
         })
         .catch((err: any) => {
           console.error('[EngView] Erro ao carregar SVG inicial:', err);

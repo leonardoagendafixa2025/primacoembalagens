@@ -261,16 +261,7 @@ export function getModelById(id: string): PackagingModel {
       calculate: (params: Record<string, number>): DielineResult => {
         const cached = getLoadedSvgDieline(catalogItem.id);
         if (cached && cached.segments.length > 0) {
-          try {
-            return computeParametricDieline(
-              cached,
-              { L: defL, B: defB, H: defH, M: 20 },
-              params,
-              'engview'
-            );
-          } catch (e) {
-            return cached;
-          }
+          return cached;
         }
         return {
           bounds: { minX: 0, minY: 0, maxX: params.L || defL, maxY: params.B || defB, width: params.L || defL, height: params.B || defB },

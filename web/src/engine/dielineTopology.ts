@@ -576,8 +576,9 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     const deg = adjMap.get(pf.id)?.length || 0;
 
     // Prioriza conexões estruturais (deg), área da base/fundo e proximidade do centro real da faca
-    // Em embalagens CAD paramétricas industriais, a BASE da caixa é construída centrada em (0, 0)
-    const isOriginBase = Math.hypot(pf.centroid.x, pf.centroid.y) < 25.0 || pointInPolygon({ x: 0, y: 0 }, pf.points);
+    // Em embalagens CAD paramétricas industriais centradas, a BASE da caixa é construída em (0, 0)
+    const isBlankOriginCentered = (bMinX < -10 && bMaxX > 10 && bMinY < -10 && bMaxY > 10);
+    const isOriginBase = isBlankOriginCentered && (Math.hypot(pf.centroid.x, pf.centroid.y) < 25.0 || pointInPolygon({ x: 0, y: 0 }, pf.points));
     const originBonus = isOriginBase ? 10000 : 0;
     const score = originBonus + deg * 250 + normArea * 500 + (1.0 - normDist) * 400;
     if (score > bestScore) {

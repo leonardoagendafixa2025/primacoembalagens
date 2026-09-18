@@ -294,23 +294,7 @@ class PLMStudioViewer {
       codeStr.startsWith('ECMA_E') ||
       codeStr.startsWith('ECMA_X');
 
-    let groundY = -bbox.min.y;
-    if (isTubular) {
-      const rootId = this.currentTree.topology?.panels?.find((p: any) => p.isRoot)?.id;
-      const rootMesh = rootId ? this.boxGroup.getObjectByName(rootId) : null;
-      if (rootMesh) {
-        const rootBbox = new THREE.Box3().setFromObject(rootMesh);
-        const targetGroundY = -rootBbox.min.y;
-        if (progress >= 0.8) {
-          const t = (progress - 0.8) / 0.2;
-          groundY = THREE.MathUtils.lerp(-bbox.min.y, targetGroundY, t);
-        } else {
-          groundY = -bbox.min.y;
-        }
-      } else {
-        groundY = -bbox.min.y - 3.0;
-      }
-    }
+    const groundY = -bbox.min.y;
 
     const cx = (bbox.min.x + bbox.max.x) / 2;
     const cz = (bbox.min.z + bbox.max.z) / 2;
