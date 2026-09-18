@@ -257,7 +257,7 @@ export function getModelById(id: string): PackagingModel {
       originalSource: 'ENGVIEW_PARAMETRIC',
       implementationType: 'ENGVIEW_SVG_PARSER',
       generator: `svg_${catalogItem.id}`,
-      isFoldable: false,
+      isFoldable: true,
       calculate: (params: Record<string, number>): DielineResult => {
         const cached = getLoadedSvgDieline(catalogItem.id);
         if (cached && cached.segments.length > 0) {
