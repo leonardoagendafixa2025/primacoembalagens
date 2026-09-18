@@ -169,9 +169,9 @@ body {
   background: var(--cad-bg-input);
   border: 1px solid var(--cad-border-default);
   border-radius: var(--cad-radius-sm);
-  height: 26px;
-  width: 78px;
-  padding: 0 6px 0 6px;
+  height: 28px;
+  width: 92px;
+  padding: 0 8px;
   box-sizing: border-box;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }

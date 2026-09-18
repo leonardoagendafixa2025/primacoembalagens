@@ -467,12 +467,12 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                     </div>
 
                     {/* Stepper Numérico CAD */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                       <button
                         type="button"
                         onClick={() => handleStep(-1)}
                         className="cad-tool-btn"
-                        style={{ width: 22, height: 26, borderRadius: 3 }}
+                        style={{ width: 24, height: 28, borderRadius: 3 }}
                         title="Diminuir"
                       >
                         <Minus size={11} />
@@ -497,7 +497,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                             outline: 'none',
                             color: 'var(--cad-text-primary)',
                             fontFamily: 'var(--cad-font-mono)',
-                            fontSize: 11,
+                            fontSize: 11.5,
                             fontWeight: 600,
                             textAlign: 'right',
                             padding: 0,
@@ -508,7 +508,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                           style={{
                             fontSize: 10,
                             color: 'var(--cad-text-muted)',
-                            marginLeft: 4,
+                            marginLeft: 6,
                             userSelect: 'none',
                             pointerEvents: 'none',
                           }}
@@ -521,7 +521,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                         type="button"
                         onClick={() => handleStep(1)}
                         className="cad-tool-btn"
-                        style={{ width: 22, height: 26, borderRadius: 3 }}
+                        style={{ width: 24, height: 28, borderRadius: 3 }}
                         title="Aumentar"
                       >
                         <Plus size={11} />
