@@ -363,9 +363,16 @@
   // 10. Botão Zerar Estúdio
   if (btnClearStudio) {
     btnClearStudio.addEventListener('click', function() {
+      currentProject = null;
+      lastLoadedArtworkUri = null;
+      artVersion = 0;
       fetch(BRIDGE_URL + '/api/clear', { method: 'POST' }).catch(function() {});
-      if (window.PLMStudio) {
-        window.PLMStudio.clearModel();
+      try {
+        if (window.PLMStudio && typeof window.PLMStudio.clearModel === 'function') {
+          window.PLMStudio.clearModel();
+        }
+      } catch (e) {
+        console.error('Erro ao limpar modelo 3D:', e);
       }
       setEmptyState(true, 'Estúdio zerado. Aguardando novo projeto da Web.');
     });

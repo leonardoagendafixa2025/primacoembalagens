@@ -396,9 +396,28 @@ class PLMStudioViewer {
     this.currentTree = null;
     this.lastArtworkDataUri = null;
     this.currentTexture = null;
+    this.isAutoRotating = false;
+
     while (this.boxGroup.children.length > 0) {
-      this.boxGroup.remove(this.boxGroup.children[0]);
+      const child = this.boxGroup.children[0];
+      this.boxGroup.remove(child);
+      try {
+        child.traverse((obj: any) => {
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) {
+            if (Array.isArray(obj.material)) obj.material.forEach((m: any) => m.dispose());
+            else obj.material.dispose();
+          }
+        });
+      } catch (e) {
+        // Ignora erros em geometrias auxiliares
+      }
     }
+
+    this.boxGroup.position.set(0, 0, 0);
+    this.boxGroup.rotation.set(0, 0, 0);
+    this.boxGroup.scale.set(1, 1, 1);
+
     if (this.controls) {
       this.controls.target.set(0, 0, 0);
       this.controls.update();
