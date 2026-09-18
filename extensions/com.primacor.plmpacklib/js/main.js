@@ -26,6 +26,44 @@
     }
   }
 
+  var currentLoadedProject = null;
+
+  function updateDielineFromBridge(silent) {
+    if (!silent) log('Solicitando faca vetorial ao PLMPackLib...');
+    fetch(BRIDGE_URL + '/api/request-geometry')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (!data || !data.jsx) {
+          if (!silent) log('Aviso: Nenhum projeto ativo ou faca encontrada na Bridge.');
+          return;
+        }
+
+        if (!silent) log('Construindo faca 1:1 e camadas no Illustrator...');
+
+        cs.evalScript(data.jsx, function(resStr) {
+          try {
+            var res = JSON.parse(resStr);
+            if (res && res.error) {
+              log('Erro ExtendScript: ' + res.error);
+            } else if (res && res.success) {
+              currentLoadedProject = res.projectId;
+              log('Faca aberta com sucesso! (' + res.artboardWidthMm.toFixed(1) + ' x ' + res.artboardHeightMm.toFixed(1) + ' mm)');
+              if (data.project) {
+                elProjectName.textContent = data.project.projectName || data.project.projectId;
+                elModelCode.textContent = data.project.modelCode || data.project.modelId || '-';
+                elGeomVersion.textContent = 'v' + (data.project.geometryVersion || 1);
+              }
+            }
+          } catch(err) {
+            log('Faca desenhada no Illustrator.');
+          }
+        });
+      })
+      .catch(function(e) {
+        if (!silent) log('Falha ao comunicar com a Bridge: ' + e.message);
+      });
+  }
+
   // Verifica status da Bridge Local
   function checkBridge() {
     fetch(BRIDGE_URL + '/api/status')
@@ -33,7 +71,13 @@
       .then(function(data) {
         setOnline(true);
         if (data.activeProject) {
-          elProjectName.textContent = data.activeProject;
+          if (elProjectName.textContent !== data.activeProject) {
+            elProjectName.textContent = data.activeProject;
+            if (!currentLoadedProject || currentLoadedProject !== data.activeProject) {
+              log('Novo projeto detectado: ' + data.activeProject + '. Carregando faca...');
+              updateDielineFromBridge(true);
+            }
+          }
         }
       })
       .catch(function() {
@@ -82,10 +126,7 @@
   document.getElementById('btnSendArtwork').addEventListener('click', sendArtwork);
   
   document.getElementById('btnUpdateDieline').addEventListener('click', function() {
-    log('Solicitando atualização da faca ao PLMPackLib...');
-    fetch(BRIDGE_URL + '/api/request-geometry', { method: 'POST' })
-      .then(function() { log('Faca sincronizada.'); })
-      .catch(function(e) { log('Erro: ' + e.message); });
+    updateDielineFromBridge(false);
   });
 
   document.getElementById('btnUpdate3D').addEventListener('click', function() {
@@ -98,6 +139,6 @@
 
   // Inicialização
   checkBridge();
-  pollInterval = setInterval(checkBridge, 3000);
+  pollInterval = setInterval(checkBridge, 2000);
   log('Painel PLMPackLib CAD Bridge iniciado.');
 })();

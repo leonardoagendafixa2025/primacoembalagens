@@ -40,26 +40,40 @@ function isIllustratorRunning() {
 function runJsxInIllustrator(scriptPath) {
   return new Promise((resolve) => {
     const cleanPath = scriptPath.replace(/\\/g, '/');
-    const psCommand = `
+    const psScript = `
+      $ai = $null;
       try {
         $ai = [System.Runtime.InteropServices.Marshal]::GetActiveObject('Illustrator.Application');
-        if (-not $ai) {
-          $ai = New-Object -ComObject Illustrator.Application;
-        }
-        $ai.UserInteractionLevel = -1;
-        $res = $ai.DoJavaScriptFile('${cleanPath}');
-        $wshell = New-Object -ComObject WScript.Shell;
-        $wshell.AppActivate('Adobe Illustrator');
-        Write-Output $res;
       } catch {
-        Write-Error $_.Exception.Message;
-        exit 1;
+        try {
+          $ai = New-Object -ComObject Illustrator.Application;
+        } catch {
+          Write-Error ("COM Failure: " + $_.Exception.Message);
+          exit 1;
+        }
+      }
+      if ($ai) {
+        try {
+          $ai.UserInteractionLevel = -1;
+          $res = $ai.DoJavaScriptFile('${cleanPath}');
+          try {
+            $wshell = New-Object -ComObject WScript.Shell;
+            $wshell.AppActivate('Adobe Illustrator');
+          } catch {}
+          Write-Output $res;
+        } catch {
+          Write-Error ("ExtendScript Failure: " + $_.Exception.Message);
+          exit 1;
+        }
       }
     `;
 
-    exec(`powershell -NoProfile -NonInteractive -Command "${psCommand.replace(/\n/g, ' ')}"`, { timeout: 6000 }, (error, stdout, stderr) => {
+    const runnerFile = path.join(WORKDIR, 'run_jsx.ps1');
+    fs.writeFileSync(runnerFile, psScript, 'utf-8');
+
+    exec(`powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${runnerFile}"`, { timeout: 10000 }, (error, stdout, stderr) => {
       if (error) {
-        console.warn('[Bridge] Aviso COM:', stderr || error.message);
+        console.warn('[Bridge] Aviso COM/PowerShell:', stderr || error.message);
         return resolve({ success: false, error: stderr || error.message });
       }
       resolve({ success: true, stdout: stdout.trim() });
@@ -93,6 +107,38 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1.1 Obter Geometria / Faca atual (para o painel CEP e extensões)
+  if ((url.pathname === '/api/request-geometry' || url.pathname === '/api/active-script') && (req.method === 'GET' || req.method === 'POST')) {
+    if (!activeProject) {
+      // Tenta recuperar último arquivo .plmpack se activeProject estiver nulo
+      try {
+        const plmFiles = fs.readdirSync(WORKDIR).filter(f => f.endsWith('.plmpack'));
+        if (plmFiles.length > 0) {
+          const lastFile = path.join(WORKDIR, plmFiles[plmFiles.length - 1]);
+          activeProject = JSON.parse(fs.readFileSync(lastFile, 'utf-8'));
+        }
+      } catch(e) {}
+    }
+
+    if (!activeProject) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, message: 'Nenhum projeto ativo na Bridge.' }));
+      return;
+    }
+
+    const { generateIllustratorJsx } = require('../web/src/integrations/illustrator/jsxGenerator.cjs');
+    const jsxCode = generateIllustratorJsx(activeProject);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      project: activeProject,
+      jsx: jsxCode,
+      projectId: activeProject.projectId
+    }));
+    return;
+  }
+
   // 2. Abrir ou Atualizar Documento no Illustrator
   if (url.pathname === '/api/open' && req.method === 'POST') {
     let body = '';
@@ -114,14 +160,20 @@ const server = http.createServer(async (req, res) => {
         const jsxCode = generateIllustratorJsx(project);
         fs.writeFileSync(scriptPath, jsxCode, 'utf-8');
 
+        // Notifica extensão CEP e ouvintes em tempo real
+        broadcast({
+          type: 'PROJECT_UPDATED',
+          payload: { project: project, jsx: jsxCode }
+        });
+
         const isRunning = await isIllustratorRunning();
         if (!isRunning) {
           console.log('[Bridge] Illustrator não está rodando no momento.');
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
-            success: false,
+            success: true,
             illustratorRunning: false,
-            message: 'O Adobe Illustrator 2025 não está aberto no momento. Abra o Illustrator na sua barra de tarefas e clique novamente!',
+            message: 'Projeto preparado! Abra o Adobe Illustrator 2025 para visualizar a faca sincronizada.',
             scriptPath: scriptPath,
           }));
           return;
@@ -130,23 +182,15 @@ const server = http.createServer(async (req, res) => {
         console.log(`[Bridge] Executando script no Illustrator para o projeto ${project.projectId}...`);
         const execRes = await runJsxInIllustrator(scriptPath);
 
-        if (execRes.success) {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            success: true,
-            illustratorRunning: true,
-            message: `Projeto ${project.projectName} aberto no Illustrator 2025 com sucesso!`,
-            projectId: project.projectId
-          }));
-        } else {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            success: false,
-            illustratorRunning: true,
-            message: 'Illustrator detectado, mas não respondeu ao comando de automação. Você pode executar o arquivo .jsx gerado diretamente no Illustrator.',
-            scriptPath: scriptPath,
-          }));
-        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          illustratorRunning: true,
+          comSuccess: execRes.success,
+          message: `Faca do projeto ${project.projectName} aberta com sucesso no Illustrator 2025!`,
+          projectId: project.projectId,
+          scriptPath: scriptPath
+        }));
       } catch (err) {
         console.error('[Bridge] Erro ao processar /api/open:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });

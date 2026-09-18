@@ -1,10 +1,35 @@
 // Script ExtendScript de apoio à extensão CEP PLMPackLib
 #target illustrator
 
+if (typeof JSON !== "object") {
+  JSON = {
+    stringify: function(o) {
+      if (o === null) return "null";
+      if (typeof o === "number" || typeof o === "boolean") return "" + o;
+      if (typeof o === "string") return "\"" + o.replace(/\\/g, "\\\\").replace(/"/g, "\\\"").replace(/\n/g, "\\n").replace(/\r/g, "\\r") + "\"";
+      if (o instanceof Array) {
+        var a = [];
+        for (var i = 0; i < o.length; i++) a.push(JSON.stringify(o[i]));
+        return "[" + a.join(",") + "]";
+      }
+      if (typeof o === "object") {
+        var p = [];
+        for (var k in o) {
+          if (o.hasOwnProperty(k)) p.push("\"" + k + "\":" + JSON.stringify(o[k]));
+        }
+        return "{" + p.join(",") + "}";
+      }
+      return "null";
+    },
+    parse: function(s) { return eval("(" + s + ")"); }
+  };
+}
+
 function exportArtworkFromIllustrator() {
-  if (app.documents.length === 0) {
-    return JSON.stringify({ error: "Nenhum documento aberto no Illustrator." });
-  }
+  try {
+    if (app.documents.length === 0) {
+      return JSON.stringify({ error: "Nenhum documento aberto no Illustrator." });
+    }
 
   var doc = app.activeDocument;
   var layerArte = null;
@@ -63,9 +88,13 @@ function exportArtworkFromIllustrator() {
     base64 += (c + 2 < binaryData.length) ? chars.charAt(b3 & 63) : "=";
   }
 
-  return JSON.stringify({
-    success: true,
-    dataUri: "data:image/png;base64," + base64,
-    filePath: destFile.fsName
-  });
+    return JSON.stringify({
+      success: true,
+      dataUri: "data:image/png;base64," + base64,
+      filePath: destFile.fsName
+    });
+  } catch(err) {
+    return JSON.stringify({ error: "Erro na exportação: " + err.message + " (linha " + err.line + ")" });
+  }
 }
+

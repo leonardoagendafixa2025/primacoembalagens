@@ -31,6 +31,7 @@ function generateIllustratorJsx(projectData) {
     '  };\n' +
     '}\n\n' +
     '(function() {\n' +
+    'try {\n' +
     '  var projectData = ' + jsonPayload + ';\n\n' +
     '  var MM_TO_PT = 72.0 / 25.4; // 2.83464567 pt por mm\n' +
     '  var MARGIN_MM = 15.0;\n\n' +
@@ -60,38 +61,31 @@ function generateIllustratorJsx(projectData) {
     '    }\n' +
     '  }\n\n' +
     '  if (!doc) {\n' +
-    '    var docPreset = new DocumentPreset();\n' +
-    '    docPreset.title = projectData.projectName + "_" + projectData.projectId;\n' +
-    '    docPreset.width = artboardWidthPt;\n' +
-    '    docPreset.height = artboardHeightPt;\n' +
-    '    docPreset.colorMode = DocumentColorSpace.CMYK;\n' +
-    '    docPreset.units = RulerUnits.Millimeters;\n' +
-    '    docPreset.rasterResolution = DocumentRasterResolution.HighResolution;\n\n' +
-    '    doc = app.documents.addDocument(DocumentColorSpace.CMYK, docPreset);\n' +
+    '    doc = app.documents.add(DocumentColorSpace.CMYK, artboardWidthPt, artboardHeightPt);\n' +
     '  } else {\n' +
     '    var ab = doc.artboards[doc.artboards.getActiveArtboardIndex()];\n' +
     '    ab.artboardRect = [0, artboardHeightPt, artboardWidthPt, 0];\n' +
     '  }\n\n' +
     '  app.activeDocument = doc;\n\n' +
     '  function getOrCreateSpotColor(name, c, m, y, k) {\n' +
+    '    var spot = null;\n' +
     '    try {\n' +
-    '      var spot = doc.spots.getByName(name);\n' +
-    '      return spot.color;\n' +
+    '      spot = doc.spots.getByName(name);\n' +
     '    } catch(e) {\n' +
-    '      var newSpot = doc.spots.add();\n' +
-    '      newSpot.name = name;\n' +
-    '      newSpot.colorType = ColorModel.SPOT;\n' +
+    '      spot = doc.spots.add();\n' +
+    '      spot.name = name;\n' +
+    '      spot.colorType = ColorModel.SPOT;\n' +
     '      var cmyk = new CMYKColor();\n' +
     '      cmyk.cyan = c;\n' +
     '      cmyk.magenta = m;\n' +
     '      cmyk.yellow = y;\n' +
     '      cmyk.black = k;\n' +
-    '      newSpot.color = cmyk;\n' +
-    '      var sc = new SpotColor();\n' +
-    '      sc.spot = newSpot;\n' +
-    '      sc.tint = 100;\n' +
-    '      return sc;\n' +
+    '      spot.color = cmyk;\n' +
     '    }\n' +
+    '    var sc = new SpotColor();\n' +
+    '    sc.spot = spot;\n' +
+    '    sc.tint = 100;\n' +
+    '    return sc;\n' +
     '  }\n\n' +
     '  var cutSpotColor = getOrCreateSpotColor("Corte", 0, 100, 100, 0);\n' +
     '  var creaseSpotColor = getOrCreateSpotColor("Vinco", 100, 0, 30, 0);\n\n' +
@@ -118,19 +112,23 @@ function generateIllustratorJsx(projectData) {
     '  var layerRef = getOrCreateLayer("PLMPACKLIB_REFERENCIA");\n\n' +
     '  var layersToClean = [layerCorte, layerVinco, layerPaineis, layerCotas, layerRef];\n' +
     '  for (var li = 0; li < layersToClean.length; li++) {\n' +
-    '    layersToClean[li].locked = false;\n' +
-    '    layersToClean[li].hasSelectedArtwork = true;\n' +
-    '    for (var pi = layersToClean[li].pageItems.length - 1; pi >= 0; pi--) {\n' +
-    '      layersToClean[li].pageItems[pi].remove();\n' +
-    '    }\n' +
+    '    try {\n' +
+    '      layersToClean[li].locked = false;\n' +
+    '      for (var pi = layersToClean[li].pageItems.length - 1; pi >= 0; pi--) {\n' +
+    '        layersToClean[li].pageItems[pi].remove();\n' +
+    '      }\n' +
+    '    } catch(e) {}\n' +
     '  }\n\n' +
-    '  var lines = projectData.dieline.lines;\n' +
+    '  var lines = projectData.dieline.lines || [];\n' +
     '  for (var i = 0; i < lines.length; i++) {\n' +
     '    var l = lines[i];\n' +
     '    var p1x = toPtX(l.x1);\n' +
     '    var p1y = toPtY(l.y1);\n' +
     '    var p2x = toPtX(l.x2);\n' +
     '    var p2y = toPtY(l.y2);\n\n' +
+    '    if (Math.abs(p1x - p2x) < 0.001 && Math.abs(p1y - p2y) < 0.001) {\n' +
+    '      continue;\n' +
+    '    }\n\n' +
     '    var targetLayer = layerCorte;\n' +
     '    var strokeColor = cutSpotColor;\n' +
     '    var isDashed = false;\n\n' +
@@ -146,19 +144,22 @@ function generateIllustratorJsx(projectData) {
     '      strokeColor = cmykSangria;\n' +
     '      isDashed = true;\n' +
     '    }\n\n' +
-    '    var path = targetLayer.pathItems.add();\n' +
-    '    path.setEntirePath([[p1x, p1y], [p2x, p2y]]);\n' +
-    '    path.filled = false;\n' +
-    '    path.stroked = true;\n' +
-    '    path.strokeColor = strokeColor;\n' +
-    '    path.strokeWidth = 0.5 * MM_TO_PT;\n\n' +
-    '    if (isDashed) {\n' +
-    '      path.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];\n' +
-    '    }\n' +
+    '    try {\n' +
+    '      var path = targetLayer.pathItems.add();\n' +
+    '      path.setEntirePath([[p1x, p1y], [p2x, p2y]]);\n' +
+    '      path.filled = false;\n' +
+    '      path.stroked = true;\n' +
+    '      path.strokeColor = strokeColor;\n' +
+    '      path.strokeWidth = 0.5 * MM_TO_PT;\n\n' +
+    '      if (isDashed) {\n' +
+    '        path.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];\n' +
+    '      }\n' +
+    '    } catch(e) {}\n' +
     '  }\n\n' +
     '  var arcs = projectData.dieline.arcs || [];\n' +
     '  for (var a = 0; a < arcs.length; a++) {\n' +
     '    var arc = arcs[a];\n' +
+    '    if (!arc.r || arc.r <= 0.001) continue;\n' +
     '    var cx = toPtX(arc.cx);\n' +
     '    var cy = toPtY(arc.cy);\n' +
     '    var r = arc.r * MM_TO_PT;\n\n' +
@@ -172,15 +173,17 @@ function generateIllustratorJsx(projectData) {
     '      var curAngle = startRad + (s / stepCount) * (endRad - startRad);\n' +
     '      arcPts.push([cx + Math.cos(curAngle) * r, cy + Math.sin(curAngle) * r]);\n' +
     '    }\n\n' +
-    '    var arcPath = arcLayer.pathItems.add();\n' +
-    '    arcPath.setEntirePath(arcPts);\n' +
-    '    arcPath.filled = false;\n' +
-    '    arcPath.stroked = true;\n' +
-    '    arcPath.strokeColor = arcColor;\n' +
-    '    arcPath.strokeWidth = 0.5 * MM_TO_PT;\n' +
-    '    if (arc.type === "crease") {\n' +
-    '      arcPath.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];\n' +
-    '    }\n' +
+    '    try {\n' +
+    '      var arcPath = arcLayer.pathItems.add();\n' +
+    '      arcPath.setEntirePath(arcPts);\n' +
+    '      arcPath.filled = false;\n' +
+    '      arcPath.stroked = true;\n' +
+    '      arcPath.strokeColor = arcColor;\n' +
+    '      arcPath.strokeWidth = 0.5 * MM_TO_PT;\n' +
+    '      if (arc.type === "crease") {\n' +
+    '        arcPath.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];\n' +
+    '      }\n' +
+    '    } catch(e) {}\n' +
     '  }\n\n' +
     '  var panels = projectData.panels || [];\n' +
     '  for (var p = 0; p < panels.length; p++) {\n' +
@@ -190,23 +193,29 @@ function generateIllustratorJsx(projectData) {
     '    for (var pt = 0; pt < panel.polygon.length; pt++) {\n' +
     '      polyPts.push([toPtX(panel.polygon[pt].x), toPtY(panel.polygon[pt].y)]);\n' +
     '    }\n\n' +
-    '    var panelGuide = layerPaineis.pathItems.add();\n' +
-    '    panelGuide.setEntirePath(polyPts);\n' +
-    '    panelGuide.closed = true;\n' +
-    '    panelGuide.filled = false;\n' +
-    '    panelGuide.stroked = true;\n' +
-    '    panelGuide.strokeColor = cmykCotas;\n' +
-    '    panelGuide.strokeWidth = 0.25 * MM_TO_PT;\n' +
-    '    panelGuide.strokeDashes = [2 * MM_TO_PT, 2 * MM_TO_PT];\n' +
-    '    panelGuide.note = "PLMPACK_PANEL:" + panel.id + ":" + panel.name;\n' +
+    '    try {\n' +
+    '      var panelGuide = layerPaineis.pathItems.add();\n' +
+    '      panelGuide.setEntirePath(polyPts);\n' +
+    '      panelGuide.closed = true;\n' +
+    '      panelGuide.filled = false;\n' +
+    '      panelGuide.stroked = true;\n' +
+    '      panelGuide.strokeColor = cmykCotas;\n' +
+    '      panelGuide.strokeWidth = 0.25 * MM_TO_PT;\n' +
+    '      panelGuide.strokeDashes = [2 * MM_TO_PT, 2 * MM_TO_PT];\n' +
+    '      panelGuide.note = "PLMPACK_PANEL:" + panel.id + ":" + panel.name;\n' +
+    '    } catch(e) {}\n' +
     '  }\n\n' +
-    '  layerCorte.locked = true;\n' +
-    '  layerVinco.locked = true;\n' +
-    '  layerPaineis.locked = true;\n' +
-    '  layerCotas.locked = true;\n' +
-    '  layerRef.locked = true;\n\n' +
-    '  layerArte.zOrder(ZOrderMethod.BRINGTOFRONT);\n' +
-    '  doc.activeLayer = layerArte;\n\n' +
+    '  try { layerCorte.locked = true; } catch(e) {}\n' +
+    '  try { layerVinco.locked = true; } catch(e) {}\n' +
+    '  try { layerPaineis.locked = true; } catch(e) {}\n' +
+    '  try { layerCotas.locked = true; } catch(e) {}\n' +
+    '  try { layerRef.locked = true; } catch(e) {}\n\n' +
+    '  try {\n' +
+    '    layerArte.move(doc, ElementPlacement.PLACEATBEGINNING);\n' +
+    '  } catch(e) {}\n' +
+    '  try {\n' +
+    '    doc.activeLayer = layerArte;\n' +
+    '  } catch(e) {}\n\n' +
     '  return JSON.stringify({\n' +
     '    success: true,\n' +
     '    documentName: doc.name,\n' +
@@ -216,6 +225,12 @@ function generateIllustratorJsx(projectData) {
     '    projectId: projectData.projectId,\n' +
     '    geometryVersion: projectData.geometryVersion\n' +
     '  });\n' +
+    '} catch(err) {\n' +
+    '  alert("PLMPackLib Erro ExtendScript: " + err.message + " (Linha: " + err.line + ")");\n' +
+    '  return JSON.stringify({\n' +
+    '    error: "ExtendScript Error: " + err.message + " (linha " + err.line + ")"\n' +
+    '  });\n' +
+    '}\n' +
     '})();\n';
 }
 

@@ -40,6 +40,7 @@ if (typeof JSON !== 'object') {
 }
 
 (function() {
+try {
   var projectData = ${jsonPayload};
 
   var MM_TO_PT = 72.0 / 25.4; // 2.83464567 pt por mm
@@ -82,16 +83,7 @@ if (typeof JSON !== 'object') {
   }
 
   if (!doc) {
-    // Cria novo documento CMYK
-    var docPreset = new DocumentPreset();
-    docPreset.title = projectData.projectName + "_" + projectData.projectId;
-    docPreset.width = artboardWidthPt;
-    docPreset.height = artboardHeightPt;
-    docPreset.colorMode = DocumentColorSpace.CMYK;
-    docPreset.units = RulerUnits.Millimeters;
-    docPreset.rasterResolution = DocumentRasterResolution.HighResolution;
-
-    doc = app.documents.addDocument(DocumentColorSpace.CMYK, docPreset);
+    doc = app.documents.add(DocumentColorSpace.CMYK, artboardWidthPt, artboardHeightPt);
   } else {
     // Atualização de prancheta existente
     var ab = doc.artboards[doc.artboards.getActiveArtboardIndex()];
@@ -102,24 +94,24 @@ if (typeof JSON !== 'object') {
 
   // 2. Criação ou recuperação de Tintas Especiais (Spot Colors) para Facaria
   function getOrCreateSpotColor(name, c, m, y, k) {
+    var spot = null;
     try {
-      var spot = doc.spots.getByName(name);
-      return spot.color;
+      spot = doc.spots.getByName(name);
     } catch(e) {
-      var newSpot = doc.spots.add();
-      newSpot.name = name;
-      newSpot.colorType = ColorModel.SPOT;
+      spot = doc.spots.add();
+      spot.name = name;
+      spot.colorType = ColorModel.SPOT;
       var cmyk = new CMYKColor();
       cmyk.cyan = c;
       cmyk.magenta = m;
       cmyk.yellow = y;
       cmyk.black = k;
-      newSpot.color = cmyk;
-      var sc = new SpotColor();
-      sc.spot = newSpot;
-      sc.tint = 100;
-      return sc;
+      spot.color = cmyk;
     }
+    var sc = new SpotColor();
+    sc.spot = spot;
+    sc.tint = 100;
+    return sc;
   }
 
   var cutSpotColor = getOrCreateSpotColor("Corte", 0, 100, 100, 0); // Vermelho faca
@@ -156,21 +148,27 @@ if (typeof JSON !== 'object') {
   // Limpa apenas as camadas técnicas de geometria ao sincronizar, NUNCA a camada de arte!
   var layersToClean = [layerCorte, layerVinco, layerPaineis, layerCotas, layerRef];
   for (var li = 0; li < layersToClean.length; li++) {
-    layersToClean[li].locked = false;
-    layersToClean[li].hasSelectedArtwork = true;
-    for (var pi = layersToClean[li].pageItems.length - 1; pi >= 0; pi--) {
-      layersToClean[li].pageItems[pi].remove();
-    }
+    try {
+      layersToClean[li].locked = false;
+      for (var pi = layersToClean[li].pageItems.length - 1; pi >= 0; pi--) {
+        layersToClean[li].pageItems[pi].remove();
+      }
+    } catch(e) {}
   }
 
   // 4. Desenhar Linhas Vetoriais da Faca
-  var lines = projectData.dieline.lines;
+  var lines = projectData.dieline.lines || [];
   for (var i = 0; i < lines.length; i++) {
     var l = lines[i];
     var p1x = toPtX(l.x1);
     var p1y = toPtY(l.y1);
     var p2x = toPtX(l.x2);
     var p2y = toPtY(l.y2);
+
+    // Ignora linhas de comprimento zero para evitar erro de parâmetro inválido (PARM) no Illustrator
+    if (Math.abs(p1x - p2x) < 0.001 && Math.abs(p1y - p2y) < 0.001) {
+      continue;
+    }
 
     var targetLayer = layerCorte;
     var strokeColor = cutSpotColor;
@@ -189,22 +187,25 @@ if (typeof JSON !== 'object') {
       isDashed = true;
     }
 
-    var path = targetLayer.pathItems.add();
-    path.setEntirePath([[p1x, p1y], [p2x, p2y]]);
-    path.filled = false;
-    path.stroked = true;
-    path.strokeColor = strokeColor;
-    path.strokeWidth = 0.5 * MM_TO_PT; // 0.5 mm
+    try {
+      var path = targetLayer.pathItems.add();
+      path.setEntirePath([[p1x, p1y], [p2x, p2y]]);
+      path.filled = false;
+      path.stroked = true;
+      path.strokeColor = strokeColor;
+      path.strokeWidth = 0.5 * MM_TO_PT; // 0.5 mm
 
-    if (isDashed) {
-      path.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];
-    }
+      if (isDashed) {
+        path.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];
+      }
+    } catch(e) {}
   }
 
   // 5. Desenhar Arcos Vetoriais
   var arcs = projectData.dieline.arcs || [];
   for (var a = 0; a < arcs.length; a++) {
     var arc = arcs[a];
+    if (!arc.r || arc.r <= 0.001) continue;
     var cx = toPtX(arc.cx);
     var cy = toPtY(arc.cy);
     var r = arc.r * MM_TO_PT;
@@ -223,15 +224,17 @@ if (typeof JSON !== 'object') {
       arcPts.push([cx + Math.cos(curAngle) * r, cy + Math.sin(curAngle) * r]);
     }
 
-    var arcPath = arcLayer.pathItems.add();
-    arcPath.setEntirePath(arcPts);
-    arcPath.filled = false;
-    arcPath.stroked = true;
-    arcPath.strokeColor = arcColor;
-    arcPath.strokeWidth = 0.5 * MM_TO_PT;
-    if (arc.type === 'crease') {
-      arcPath.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];
-    }
+    try {
+      var arcPath = arcLayer.pathItems.add();
+      arcPath.setEntirePath(arcPts);
+      arcPath.filled = false;
+      arcPath.stroked = true;
+      arcPath.strokeColor = arcColor;
+      arcPath.strokeWidth = 0.5 * MM_TO_PT;
+      if (arc.type === 'crease') {
+        arcPath.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];
+      }
+    } catch(e) {}
   }
 
   // 6. Desenhar Polígonos de Painéis com Metadados (Para Mapeamento de Arte 3D)
@@ -245,27 +248,33 @@ if (typeof JSON !== 'object') {
       polyPts.push([toPtX(panel.polygon[pt].x), toPtY(panel.polygon[pt].y)]);
     }
 
-    var panelGuide = layerPaineis.pathItems.add();
-    panelGuide.setEntirePath(polyPts);
-    panelGuide.closed = true;
-    panelGuide.filled = false;
-    panelGuide.stroked = true;
-    panelGuide.strokeColor = cmykCotas;
-    panelGuide.strokeWidth = 0.25 * MM_TO_PT;
-    panelGuide.strokeDashes = [2 * MM_TO_PT, 2 * MM_TO_PT];
-    panelGuide.note = "PLMPACK_PANEL:" + panel.id + ":" + panel.name;
+    try {
+      var panelGuide = layerPaineis.pathItems.add();
+      panelGuide.setEntirePath(polyPts);
+      panelGuide.closed = true;
+      panelGuide.filled = false;
+      panelGuide.stroked = true;
+      panelGuide.strokeColor = cmykCotas;
+      panelGuide.strokeWidth = 0.25 * MM_TO_PT;
+      panelGuide.strokeDashes = [2 * MM_TO_PT, 2 * MM_TO_PT];
+      panelGuide.note = "PLMPACK_PANEL:" + panel.id + ":" + panel.name;
+    } catch(e) {}
   }
 
   // 7. Configurações de Camadas e Segurança
-  layerCorte.locked = true;
-  layerVinco.locked = true;
-  layerPaineis.locked = true;
-  layerCotas.locked = true;
-  layerRef.locked = true;
+  try { layerCorte.locked = true; } catch(e) {}
+  try { layerVinco.locked = true; } catch(e) {}
+  try { layerPaineis.locked = true; } catch(e) {}
+  try { layerCotas.locked = true; } catch(e) {}
+  try { layerRef.locked = true; } catch(e) {}
 
   // Garante que a camada de arte fique no topo e ativa para edição direta pelo designer
-  layerArte.zOrder(ZOrderMethod.BRINGTOFRONT);
-  doc.activeLayer = layerArte;
+  try {
+    layerArte.move(doc, ElementPlacement.PLACEATBEGINNING);
+  } catch(e) {}
+  try {
+    doc.activeLayer = layerArte;
+  } catch(e) {}
 
   return JSON.stringify({
     success: true,
@@ -276,6 +285,12 @@ if (typeof JSON !== 'object') {
     projectId: projectData.projectId,
     geometryVersion: projectData.geometryVersion
   });
+} catch(err) {
+  alert("PLMPackLib Erro ExtendScript: " + err.message + " (Linha: " + err.line + ")");
+  return JSON.stringify({
+    error: "ExtendScript Error: " + err.message + " (linha " + err.line + ")"
+  });
+}
 })();
 `;
 }
