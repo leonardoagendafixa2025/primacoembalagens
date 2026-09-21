@@ -303,7 +303,27 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
   opacity: 1;
 }
 
-/* Responsive Mobile Layout Adaptations */
+/* Responsive Layout Adaptations (Desktop Médio, Tablet e Mobile) */
+@media (max-width: 1280px) {
+  .hide-on-laptop {
+    display: none !important;
+  }
+  .compact-btn {
+    padding: 5px 8px !important;
+    gap: 4px !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hide-on-tablet {
+    display: none !important;
+  }
+  .cad-btn {
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
 @media (max-width: 768px) {
   :root {
     --cad-header-height: 48px;
@@ -320,7 +340,7 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
   }
 
   .cad-btn {
-    padding: 5px 8px !important;
+    padding: 5px 7px !important;
     font-size: 11px !important;
   }
 
@@ -328,4 +348,5 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
     display: none !important;
   }
 }
+
 

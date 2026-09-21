@@ -319,16 +319,17 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 3. Ações Técnicas: Projetos, Salvar e Exportações */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
         {/* Projetos Salvos */}
         <button
           type="button"
           onClick={onOpenProjectsModal}
           className="cad-btn icon-only-mobile"
           title={isSupabaseConnected ? 'Projetos sincronizados na Nuvem' : 'Projetos salvos localmente'}
+          style={{ flexShrink: 0 }}
         >
           <FolderOpen size={14} />
-          <span>Projetos</span>
+          <span className="hide-on-tablet">Projetos</span>
         </button>
 
         {/* Salvar Projeto */}
@@ -338,13 +339,14 @@ export const Header: React.FC<HeaderProps> = ({
           disabled={isSaving}
           className="cad-btn icon-only-mobile"
           style={{
+            flexShrink: 0,
             background: saveSuccess ? 'rgba(16, 185, 129, 0.2)' : 'var(--cad-bg-panel)',
             borderColor: saveSuccess ? '#10b981' : 'var(--cad-border-default)',
             color: saveSuccess ? '#10b981' : 'var(--cad-text-primary)',
           }}
         >
           {saveSuccess ? <Check size={14} color="#10b981" /> : <Save size={14} />}
-          <span>{isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Salvar'}</span>
+          <span className="hide-on-tablet">{isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Salvar'}</span>
         </button>
 
         {/* Input Oculto para upload manual de arte PNG/JPG */}
@@ -363,12 +365,12 @@ export const Header: React.FC<HeaderProps> = ({
         />
 
         {/* Botão Oficial Adobe Illustrator (Ficar Online / Sincronizar) & Download do Plugin */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <button
             type="button"
             onClick={onOpenInIllustrator}
             disabled={isOpeningIllustrator}
-            className="cad-btn"
+            className="cad-btn compact-btn"
             title={
               bridgeStatus?.bridgeOnline
                 ? 'Illustrator Online: clique para abrir e sincronizar a faca no Illustrator'
@@ -383,8 +385,9 @@ export const Header: React.FC<HeaderProps> = ({
                 : '1px solid rgba(255, 154, 0, 0.55)',
               color: bridgeStatus?.bridgeOnline ? '#34d399' : '#ff9a00',
               fontWeight: 600,
-              gap: 7,
-              padding: '5px 11px',
+              gap: 6,
+              padding: '5px 9px',
+              flexShrink: 0,
               boxShadow: bridgeStatus?.bridgeOnline
                 ? '0 1px 8px rgba(16, 185, 129, 0.3)'
                 : '0 1px 6px rgba(255, 154, 0, 0.15)',
@@ -405,12 +408,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Ai
             </span>
-            <span className="hide-on-mobile">
+            <span className="hide-on-laptop">
               {isOpeningIllustrator
                 ? 'Conectando...'
                 : bridgeStatus?.bridgeOnline
                   ? 'Illustrator (Online)'
-                  : 'Ficar Online'}
+                  : 'Illustrator'}
             </span>
             <span
               style={{
@@ -428,35 +431,36 @@ export const Header: React.FC<HeaderProps> = ({
           <a
             href="/downloads/Plugin_Illustrator_Primacor.zip"
             download="Plugin_Illustrator_Primacor.zip"
-            className="cad-btn"
+            className="cad-btn compact-btn"
             title="Baixar Plugin Oficial PRIMACOR EMBALAGENS para Adobe Illustrator (.ZIP)"
             style={{
               background: 'rgba(255, 154, 0, 0.08)',
               border: '1px solid rgba(255, 154, 0, 0.35)',
               color: '#ffb347',
-              padding: '5px 9px',
+              padding: '5px 7px',
               display: 'flex',
               alignItems: 'center',
-              gap: 5,
+              gap: 4,
               fontSize: 11,
               fontWeight: 600,
               textDecoration: 'none',
               boxSizing: 'border-box',
+              flexShrink: 0,
             }}
           >
             <Download size={13} />
-            <span className="hide-on-mobile">Plugin</span>
+            <span className="hide-on-laptop">Plugin</span>
           </a>
         </div>
 
         {/* Botão Oficial CorelDRAW (Ficar Online / Sincronizar) & Download do Plugin */}
         {onOpenInCorelDraw && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             <button
               type="button"
               onClick={onOpenInCorelDraw}
               disabled={isOpeningCorelDraw}
-              className="cad-btn"
+              className="cad-btn compact-btn"
               title={
                 corelBridgeStatus?.bridgeOnline
                   ? 'CorelDRAW Online: clique para abrir e sincronizar a faca no CorelDRAW'
@@ -471,8 +475,9 @@ export const Header: React.FC<HeaderProps> = ({
                   : '1px solid rgba(34, 197, 94, 0.45)',
                 color: corelBridgeStatus?.bridgeOnline ? '#4ade80' : '#86efac',
                 fontWeight: 600,
-                gap: 7,
-                padding: '5px 11px',
+                gap: 6,
+                padding: '5px 9px',
+                flexShrink: 0,
                 boxShadow: corelBridgeStatus?.bridgeOnline
                   ? '0 1px 8px rgba(34, 197, 94, 0.35)'
                   : '0 1px 6px rgba(34, 197, 94, 0.15)',
@@ -493,7 +498,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 Cdr
               </span>
-              <span className="hide-on-mobile">
+              <span className="hide-on-laptop">
                 {isOpeningCorelDraw
                   ? 'Conectando...'
                   : corelBridgeStatus?.bridgeOnline
@@ -516,28 +521,28 @@ export const Header: React.FC<HeaderProps> = ({
             <a
               href="/downloads/Plugin_CorelDRAW_Primacor.zip"
               download="Plugin_CorelDRAW_Primacor.zip"
-              className="cad-btn"
+              className="cad-btn compact-btn"
               title="Baixar Plugin Oficial PRIMACOR EMBALAGENS para CorelDRAW (.ZIP)"
               style={{
                 background: 'rgba(34, 197, 94, 0.1)',
                 border: '1px solid rgba(34, 197, 94, 0.4)',
                 color: '#4ade80',
-                padding: '5px 9px',
+                padding: '5px 7px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
+                gap: 4,
                 fontSize: 11,
                 fontWeight: 600,
                 textDecoration: 'none',
                 boxSizing: 'border-box',
+                flexShrink: 0,
               }}
             >
               <Download size={13} />
-              <span className="hide-on-mobile">Plugin</span>
+              <span className="hide-on-laptop">Plugin</span>
             </a>
           </div>
         )}
-
 
         {/* Indicador de Arte 3D Ativa */}
         {hasArtwork && (
@@ -551,25 +556,35 @@ export const Header: React.FC<HeaderProps> = ({
               border: '1px solid #10b981',
               color: '#10b981',
               fontWeight: 600,
-              padding: '5px 9px',
+              padding: '5px 8px',
               fontSize: 11,
-              gap: 5,
+              gap: 4,
+              flexShrink: 0,
             }}
           >
             <span>Arte 3D ✓</span>
           </button>
         )}
 
-        {/* Dropdown de Exportação CAD */}
-        <div style={{ position: 'relative' }}>
+        {/* Dropdown de Exportação CAD (Sempre Visível e Protegido) */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
           <button
             type="button"
             onClick={() => setIsExportMenuOpen((prev) => !prev)}
             className="cad-btn cad-btn-primary"
             title="Opções de Exportação CAD e Integração"
+            style={{
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+              fontWeight: 700,
+              padding: '5px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
           >
             <Download size={14} />
-            <span className="hide-on-mobile">Exportar</span>
+            <span style={{ display: 'inline-block' }}>Exportar</span>
             <ChevronDown size={12} />
           </button>
 
