@@ -65,29 +65,48 @@ reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.18" /v PlayerDebugMode /t REG_SZ 
 
 echo    [OK] Modo de desenvolvedor ativado com sucesso.
 echo.
-echo 2. Instalando arquivos do plugin na pasta oficial da Adobe...
+echo 2. Verificando se o Adobe Illustrator esta aberto...
+
+tasklist /FI "IMAGENAME eq Illustrator.exe" 2>NUL | find /I /N "Illustrator.exe">NUL
+if "%ERRORLEVEL%"=="0" (
+    echo.
+    echo    [ATENCAO] O Adobe Illustrator esta aberto no momento!
+    echo    Por favor, FECHE O ILLUSTRATOR e depois pressione qualquer tecla
+    echo    para prosseguir com a instalacao/atualizacao limpa...
+    echo.
+    pause >nul
+)
+
+echo 3. Instalando/Atualizando arquivos do plugin na pasta oficial da Adobe...
 
 set "TARGET_DIR=%APPDATA%\Adobe\CEP\extensions\com.primacor.plmpacklib"
 
-if not exist "%TARGET_DIR%" (
-    mkdir "%TARGET_DIR%" >nul 2>&1
+if exist "%TARGET_DIR%" (
+    echo    Removendo versao anterior para instalacao limpa...
+    rd /s /q "%TARGET_DIR%" >nul 2>&1
 )
+
+mkdir "%TARGET_DIR%" >nul 2>&1
 
 xcopy /E /Y /I "%~dp0com.primacor.plmpacklib\*" "%TARGET_DIR%\" >nul
 
+if exist "%LOCALAPPDATA%\Adobe\CEP\cache" (
+    del /f /q "%LOCALAPPDATA%\Adobe\CEP\cache\com.primacor.plmpacklib*" >nul 2>&1
+)
+
 if %ERRORLEVEL% equ 0 (
-    echo    [OK] Arquivos instalados com sucesso em:
+    echo    [OK] Arquivos instalados e atualizados com sucesso em:
     echo         %TARGET_DIR%
     echo.
     echo =====================================================================
-    echo    INSTALACAO CONCLUIDA COM SUCESSO!
+    echo    INSTALACAO / ATUALIZACAO CONCLUIDA COM SUCESSO!
     echo =====================================================================
     echo.
     echo Como usar:
-    echo 1. Abra (ou reinicie) o Adobe Illustrator.
+    echo 1. Abra o Adobe Illustrator.
     echo 2. Acesse o menu superior:
     echo    Janela (Window) ^> Extensoes (Extensions) ^> PRIMACOR EMBALAGENS.
-    echo 3. O painel interativo 3D com sincronizacao de arte abrira no Illustrator!
+    echo 3. O estúdio 3D com sincronizacao de facas e artes abrira no Illustrator!
     echo.
 ) else (
     echo    [ERRO] Falha ao copiar arquivos. Verifique permissoes de usuario.
@@ -112,12 +131,13 @@ for v in 7 8 9 10 11 12 13 14 15 16 17 18; do
 done
 
 TARGET_DIR="`$HOME/Library/Application Support/Adobe/CEP/extensions/com.primacor.plmpacklib"
+rm -rf "`$TARGET_DIR" 2>/dev/null
 mkdir -p "`$TARGET_DIR"
 
 DIR="`$( cd "`$( dirname "`"${BASH_SOURCE[0]}"`" )" && pwd )"
 cp -R "`$DIR/com.primacor.plmpacklib/"* "`$TARGET_DIR/"
 
-echo "[OK] Plugin instalado com sucesso em:"
+echo "[OK] Plugin instalado/atualizado com sucesso em:"
 echo "     `$TARGET_DIR"
 echo ""
 echo "Como usar:"
