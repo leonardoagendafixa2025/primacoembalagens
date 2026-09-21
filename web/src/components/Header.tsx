@@ -647,7 +647,11 @@ export const Header: React.FC<HeaderProps> = ({
 
               <div
                 style={{
-
+                  height: 1,
+                  background: 'var(--cad-border-subtle)',
+                  margin: '4px 0',
+                }}
+              />
 
               {onSyncArtwork && (
                 <button
