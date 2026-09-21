@@ -35,11 +35,6 @@ interface HeaderProps {
   onOpenInIllustrator?: () => void;
   isOpeningIllustrator?: boolean;
   bridgeStatus?: { bridgeOnline: boolean; authenticated?: boolean; illustratorDetected: boolean };
-  onOpenInCorelDraw?: () => void;
-  isOpeningCorelDraw?: boolean;
-  corelBridgeStatus?: { bridgeOnline: boolean; authenticated?: boolean; corelDetected: boolean };
-  onExportCorelScript?: () => void;
-  onOpenCorelPluginModal?: () => void;
   onSyncArtwork?: () => void;
   hasArtwork?: boolean;
   onClearArtwork?: () => void;
@@ -62,11 +57,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenInIllustrator,
   isOpeningIllustrator,
   bridgeStatus,
-  onOpenInCorelDraw,
-  isOpeningCorelDraw,
-  corelBridgeStatus,
-  onExportCorelScript,
-  onOpenCorelPluginModal,
   onSyncArtwork,
   hasArtwork,
   onClearArtwork,
@@ -453,96 +443,6 @@ export const Header: React.FC<HeaderProps> = ({
           </a>
         </div>
 
-        {/* Botão Oficial CorelDRAW (Ficar Online / Sincronizar) & Download do Plugin */}
-        {onOpenInCorelDraw && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            <button
-              type="button"
-              onClick={onOpenInCorelDraw}
-              disabled={isOpeningCorelDraw}
-              className="cad-btn compact-btn"
-              title={
-                corelBridgeStatus?.bridgeOnline
-                  ? 'CorelDRAW Online: clique para abrir e sincronizar a faca no CorelDRAW'
-                  : 'Conectar ao CorelDRAW (Ficar Online)'
-              }
-              style={{
-                background: corelBridgeStatus?.bridgeOnline
-                  ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(6, 78, 59, 0.5))'
-                  : 'linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(6, 78, 59, 0.25))',
-                border: corelBridgeStatus?.bridgeOnline
-                  ? '1px solid rgba(34, 197, 94, 0.7)'
-                  : '1px solid rgba(34, 197, 94, 0.45)',
-                color: corelBridgeStatus?.bridgeOnline ? '#4ade80' : '#86efac',
-                fontWeight: 600,
-                gap: 6,
-                padding: '5px 9px',
-                flexShrink: 0,
-                boxShadow: corelBridgeStatus?.bridgeOnline
-                  ? '0 1px 8px rgba(34, 197, 94, 0.35)'
-                  : '0 1px 6px rgba(34, 197, 94, 0.15)',
-              }}
-            >
-              <span
-                style={{
-                  background: '#064e3b',
-                  color: '#4ade80',
-                  border: '1px solid #4ade80',
-                  borderRadius: 3,
-                  padding: '1px 3px',
-                  fontSize: 9,
-                  fontWeight: 900,
-                  letterSpacing: 0.5,
-                  lineHeight: 1,
-                }}
-              >
-                Cdr
-              </span>
-              <span className="hide-on-laptop">
-                {isOpeningCorelDraw
-                  ? 'Conectando...'
-                  : corelBridgeStatus?.bridgeOnline
-                    ? 'CorelDRAW (Online)'
-                    : 'CorelDRAW'}
-              </span>
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: corelBridgeStatus?.bridgeOnline ? '#22c55e' : '#f59e0b',
-                  boxShadow: corelBridgeStatus?.bridgeOnline ? '0 0 6px #22c55e' : '0 0 4px #f59e0b',
-                }}
-                title={corelBridgeStatus?.bridgeOnline ? 'CorelDRAW Conectado e Online' : 'Clique para Ficar Online com o CorelDRAW'}
-              />
-            </button>
-
-            {/* Botão de Download do Plugin Corel */}
-            <a
-              href="/downloads/Plugin_CorelDRAW_Primacor.zip"
-              download="Plugin_CorelDRAW_Primacor.zip"
-              className="cad-btn compact-btn"
-              title="Baixar Plugin Oficial PRIMACOR EMBALAGENS para CorelDRAW (.ZIP)"
-              style={{
-                background: 'rgba(34, 197, 94, 0.1)',
-                border: '1px solid rgba(34, 197, 94, 0.4)',
-                color: '#4ade80',
-                padding: '5px 7px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                fontSize: 11,
-                fontWeight: 600,
-                textDecoration: 'none',
-                boxSizing: 'border-box',
-                flexShrink: 0,
-              }}
-            >
-              <Download size={13} />
-              <span className="hide-on-laptop">Plugin</span>
-            </a>
-          </div>
-        )}
 
         {/* Indicador de Arte 3D Ativa */}
         {hasArtwork && (
@@ -747,88 +647,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               <div
                 style={{
-                  height: 1,
-                  background: 'var(--cad-border-subtle)',
-                  margin: '4px 0',
-                }}
-              />
 
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: 'var(--cad-text-muted)',
-                  padding: '4px 8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                }}
-              >
-                CorelDRAW Graphics Suite
-              </div>
-
-              <a
-                href="/downloads/Plugin_CorelDRAW_Primacor.zip"
-                download="Plugin_CorelDRAW_Primacor.zip"
-                className="cad-btn"
-                onClick={() => setIsExportMenuOpen(false)}
-                style={{
-                  width: '100%',
-                  justifyContent: 'flex-start',
-                  background: 'rgba(34, 197, 94, 0.12)',
-                  border: '1px solid rgba(34, 197, 94, 0.4)',
-                  color: '#4ade80',
-                  fontSize: 12,
-                  textDecoration: 'none',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <Download size={14} color="#4ade80" />
-                <span style={{ fontWeight: 700 }}>Baixar Plugin CorelDRAW (.zip)</span>
-              </a>
-
-              {onOpenCorelPluginModal && (
-                <button
-                  type="button"
-                  className="cad-btn"
-                  onClick={() => {
-                    onOpenCorelPluginModal();
-                    setIsExportMenuOpen(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    justifyContent: 'flex-start',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--cad-text-secondary)',
-                    fontSize: 12,
-                  }}
-                >
-                  <HelpCircle size={14} color="#4ade80" />
-                  <span>Como Instalar no CorelDRAW...</span>
-                </button>
-              )}
-
-              {onExportCorelScript && (
-                <button
-                  type="button"
-                  className="cad-btn"
-                  onClick={() => {
-                    onExportCorelScript();
-                    setIsExportMenuOpen(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    justifyContent: 'flex-start',
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#4ade80',
-                    fontSize: 12,
-                  }}
-                >
-                  <FileCode size={14} color="#4ade80" />
-                  <span style={{ fontWeight: 600 }}>Script CorelDRAW (.ps1)</span>
-                </button>
-              )}
 
               {onSyncArtwork && (
                 <button
