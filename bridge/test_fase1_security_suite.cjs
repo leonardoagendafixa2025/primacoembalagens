@@ -442,9 +442,9 @@ async function runAllTests() {
         arcs: []
       }
     });
-    // O endpoint deve autenticar (sem 401) e processar com sucesso ou retornar erro controlado
-    const passT21 = (resT21.statusCode === 200 && resT21.json?.success === true) || (resT21.statusCode === 500 && resT21.json?.error === 'COREL_ERROR');
-    recordResult('T21', 'Abertura no CorelDRAW autenticada', passT21, 'Status 200 (ou 500 COREL_ERROR controlado, sem 401)', `Status ${resT21.statusCode}`, resT21.body);
+    // O endpoint deve autenticar (sem 401) e processar a requisição
+    const passT21 = resT21.statusCode === 200 && resT21.statusCode !== 401;
+    recordResult('T21', 'Abertura no CorelDRAW autenticada', passT21, 'Status 200 autenticado (sem 401)', `Status ${resT21.statusCode}`, resT21.body);
 
     // -------------------------------------------------------------------------
     // Teste 22: Sincronização de arte no CorelDRAW autenticada
@@ -491,8 +491,8 @@ async function runAllTests() {
         arcs: []
       }
     });
-    const passT23 = (resT23.statusCode === 200 && resT23.json?.success === true) || (resT23.statusCode === 500 && resT23.json?.error === 'ILLUSTRATOR_ERROR');
-    recordResult('T23', 'Abertura no Illustrator autenticada', passT23, 'Status 200 (ou 500 ILLUSTRATOR_ERROR controlado, sem 401)', `Status ${resT23.statusCode}`, resT23.body);
+    const passT23 = resT23.statusCode === 200 && resT23.statusCode !== 401;
+    recordResult('T23', 'Abertura no Illustrator autenticada', passT23, 'Status 200 autenticado (sem 401)', `Status ${resT23.statusCode}`, resT23.body);
 
     // -------------------------------------------------------------------------
     // Teste 24: Sincronização de arte no Illustrator autenticada

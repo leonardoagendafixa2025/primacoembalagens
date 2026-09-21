@@ -29,8 +29,14 @@ import {
   IllustratorBridgeClient,
   type BridgeStatus,
 } from './integrations/illustrator/IllustratorBridgeClient';
+import {
+  CorelDrawBridgeClient,
+  type CorelBridgeStatus,
+} from './integrations/coreldraw/CorelDrawBridgeClient';
 import { createProjectExchangePackage } from './integrations/illustrator/projectExchange';
 import { generateIllustratorJsx } from './integrations/illustrator/jsxGenerator';
+import { generateCorelAutomationScript } from './integrations/coreldraw/corelGenerator';
+import { CorelDrawPluginModal } from './components/CorelDrawPluginModal';
 
 export const App: React.FC = () => {
   // 1. Estados Centrais
@@ -42,13 +48,20 @@ export const App: React.FC = () => {
   }));
   const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
 
-  // Estados da Integração Oficial Adobe Illustrator 2025
+  // Estados da Integração Oficial Adobe Illustrator 2025 & CorelDRAW Suite
   const [artworkTextureUri, setArtworkTextureUri] = useState<string | null>(null);
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>({
     bridgeOnline: false,
     illustratorDetected: false,
   });
   const [isOpeningIllustrator, setIsOpeningIllustrator] = useState(false);
+
+  const [corelBridgeStatus, setCorelBridgeStatus] = useState<CorelBridgeStatus>({
+    bridgeOnline: false,
+    corelDetected: false,
+  });
+  const [isOpeningCorelDraw, setIsOpeningCorelDraw] = useState(false);
+  const [isCorelPluginModalOpen, setIsCorelPluginModalOpen] = useState(false);
 
   // Estados do Inspetor de Dobras das Abas (ArtiosCAD / Prinect) integrado ao painel esquerdo
   const [customAngles, setCustomAngles] = useState<Record<string, number>>({});
@@ -143,6 +156,30 @@ export const App: React.FC = () => {
         }
       } else if (event.type === 'STATUS_CHANGED') {
         if (event.data) setBridgeStatus(event.data);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Monitora a conexão com o CorelDRAW e escuta sincronização de arte
+  useEffect(() => {
+    const client = CorelDrawBridgeClient.getInstance();
+    client.checkStatus().then(setCorelBridgeStatus);
+
+    const unsubscribe = client.addListener((event) => {
+      if (event.type === 'ARTWORK_UPDATED') {
+        const uri =
+          event.data?.textureDataUri ||
+          (typeof event.data === 'string' ? event.data : null);
+        if (uri) {
+          setArtworkTextureUri(uri);
+          try {
+            confetti({ particleCount: 30, spread: 50, origin: { y: 0.2 } });
+          } catch {}
+        }
+      } else if (event.type === 'STATUS_CHANGED') {
+        if (event.data) setCorelBridgeStatus(event.data);
       }
     });
 
@@ -292,8 +329,60 @@ export const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Integração Oficial CorelDRAW Suite
+  const handleOpenInCorelDraw = async () => {
+    setIsOpeningCorelDraw(true);
+    try {
+      const exchangePkg = createProjectExchangePackage(
+        currentModel,
+        params,
+        selectedProfile,
+        dieline
+      );
+      const client = CorelDrawBridgeClient.getInstance();
+      const res = await client.openInCorelDraw(exchangePkg);
+      if (res.success) {
+        confetti({ particleCount: 35, spread: 45, origin: { y: 0.1 } });
+      } else {
+        setIsCorelPluginModalOpen(true);
+      }
+    } catch (e: any) {
+      console.warn('Falha na comunicação com CorelDRAW:', e);
+      setIsCorelPluginModalOpen(true);
+    } finally {
+      setIsOpeningCorelDraw(false);
+    }
+  };
+
+  const handleExportCorelScript = () => {
+    const exchangePkg = createProjectExchangePackage(
+      currentModel,
+      params,
+      selectedProfile,
+      dieline
+    );
+    const psScript = generateCorelAutomationScript(exchangePkg);
+    const blob = new Blob([psScript], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${currentModel.code}_${params.L}x${params.B}x${params.H}_CorelDRAW.ps1`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSyncArtwork = async () => {
     try {
+      if (corelBridgeStatus.corelDetected) {
+        const client = CorelDrawBridgeClient.getInstance();
+        const res = await client.requestArtworkSync(currentModel.id);
+        if (res.success && res.textureDataUri) {
+          setArtworkTextureUri(res.textureDataUri);
+          return;
+        }
+      }
       const client = IllustratorBridgeClient.getInstance();
       const res = await client.requestArtworkSync(currentModel.id);
       if (res.success && res.textureDataUri) {
@@ -389,6 +478,11 @@ export const App: React.FC = () => {
         onOpenInIllustrator={handleOpenInIllustrator}
         isOpeningIllustrator={isOpeningIllustrator}
         bridgeStatus={bridgeStatus}
+        onOpenInCorelDraw={handleOpenInCorelDraw}
+        isOpeningCorelDraw={isOpeningCorelDraw}
+        corelBridgeStatus={corelBridgeStatus}
+        onExportCorelScript={handleExportCorelScript}
+        onOpenCorelPluginModal={() => setIsCorelPluginModalOpen(true)}
         onSyncArtwork={handleSyncArtwork}
         hasArtwork={Boolean(artworkTextureUri)}
         onClearArtwork={() => setArtworkTextureUri(null)}
@@ -521,6 +615,12 @@ export const App: React.FC = () => {
       <IllustratorPluginModal
         isOpen={isIllustratorPluginModalOpen}
         onClose={() => setIsIllustratorPluginModalOpen(false)}
+      />
+
+      {/* Modal de Download e Instruções do Plugin CorelDRAW */}
+      <CorelDrawPluginModal
+        isOpen={isCorelPluginModalOpen}
+        onClose={() => setIsCorelPluginModalOpen(false)}
       />
     </div>
   );

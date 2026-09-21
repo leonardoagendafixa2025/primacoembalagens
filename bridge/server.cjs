@@ -441,6 +441,19 @@ const server = http.createServer(async (req, res) => {
           const scriptPath = path.join(WORKDIR, 'open_project_corel.ps1');
           fs.writeFileSync(scriptPath, scriptContent, 'utf-8');
 
+          const isRunning = await isCorelDrawRunning();
+          if (!isRunning) {
+            isProcessing = false;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              corelRunning: false,
+              message: 'Projeto preparado. Abra o CorelDRAW para sincronizar.',
+              projectId: project.projectId,
+            }));
+            return;
+          }
+
           const execRes = await runScriptInCorelDraw(scriptPath);
           isProcessing = false;
 
