@@ -6,14 +6,14 @@
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
-            <!-- Suporta Adobe Illustrator 2020 até 2025 (v24.0 até v29.9) -->
-            <Host Name="ILST" Version="[24.0,29.9]" />
+            <!-- Suporta Adobe Illustrator CC 2019 até Illustrator 2026+ (v23.0 até v35.0) -->
+            <Host Name="ILST" Version="[20.0,35.0]" />
         </HostList>
         <LocaleList>
             <Locale Code="All" />
         </LocaleList>
         <RequiredRuntimeList>
-            <RequiredRuntime Name="CSXS" Version="9.0" />
+            <RequiredRuntime Name="CSXS" Version="6.0" />
         </RequiredRuntimeList>
     </ExecutionEnvironment>
     <DispatchInfoList>
@@ -25,6 +25,13 @@
                     <CEFCommandLine>
                         <Parameter>--enable-nodejs</Parameter>
                         <Parameter>--mixed-context</Parameter>
+                        <Parameter>--enable-webgl</Parameter>
+                        <Parameter>--ignore-gpu-blacklist</Parameter>
+                        <Parameter>--ignore-gpu-blocklist</Parameter>
+                        <Parameter>--disable-gpu-sandbox</Parameter>
+                        <Parameter>--enable-gpu-rasterization</Parameter>
+                        <Parameter>--allow-file-access</Parameter>
+                        <Parameter>--allow-file-access-from-files</Parameter>
                     </CEFCommandLine>
                 </Resources>
                 <Lifecycle>

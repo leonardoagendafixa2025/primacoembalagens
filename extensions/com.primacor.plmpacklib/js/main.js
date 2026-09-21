@@ -90,11 +90,20 @@
     }
   }
 
-  // 1. Inicializa o Estúdio 3D (começa ZERADO sem malha carregada)
+  // 1. Inicializa o Estúdio 3D (resiliente e protegido)
   var container = document.getElementById('studioCanvas');
-  if (window.PLMStudio && container) {
-    window.PLMStudio.init(container);
+  function initStudioIfReady() {
+    if (!container) container = document.getElementById('studioCanvas');
+    if (window.PLMStudio && container && !window.PLMStudio.isInitialized) {
+      try {
+        window.PLMStudio.init(container);
+      } catch (err) {
+        console.error('[CEP] Erro ao inicializar PLMStudio:', err);
+      }
+    }
   }
+  initStudioIfReady();
+  window.addEventListener('DOMContentLoaded', initStudioIfReady);
 
   // Inicia sempre zerado
   setEmptyState(true);
@@ -110,6 +119,7 @@
           return;
         }
 
+        initStudioIfReady();
         currentProject = data.project;
         setEmptyState(false);
 
@@ -118,12 +128,17 @@
         }
 
         if (window.PLMStudio) {
-          window.PLMStudio.loadModel(data.project);
-          var artUri = (data.project.artwork && data.project.artwork.textureDataUri) || lastLoadedArtworkUri;
-          if (artUri) {
-            window.PLMStudio.updateArtwork(artUri);
+          try {
+            window.PLMStudio.loadModel(data.project);
+            var artUri = (data.project.artwork && data.project.artwork.textureDataUri) || lastLoadedArtworkUri;
+            if (artUri) {
+              window.PLMStudio.updateArtwork(artUri);
+            }
+            setStatus('Modelo ' + (data.project.modelCode || '') + ' carregado com sucesso no 3D.');
+          } catch (mErr) {
+            console.error('[CEP] Erro ao carregar geometria no 3D:', mErr);
+            setStatus('Aviso: Erro ao renderizar 3D: ' + mErr.message);
           }
-          setStatus('Modelo ' + (data.project.modelCode || '') + ' carregado com sucesso no 3D.');
         }
       })
       .catch(function(e) {
@@ -136,6 +151,7 @@
   // Processa projeto recebido diretamente da Web pelo servidor embutido CEP
   function handleIncomingProjectFromWeb(pkg) {
     if (!pkg) return;
+    initStudioIfReady();
     currentProject = pkg;
     setEmptyState(false);
     setOnline(true);
@@ -145,11 +161,18 @@
     }
 
     if (window.PLMStudio) {
-      window.PLMStudio.loadModel(pkg);
-      var artUri = (pkg.artwork && pkg.artwork.textureDataUri) || lastLoadedArtworkUri;
-      if (artUri) {
-        window.PLMStudio.updateArtwork(artUri);
+      try {
+        window.PLMStudio.loadModel(pkg);
+        var artUri = (pkg.artwork && pkg.artwork.textureDataUri) || lastLoadedArtworkUri;
+        if (artUri) {
+          window.PLMStudio.updateArtwork(artUri);
+        }
+      } catch (err3d) {
+        console.error('[CEP] Erro ao carregar modelo no 3D:', err3d);
+        setStatus('Aviso: Erro na malha 3D: ' + err3d.message);
       }
+    } else {
+      console.warn('[CEP] window.PLMStudio ainda não disponível');
     }
 
     // Se o pacote contém o script da faca vetorial (JSX), executa no Illustrator
@@ -176,14 +199,15 @@
   var embeddedServerOnline = false;
   function startEmbeddedServer() {
     try {
-      if (typeof require === 'function') {
-        var http = require('http');
+      var reqFn = (typeof require === 'function') ? require : (typeof window !== 'undefined' && typeof window.require === 'function' ? window.require : null);
+      if (reqFn) {
+        var http = reqFn('http');
         if (!http || !http.createServer) return;
 
         var server = http.createServer(function(req, res) {
           res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+          res.setHeader('Access-Control-Allow-Headers', '*');
           res.setHeader('Access-Control-Allow-Private-Network', 'true');
 
           if (req.method === 'OPTIONS') {
@@ -359,8 +383,9 @@
         // Leitura rápida via Node.js embutido no CEP
         var dataUri = null;
         try {
-          if (typeof require === 'function') {
-            var fs = require('fs');
+          var reqFn = (typeof require === 'function') ? require : (typeof window !== 'undefined' && typeof window.require === 'function' ? window.require : null);
+          if (reqFn) {
+            var fs = reqFn('fs');
             if (fs.existsSync(res.filePath)) {
               var buf = fs.readFileSync(res.filePath);
               dataUri = 'data:image/png;base64,' + buf.toString('base64');

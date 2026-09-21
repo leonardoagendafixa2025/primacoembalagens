@@ -7,6 +7,13 @@ $packageDir = Join-Path $distDir "Plugin_Illustrator_Primacor"
 $targetZip = Join-Path $repoRoot "web\public\downloads\Plugin_Illustrator_Primacor.zip"
 $downloadsDir = Join-Path $repoRoot "web\public\downloads"
 
+Write-Host "0. Compilando studio.bundle.js em formato IIFE puro..."
+$esbuildCmd = "npx.cmd esbuild `"$repoRoot\web\src\integrations\illustrator\cepStudioEntry.ts`" --bundle --format=iife --target=es2020 --platform=browser --outfile=`"$extSrc\js\studio.bundle.js`""
+Invoke-Expression $esbuildCmd
+if ($LASTEXITCODE -ne 0) {
+    throw "Falha ao compilar studio.bundle.js com esbuild"
+}
+
 Write-Host "1. Preparando pastas de distribuição..."
 if (Test-Path $distDir) {
     Remove-Item $distDir -Recurse -Force
@@ -19,6 +26,16 @@ New-Item -ItemType Directory -Path $extDest -Force | Out-Null
 
 Write-Host "2. Copiando arquivos da extensão..."
 Copy-Item -Path (Join-Path $extSrc "*") -Destination $extDest -Recurse -Force
+
+# Também atualiza a instalação local do desenvolvedor se existir a pasta
+$localDevCEP = "$env:APPDATA\Adobe\CEP\extensions\com.primacor.plmpacklib"
+if (Test-Path "$env:APPDATA\Adobe\CEP\extensions") {
+    Write-Host "   Atualizando pasta local do Illustrator ($localDevCEP)..."
+    if (-not (Test-Path $localDevCEP)) {
+        New-Item -ItemType Directory -Path $localDevCEP -Force | Out-Null
+    }
+    Copy-Item -Path (Join-Path $extSrc "*") -Destination $localDevCEP -Recurse -Force
+}
 
 Write-Host "3. Criando instalador Windows (.bat)..."
 $batContent = @"
@@ -33,6 +50,8 @@ echo =====================================================================
 echo.
 echo 1. Habilitando modo de desenvolvedor de extensoes no registro...
 
+reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.7" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
+reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.8" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.9" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.10" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.11" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
@@ -41,6 +60,8 @@ reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.13" /v PlayerDebugMode /t REG_SZ 
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.14" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.15" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.16" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
+reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.17" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
+reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.18" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
 
 echo    [OK] Modo de desenvolvedor ativado com sucesso.
 echo.
@@ -86,7 +107,7 @@ echo "   INSTALADOR OFICIAL: PRIMACOR EMBALAGENS - ADOBE ILLUSTRATOR (MAC)"
 echo "====================================================================="
 echo ""
 
-for v in 9 10 11 12 13 14 15 16; do
+for v in 7 8 9 10 11 12 13 14 15 16 17 18; do
   defaults write com.adobe.CSXS.`$v PlayerDebugMode 1 2>/dev/null
 done
 

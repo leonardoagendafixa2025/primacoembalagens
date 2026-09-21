@@ -81,12 +81,37 @@ class PLMStudioViewer {
     this.scene.add(grid);
   }
 
-  public init(container: HTMLElement) {
-    this.container = container;
-    const width = container.clientWidth || 400;
-    const height = container.clientHeight || 350;
+  public isInitialized: boolean = false;
+  private resizeObserver: ResizeObserver | null = null;
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+  public init(container: HTMLElement) {
+    if (this.isInitialized && this.renderer) return;
+    this.container = container;
+
+    const width = Math.max(container.clientWidth || 0, 300);
+    const height = Math.max(container.clientHeight || 0, 250);
+
+    try {
+      this.renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+        preserveDrawingBuffer: true,
+        powerPreference: 'high-performance'
+      });
+    } catch (err: any) {
+      console.error('[PLMStudio] Erro crítico ao criar WebGLRenderer:', err);
+      container.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;color:#f87171;background:#14171d;">
+          <span style="font-size:36px;margin-bottom:10px;">⚠️</span>
+          <strong style="font-size:13px;color:#ffffff;margin-bottom:6px;">Aceleração 3D (WebGL) Bloqueada</strong>
+          <p style="font-size:11px;color:#94a3b8;line-height:1.45;max-width:280px;">
+            O Adobe Illustrator nesta máquina bloqueou o WebGL. Atualize o driver da placa de vídeo ou verifique as permissões de GPU.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -105,6 +130,16 @@ class PLMStudioViewer {
     this.controls.minDistance = 40;
 
     window.addEventListener('resize', this.onResize);
+    if (typeof ResizeObserver !== 'undefined') {
+      try {
+        this.resizeObserver = new ResizeObserver(() => this.onResize());
+        this.resizeObserver.observe(container);
+      } catch (e) {
+        // Fallback silencioso para ambientes sem ResizeObserver
+      }
+    }
+
+    this.isInitialized = true;
     this.startRenderLoop();
   }
 
@@ -112,7 +147,7 @@ class PLMStudioViewer {
     if (!this.container || !this.renderer) return;
     const w = this.container.clientWidth;
     const h = this.container.clientHeight;
-    if (w === 0 || h === 0) return;
+    if (w <= 0 || h <= 0) return;
 
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -143,6 +178,10 @@ class PLMStudioViewer {
       this.animationFrameId = null;
     }
     window.removeEventListener('resize', this.onResize);
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
   }
 
   private lastArtworkDataUri: string | null = null;
