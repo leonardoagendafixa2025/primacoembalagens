@@ -1,0 +1,35 @@
+=====================================================================
+  GUIA DE INSTALAÇÃO — PLUGIN OFICIAL PRIMACOR EMBALAGENS PARA CORELDRAW
+=====================================================================
+
+Compatibilidade: CorelDRAW 2019, 2020, 2021, 2022, 2023, 2024 e 2025 / 2026.
+Sistemas: Windows 10 e Windows 11 (64-bit).
+
+---------------------------------------------------------------------
+INSTALAÇÃO AUTOMÁTICA EM 1 CLIQUE:
+---------------------------------------------------------------------
+1. Feche o CorelDRAW se estiver aberto.
+2. Dê um duplo clique no arquivo:
+   "Instalar_Plugin_CorelDRAW.bat"
+3. O instalador copiará o complemento diretamente para o diretório oficial
+   de complementos GMS do CorelDRAW:
+   (%APPDATA%\Corel\CorelDRAW Graphics Suite 2025\Draw\GMS\)
+4. Abra o CorelDRAW.
+5. No menu superior, acesse:
+   Ferramentas (Tools) > Scripts / Macros > Gerenciador de Scripts (Script Manager).
+6. Localize o projeto "PrimacorEmbalagens" e execute:
+   - InserirFacaTecnica: gera a faca técnica paramétrica 1:1 diretamente no documento;
+   - EnviarArte3D: exporta a arte a 300 DPI e sincroniza com o visualizador 3D na nuvem;
+   - AbrirCatalogo3D: abre o catálogo 3D oficial da Primacor.
+
+---------------------------------------------------------------------
+REQUISITOS:
+---------------------------------------------------------------------
+- 100% Autônomo e Nativo.
+- Sem necessidade de instalar Node.js, Bridge local, terminal ou senhas/tokens.
+- Toda a comunicação é realizada diretamente via HTTPS seguro com a nuvem Primacor.
+
+=====================================================================
+                    PRIMACOR GRAFICA E EDITORA LTDA
+                 https://primacorembalagens.vercel.app
+=====================================================================
