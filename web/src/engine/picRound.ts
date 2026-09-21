@@ -53,7 +53,7 @@ function extendSegment(seg: Segment, pt: Vec2): Segment {
   const prod0 = seg.p0.sub(pt).dot(d);
   const prod1 = seg.p1.sub(pt).dot(d);
   if (prod0 > 0 && prod1 > 0) return new Segment(pt, seg.p1);
-  if (prod0 < 0 && prod1 < 0) return new Segment(pt, seg.p0);
+  if (prod0 < 0 && prod1 < 0) return new Segment(seg.p0, pt);
   return new Segment(seg.p0, seg.p1);
 }
 
@@ -95,12 +95,18 @@ export function applyPicToolRound(
   const pt0 = projectOnLine(seg0, ptCenter);
   const pt1 = projectOnLine(seg1, ptCenter);
   const ptInter = ptExt;
-  if (seg0.p0.sub(ptInter).len() < seg0.p1.sub(ptInter).len()) {
+
+  const d0_0 = Math.hypot(seg0Ent.x0 - ptInter.x, seg0Ent.y0 - ptInter.y);
+  const d0_1 = Math.hypot(seg0Ent.x1 - ptInter.x, seg0Ent.y1 - ptInter.y);
+  if (d0_0 < d0_1) {
     seg0Ent.x0 = pt0.x; seg0Ent.y0 = pt0.y;
   } else {
     seg0Ent.x1 = pt0.x; seg0Ent.y1 = pt0.y;
   }
-  if (seg1.p0.sub(ptInter).len() < seg1.p1.sub(ptInter).len()) {
+
+  const d1_0 = Math.hypot(seg1Ent.x0 - ptInter.x, seg1Ent.y0 - ptInter.y);
+  const d1_1 = Math.hypot(seg1Ent.x1 - ptInter.x, seg1Ent.y1 - ptInter.y);
+  if (d1_0 < d1_1) {
     seg1Ent.x0 = pt1.x; seg1Ent.y0 = pt1.y;
   } else {
     seg1Ent.x1 = pt1.x; seg1Ent.y1 = pt1.y;

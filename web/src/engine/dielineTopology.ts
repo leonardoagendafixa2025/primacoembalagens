@@ -223,8 +223,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 2.5mm)
-  // Se duas pontas soltas de corte estão a uma distância curta, conecta com segmento de corte.
+  // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 3.6mm)
+  // Se duas pontas soltas de corte estão a uma distância curta (tolerância industrial Ep <= 3.6mm), conecta com corte.
   const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
   for (const s of rawSegs) {
     if (s.type !== 'cut') continue;
@@ -250,7 +250,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       const pA = cutEndpoints[i].pt;
       const pB = cutEndpoints[j].pt;
       const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-      if (d > 0.05 && d <= 2.5) {
+      if (d > 0.05 && d <= 3.6) {
         boundaryBridges.push({
           p0: { x: pA.x, y: pA.y },
           p1: { x: pB.x, y: pB.y },
@@ -260,6 +260,45 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
   rawSegs.push(...boundaryBridges);
+
+  // 1.5e: Fechamento universal de degraus entre vincos (Crease Jog / Step Closures <= 3.6mm)
+  // Em embalagens dobráveis industriais (FEFCO 02xx / ECMA), vincos opostos de flaps superiores e inferiores
+  // terminam na linha divisória central com pequenos degraus de folga de dobra (setback lateral <= 3.6mm).
+  const looseCreaseEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
+  for (const s of rawSegs) {
+    if (s.type !== 'crease') continue;
+    for (const ep of ['p0', 'p1'] as const) {
+      const pt = s[ep];
+      let meets = 0;
+      for (const o of rawSegs) {
+        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
+          meets++;
+        }
+        if (o !== s && distToSeg(pt, o) < 0.1) {
+          meets++;
+        }
+      }
+      if (meets <= 1) {
+        looseCreaseEndpoints.push({ pt, seg: s });
+      }
+    }
+  }
+  const creaseJogBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
+  for (let i = 0; i < looseCreaseEndpoints.length; i++) {
+    for (let j = i + 1; j < looseCreaseEndpoints.length; j++) {
+      const pA = looseCreaseEndpoints[i].pt;
+      const pB = looseCreaseEndpoints[j].pt;
+      const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+      if (d > 0.05 && d <= 3.6) {
+        creaseJogBridges.push({
+          p0: { x: pA.x, y: pA.y },
+          p1: { x: pB.x, y: pB.y },
+          type: 'crease',
+        });
+      }
+    }
+  }
+  rawSegs.push(...creaseJogBridges);
 
   // 2. Unifica vértices próximos (tolerância numérica padrão de CAD 0.15 mm)
   const EPS = 0.15;
@@ -610,36 +649,69 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   const visitedPanels = new Set<number>();
   const parentMap = new Map<number, { parentId: number; hinge: RawHingeEdge; depth: number }>();
   const queue: number[] = [];
+  const rootFaceIds: number[] = [];
 
   if (rootFaceId !== -1) {
+    rootFaceIds.push(rootFaceId);
     visitedPanels.add(rootFaceId);
     queue.push(rootFaceId);
   }
 
-  while (queue.length > 0) {
-    const curr = queue.shift()!;
-    const currDepth = parentMap.get(curr)?.depth || 0;
-    const neighbors = adjMap.get(curr) || [];
+  // BFS para todos os componentes conexos (suporta embalagens multi-peças como tampa e fundo separados)
+  while (true) {
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      const currDepth = parentMap.get(curr)?.depth || 0;
+      const neighbors = adjMap.get(curr) || [];
 
-    for (const edge of neighbors) {
-      if (!visitedPanels.has(edge.neighborId)) {
-        visitedPanels.add(edge.neighborId);
-        parentMap.set(edge.neighborId, {
-          parentId: curr,
-          hinge: edge.hinge,
-          depth: currDepth + 1,
-        });
-        queue.push(edge.neighborId);
+      for (const edge of neighbors) {
+        if (!visitedPanels.has(edge.neighborId)) {
+          visitedPanels.add(edge.neighborId);
+          parentMap.set(edge.neighborId, {
+            parentId: curr,
+            hinge: edge.hinge,
+            depth: currDepth + 1,
+          });
+          queue.push(edge.neighborId);
+        }
       }
+    }
+
+    // Busca o próximo componente conexo não visitado que possua dobradiças
+    let nextRoot: (typeof panelFaces)[0] | null = null;
+    let nextBestScore = -Infinity;
+    for (const pf of panelFaces) {
+      if (visitedPanels.has(pf.id)) continue;
+      const deg = adjMap.get(pf.id)?.length || 0;
+      if (deg === 0) continue;
+      const score = deg * 250 + pf.area;
+      if (score > nextBestScore) {
+        nextBestScore = score;
+        nextRoot = pf;
+      }
+    }
+
+    if (!nextRoot) break;
+
+    rootFaceIds.push(nextRoot.id);
+    visitedPanels.add(nextRoot.id);
+    queue.push(nextRoot.id);
+  }
+
+  // Inclui quaisquer peças planas remanescentes (ex: calços, divisórias, chapas planas de cabeceira)
+  for (const pf of panelFaces) {
+    if (!visitedPanels.has(pf.id)) {
+      rootFaceIds.push(pf.id);
+      visitedPanels.add(pf.id);
     }
   }
 
-  // 10. Constr├│i os objetos TopologicalPanel e TopologicalHinge com eixos vetoriais 3D
+  // 10. Constrói os objetos TopologicalPanel e TopologicalHinge com eixos vetoriais 3D
   const topologicalPanels: TopologicalPanel[] = [];
   const topologicalHinges: TopologicalHinge[] = [];
 
   for (const pf of panelFaces) {
-    const isRoot = pf.id === rootFaceId;
+    const isRoot = rootFaceIds.includes(pf.id);
     const parentInfo = parentMap.get(pf.id);
     const panelId = `panel_${pf.id}`;
 

@@ -177,6 +177,112 @@ export function parseEngViewSvg(svgText: string): DielineResult {
     }
   }
 
+  // 3.5 Parser de Círculos (<circle>), Elipses (<ellipse>) e Retângulos (<rect>)
+  const circleRegex = /<circle\b([^>]+)>/g;
+  while ((m = circleRegex.exec(svgText)) !== null) {
+    const attrStr = m[1];
+    const cxM = attrStr.match(/cx=\"([^\"]+)\"/);
+    const cyM = attrStr.match(/cy=\"([^\"]+)\"/);
+    const rM = attrStr.match(/r=\"([^\"]+)\"/);
+    const stylem = attrStr.match(/ev-style=\"([^\"]+)\"/);
+    if (!cxM || !cyM || !rM) continue;
+
+    let style = stylem ? stylem[1] : 'Cutting';
+    if (!style.includes('Cutting') && !style.includes('Creasing')) {
+      if (attrStr.includes('rgb(255,0,0)') || attrStr.includes('#ff0000')) style = 'Cutting';
+      else if (attrStr.includes('rgb(0,255,0)') || attrStr.includes('#00ff00')) style = 'Creasing';
+      else continue;
+    }
+    const type = style.includes('Cutting') ? 'cut' : 'crease';
+
+    const cx = (parseFloat(cxM[1]) + tx) / SCALE_DPI;
+    const cy = parseFloat(cyM[1]) / SCALE_DPI;
+    const r = parseFloat(rM[1]) / SCALE_DPI;
+
+    rawArcs.push({ cx, cy, r, startAngle: 0, endAngle: 2 * Math.PI, type });
+
+    const N = 48;
+    for (let k = 0; k < N; k++) {
+      const th0 = (2 * Math.PI * k) / N;
+      const th1 = (2 * Math.PI * (k + 1)) / N;
+      rawSegments.push({
+        x0: cx + r * Math.cos(th0),
+        y0: cy + r * Math.sin(th0),
+        x1: cx + r * Math.cos(th1),
+        y1: cy + r * Math.sin(th1),
+        type,
+      });
+    }
+  }
+
+  const ellipseRegex = /<ellipse\b([^>]+)>/g;
+  while ((m = ellipseRegex.exec(svgText)) !== null) {
+    const attrStr = m[1];
+    const cxM = attrStr.match(/cx=\"([^\"]+)\"/);
+    const cyM = attrStr.match(/cy=\"([^\"]+)\"/);
+    const rxM = attrStr.match(/rx=\"([^\"]+)\"/);
+    const ryM = attrStr.match(/ry=\"([^\"]+)\"/);
+    const stylem = attrStr.match(/ev-style=\"([^\"]+)\"/);
+    if (!cxM || !cyM || !rxM || !ryM) continue;
+
+    let style = stylem ? stylem[1] : 'Cutting';
+    if (!style.includes('Cutting') && !style.includes('Creasing')) {
+      if (attrStr.includes('rgb(255,0,0)') || attrStr.includes('#ff0000')) style = 'Cutting';
+      else if (attrStr.includes('rgb(0,255,0)') || attrStr.includes('#00ff00')) style = 'Creasing';
+      else continue;
+    }
+    const type = style.includes('Cutting') ? 'cut' : 'crease';
+
+    const cx = (parseFloat(cxM[1]) + tx) / SCALE_DPI;
+    const cy = parseFloat(cyM[1]) / SCALE_DPI;
+    const rx = parseFloat(rxM[1]) / SCALE_DPI;
+    const ry = parseFloat(ryM[1]) / SCALE_DPI;
+
+    const N = 48;
+    for (let k = 0; k < N; k++) {
+      const th0 = (2 * Math.PI * k) / N;
+      const th1 = (2 * Math.PI * (k + 1)) / N;
+      rawSegments.push({
+        x0: cx + rx * Math.cos(th0),
+        y0: cy + ry * Math.sin(th0),
+        x1: cx + rx * Math.cos(th1),
+        y1: cy + ry * Math.sin(th1),
+        type,
+      });
+    }
+  }
+
+  const rectRegex = /<rect\b([^>]+)>/g;
+  while ((m = rectRegex.exec(svgText)) !== null) {
+    const attrStr = m[1];
+    const xM = attrStr.match(/x=\"([^\"]+)\"/);
+    const yM = attrStr.match(/y=\"([^\"]+)\"/);
+    const wM = attrStr.match(/width=\"([^\"]+)\"/);
+    const hM = attrStr.match(/height=\"([^\"]+)\"/);
+    const stylem = attrStr.match(/ev-style=\"([^\"]+)\"/);
+    if (!xM || !yM || !wM || !hM) continue;
+
+    let style = stylem ? stylem[1] : null;
+    if (!style || (!style.includes('Cutting') && !style.includes('Creasing'))) {
+      if (attrStr.includes('rgb(255,0,0)') || attrStr.includes('#ff0000')) style = 'Cutting';
+      else if (attrStr.includes('rgb(0,255,0)') || attrStr.includes('#00ff00')) style = 'Creasing';
+      else continue;
+    }
+    const type = style.includes('Cutting') ? 'cut' : 'crease';
+
+    const rx0 = (parseFloat(xM[1]) + tx) / SCALE_DPI;
+    const ry0 = parseFloat(yM[1]) / SCALE_DPI;
+    const rw = parseFloat(wM[1]) / SCALE_DPI;
+    const rh = parseFloat(hM[1]) / SCALE_DPI;
+
+    rawSegments.push(
+      { x0: rx0, y0: ry0, x1: rx0 + rw, y1: ry0, type },
+      { x0: rx0 + rw, y0: ry0, x1: rx0 + rw, y1: ry0 + rh, type },
+      { x0: rx0 + rw, y0: ry0 + rh, x1: rx0, y1: ry0 + rh, type },
+      { x0: rx0, y0: ry0 + rh, x1: rx0, y1: ry0, type }
+    );
+  }
+
   // 4. Normalização do Bounding Box (origem no canto inferior esquerdo a 0, 0)
   if (rawSegments.length === 0) {
     return {
@@ -203,6 +309,12 @@ export function parseEngViewSvg(svgText: string): DielineResult {
     type: s.type,
   }));
 
+  const normArcs = rawArcs.map((a) => ({
+    ...a,
+    cx: Number((a.cx - minX).toFixed(3)),
+    cy: Number((a.cy - minY).toFixed(3)),
+  }));
+
   return {
     bounds: {
       minX: 0,
@@ -213,7 +325,7 @@ export function parseEngViewSvg(svgText: string): DielineResult {
       height: Number((maxY - minY).toFixed(3)),
     },
     segments: normSegments,
-    arcs: rawArcs,
+    arcs: normArcs,
     dimensions: [],
   };
 }

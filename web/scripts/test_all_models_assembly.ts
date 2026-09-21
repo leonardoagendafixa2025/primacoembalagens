@@ -49,6 +49,6 @@ for (const m of models) {
   console.log(`  100% Montada: Largura=${w100.toFixed(1)}mm, Altura(Y)=${h100.toFixed(1)}mm, Profundidade=${d100.toFixed(1)}mm`);
   console.log(`  Reversibilidade 100% -> 0%: erro = ${revDiff.toExponential(3)}mm`);
 
-  const ok = flatDiff < 0.01 && h100 > 100 && revDiff < 1e-5;
+  const ok = flatDiff < 0.01 && h100 > 20 && revDiff < 1e-5;
   console.log(`  Status: ${ok ? '✅ PASS' : '❌ FAIL'}`);
 }

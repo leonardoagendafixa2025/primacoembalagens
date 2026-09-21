@@ -213,37 +213,22 @@ export function computeBoundingBox(geom: {
   if (geom.arcs && geom.arcs.length > 0) {
     for (const arc of geom.arcs) {
       if (arc.type === 'dimension') continue;
-      // Pontos inicial e final
-      const radBeg = (arc.startAngle * Math.PI) / 180;
-      const radEnd = (arc.endAngle * Math.PI) / 180;
-      const xBeg = arc.cx + arc.r * Math.cos(radBeg);
-      const yBeg = arc.cy + arc.r * Math.sin(radBeg);
-      const xEnd = arc.cx + arc.r * Math.cos(radEnd);
-      const yEnd = arc.cy + arc.r * Math.sin(radEnd);
+      if (!arc.r || arc.r < 0.001) continue;
+      const isDegrees = Math.abs(arc.startAngle) > 2 * Math.PI || Math.abs(arc.endAngle) > 2 * Math.PI || (Math.abs(arc.endAngle - arc.startAngle) >= 10);
+      const startRad = isDegrees ? (arc.startAngle * Math.PI) / 180 : arc.startAngle;
+      const endRad = isDegrees ? (arc.endAngle * Math.PI) / 180 : arc.endAngle;
 
-      minX = Math.min(minX, xBeg, xEnd);
-      minY = Math.min(minY, yBeg, yEnd);
-      maxX = Math.max(maxX, xBeg, xEnd);
-      maxY = Math.max(maxY, yBeg, yEnd);
-
-      // Pontos cardeais que pertencem ao arco (0°, 90°, 180°, 270°)
-      const cardinalAngles = [0, 90, 180, 270];
-      for (const ca of cardinalAngles) {
-        let inside = false;
-        if (arc.startAngle <= arc.endAngle) {
-          inside = ca >= arc.startAngle && ca <= arc.endAngle;
-        } else {
-          inside = ca >= arc.startAngle || ca <= arc.endAngle;
-        }
-
-        if (inside) {
-          const cxCard = arc.cx + arc.r * Math.cos((ca * Math.PI) / 180);
-          const cyCard = arc.cy + arc.r * Math.sin((ca * Math.PI) / 180);
-          minX = Math.min(minX, cxCard);
-          minY = Math.min(minY, cyCard);
-          maxX = Math.max(maxX, cxCard);
-          maxY = Math.max(maxY, cyCard);
-        }
+      const spanRad = endRad - startRad;
+      const steps = 16;
+      const da = spanRad / steps;
+      for (let i = 0; i <= steps; i++) {
+        const a = startRad + i * da;
+        const px = arc.cx + arc.r * Math.cos(a);
+        const py = arc.cy + arc.r * Math.sin(a);
+        minX = Math.min(minX, px);
+        maxX = Math.max(maxX, px);
+        minY = Math.min(minY, py);
+        maxY = Math.max(maxY, py);
       }
     }
   }
@@ -443,4 +428,3 @@ export function computeDielineMetrics(dieline: DielineResult): DielineMetrics {
     creasesCount,
   };
 }
-

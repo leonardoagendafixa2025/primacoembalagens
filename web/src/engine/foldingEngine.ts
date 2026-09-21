@@ -207,22 +207,30 @@ export function buildFoldable3DTree(
     });
   }
 
-  // Montagem da hierarquia cinematica com posições locais relativas
-  const rootItem = itemsMap.get(rootPanel.id)!;
-  rootItem.pivotGroup.add(rootItem.mesh);
-  rootGroup.add(rootItem.pivotGroup);
+  // Montagem da hierarquia cinematica com posições locais relativas (suporta 1 ou múltiplas raízes como caixas telescópicas)
+  for (const p of panels) {
+    if (p.isRoot) {
+      const rItem = itemsMap.get(p.id);
+      if (rItem) {
+        rItem.pivotGroup.add(rItem.mesh);
+        rootGroup.add(rItem.pivotGroup);
+      }
+    }
+  }
 
   // Para cada nó filho na árvore
   for (const p of panels) {
-    if (p.id === rootPanel.id) continue;
-    const item = itemsMap.get(p.id)!;
+    if (p.isRoot) continue;
+    const item = itemsMap.get(p.id);
+    if (!item) continue;
     const parentPanelId = p.parentId;
     if (!parentPanelId) continue;
 
     const parentItem = itemsMap.get(parentPanelId);
     if (!parentItem) continue;
 
-    const h = p.hingeToParent!;
+    const h = p.hingeToParent;
+    if (!h) continue;
     const childHingeOrigin = new THREE.Vector3(h.origin.x, h.origin.y, h.origin.z);
 
     // O offset do mesh relativo ao próprio pivô é -childHingeOrigin
@@ -238,7 +246,7 @@ export function buildFoldable3DTree(
         childHingeOrigin.z - parentHingeOrigin.z
       );
     } else {
-      // Pai é a raiz (na origem do mundo)
+      // Pai é a raiz do seu componente (com origem local no mundo 2D)
       item.pivotGroup.position.copy(childHingeOrigin);
     }
 
@@ -257,8 +265,8 @@ export function buildFoldable3DTree(
     currentProgress = progress;
     const t = Math.max(0, Math.min(1, progress));
 
-    for (const [id, item] of itemsMap.entries()) {
-      if (id === rootPanel.id) continue;
+    for (const [, item] of itemsMap.entries()) {
+      if (item.panel.isRoot) continue;
 
       let localT = t;
       // Ordem física sequencial de montagem:
