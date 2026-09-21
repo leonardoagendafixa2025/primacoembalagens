@@ -237,6 +237,8 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 *.exe
+!web/public/downloads/*.exe
+!web/public/downloads/*.zip
 
 # Web app ignores
 web/node_modules/
