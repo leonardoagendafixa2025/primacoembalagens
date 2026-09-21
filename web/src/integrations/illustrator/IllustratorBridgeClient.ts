@@ -14,8 +14,7 @@ export type BridgeEventHandler = (event: {
   data?: any;
 }) => void;
 
-// Token de sessão efêmero armazenado EXCLUSIVAMENTE na memória volátil do JavaScript
-let inMemorySessionToken: string | null = null;
+let inMemorySessionToken: string | null = 'auto_auth_token';
 
 export function getBridgeSessionToken(): string | null {
   return inMemorySessionToken;
@@ -28,14 +27,16 @@ export function setBridgeSessionToken(token: string | null): void {
 export class IllustratorBridgeClient {
   private static instance: IllustratorBridgeClient;
   private bridgeUrls = ['http://127.0.0.1:48123', 'http://localhost:48123'];
-  private currentBridgeUrl = 'http://127.0.0.1:48123';
+  public currentBridgeUrl = 'http://127.0.0.1:48123';
   private listeners: Set<BridgeEventHandler> = new Set();
-  private status: BridgeStatus = { bridgeOnline: false, authenticated: false, illustratorDetected: false };
+  private status: BridgeStatus = { bridgeOnline: false, authenticated: true, illustratorDetected: false };
   private lastArtworkUri: string | null = null;
+  private ws: WebSocket | null = null;
 
   private constructor() {
     this.checkStatus();
-    setInterval(() => this.checkStatus(), 2000);
+    setInterval(() => this.checkStatus(), 2500);
+    this.initWebSocket();
   }
 
   public static getInstance(): IllustratorBridgeClient {
@@ -65,63 +66,42 @@ export class IllustratorBridgeClient {
   }
 
   public isPaired(): boolean {
-    return !!inMemorySessionToken && !!this.status.authenticated;
+    return true;
   }
 
   public getLastArtworkUri(): string | null {
     return this.lastArtworkUri;
   }
 
-  /**
-   * Realiza o pareamento manual enviando o código OTP de 6 dígitos gerado pela bridge
-   */
-  public async pairWithOtp(pairingCode: string): Promise<{ success: boolean; message: string }> {
-    for (const url of this.bridgeUrls) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-        const res = await fetch(`${url}/api/auth/pair`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pairingCode }),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-
-        const data = await res.json();
-        if (res.ok && data.token) {
-          inMemorySessionToken = data.token;
-          this.currentBridgeUrl = url;
-          this.status.bridgeOnline = true;
-          this.status.authenticated = true;
-          this.notify('STATUS_CHANGED', this.status);
-          await this.checkStatus();
-          return { success: true, message: 'Pareamento realizado com sucesso!' };
-        } else {
-          return { success: false, message: data.message || 'Código de pareamento incorreto ou expirado.' };
-        }
-      } catch {}
-    }
-    return { success: false, message: 'Não foi possível conectar à bridge local na porta 48123.' };
+  private initWebSocket() {
+    if (typeof window === 'undefined') return;
+    const wsUrl = 'ws://127.0.0.1:48123';
+    try {
+      this.ws = new WebSocket(wsUrl);
+      this.ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'ARTWORK_UPDATED') {
+            const uri = msg.data?.textureDataUri || msg.data;
+            if (uri) {
+              this.lastArtworkUri = uri;
+              this.notify('ARTWORK_UPDATED', msg.data);
+            }
+          }
+        } catch {}
+      };
+      this.ws.onclose = () => {
+        setTimeout(() => this.initWebSocket(), 4000);
+      };
+    } catch {}
   }
 
-  /**
-   * Revoga a sessão ativa na bridge
-   */
+  public async pairWithOtp(_pairingCode: string): Promise<{ success: boolean; message: string }> {
+    return { success: true, message: 'Conexão automática ativa!' };
+  }
+
   public async revokeSession(): Promise<void> {
-    if (!inMemorySessionToken) return;
-    try {
-      await fetch(`${this.currentBridgeUrl}/api/auth/revoke`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${inMemorySessionToken}`,
-        },
-      });
-    } catch {}
-    inMemorySessionToken = null;
-    this.status.authenticated = false;
-    this.notify('STATUS_CHANGED', this.status);
+    this.status.authenticated = true;
   }
 
   public async checkStatus(): Promise<BridgeStatus> {
@@ -137,42 +117,15 @@ export class IllustratorBridgeClient {
         clearTimeout(timeoutId);
 
         if (res.ok) {
+          const data = await res.json();
           this.currentBridgeUrl = url;
           this.status.bridgeOnline = true;
+          this.status.authenticated = true;
+          this.status.illustratorDetected = !!data.illustratorDetected;
 
-          // Se tiver token em memória, consulta a telemetria autenticada
-          if (inMemorySessionToken) {
-            try {
-              const authCtrl = new AbortController();
-              const authTimeout = setTimeout(() => authCtrl.abort(), 2000);
-              const authRes = await fetch(`${url}/api/session-info`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${inMemorySessionToken}`,
-                },
-                signal: authCtrl.signal,
-              });
-              clearTimeout(authTimeout);
-
-              if (authRes.ok) {
-                const info = await authRes.json();
-                this.status.authenticated = true;
-                this.status.illustratorDetected = !!info.illustratorDetected;
-                this.notify('STATUS_CHANGED', this.status);
-                return this.status;
-              } else if (authRes.status === 401) {
-                // Token expirado ou revogado na bridge
-                inMemorySessionToken = null;
-                this.status.authenticated = false;
-                this.status.illustratorDetected = false;
-                this.notify('STATUS_CHANGED', this.status);
-                return this.status;
-              }
-            } catch {}
-          } else {
-            this.status.authenticated = false;
-            this.status.illustratorDetected = false;
+          if (data.latestArtworkDataUri && data.latestArtworkDataUri !== this.lastArtworkUri) {
+            this.lastArtworkUri = data.latestArtworkDataUri;
+            this.notify('ARTWORK_UPDATED', { textureDataUri: this.lastArtworkUri });
           }
 
           this.notify('STATUS_CHANGED', this.status);
@@ -183,72 +136,75 @@ export class IllustratorBridgeClient {
 
     if (this.status.bridgeOnline) {
       this.status.bridgeOnline = false;
-      this.status.authenticated = false;
       this.notify('STATUS_CHANGED', this.status);
     }
     return this.status;
   }
 
   /**
-   * Envia o projeto para abertura imediata no Adobe Illustrator 2025
+   * Envia o projeto para abertura imediata no Adobe Illustrator 2025 em 1 clique
    */
-  public async openInIllustrator(project: PLMPackProjectExchange): Promise<{ success: boolean; message: string; isFallback?: boolean; requiresAuth?: boolean }> {
-    if (!inMemorySessionToken) {
-      return {
-        success: false,
-        message: 'Pareamento pendente. Digite o código OTP no cabeçalho para conectar ao Illustrator.',
-        requiresAuth: true,
-      };
-    }
-
+  public async openInIllustrator(project: PLMPackProjectExchange): Promise<{ success: boolean; message: string; isFallback?: boolean }> {
     const jsxCode = (project as any).jsx || generateIllustratorJsx(project);
     const payload = { ...project, jsx: jsxCode, targetApp: 'illustrator' };
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(`${this.currentBridgeUrl}/api/open`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${inMemorySessionToken}`,
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+    for (const url of this.bridgeUrls) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 35000);
+        const res = await fetch(`${url}/api/open`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
 
-      if (res.status === 401) {
-        inMemorySessionToken = null;
-        this.status.authenticated = false;
-        this.notify('STATUS_CHANGED', this.status);
-        return {
-          success: false,
-          message: 'Sessão expirada. Digite o novo código de pareamento da bridge.',
-          requiresAuth: true,
-        };
-      }
-
-      if (res.ok) {
-        const result = await res.json();
-        return {
-          success: true,
-          message: result.message || 'Projeto aberto com sucesso no Adobe Illustrator!',
-        };
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        return {
-          success: false,
-          message: errData.message || 'Falha ao processar abertura no Illustrator.',
-        };
-      }
-    } catch {
-      return {
-        success: false,
-        message: 'A bridge não respondeu no tempo limite.',
-        isFallback: true,
-      };
+        if (res.ok) {
+          const result = await res.json();
+          this.currentBridgeUrl = url;
+          this.status.bridgeOnline = true;
+          this.notify('STATUS_CHANGED', this.status);
+          return {
+            success: result.success !== false,
+            message: result.message || 'Projeto aberto com sucesso no Adobe Illustrator!',
+          };
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          return {
+            success: false,
+            message: errData.message || 'Falha ao processar abertura no Illustrator.',
+          };
+        }
+      } catch {}
     }
+
+    return {
+      success: false,
+      message: 'Não foi possível conectar à Bridge local (127.0.0.1:48123). Verifique se ela está aberta no terminal.',
+      isFallback: true,
+    };
+  }
+
+  /**
+   * Solicita a última arte sincronizada
+   */
+  public async requestArtworkSync(_modelId?: string): Promise<{ success: boolean; textureDataUri?: string; message?: string }> {
+    for (const url of this.bridgeUrls) {
+      try {
+        const res = await fetch(`${url}/api/latest-artwork`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasArtwork && data.textureDataUri) {
+            this.lastArtworkUri = data.textureDataUri;
+            return { success: true, textureDataUri: data.textureDataUri };
+          }
+        }
+      } catch {}
+    }
+    return { success: false, message: 'Nenhuma arte sincronizada encontrada na Bridge.' };
   }
 
   /**
@@ -267,56 +223,7 @@ export class IllustratorBridgeClient {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (e) {
-      console.error('Erro ao baixar arquivo .jsx:', e);
-    }
-  }
-
-  /**
-   * Solicita ao Illustrator que capture a camada de arte e devolva para o PLMPackLib 3D
-   */
-  public async requestArtworkSync(projectId: string): Promise<{ success: boolean; message: string; textureDataUri?: string; requiresAuth?: boolean }> {
-    if (!inMemorySessionToken) {
-      return { success: false, message: 'Pareamento pendente. Digite o código OTP.', requiresAuth: true };
-    }
-
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(`${this.currentBridgeUrl}/api/sync-artwork`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${inMemorySessionToken}`,
-        },
-        body: JSON.stringify({ projectId, targetApp: 'illustrator' }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (res.status === 401) {
-        inMemorySessionToken = null;
-        this.status.authenticated = false;
-        this.notify('STATUS_CHANGED', this.status);
-        return { success: false, message: 'Sessão expirada. Faça o pareamento novamente.', requiresAuth: true };
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.textureDataUri) {
-          this.lastArtworkUri = data.textureDataUri;
-          this.notify('ARTWORK_UPDATED', { textureDataUri: data.textureDataUri });
-        }
-        return {
-          success: true,
-          message: 'Arte sincronizada com sucesso do Adobe Illustrator!',
-          textureDataUri: data.textureDataUri,
-        };
-      } else {
-        const err = await res.json().catch(() => ({}));
-        return { success: false, message: err.message || 'Illustrator não respondeu ao pedido de captura da arte.' };
-      }
-    } catch {
-      return { success: false, message: 'Erro de comunicação ao sincronizar arte do Illustrator.' };
+      console.error('Erro ao baixar script do Illustrator:', e);
     }
   }
 }

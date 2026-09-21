@@ -12,12 +12,8 @@ import {
   BookOpen,
   ChevronDown,
   HelpCircle,
-  Key,
-  Lock,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { CorelDrawBridgeClient } from '../integrations/coreldraw/CorelDrawBridgeClient';
-import { IllustratorBridgeClient } from '../integrations/illustrator/IllustratorBridgeClient';
 
 const CATALOG_COUNT = modelsCatalog.length;
 
@@ -82,46 +78,6 @@ export const Header: React.FC<HeaderProps> = ({
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  // Estados de Pareamento e Autenticação da Bridge Local
-  const [isPairModalOpen, setIsPairModalOpen] = useState(false);
-  const [otpInput, setOtpInput] = useState('');
-  const [pairError, setPairError] = useState<string | null>(null);
-  const [isPairing, setIsPairing] = useState(false);
-
-  const isBridgeOnline = !!(bridgeStatus?.bridgeOnline || corelBridgeStatus?.bridgeOnline);
-  const isBridgePaired = !!(bridgeStatus?.authenticated || corelBridgeStatus?.authenticated);
-
-  const handlePairSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanCode = otpInput.replace(/[-\s]/g, '').trim();
-    if (cleanCode.length !== 6) {
-      setPairError('O código deve conter exatamente 6 dígitos.');
-      return;
-    }
-    setIsPairing(true);
-    setPairError(null);
-    try {
-      const res = await CorelDrawBridgeClient.getInstance().pairWithOtp(cleanCode);
-      if (res.success) {
-        await IllustratorBridgeClient.getInstance().checkStatus();
-        setIsPairModalOpen(false);
-        setOtpInput('');
-        confetti({ particleCount: 35, spread: 45, origin: { y: 0.1 } });
-      } else {
-        setPairError(res.message);
-      }
-    } catch {
-      setPairError('Erro ao comunicar com a bridge.');
-    } finally {
-      setIsPairing(false);
-    }
-  };
-
-  const handleRevokePairing = async () => {
-    await CorelDrawBridgeClient.getInstance().revokeSession();
-    await IllustratorBridgeClient.getInstance().checkStatus();
-    setIsPairModalOpen(false);
-  };
 
   const handleSaveClick = async () => {
     const name = prompt(
@@ -582,37 +538,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        {/* Status de Autenticação / Pareamento da Bridge Local */}
-        {isBridgeOnline && (
-          <button
-            type="button"
-            onClick={() => setIsPairModalOpen(true)}
-            className="cad-btn"
-            title={
-              isBridgePaired
-                ? 'Bridge Local Autenticada (Porta 48123). Clique para gerenciar a sessão.'
-                : 'Bridge Local Detectada! Clique para digitar o código OTP de pareamento.'
-            }
-            style={{
-              background: isBridgePaired
-                ? 'rgba(16, 185, 129, 0.12)'
-                : 'rgba(245, 158, 11, 0.15)',
-              border: isBridgePaired
-                ? '1px solid rgba(16, 185, 129, 0.45)'
-                : '1px solid rgba(245, 158, 11, 0.55)',
-              color: isBridgePaired ? '#34d399' : '#fbbf24',
-              padding: '5px 9px',
-              fontSize: 11,
-              fontWeight: 600,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-            }}
-          >
-            {isBridgePaired ? <Lock size={12} color="#34d399" /> : <Key size={12} color="#fbbf24" />}
-            <span className="hide-on-mobile">{isBridgePaired ? 'Autenticada' : 'Parear OTP'}</span>
-          </button>
-        )}
 
         {/* Indicador de Arte 3D Ativa */}
         {hasArtwork && (
@@ -959,184 +884,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Modal de Pareamento da Bridge (OTP de 6 Dígitos) */}
-      {isPairModalOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 99999,
-            backdropFilter: 'blur(4px)',
-          }}
-          onClick={() => setIsPairModalOpen(false)}
-        >
-          <div
-            style={{
-              background: '#131822',
-              border: '1px solid #1e293b',
-              borderRadius: 12,
-              padding: 24,
-              maxWidth: 420,
-              width: '90%',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-              color: '#f8fafc',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: isBridgePaired ? '#10b981' : '#f59e0b',
-                  }}
-                />
-                {isBridgePaired ? 'Bridge Autenticada' : 'Parear Bridge Local'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsPairModalOpen(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#94a3b8',
-                  cursor: 'pointer',
-                  fontSize: 20,
-                  lineHeight: 1,
-                }}
-              >
-                &times;
-              </button>
-            </div>
-
-            <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5, marginBottom: 16 }}>
-              {isBridgePaired ? (
-                <>
-                  Sua sessão com a bridge local em <code>127.0.0.1:48123</code> está <strong>ativa e autenticada</strong>. O Illustrator e o CorelDRAW estão liberados para receber a faca e enviar a arte.
-                </>
-              ) : (
-                <>
-                  A bridge local foi detectada na porta 48123. Digite o código de <strong>6 dígitos (OTP)</strong> exibido no terminal para autorizar a sincronização:
-                </>
-              )}
-            </p>
-
-            {!isBridgePaired ? (
-              <form onSubmit={handlePairSubmit}>
-                <div style={{ marginBottom: 16 }}>
-                  <input
-                    type="text"
-                    maxLength={7}
-                    placeholder="Ex: 482-915"
-                    value={otpInput}
-                    onChange={(e) => setOtpInput(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      fontSize: 22,
-                      fontWeight: 700,
-                      letterSpacing: 4,
-                      textAlign: 'center',
-                      background: '#0f172a',
-                      border: pairError ? '1px solid #ef4444' : '1px solid #334155',
-                      borderRadius: 8,
-                      color: '#38bdf8',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                    autoFocus
-                  />
-                  {pairError && (
-                    <p style={{ color: '#ef4444', fontSize: 12, marginTop: 6, marginBottom: 0 }}>
-                      {pairError}
-                    </p>
-                  )}
-                </div>
-
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                  <button
-                    type="button"
-                    onClick={() => setIsPairModalOpen(false)}
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid #334155',
-                      color: '#94a3b8',
-                      padding: '8px 14px',
-                      borderRadius: 6,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isPairing || otpInput.replace(/[-\s]/g, '').length !== 6}
-                    style={{
-                      background: 'linear-gradient(135deg, #0284c7, #0369a1)',
-                      border: 'none',
-                      color: '#ffffff',
-                      padding: '8px 18px',
-                      borderRadius: 6,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      cursor: isPairing ? 'wait' : 'pointer',
-                      opacity: otpInput.replace(/[-\s]/g, '').length !== 6 ? 0.6 : 1,
-                    }}
-                  >
-                    {isPairing ? 'Conectando...' : 'Autorizar Conexão'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={handleRevokePairing}
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
-                    color: '#f87171',
-                    padding: '8px 16px',
-                    borderRadius: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Desconectar Bridge
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsPairModalOpen(false)}
-                  style={{
-                    background: '#0f172a',
-                    border: '1px solid #334155',
-                    color: '#f8fafc',
-                    padding: '8px 16px',
-                    borderRadius: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Fechar
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   );
 };

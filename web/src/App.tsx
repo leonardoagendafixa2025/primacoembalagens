@@ -344,11 +344,11 @@ export const App: React.FC = () => {
       if (res.success) {
         confetti({ particleCount: 35, spread: 45, origin: { y: 0.1 } });
       } else {
-        setIsCorelPluginModalOpen(true);
+        alert(res.message || 'Certifique-se de que a Bridge está iniciada no terminal (node bridge/server.cjs).');
       }
     } catch (e: any) {
       console.warn('Falha na comunicação com CorelDRAW:', e);
-      setIsCorelPluginModalOpen(true);
+      alert('Certifique-se de que a Bridge está iniciada no terminal (node bridge/server.cjs).');
     } finally {
       setIsOpeningCorelDraw(false);
     }

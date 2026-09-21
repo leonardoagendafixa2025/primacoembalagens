@@ -1,6 +1,5 @@
 import type { PLMPackProjectExchange } from '../illustrator/projectExchange';
 import { generateCorelAutomationScript } from './corelGenerator';
-import { getBridgeSessionToken, setBridgeSessionToken } from '../illustrator/IllustratorBridgeClient';
 
 export interface CorelBridgeStatus {
   bridgeOnline: boolean;
@@ -18,14 +17,16 @@ export type CorelBridgeEventHandler = (event: {
 export class CorelDrawBridgeClient {
   private static instance: CorelDrawBridgeClient;
   private bridgeUrls = ['http://127.0.0.1:48123', 'http://localhost:48123'];
-  private currentBridgeUrl = 'http://127.0.0.1:48123';
+  public currentBridgeUrl = 'http://127.0.0.1:48123';
   private listeners: Set<CorelBridgeEventHandler> = new Set();
-  private status: CorelBridgeStatus = { bridgeOnline: false, authenticated: false, corelDetected: false };
+  private status: CorelBridgeStatus = { bridgeOnline: false, authenticated: true, corelDetected: false };
   private lastArtworkUri: string | null = null;
+  private ws: WebSocket | null = null;
 
   private constructor() {
     this.checkStatus();
-    setInterval(() => this.checkStatus(), 2000);
+    setInterval(() => this.checkStatus(), 2500);
+    this.initWebSocket();
   }
 
   public static getInstance(): CorelDrawBridgeClient {
@@ -54,65 +55,31 @@ export class CorelDrawBridgeClient {
     return { ...this.status };
   }
 
-  public isPaired(): boolean {
-    return !!getBridgeSessionToken() && !!this.status.authenticated;
-  }
-
   public getLastArtworkUri(): string | null {
     return this.lastArtworkUri;
   }
 
-  /**
-   * Realiza o pareamento manual enviando o código OTP de 6 dígitos gerado pela bridge
-   */
-  public async pairWithOtp(pairingCode: string): Promise<{ success: boolean; message: string }> {
-    for (const url of this.bridgeUrls) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-        const res = await fetch(`${url}/api/auth/pair`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pairingCode }),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-
-        const data = await res.json();
-        if (res.ok && data.token) {
-          setBridgeSessionToken(data.token);
-          this.currentBridgeUrl = url;
-          this.status.bridgeOnline = true;
-          this.status.authenticated = true;
-          this.notify('STATUS_CHANGED', this.status);
-          await this.checkStatus();
-          return { success: true, message: 'Pareamento realizado com sucesso!' };
-        } else {
-          return { success: false, message: data.message || 'Código de pareamento incorreto ou expirado.' };
-        }
-      } catch {}
-    }
-    return { success: false, message: 'Não foi possível conectar à bridge local na porta 48123.' };
-  }
-
-  /**
-   * Revoga a sessão ativa na bridge
-   */
-  public async revokeSession(): Promise<void> {
-    const token = getBridgeSessionToken();
-    if (!token) return;
+  private initWebSocket() {
+    if (typeof window === 'undefined') return;
+    const wsUrl = 'ws://127.0.0.1:48123';
     try {
-      await fetch(`${this.currentBridgeUrl}/api/auth/revoke`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      this.ws = new WebSocket(wsUrl);
+      this.ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'ARTWORK_UPDATED') {
+            const uri = msg.data?.textureDataUri || msg.data;
+            if (uri) {
+              this.lastArtworkUri = uri;
+              this.notify('ARTWORK_UPDATED', msg.data);
+            }
+          }
+        } catch {}
+      };
+      this.ws.onclose = () => {
+        setTimeout(() => this.initWebSocket(), 4000);
+      };
     } catch {}
-    setBridgeSessionToken(null);
-    this.status.authenticated = false;
-    this.notify('STATUS_CHANGED', this.status);
   }
 
   public async checkStatus(): Promise<CorelBridgeStatus> {
@@ -128,41 +95,16 @@ export class CorelDrawBridgeClient {
         clearTimeout(timeoutId);
 
         if (res.ok) {
+          const data = await res.json();
           this.currentBridgeUrl = url;
           this.status.bridgeOnline = true;
+          this.status.authenticated = true;
+          this.status.corelDetected = !!data.corelDetected;
+          this.status.corelVersion = data.corelVersion;
 
-          const token = getBridgeSessionToken();
-          if (token) {
-            try {
-              const authCtrl = new AbortController();
-              const authTimeout = setTimeout(() => authCtrl.abort(), 2000);
-              const authRes = await fetch(`${url}/api/session-info`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                },
-                signal: authCtrl.signal,
-              });
-              clearTimeout(authTimeout);
-
-              if (authRes.ok) {
-                const info = await authRes.json();
-                this.status.authenticated = true;
-                this.status.corelDetected = !!info.corelDetected;
-                this.notify('STATUS_CHANGED', this.status);
-                return this.status;
-              } else if (authRes.status === 401) {
-                setBridgeSessionToken(null);
-                this.status.authenticated = false;
-                this.status.corelDetected = false;
-                this.notify('STATUS_CHANGED', this.status);
-                return this.status;
-              }
-            } catch {}
-          } else {
-            this.status.authenticated = false;
-            this.status.corelDetected = false;
+          if (data.latestArtworkDataUri && data.latestArtworkDataUri !== this.lastArtworkUri) {
+            this.lastArtworkUri = data.latestArtworkDataUri;
+            this.notify('ARTWORK_UPDATED', { textureDataUri: this.lastArtworkUri });
           }
 
           this.notify('STATUS_CHANGED', this.status);
@@ -173,72 +115,74 @@ export class CorelDrawBridgeClient {
 
     if (this.status.bridgeOnline) {
       this.status.bridgeOnline = false;
-      this.status.authenticated = false;
       this.notify('STATUS_CHANGED', this.status);
     }
     return this.status;
   }
 
   /**
-   * Envia o projeto para abertura imediata no CorelDRAW
+   * Envia o projeto para abertura imediata no CorelDRAW em 1 clique
    */
-  public async openInCorelDraw(project: PLMPackProjectExchange): Promise<{ success: boolean; message: string; isFallback?: boolean; requiresAuth?: boolean }> {
-    const token = getBridgeSessionToken();
-    if (!token) {
-      return {
-        success: false,
-        message: 'Pareamento pendente. Digite o código OTP no cabeçalho para conectar ao CorelDRAW.',
-        requiresAuth: true,
-      };
-    }
-
+  public async openInCorelDraw(project: PLMPackProjectExchange): Promise<{ success: boolean; message: string; isFallback?: boolean }> {
     const payload = { ...project, targetApp: 'coreldraw' };
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(`${this.currentBridgeUrl}/api/open`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+    for (const url of this.bridgeUrls) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 35000);
+        const res = await fetch(`${url}/api/open`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
 
-      if (res.status === 401) {
-        setBridgeSessionToken(null);
-        this.status.authenticated = false;
-        this.notify('STATUS_CHANGED', this.status);
-        return {
-          success: false,
-          message: 'Sessão expirada. Digite o novo código de pareamento da bridge.',
-          requiresAuth: true,
-        };
-      }
-
-      if (res.ok) {
-        const result = await res.json();
-        return {
-          success: true,
-          message: result.message || 'Faca aberta com sucesso no CorelDRAW!',
-        };
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        return {
-          success: false,
-          message: errData.message || 'Falha ao processar abertura no CorelDRAW.',
-        };
-      }
-    } catch {
-      return {
-        success: false,
-        message: 'A bridge não respondeu no tempo limite.',
-        isFallback: true,
-      };
+        if (res.ok) {
+          const result = await res.json();
+          this.currentBridgeUrl = url;
+          this.status.bridgeOnline = true;
+          this.notify('STATUS_CHANGED', this.status);
+          return {
+            success: result.success !== false,
+            message: result.message || 'Faca aberta com sucesso no CorelDRAW!',
+          };
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          return {
+            success: false,
+            message: errData.message || 'Falha ao processar abertura no CorelDRAW.',
+          };
+        }
+      } catch {}
     }
+
+    return {
+      success: false,
+      message: 'Não foi possível conectar à Bridge local (127.0.0.1:48123). Verifique se ela está aberta no terminal.',
+      isFallback: true,
+    };
+  }
+
+  /**
+   * Solicita a última arte sincronizada
+   */
+  public async requestArtworkSync(_modelId?: string): Promise<{ success: boolean; textureDataUri?: string; message?: string }> {
+    for (const url of this.bridgeUrls) {
+      try {
+        const res = await fetch(`${url}/api/latest-artwork`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasArtwork && data.textureDataUri) {
+            this.lastArtworkUri = data.textureDataUri;
+            return { success: true, textureDataUri: data.textureDataUri };
+          }
+        }
+      } catch {}
+    }
+    return { success: false, message: 'Nenhuma arte sincronizada encontrada na Bridge.' };
   }
 
   /**
@@ -258,56 +202,6 @@ export class CorelDrawBridgeClient {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error('Erro ao baixar script do CorelDRAW:', e);
-    }
-  }
-
-  /**
-   * Solicita ao CorelDRAW que capture a camada de arte e devolva para o PLMPackLib 3D
-   */
-  public async requestArtworkSync(projectId: string): Promise<{ success: boolean; message: string; textureDataUri?: string; requiresAuth?: boolean }> {
-    const token = getBridgeSessionToken();
-    if (!token) {
-      return { success: false, message: 'Pareamento pendente. Digite o código OTP.', requiresAuth: true };
-    }
-
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(`${this.currentBridgeUrl}/api/sync-artwork`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ projectId, targetApp: 'coreldraw' }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (res.status === 401) {
-        setBridgeSessionToken(null);
-        this.status.authenticated = false;
-        this.notify('STATUS_CHANGED', this.status);
-        return { success: false, message: 'Sessão expirada. Faça o pareamento novamente.', requiresAuth: true };
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.textureDataUri) {
-          this.lastArtworkUri = data.textureDataUri;
-          this.notify('ARTWORK_UPDATED', { textureDataUri: data.textureDataUri });
-        }
-        return {
-          success: true,
-          message: 'Arte sincronizada com sucesso do CorelDRAW!',
-          textureDataUri: data.textureDataUri,
-        };
-      } else {
-        const err = await res.json().catch(() => ({}));
-        return { success: false, message: err.message || 'CorelDRAW não respondeu ao pedido de captura da arte.' };
-      }
-    } catch {
-      return { success: false, message: 'Erro de comunicação ao sincronizar arte do CorelDRAW.' };
     }
   }
 }

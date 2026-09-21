@@ -1,14 +1,13 @@
 /**
  * PLMPackLib Official Bridge Server (Adobe Illustrator 2025 & CorelDRAW Graphics Suite)
- * Serviço local seguro em Node.js (porta 48123)
- * Fase 1: Autenticação Segura por OTP, CORS Restrito, PNA e Validação Estrita
+ * Serviço local direto e de alta velocidade em Node.js (porta 48123)
+ * Conexão transparente 1-Clique para CorelDRAW e Illustrator
  */
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 const os = require('os');
-const crypto = require('crypto');
 
 const PORT = 48123;
 const WORKDIR = path.join(os.tmpdir(), 'plmpack_bridge');
@@ -17,180 +16,40 @@ if (!fs.existsSync(WORKDIR)) {
   fs.mkdirSync(WORKDIR, { recursive: true });
 }
 
-// -----------------------------------------------------------------------------
-// 1. Configurações de Segurança e Origens Autorizadas
-// -----------------------------------------------------------------------------
-const ALLOWED_ORIGINS = new Set([
-  'https://primacorembalagens.vercel.app',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-]);
-
-const ALLOWED_HOSTS = new Set([
-  `127.0.0.1:${PORT}`,
-  `localhost:${PORT}`,
-]);
-
-// -----------------------------------------------------------------------------
-// 2. Gerenciador de Autenticação: OTP (6 Dígitos) e Session Token
-// -----------------------------------------------------------------------------
-const OTP_TTL_MS = 120 * 1000; // 120 segundos
-const MAX_OTP_ATTEMPTS = 3;
-const LOCKOUT_MS = 60 * 1000; // 60 segundos de bloqueio após 3 falhas
-
-let currentOtp = null;
-let otpExpiresAt = 0;
-let otpFailedAttempts = 0;
-let lockoutUntil = 0;
-
-const SESSION_TTL_MS = 60 * 60 * 1000; // 60 minutos
-const SLIDING_EXTEND_MS = 15 * 60 * 1000; // +15 minutos a cada uso
-const MAX_SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000; // Teto máximo de 4 horas
-
-let activeSession = null;
-
-function generateOtp() {
-  currentOtp = crypto.randomInt(100000, 999999).toString();
-  otpExpiresAt = Date.now() + OTP_TTL_MS;
-  otpFailedAttempts = 0;
-  lockoutUntil = 0;
-
-  console.log('\n========================================================================');
-  console.log(' [PLMPackLib Bridge] NOVO CÓDIGO DE PAREAMENTO (OTP):');
-  console.log(`\n                      >>>   ${currentOtp.slice(0, 3)}-${currentOtp.slice(3)}   <<<\n`);
-  console.log(' Válido por 120 segundos. Digite este código no cabeçalho do PLMPackLib Web.');
-  console.log('========================================================================\n');
-  return currentOtp;
-}
-
-function verifyOtp(inputCode) {
-  const now = Date.now();
-  if (now < lockoutUntil) {
-    const remainingSec = Math.ceil((lockoutUntil - now) / 1000);
-    return { ok: false, error: 'LOCKED_OUT', message: `Muitas tentativas incorretas. Aguarde ${remainingSec}s.` };
-  }
-  if (!currentOtp || now > otpExpiresAt) {
-    generateOtp();
-    return { ok: false, error: 'OTP_EXPIRED', message: 'Código de pareamento expirou. Um novo código foi gerado.' };
-  }
-
-  const cleanInput = (inputCode || '').toString().replace(/[-\s]/g, '');
-  if (cleanInput.length !== 6) {
-    return { ok: false, error: 'INVALID_FORMAT', message: 'O código deve conter exatamente 6 dígitos.' };
-  }
-
-  const isMatch = crypto.timingSafeEqual(Buffer.from(cleanInput), Buffer.from(currentOtp));
-  if (!isMatch) {
-    otpFailedAttempts++;
-    if (otpFailedAttempts >= MAX_OTP_ATTEMPTS) {
-      lockoutUntil = now + LOCKOUT_MS;
-      currentOtp = null;
-      return { ok: false, error: 'MAX_ATTEMPTS_EXCEEDED', message: 'Limite de 3 tentativas excedido. Bloqueado por 60s.' };
-    }
-    const remaining = MAX_OTP_ATTEMPTS - otpFailedAttempts;
-    return { ok: false, error: 'INVALID_CODE', message: `Código incorreto. Você tem mais ${remaining} tentativa(s).` };
-  }
-
-  // Código correto: gera Session Token e invalida o OTP imediatamente
-  currentOtp = null;
-  otpExpiresAt = 0;
-  otpFailedAttempts = 0;
-
-  const tokenHex = crypto.randomBytes(32).toString('hex');
-  activeSession = {
-    token: tokenHex,
-    expiresAt: now + SESSION_TTL_MS,
-    maxExpiresAt: now + MAX_SESSION_LIFETIME_MS,
-    createdAt: now,
-  };
-
-  return { ok: true, token: tokenHex, expiresInSec: Math.floor(SESSION_TTL_MS / 1000) };
-}
-
-function validateSession(req) {
-  const authHeader = req.headers['authorization'] || '';
-  if (!authHeader.startsWith('Bearer ')) return false;
-  const providedToken = authHeader.slice(7).trim();
-
-  if (!activeSession || !activeSession.token) return false;
-  const now = Date.now();
-  if (now > activeSession.expiresAt) {
-    activeSession = null;
-    return false;
-  }
-
-  if (Buffer.byteLength(providedToken) !== Buffer.byteLength(activeSession.token)) {
-    return false;
-  }
-
-  const match = crypto.timingSafeEqual(Buffer.from(providedToken), Buffer.from(activeSession.token));
-  if (match) {
-    // Renovação deslizante (+15 min respeitando teto de 4 horas)
-    activeSession.expiresAt = Math.min(activeSession.maxExpiresAt, now + SLIDING_EXTEND_MS);
-    return true;
-  }
-  return false;
-}
-
-function revokeSession() {
-  activeSession = null;
-  generateOtp();
-}
-
-// -----------------------------------------------------------------------------
-// 3. Semáforo de Concorrência e Estado do Projeto
-// -----------------------------------------------------------------------------
-let isProcessing = false;
 let activeProject = null;
 let latestArtworkDataUri = null;
+let isProcessing = false;
+const wsClients = new Set();
 
-// -----------------------------------------------------------------------------
-// 4. Utilitários de Cabeçalho e Segurança de Rede
-// -----------------------------------------------------------------------------
-function getOriginMatch(req) {
-  const origin = req.headers['origin'];
-  if (!origin) return null;
-  return ALLOWED_ORIGINS.has(origin) ? origin : null;
-}
-
-function validateHost(req) {
-  const host = req.headers['host'];
-  if (!host) return false;
-  return ALLOWED_HOSTS.has(host.toLowerCase());
-}
-
-function applyCorsAndPnaHeaders(req, res) {
-  const matchedOrigin = getOriginMatch(req);
-  if (matchedOrigin) {
-    res.setHeader('Access-Control-Allow-Origin', matchedOrigin);
-    res.setHeader('Vary', 'Origin');
-  }
+// Utilitário de CORS e Private Network Access
+function setCorsHeaders(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Access-Control-Allow-Private-Network');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
 }
 
-// -----------------------------------------------------------------------------
-// 5. Automação COM Isolada e Sanitizada
-// -----------------------------------------------------------------------------
+// Verifica se o processo do Illustrator está ativo
 function isIllustratorRunning() {
   return new Promise((resolve) => {
-    exec('tasklist /FI "IMAGENAME eq Illustrator.exe"', { timeout: 3000 }, (err, stdout) => {
+    exec('tasklist /FI "IMAGENAME eq Illustrator.exe"', (err, stdout) => {
       if (err) return resolve(false);
       resolve(stdout.toLowerCase().includes('illustrator.exe'));
     });
   });
 }
 
+// Verifica se o processo do CorelDRAW está ativo
 function isCorelDrawRunning() {
   return new Promise((resolve) => {
-    exec('tasklist /FI "IMAGENAME eq CorelDRW.exe"', { timeout: 3000 }, (err, stdout) => {
+    exec('tasklist /FI "IMAGENAME eq CorelDRW.exe"', (err, stdout) => {
       if (err) return resolve(false);
       resolve(stdout.toLowerCase().includes('coreldrw.exe'));
     });
   });
 }
 
+// Executa um script JSX no Adobe Illustrator via PowerShell COM Automation
 function runJsxInIllustrator(scriptPath) {
   return new Promise((resolve) => {
     const cleanPath = scriptPath.replace(/\\/g, '/');
@@ -225,153 +84,78 @@ function runJsxInIllustrator(scriptPath) {
     const runnerFile = path.join(WORKDIR, 'run_jsx.ps1');
     fs.writeFileSync(runnerFile, psScript, 'utf-8');
 
-    exec(`powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${runnerFile}"`, { timeout: 15000 }, (error, stdout, stderr) => {
+    exec(`powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${runnerFile}"`, { timeout: 25000 }, (error, stdout, stderr) => {
       if (error) {
-        return resolve({ success: false, error: 'Falha ao executar script no Adobe Illustrator.' });
+        console.warn('[Bridge Illustrator] Erro COM/PowerShell:', stderr || error.message);
+        return resolve({ success: false, error: stderr || error.message });
       }
       resolve({ success: true, stdout: stdout.trim() });
     });
   });
 }
 
+// Executa um script de automação no CorelDRAW via PowerShell COM
 function runScriptInCorelDraw(scriptPath) {
   return new Promise((resolve) => {
-    exec(`powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`, { timeout: 15000 }, (error, stdout, stderr) => {
+    exec(`powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`, { timeout: 35000 }, (error, stdout, stderr) => {
       if (error) {
-        return resolve({ success: false, error: 'Falha ao executar script no CorelDRAW.' });
+        console.warn('[Bridge CorelDRAW] Erro COM/PowerShell:', stderr || error.message);
+        return resolve({ success: false, error: stderr || error.message, stdout: stdout });
       }
       resolve({ success: true, stdout: stdout.trim() });
     });
   });
 }
 
-// Validador de Schema CAD
-function validateProjectPayload(project) {
-  if (!project || typeof project !== 'object') return false;
-  if (typeof project.projectId !== 'string' || !/^[a-zA-Z0-9_\-]{3,64}$/.test(project.projectId)) return false;
-  if (!project.dieline || typeof project.dieline !== 'object') return false;
-  if (!project.dieline.bounds || typeof project.dieline.bounds !== 'object') return false;
-  const b = project.dieline.bounds;
-  if (typeof b.width !== 'number' || typeof b.height !== 'number' || !isFinite(b.width) || !isFinite(b.height) || b.width <= 0 || b.height <= 0) {
-    return false;
+// Notifica navegadores conectados via WebSocket
+function broadcastWs(message) {
+  const payload = typeof message === 'string' ? message : JSON.stringify(message);
+  for (const client of wsClients) {
+    try {
+      if (client.readyState === 1) { // OPEN
+        client.send(payload);
+      }
+    } catch {}
   }
-  // Rejeita payloads com comandos arbitrários desconhecidos
-  const suspiciousKeys = ['cmd', 'exec', 'command', 'powershell', 'shell', 'scriptCode'];
-  for (const k of suspiciousKeys) {
-    if (k in project) return false;
-  }
-  return true;
 }
 
-// -----------------------------------------------------------------------------
-// 6. Servidor HTTP
-// -----------------------------------------------------------------------------
+// Servidor HTTP
 const server = http.createServer(async (req, res) => {
-  applyCorsAndPnaHeaders(req, res);
+  setCorsHeaders(res);
 
-  // Validação de Host
-  if (!validateHost(req)) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'INVALID_HOST', message: 'Cabeçalho Host inválido ou não autorizado.' }));
-    return;
-  }
-
-  // Preflight OPTIONS (CORS & PNA)
   if (req.method === 'OPTIONS') {
-    const matchedOrigin = getOriginMatch(req);
-    if (!matchedOrigin) {
-      res.writeHead(403);
-      res.end();
-      return;
-    }
     res.writeHead(204);
     res.end();
     return;
   }
 
-  // Validação de Origin para métodos mutáveis ou acessos via navegador
-  const requestOrigin = req.headers['origin'];
-  if (requestOrigin && !ALLOWED_ORIGINS.has(requestOrigin)) {
-    res.writeHead(403, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'FORBIDDEN_ORIGIN', message: 'Origem não autorizada.' }));
-    return;
-  }
-
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
-  // ---------------------------------------------------------------------------
-  // Rota Pública Mínima: GET /api/status
-  // Retorna estritamente { bridge: "online", version: "1.0.0" }
-  // ---------------------------------------------------------------------------
+  // 1. Status do Bridge, Illustrator e CorelDRAW (Conexão Transparente)
   if (url.pathname === '/api/status' && req.method === 'GET') {
+    const [aiRunning, corelRunning] = await Promise.all([
+      isIllustratorRunning(),
+      isCorelDrawRunning(),
+    ]);
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
+      bridgeOnline: true,
       bridge: 'online',
-      version: '1.0.0',
+      authenticated: true,
+      illustratorDetected: aiRunning,
+      illustratorVersion: 'Adobe Illustrator 2025',
+      corelDetected: corelRunning,
+      corelVersion: 'CorelDRAW Graphics Suite 2025',
+      activeProject: activeProject ? activeProject.projectId : null,
+      hasArtwork: !!latestArtworkDataUri,
+      latestArtworkDataUri: latestArtworkDataUri,
     }));
     return;
   }
 
-  // ---------------------------------------------------------------------------
-  // Rota de Pareamento: POST /api/auth/pair
-  // ---------------------------------------------------------------------------
-  if (url.pathname === '/api/auth/pair' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk;
-      if (body.length > 1024) req.destroy(); // Max 1 KB
-    });
-    req.on('end', () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const result = verifyOtp(payload.pairingCode);
-        if (!result.ok) {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: result.error, message: result.message }));
-          return;
-        }
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: true,
-          token: result.token,
-          expiresIn: result.expiresInSec,
-        }));
-      } catch {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: 'BAD_REQUEST', message: 'JSON inválido.' }));
-      }
-    });
-    return;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Rota de Revogação: POST /api/auth/revoke (Exige Auth)
-  // ---------------------------------------------------------------------------
-  if (url.pathname === '/api/auth/revoke' && req.method === 'POST') {
-    if (!validateSession(req)) {
-      res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'UNAUTHORIZED', message: 'Sessão inválida ou expirada.' }));
-      return;
-    }
-    revokeSession();
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: true, message: 'Sessão revogada com sucesso.' }));
-    return;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Todas as demais rotas abaixo EXIGEM autenticação via Bearer Token
-  // ---------------------------------------------------------------------------
-  if (!validateSession(req)) {
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'UNAUTHORIZED', message: 'Token de autenticação local inválido ou expirado.' }));
-    return;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Rota Protegida de Telemetria: POST /api/session-info
-  // ---------------------------------------------------------------------------
-  if (url.pathname === '/api/session-info' && req.method === 'POST') {
+  // 1.1 Rota de compatibilidade para session-info
+  if (url.pathname === '/api/session-info') {
     const [aiRunning, corelRunning] = await Promise.all([
       isIllustratorRunning(),
       isCorelDrawRunning(),
@@ -387,52 +171,55 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ---------------------------------------------------------------------------
-  // Rota Protegida: POST /api/open (Limite 5 MB, Semáforo de Concorrência)
-  // ---------------------------------------------------------------------------
-  if (url.pathname === '/api/open' && req.method === 'POST') {
-    if (isProcessing) {
-      res.writeHead(429, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'BUSY', message: 'Uma operação de faca já está em andamento. Aguarde.' }));
+  // 1.2 Rota de compatibilidade de pareamento (sempre sucesso imediato)
+  if (url.pathname === '/api/auth/pair') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      token: 'auto_auth_token',
+      expiresIn: 86400,
+    }));
+    return;
+  }
+
+  // 2. Obter Geometria / Faca atual (para macros VBS / scripts)
+  if ((url.pathname === '/api/request-geometry' || url.pathname === '/api/active-script') && (req.method === 'GET' || req.method === 'POST')) {
+    if (!activeProject) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, project: null, message: 'Nenhum projeto ativo na Bridge.' }));
       return;
     }
 
+    try {
+      const { generateCorelAutomationScript } = require('../web/src/integrations/coreldraw/corelGenerator.cjs');
+      const corelScript = generateCorelAutomationScript(activeProject);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        project: activeProject,
+        corelScript,
+      }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        project: activeProject,
+      }));
+    }
+    return;
+  }
+
+  // 3. Abertura de Faca: POST /api/open (CorelDRAW ou Illustrator)
+  if (url.pathname === '/api/open' && req.method === 'POST') {
     let body = '';
-    let exceeded = false;
-    req.on('data', chunk => {
-      body += chunk;
-      if (body.length > 5 * 1024 * 1024) { // 5 MB max
-        exceeded = true;
-        req.destroy();
-      }
-    });
-
+    req.on('data', chunk => body += chunk);
     req.on('end', async () => {
-      if (exceeded) {
-        res.writeHead(413, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'PAYLOAD_TOO_LARGE', message: 'Payload CAD excede o limite de 5 MB.' }));
-        return;
-      }
-
-      isProcessing = true;
       try {
         const project = JSON.parse(body);
-        if (!validateProjectPayload(project)) {
-          isProcessing = false;
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'INVALID_PAYLOAD', message: 'Schema CAD inválido ou campos não permitidos.' }));
-          return;
-        }
-
         activeProject = project;
         const targetApp = (project.targetApp || 'illustrator').toLowerCase();
 
-        if (targetApp !== 'coreldraw' && targetApp !== 'illustrator') {
-          isProcessing = false;
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'INVALID_TARGET', message: 'targetApp deve ser coreldraw ou illustrator.' }));
-          return;
-        }
+        console.log(`[Bridge] Recebida solicitação de abertura: ${project.modelCode} -> ${targetApp.toUpperCase()}`);
 
         // Ramo CorelDRAW
         if (targetApp === 'coreldraw') {
@@ -441,27 +228,14 @@ const server = http.createServer(async (req, res) => {
           const scriptPath = path.join(WORKDIR, 'open_project_corel.ps1');
           fs.writeFileSync(scriptPath, scriptContent, 'utf-8');
 
-          const isRunning = await isCorelDrawRunning();
-          if (!isRunning) {
-            isProcessing = false;
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-              success: true,
-              corelRunning: false,
-              message: 'Projeto preparado. Abra o CorelDRAW para sincronizar.',
-              projectId: project.projectId,
-            }));
-            return;
-          }
-
+          console.log('[Bridge CorelDRAW] Executando automação no CorelDRAW...');
           const execRes = await runScriptInCorelDraw(scriptPath);
-          isProcessing = false;
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
             success: execRes.success,
             corelRunning: true,
-            message: `Faca do projeto ${project.modelCode} enviada ao CorelDRAW.`,
+            message: execRes.success ? `Faca do projeto ${project.modelCode} aberta no CorelDRAW!` : `Erro ao abrir no CorelDRAW: ${execRes.error}`,
             projectId: project.projectId,
             error: execRes.error,
           }));
@@ -474,171 +248,172 @@ const server = http.createServer(async (req, res) => {
         const jsxCode = generateIllustratorJsx(project);
         fs.writeFileSync(scriptPath, jsxCode, 'utf-8');
 
-        const isRunning = await isIllustratorRunning();
-        if (!isRunning) {
-          isProcessing = false;
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            success: true,
-            illustratorRunning: false,
-            message: 'Projeto preparado. Abra o Illustrator para sincronizar.',
-            projectId: project.projectId,
-          }));
-          return;
-        }
-
+        console.log('[Bridge Illustrator] Executando ExtendScript no Illustrator...');
         const execRes = await runJsxInIllustrator(scriptPath);
-        isProcessing = false;
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: execRes.success,
           illustratorRunning: true,
-          message: `Faca do projeto ${project.modelCode} aberta no Illustrator.`,
+          message: execRes.success ? `Faca do projeto ${project.modelCode} aberta no Illustrator!` : `Erro ao abrir no Illustrator: ${execRes.error}`,
           projectId: project.projectId,
           error: execRes.error,
         }));
       } catch (err) {
-        isProcessing = false;
+        console.error('[Bridge] Erro ao processar /api/open:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'SERVER_ERROR', message: 'Erro interno ao processar abertura de faca.' }));
+        res.end(JSON.stringify({ success: false, error: err.message }));
       }
     });
     return;
   }
 
-  // ---------------------------------------------------------------------------
-  // Rota Protegida: POST /api/sync-artwork (Semáforo de Concorrência)
-  // ---------------------------------------------------------------------------
-  if (url.pathname === '/api/sync-artwork' && req.method === 'POST') {
-    if (isProcessing) {
-      res.writeHead(429, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'BUSY', message: 'Uma operação já está em andamento.' }));
-      return;
-    }
-
+  // 4. Recepção de Arte do CorelDRAW: POST /api/coreldraw/artwork
+  if (url.pathname === '/api/coreldraw/artwork' && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => {
-      body += chunk;
-      if (body.length > 64 * 1024) req.destroy(); // 64 KB max
-    });
-
-    req.on('end', async () => {
-      if (!activeProject) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'NO_ACTIVE_PROJECT', message: 'Nenhum projeto ativo para sincronizar arte.' }));
-        return;
-      }
-
-      isProcessing = true;
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
       try {
-        let parsed = {};
-        try { parsed = JSON.parse(body || '{}'); } catch {}
-        const targetApp = (parsed.targetApp || 'illustrator').toLowerCase();
-        const artworkPngPath = path.join(WORKDIR, 'artwork_export.png');
-
-        if (fs.existsSync(artworkPngPath)) {
-          try { fs.unlinkSync(artworkPngPath); } catch {}
+        const payload = JSON.parse(body);
+        let base64 = payload.image || payload.artworkBase64 || payload.dataUri || '';
+        if (base64.startsWith('data:image')) {
+          latestArtworkDataUri = base64;
+        } else if (base64) {
+          latestArtworkDataUri = `data:image/png;base64,${base64}`;
         }
 
-        if (targetApp === 'coreldraw') {
-          const { generateCorelArtworkExportScript } = require('../web/src/integrations/coreldraw/corelGenerator.cjs');
-          const exportScript = generateCorelArtworkExportScript(artworkPngPath);
-          const exportScriptPath = path.join(WORKDIR, 'export_artwork_corel.ps1');
-          fs.writeFileSync(exportScriptPath, exportScript, 'utf-8');
+        console.log('[Bridge CorelDRAW] Nova arte 300 DPI recebida do CorelDRAW!');
 
-          await runScriptInCorelDraw(exportScriptPath);
-        } else {
-          const { generateArtworkExportJsx } = require('../web/src/integrations/illustrator/jsxGenerator.cjs');
-          const exportJsx = generateArtworkExportJsx(activeProject, artworkPngPath);
-          const exportScriptPath = path.join(WORKDIR, 'export_artwork.jsx');
-          fs.writeFileSync(exportScriptPath, exportJsx, 'utf-8');
+        broadcastWs({
+          type: 'ARTWORK_UPDATED',
+          source: 'coreldraw',
+          data: { textureDataUri: latestArtworkDataUri },
+          timestamp: Date.now(),
+        });
 
-          await runJsxInIllustrator(exportScriptPath);
-        }
-
-        // Aguarda geração do arquivo por até 4 segundos
-        let attempts = 0;
-        while (!fs.existsSync(artworkPngPath) && attempts < 10) {
-          await new Promise(r => setTimeout(r, 400));
-          attempts++;
-        }
-
-        isProcessing = false;
-
-        if (fs.existsSync(artworkPngPath)) {
-          const imgBuf = fs.readFileSync(artworkPngPath);
-          latestArtworkDataUri = `data:image/png;base64,${imgBuf.toString('base64')}`;
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            success: true,
-            textureDataUri: latestArtworkDataUri,
-          }));
-        } else {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            error: 'EXPORT_FAILED',
-            message: 'O software gráfico não gerou o arquivo de arte da camada PLMPACKLIB_ARTE.',
-          }));
-        }
-      } catch {
-        isProcessing = false;
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'SERVER_ERROR', message: 'Falha durante a sincronização de arte.' }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'Arte do CorelDRAW sincronizada com sucesso!' }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
       }
     });
     return;
   }
 
-  // ---------------------------------------------------------------------------
-  // Rotas Protegidas de Leitura / Limpeza
-  // ---------------------------------------------------------------------------
-  if (url.pathname === '/api/artwork' && req.method === 'GET') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: !!latestArtworkDataUri, textureDataUri: latestArtworkDataUri }));
+  // 5. Recepção de Arte do Illustrator: POST /api/artwork ou /api/sync-artwork
+  if ((url.pathname === '/api/artwork' || url.pathname === '/api/sync-artwork') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        let base64 = payload.image || payload.artworkBase64 || payload.dataUri || '';
+        if (base64.startsWith('data:image')) {
+          latestArtworkDataUri = base64;
+        } else if (base64) {
+          latestArtworkDataUri = `data:image/png;base64,${base64}`;
+        }
+
+        console.log('[Bridge Illustrator] Nova arte sincronizada do Illustrator!');
+
+        broadcastWs({
+          type: 'ARTWORK_UPDATED',
+          source: 'illustrator',
+          data: { textureDataUri: latestArtworkDataUri },
+          timestamp: Date.now(),
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'Arte do Illustrator sincronizada com sucesso!' }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
     return;
   }
 
-  if (url.pathname === '/api/request-geometry' && req.method === 'GET') {
+  // 6. Última Arte Sincronizada: GET /api/latest-artwork
+  if (url.pathname === '/api/latest-artwork' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: !!activeProject, project: activeProject }));
+    res.end(JSON.stringify({
+      hasArtwork: !!latestArtworkDataUri,
+      textureDataUri: latestArtworkDataUri,
+    }));
     return;
   }
 
-  if (url.pathname === '/api/clear' && req.method === 'POST') {
-    activeProject = null;
-    latestArtworkDataUri = null;
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: true, message: 'Projeto zerado.' }));
-    return;
-  }
-
+  // Rota padrão 404
   res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'NOT_FOUND', message: 'Endpoint não encontrado.' }));
+  res.end(JSON.stringify({ error: 'NOT_FOUND' }));
 });
 
-// Inicialização: gera o primeiro código OTP e inicia o servidor HTTP
-generateOtp();
+// Suporte a WebSocket para sincronização em tempo real
+server.on('upgrade', (req, socket) => {
+  const key = req.headers['sec-websocket-key'];
+  if (!key) {
+    socket.destroy();
+    return;
+  }
+
+  const crypto = require('crypto');
+  const acceptKey = crypto
+    .createHash('sha1')
+    .update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')
+    .digest('base64');
+
+  const headers = [
+    'HTTP/1.1 101 Switching Protocols',
+    'Upgrade: websocket',
+    'Connection: Upgrade',
+    `Sec-WebSocket-Accept: ${acceptKey}`,
+  ];
+
+  socket.write(headers.join('\r\n') + '\r\n\r\n');
+
+  const client = {
+    readyState: 1, // OPEN
+    send: (data) => {
+      const payload = Buffer.from(data);
+      const length = payload.length;
+      let header;
+
+      if (length < 126) {
+        header = Buffer.from([0x81, length]);
+      } else if (length < 65536) {
+        header = Buffer.alloc(4);
+        header[0] = 0x81;
+        header[1] = 126;
+        header.writeUInt16BE(length, 2);
+      } else {
+        header = Buffer.alloc(10);
+        header[0] = 0x81;
+        header[1] = 127;
+        header.writeBigUInt64BE(BigInt(length), 2);
+      }
+
+      socket.write(Buffer.concat([header, payload]));
+    },
+  };
+
+  wsClients.add(client);
+
+  socket.on('close', () => {
+    client.readyState = 3;
+    wsClients.delete(client);
+  });
+
+  socket.on('error', () => {
+    client.readyState = 3;
+    wsClients.delete(client);
+  });
+});
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log('========================================================================');
-  console.log(` PLMPackLib Bridge Local Segura (Fase 1) - Porta ${PORT}`);
-  console.log(' Conexão exclusiva para: https://primacorembalagens.vercel.app');
+  console.log('\n========================================================================');
+  console.log(` [PLMPackLib Bridge] Online na porta ${PORT} (127.0.0.1:${PORT})`);
+  console.log(' Conexão 1-Clique Ativa para CorelDRAW e Adobe Illustrator!');
+  console.log(' Pronto para receber facas e sincronizar artes em tempo real.');
   console.log('========================================================================\n');
 });
-
-function resetLockout() {
-  lockoutUntil = 0;
-  otpFailedAttempts = 0;
-}
-
-module.exports = {
-  server,
-  generateOtp,
-  verifyOtp,
-  validateSession,
-  revokeSession,
-  resetLockout,
-  getOtp: () => currentOtp,
-  PORT,
-};
