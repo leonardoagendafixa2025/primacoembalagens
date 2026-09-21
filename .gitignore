@@ -9,6 +9,8 @@ bin/
 tmp/
 scratch/
 dist_plugin/
+desktop/bin/
+desktop/dist/
 packages/
 *.tmp
 *.bak

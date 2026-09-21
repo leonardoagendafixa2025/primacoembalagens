@@ -12,8 +12,9 @@
     "test:models:2d": "tsx scripts/test_models_2d.ts",
     "test:models:3d": "tsx scripts/test_models_3d.ts",
     "audit:library": "tsx scripts/audit_library.ts",
-    "test:cad": "node ../scratch/run_regression.js",
     "build:cep": "esbuild src/integrations/illustrator/cepStudioEntry.ts --bundle --format=iife --target=es2020 --platform=browser --outfile=../extensions/com.primacor.plmpacklib/js/studio.bundle.js",
+    "desktop:build": "powershell -NoProfile -ExecutionPolicy Bypass -File ../desktop/build_exe.ps1",
+    "desktop:installer": "powershell -NoProfile -ExecutionPolicy Bypass -File ../desktop/installer/build_installer.ps1",
     "deploy": "vercel --prod"
   },
   "dependencies": {
