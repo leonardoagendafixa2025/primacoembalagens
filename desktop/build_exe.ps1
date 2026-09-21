@@ -34,6 +34,11 @@ $cscArgs = @(
 & $cscPath $cscArgs
 
 if ($LASTEXITCODE -eq 0 -and (Test-Path $outputExe)) {
+    # Garantir que a pasta resources com o ícone exista ao lado do .exe
+    $binResDir = Join-Path $scriptDir "bin\resources"
+    if (-not (Test-Path $binResDir)) { New-Item -ItemType Directory -Path $binResDir -Force | Out-Null }
+    Copy-Item $iconPath -Destination (Join-Path $binResDir "primacor.ico") -Force
+
     Write-Host "SUCESSO! Executável gerado:"
     Get-Item $outputExe | Select-Object Name, Length, LastWriteTime
 } else {

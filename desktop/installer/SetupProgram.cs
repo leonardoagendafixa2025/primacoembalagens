@@ -5,7 +5,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,46 +12,16 @@ using Microsoft.Win32;
 
 namespace PrimacorEmbalagens.Installer
 {
-    // Native IShellLink definitions for 100% reliable Windows shortcut creation
-    [ComImport]
-    [Guid("00021401-0000-0000-C000-000000000046")]
-    internal class ShellLink
-    {
-    }
-
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("000214F9-0000-0000-C000-000000000046")]
-    internal interface IShellLinkW
-    {
-        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, int cchMaxPath, out IntPtr pfd, uint fFlags);
-        void GetIDList(out IntPtr ppidl);
-        void SetIDList(IntPtr pidl);
-        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszName, int cchMaxName);
-        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszDir, int cchMaxPath);
-        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszArgs, int cchMaxPath);
-        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
-        void GetHotkey(out short pwHotkey);
-        void SetHotkey(short wHotkey);
-        void GetShowCmd(out int piShowCmd);
-        void SetShowCmd(int iShowCmd);
-        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszIconPath, int cchIconPath, out int piIcon);
-        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
-        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved);
-        void Resolve(IntPtr hwnd, uint fFlags);
-        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
-    }
-
     public class SetupForm : Form
     {
+        [DllImport("shell32.dll")]
+        private static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, IntPtr hToken, out IntPtr ppszPath);
+
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern void SHChangeNotify(int wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 
         private const int SHCNE_ASSOCCHANGED = 0x08000000;
         private const int SHCNE_UPDATEDIR = 0x00001000;
-        private const uint SHCNF_IDLIST = 0x0000;
 
         private ProgressBar progressBar;
         private Label statusLabel;
@@ -175,13 +144,13 @@ namespace PrimacorEmbalagens.Installer
                 }
 
                 await Task.Delay(200);
-                UpdateProgress(40, "Extraindo binários e dependências...");
+                UpdateProgress(40, "Extraindo arquivos do aplicativo...");
 
                 // Extract embedded payload
                 ExtractPayload();
 
                 await Task.Delay(200);
-                UpdateProgress(70, "Criando atalhos e ícones oficiais...");
+                UpdateProgress(70, "Criando atalhos e ícones na Área de Trabalho...");
 
                 CreateAllShortcuts();
 
@@ -191,11 +160,11 @@ namespace PrimacorEmbalagens.Installer
                 RegisterInWindows();
                 CreateUninstaller();
 
-                // Notify Windows Explorer to refresh desktop & icons
+                // Refresh Windows Icon Cache
                 try
                 {
-                    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
-                    SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
+                    SHChangeNotify(SHCNE_ASSOCCHANGED, 0, IntPtr.Zero, IntPtr.Zero);
+                    SHChangeNotify(SHCNE_UPDATEDIR, 0, IntPtr.Zero, IntPtr.Zero);
                 }
                 catch {}
 
@@ -245,24 +214,53 @@ namespace PrimacorEmbalagens.Installer
             }
         }
 
+        private string GetKnownFolderPath(Guid folderGuid)
+        {
+            try
+            {
+                IntPtr pPath;
+                int hr = SHGetKnownFolderPath(folderGuid, 0, IntPtr.Zero, out pPath);
+                if (hr == 0 && pPath != IntPtr.Zero)
+                {
+                    string path = Marshal.PtrToStringUni(pPath);
+                    Marshal.FreeCoTaskMem(pPath);
+                    if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
+                    {
+                        return path;
+                    }
+                }
+            }
+            catch {}
+            return null;
+        }
+
         private List<string> GetDesktopDirectories()
         {
             var dirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // 1. Registry User Shell Folders (handles OneDrive Desktop, Portuguese Área de Trabalho, etc.)
+            // 1. Windows Known Folder ID for Desktop (works in OneDrive, Brazilian Portuguese, etc.)
+            // FOLDERID_Desktop: {B4BFCC3A-DB2C-424C-B029-7FE99A87C641}
+            string knownDesk = GetKnownFolderPath(new Guid("B4BFCC3A-DB2C-424C-B029-7FE99A87C641"));
+            if (!string.IsNullOrEmpty(knownDesk)) dirs.Add(knownDesk);
+
+            // 2. Registry User Shell Folders
             try
             {
                 using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"))
                 {
                     if (key != null)
                     {
-                        var desktopValue = key.GetValue("Desktop") as string;
-                        if (!string.IsNullOrEmpty(desktopValue))
+                        foreach (string valName in key.GetValueNames())
                         {
-                            string expanded = Environment.ExpandEnvironmentVariables(desktopValue);
-                            if (Directory.Exists(expanded))
+                            if (valName.IndexOf("Desktop", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                valName.IndexOf("{754AC886-DF64-4C2C-86F5-9B0E7634FA97}", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                dirs.Add(expanded);
+                                var raw = key.GetValue(valName) as string;
+                                if (!string.IsNullOrEmpty(raw))
+                                {
+                                    string expanded = Environment.ExpandEnvironmentVariables(raw);
+                                    if (Directory.Exists(expanded)) dirs.Add(expanded);
+                                }
                             }
                         }
                     }
@@ -270,32 +268,11 @@ namespace PrimacorEmbalagens.Installer
             }
             catch {}
 
-            // 2. Standard .NET Desktop directories
+            // 3. Standard .NET Desktop Directory
             try
             {
-                string d1 = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                if (!string.IsNullOrEmpty(d1) && Directory.Exists(d1)) dirs.Add(d1);
-
-                string d2 = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                if (!string.IsNullOrEmpty(d2) && Directory.Exists(d2)) dirs.Add(d2);
-            }
-            catch {}
-
-            // 3. UserProfile OneDrive folders scan
-            try
-            {
-                string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                if (Directory.Exists(userProfile))
-                {
-                    foreach (string subDir in Directory.GetDirectories(userProfile, "OneDrive*"))
-                    {
-                        string oneDesk1 = Path.Combine(subDir, "Área de Trabalho");
-                        if (Directory.Exists(oneDesk1)) dirs.Add(oneDesk1);
-
-                        string oneDesk2 = Path.Combine(subDir, "Desktop");
-                        if (Directory.Exists(oneDesk2)) dirs.Add(oneDesk2);
-                    }
-                }
+                string d = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                if (!string.IsNullOrEmpty(d) && Directory.Exists(d)) dirs.Add(d);
             }
             catch {}
 
@@ -306,31 +283,14 @@ namespace PrimacorEmbalagens.Installer
         {
             var dirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // Registry Programs folder
-            try
-            {
-                using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"))
-                {
-                    if (key != null)
-                    {
-                        var progValue = key.GetValue("Programs") as string;
-                        if (!string.IsNullOrEmpty(progValue))
-                        {
-                            string expanded = Environment.ExpandEnvironmentVariables(progValue);
-                            if (Directory.Exists(expanded)) dirs.Add(expanded);
-                        }
-                    }
-                }
-            }
-            catch {}
+            // FOLDERID_Programs: {A77F5D77-2E2B-44C3-A6A2-ABA601054A51}
+            string knownProg = GetKnownFolderPath(new Guid("A77F5D77-2E2B-44C3-A6A2-ABA601054A51"));
+            if (!string.IsNullOrEmpty(knownProg)) dirs.Add(knownProg);
 
             try
             {
                 string sm = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
                 if (!string.IsNullOrEmpty(sm) && Directory.Exists(sm)) dirs.Add(sm);
-
-                string sm2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
-                if (!string.IsNullOrEmpty(sm2) && Directory.Exists(sm2)) dirs.Add(sm2);
             }
             catch {}
 
@@ -346,13 +306,13 @@ namespace PrimacorEmbalagens.Installer
                 iconPath = exePath;
             }
 
-            // Create in all resolved Desktop folders (including OneDrive Área de Trabalho)
+            // Create on Desktop
             foreach (string desktopDir in GetDesktopDirectories())
             {
                 try
                 {
                     string shortcutPath = Path.Combine(desktopDir, "PRIMACOR EMBALAGENS.lnk");
-                    CreateNativeShortcut(shortcutPath, exePath, iconPath, installDir, "PRIMACOR EMBALAGENS - CAD & 3D");
+                    CreateShortcutViaReflection(shortcutPath, exePath, iconPath, installDir, "PRIMACOR EMBALAGENS - CAD & 3D");
                 }
                 catch {}
             }
@@ -363,44 +323,33 @@ namespace PrimacorEmbalagens.Installer
                 try
                 {
                     string shortcutPath = Path.Combine(progDir, "PRIMACOR EMBALAGENS.lnk");
-                    CreateNativeShortcut(shortcutPath, exePath, iconPath, installDir, "PRIMACOR EMBALAGENS - CAD & 3D");
+                    CreateShortcutViaReflection(shortcutPath, exePath, iconPath, installDir, "PRIMACOR EMBALAGENS - CAD & 3D");
                 }
                 catch {}
             }
         }
 
-        private void CreateNativeShortcut(string shortcutPath, string targetPath, string iconPath, string workingDir, string description)
+        private void CreateShortcutViaReflection(string shortcutPath, string targetPath, string iconPath, string workingDir, string description)
         {
             try
             {
-                IShellLinkW link = (IShellLinkW)new ShellLink();
-                link.SetPath(targetPath);
-                link.SetWorkingDirectory(workingDir);
-                link.SetDescription(description);
-                link.SetIconLocation(iconPath, 0);
-
-                IPersistFile file = (IPersistFile)link;
-                file.Save(shortcutPath, false);
-            }
-            catch
-            {
-                // Fallback to WScript Shell if native COM fails
-                try
+                Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+                if (shellType != null)
                 {
-                    Type shellType = Type.GetTypeFromProgID("WScript.Shell");
-                    if (shellType != null)
+                    object shell = Activator.CreateInstance(shellType);
+                    object shortcut = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { shortcutPath });
+                    if (shortcut != null)
                     {
-                        dynamic shell = Activator.CreateInstance(shellType);
-                        dynamic shortcut = shell.CreateShortcut(shortcutPath);
-                        shortcut.TargetPath = targetPath;
-                        shortcut.WorkingDirectory = workingDir;
-                        shortcut.Description = description;
-                        shortcut.IconLocation = iconPath + ",0";
-                        shortcut.Save();
+                        Type scType = shortcut.GetType();
+                        scType.InvokeMember("TargetPath", BindingFlags.SetProperty, null, shortcut, new object[] { targetPath });
+                        scType.InvokeMember("WorkingDirectory", BindingFlags.SetProperty, null, shortcut, new object[] { workingDir });
+                        scType.InvokeMember("IconLocation", BindingFlags.SetProperty, null, shortcut, new object[] { iconPath + ",0" });
+                        scType.InvokeMember("Description", BindingFlags.SetProperty, null, shortcut, new object[] { description });
+                        scType.InvokeMember("Save", BindingFlags.InvokeMethod, null, shortcut, null);
                     }
                 }
-                catch {}
             }
+            catch {}
         }
 
         private void RegisterInWindows()
