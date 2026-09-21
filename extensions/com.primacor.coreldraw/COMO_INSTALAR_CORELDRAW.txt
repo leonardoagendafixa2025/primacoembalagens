@@ -1,0 +1,68 @@
+=====================================================================
+  GUIA RAPIDO — PLUGIN PRIMACOR EMBALAGENS PARA CORELDRAW
+=====================================================================
+
+Compatibilidade: CorelDRAW Graphics Suite 2020 ate 2025 / 2026.
+Sistemas: Windows 10/11.
+
+---------------------------------------------------------------------
+INSTALACAO AUTOMATICA (1 CLIQUE):
+---------------------------------------------------------------------
+1. De um duplo clique no arquivo:
+   "Instalar_Plugin_CorelDRAW.bat"
+
+2. O instalador copiara os scripts automaticamente para:
+   %APPDATA%\PLMPackLib\CorelDRAW
+
+3. Serao criados 3 atalhos na Area de Trabalho:
+   - PLMPackLib - Atualizar Faca
+   - PLMPackLib - Enviar Arte
+   - PLMPackLib - Abrir 3D
+
+---------------------------------------------------------------------
+COMO USAR:
+---------------------------------------------------------------------
+PASSO 1: Acesse o PLMPackLib Web
+   https://primacorembalagens.vercel.app
+
+PASSO 2: Configure sua embalagem
+   Escolha o modelo (FEFCO 0201, 0421, etc.), ajuste as dimensoes
+   (comprimento, largura, altura) e veja o preview 2D e 3D.
+
+PASSO 3: Inicie a Bridge local
+   Clique no botao de conexao no topo do site para conectar-se
+   a Bridge local (servidor na porta 48123).
+   Um codigo de 6 digitos sera exibido no terminal - digite-o no site.
+
+PASSO 4: Envie a faca ao CorelDRAW
+   Clique no botao [Cdr CorelDRAW] no topo do site.
+   A faca sera desenhada automaticamente no CorelDRAW com:
+   * Escala metrica 1:1 em milimetros
+   * 6 camadas tecnicas automaticas (PLMPACKLIB_ARTE, CORTE, VINCO, etc.)
+   * Margem de respiro de 15 mm
+   * Cores oficiais CMYK para corte e vinco
+
+PASSO 5: Crie sua arte
+   Desenhe sua arte na camada PLMPACKLIB_ARTE.
+   As camadas de corte, vinco e guias ficam travadas e protegidas.
+
+PASSO 6: Envie a arte para o 3D
+   Use o atalho "PLMPackLib - Enviar Arte" na Area de Trabalho.
+   A arte sera exportada em 300 DPI (sem as linhas da faca)
+   e mapeada perfeitamente nos paineis 3D do Three.js.
+
+---------------------------------------------------------------------
+ARQUIVOS DO PLUGIN:
+---------------------------------------------------------------------
+  AtualizarFaca.vbs       - Solicita atualizacao da faca via Bridge
+  EnviarArte.vbs          - Exporta arte 300 DPI e envia para 3D
+  Abrir3D.vbs             - Abre o PLMPackLib Web no navegador
+  PLMPackLib_Toolbar.vbs   - Barra de ferramentas flutuante (opcional)
+  Instalar_Plugin_CorelDRAW.bat - Instalador automatizado
+
+---------------------------------------------------------------------
+SUPORTE:
+---------------------------------------------------------------------
+Em caso de duvidas, entre em contato com a equipe de pre-impressao
+da Primacor Grafica e Editora.
+=====================================================================
