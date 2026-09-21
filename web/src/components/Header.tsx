@@ -12,6 +12,7 @@ import {
   BookOpen,
   ChevronDown,
   HelpCircle,
+  Monitor,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -441,6 +442,32 @@ export const Header: React.FC<HeaderProps> = ({
             <Download size={13} />
             <span className="hide-on-laptop">Plugin</span>
           </a>
+
+          {/* Botão Oficial para Baixar Aplicativo Windows */}
+          <a
+            href="/downloads/PRIMACOR_EMBALAGENS_Setup.exe"
+            download="PRIMACOR_EMBALAGENS_Setup.exe"
+            className="cad-btn compact-btn"
+            title="Baixar Aplicativo Windows Oficial PRIMACOR EMBALAGENS (.EXE)"
+            style={{
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(3, 105, 161, 0.35))',
+              border: '1px solid rgba(56, 189, 248, 0.5)',
+              color: '#38bdf8',
+              padding: '5px 9px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              fontSize: 11,
+              fontWeight: 700,
+              textDecoration: 'none',
+              boxSizing: 'border-box',
+              flexShrink: 0,
+              boxShadow: '0 1px 6px rgba(56, 189, 248, 0.2)',
+            }}
+          >
+            <Monitor size={13} color="#38bdf8" />
+            <span className="hide-on-laptop">App Windows (.exe)</span>
+          </a>
         </div>
 
 
@@ -559,6 +586,47 @@ export const Header: React.FC<HeaderProps> = ({
                 <Download size={14} color="#f59e0b" />
                 <span style={{ fontWeight: 600 }}>SVG (Vetor Gráfico)</span>
               </button>
+
+              <div
+                style={{
+                  height: 1,
+                  background: 'var(--cad-border-subtle)',
+                  margin: '4px 0',
+                }}
+              />
+
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: 'var(--cad-text-muted)',
+                  padding: '4px 8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                }}
+              >
+                Aplicativo Desktop Oficial
+              </div>
+
+              <a
+                href="/downloads/PRIMACOR_EMBALAGENS_Setup.exe"
+                download="PRIMACOR_EMBALAGENS_Setup.exe"
+                className="cad-btn"
+                onClick={() => setIsExportMenuOpen(false)}
+                style={{
+                  width: '100%',
+                  justifyContent: 'flex-start',
+                  background: 'rgba(56, 189, 248, 0.12)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  color: '#38bdf8',
+                  fontSize: 12,
+                  textDecoration: 'none',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <Monitor size={14} color="#38bdf8" />
+                <span style={{ fontWeight: 700 }}>Baixar App Windows (.exe)</span>
+              </a>
 
               <div
                 style={{
