@@ -5,8 +5,15 @@ import type { PLMPackProjectExchange } from '../illustrator/projectExchange';
  * Gera scripts de automação métrica 1:1, camadas técnicas isoladas, estilos de linha
  * profissionais para facaria (Corte e Vinco) e metadados de painéis para mapeamento 3D.
  */
+function utf8ToBase64(str: string): string {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => {
+    return String.fromCharCode(parseInt(p1, 16));
+  }));
+}
+
 export function generateCorelAutomationScript(project: PLMPackProjectExchange): string {
   const jsonPayload = JSON.stringify(project);
+  const base64Json = utf8ToBase64(jsonPayload);
 
   return `# PLMPackLib Oficial Bridge Script para CorelDRAW
 # Gerado automaticamente pelo motor CAD PLMPackLib
@@ -15,9 +22,8 @@ export function generateCorelAutomationScript(project: PLMPackProjectExchange): 
 $ErrorActionPreference = "Stop"
 
 try {
-  $rawJson = @'
-${jsonPayload}
-'@
+  $b64 = "${base64Json}"
+  $rawJson = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($b64))
   $projectData = $rawJson | ConvertFrom-Json
 
   $MARGIN_MM = 15.0 # Margem de respiro idêntica ao Illustrator (15 mm)

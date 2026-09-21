@@ -1,7 +1,9 @@
-// Compilador de automação profissional para CorelDRAW (versão CommonJS para Bridge Node.js)
-
+/**
+ * Compilador de automação profissional para CorelDRAW (CommonJS para Node.js Bridge)
+ */
 function generateCorelAutomationScript(project) {
   const jsonPayload = JSON.stringify(project);
+  const base64Json = Buffer.from(jsonPayload, 'utf-8').toString('base64');
 
   return `# PLMPackLib Oficial Bridge Script para CorelDRAW
 # Gerado automaticamente pelo motor CAD PLMPackLib
@@ -10,9 +12,8 @@ function generateCorelAutomationScript(project) {
 $ErrorActionPreference = "Stop"
 
 try {
-  $rawJson = @'
-${jsonPayload}
-'@
+  $b64 = "${base64Json}"
+  $rawJson = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($b64))
   $projectData = $rawJson | ConvertFrom-Json
 
   $MARGIN_MM = 15.0 # Margem de respiro idêntica ao Illustrator (15 mm)
@@ -72,7 +73,8 @@ ${jsonPayload}
   $page = $doc.ActivePage
   $page.SetSize($artboardWidthMm, $artboardHeightMm)
 
-  # Coordenadas absolutas centralizadas no artboard em mm
+  # No CorelDRAW, a origem central padrão é (0,0) ou relativa à página
+  # Calculamos coordenadas absolutas centralizadas no artboard em mm
   $leftMm = -($artboardWidthMm / 2.0)
   $bottomMm = -($artboardHeightMm / 2.0)
   $originXMm = $MARGIN_MM - [double]$bounds.minX
@@ -131,6 +133,7 @@ ${jsonPayload}
       $p2x = ToCorelX([double]$l.x2)
       $p2y = ToCorelY([double]$l.y2)
 
+      # Ignora linhas de comprimento zero
       if ([Math]::Abs($p1x - $p2x) -lt 0.001 -and [Math]::Abs($p1y - $p2y) -lt 0.001) {
         continue
       }
