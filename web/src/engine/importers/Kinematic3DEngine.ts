@@ -368,7 +368,21 @@ export class Kinematic3DEngine {
     }
 
     // Travessia BFS da Spanning Tree a partir de cada raiz de componente
-    for (const comp of foldingTree.components) {
+    const componentsToTraverse =
+      foldingTree.components && foldingTree.components.length > 0
+        ? foldingTree.components
+        : [
+            {
+              componentId: 'COMP_DEFAULT',
+              rootPanelId:
+                foldingTree.rootPanelId ||
+                (panels.find((p) => !childHingeMap.has(p.id))?.id || panels[0]?.id || ''),
+              panelIds: panels.map((p) => p.id),
+              hinges: foldingTree.hinges,
+            },
+          ];
+
+    for (const comp of componentsToTraverse) {
       const rootId = comp.rootPanelId;
       if (!panelMap.has(rootId)) continue;
 

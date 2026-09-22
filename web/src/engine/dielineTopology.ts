@@ -1002,7 +1002,15 @@ export function convertDielineTopologyToStructural(customTopo: DielineTopology):
     tree: primaryTree,
     hinges,
     edges: [],
-    components: [],
+    components: [
+      {
+        componentId: 'COMP_001',
+        rootPanelId,
+        rootSource: 'MODEL_RULE',
+        panelIds: structuralPanels.map((p) => p.id),
+        hinges,
+      },
+    ],
     orphanCreases: [],
     cycles: [],
     disconnectedComponents: [],

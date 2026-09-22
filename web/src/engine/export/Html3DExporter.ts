@@ -354,6 +354,11 @@ export function generateStandaloneHtml3D(
       opacity: 0.92;
       box-shadow: 0 4px 16px rgba(0, 210, 180, 0.5);
     }
+    .cad-btn-primary.playing {
+      background: linear-gradient(135deg, #F59E0B, #EA580C);
+      color: #FFFFFF;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+    }
 
     /* Viewport e Canvas 3D */
     #viewport {
@@ -597,7 +602,7 @@ export function generateStandaloneHtml3D(
       <button class="cad-btn cad-btn-primary" id="btnPlayPause">▶ Animar</button>
       <div class="slider-container">
         <span class="slider-title">Dobra</span>
-        <input type="range" id="foldSlider" min="0" max="100" value="${Math.round(initialFold * 100)}" />
+        <input type="range" id="foldSlider" min="0" max="100" step="0.1" value="${Math.round(initialFold * 100)}" />
         <span class="slider-readout" id="foldPctText">${Math.round(initialFold * 100)}%</span>
       </div>
 
@@ -963,15 +968,42 @@ export function generateStandaloneHtml3D(
       controls.target.set(0, (initialBBox.max.y - initialBBox.min.y) * 0.45, 0);
       controls.update();
 
-      // 8. Loop de Renderização
-      function animate() {
+      // 8. Loop de Renderização & Animação Contínua Fluida
+      var isPlaying = false;
+      var currentFold = ${Math.round(initialFold * 100)};
+      var animDir = (currentFold >= 90) ? -1 : 1;
+      var lastAnimTime = performance.now();
+
+      function animate(now) {
         requestAnimationFrame(animate);
+
+        if (isPlaying && now) {
+          var dt = Math.min(0.1, (now - lastAnimTime) / 1000);
+          lastAnimTime = now;
+          var speed = 35.0; // 35% de dobra por segundo
+          currentFold += animDir * speed * dt;
+
+          if (currentFold >= 100) {
+            currentFold = 100;
+            animDir = -1;
+          } else if (currentFold <= 0) {
+            currentFold = 0;
+            animDir = 1;
+          }
+
+          slider.value = currentFold.toFixed(1);
+          pctText.textContent = Math.round(currentFold) + '%';
+          updateFold(currentFold);
+        } else if (now) {
+          lastAnimTime = now;
+        }
+
         if (controls && controls.update) {
           controls.update();
         }
         renderer.render(scene, camera);
       }
-      animate();
+      requestAnimationFrame(animate);
 
       // Redimensionamento
       window.addEventListener('resize', function() {
@@ -985,38 +1017,33 @@ export function generateStandaloneHtml3D(
       var pctText = document.getElementById('foldPctText');
       var btnPlay = document.getElementById('btnPlayPause');
       var btnAutoRot = document.getElementById('btnAutoRotate');
-      var isPlaying = false;
-      var animDir = 1;
-      var animSpeed = 0.45;
-      var animInterval = null;
 
-      slider.addEventListener('input', function(e) {
-        var val = parseFloat(e.target.value);
-        pctText.textContent = Math.round(val) + '%';
-        updateFold(val);
-      });
+      function updatePlayButtonUI() {
+        if (isPlaying) {
+          btnPlay.innerHTML = '⏸ Pausar';
+          btnPlay.classList.add('playing');
+        } else {
+          btnPlay.innerHTML = '▶ Animar';
+          btnPlay.classList.remove('playing');
+        }
+      }
 
       btnPlay.addEventListener('click', function() {
         isPlaying = !isPlaying;
-        btnPlay.textContent = isPlaying ? '⏸ Pausar' : '▶ Animar';
         if (isPlaying) {
-          animInterval = setInterval(function() {
-            var cur = parseFloat(slider.value);
-            cur += animDir * animSpeed;
-            if (cur >= 100) {
-              cur = 100;
-              animDir = -1;
-            } else if (cur <= 0) {
-              cur = 0;
-              animDir = 1;
-            }
-            slider.value = cur;
-            pctText.textContent = Math.round(cur) + '%';
-            updateFold(cur);
-          }, 16);
-        } else {
-          clearInterval(animInterval);
+          if (currentFold >= 100) animDir = -1;
+          if (currentFold <= 0) animDir = 1;
+          lastAnimTime = performance.now();
         }
+        updatePlayButtonUI();
+      });
+
+      slider.addEventListener('input', function(e) {
+        isPlaying = false;
+        updatePlayButtonUI();
+        currentFold = parseFloat(e.target.value);
+        pctText.textContent = Math.round(currentFold) + '%';
+        updateFold(currentFold);
       });
 
       if (btnAutoRot) {
@@ -1028,13 +1055,19 @@ export function generateStandaloneHtml3D(
       }
 
       document.getElementById('btnFlatView').addEventListener('click', function() {
-        slider.value = 0;
+        isPlaying = false;
+        updatePlayButtonUI();
+        currentFold = 0;
+        slider.value = '0';
         pctText.textContent = '0%';
         updateFold(0);
       });
 
       document.getElementById('btnFoldView').addEventListener('click', function() {
-        slider.value = 100;
+        isPlaying = false;
+        updatePlayButtonUI();
+        currentFold = 100;
+        slider.value = '100';
         pctText.textContent = '100%';
         updateFold(100);
       });
