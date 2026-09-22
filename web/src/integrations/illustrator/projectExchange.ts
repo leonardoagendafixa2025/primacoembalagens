@@ -1,24 +1,69 @@
 import type { DielineResult, PackagingModel, CardboardProfile } from '../../engine/types';
-import type { DielineTopology } from '../../engine/dielineTopology';
-import { buildFoldingTopology } from '../../engine/dielineTopology';
+import { LoopTopologyEngine } from '../../engine/importers/LoopTopologyEngine';
+import { FoldingTreeEngine } from '../../engine/importers/FoldingTreeEngine';
 
-export interface PLMPackProjectExchange {
+// Códigos de Erro Padronizados da Fase 6
+export const BRIDGE_ERROR_CODES = {
+  ILLUSTRATOR_BRIDGE_UNAVAILABLE: 'ILLUSTRATOR_BRIDGE_UNAVAILABLE',
+  ILLUSTRATOR_PLUGIN_NOT_CONNECTED: 'ILLUSTRATOR_PLUGIN_NOT_CONNECTED',
+  ILLUSTRATOR_SESSION_EXPIRED: 'ILLUSTRATOR_SESSION_EXPIRED',
+  ILLUSTRATOR_PAYLOAD_INVALID: 'ILLUSTRATOR_PAYLOAD_INVALID',
+  PROJECT_REVISION_CONFLICT: 'PROJECT_REVISION_CONFLICT',
+  ILLUSTRATOR_IMPORT_FAILED: 'ILLUSTRATOR_IMPORT_FAILED',
+  ILLUSTRATOR_EXPORT_FAILED: 'ILLUSTRATOR_EXPORT_FAILED',
+  HTML_3D_EXPORT_FAILED: 'HTML_3D_EXPORT_FAILED',
+  HTML_3D_INVALID_MODEL: 'HTML_3D_INVALID_MODEL',
+  VECTOR_ARTWORK_UNAVAILABLE: 'VECTOR_ARTWORK_UNAVAILABLE',
+} as const;
+
+export type BridgeErrorCode = (typeof BRIDGE_ERROR_CODES)[keyof typeof BRIDGE_ERROR_CODES];
+
+/**
+ * Contrato de Dados Canônico e Oficial entre PLMPackLib Web e Adobe Illustrator
+ * (Fase 6 — Especificação Profissional)
+ */
+export interface IllustratorProjectPayload {
+  schemaVersion: number;
+  projectRevision: number;
+  illustratorSessionId: string;
   projectId: string;
   projectName: string;
   modelId: string;
   modelCode: string;
   modelName: string;
-  geometryVersion: number;
-  artVersion: number;
-  timestamp: string;
+  dimensions: {
+    L: number;
+    B: number;
+    H: number;
+    [key: string]: number;
+  };
   parameters: Record<string, number>;
-  substrate: {
-    id: string;
-    name: string;
-    code: string;
-    thickness: number;
-    outerColor: string;
-    innerColor: string;
+  canonicalGeometry: {
+    bounds: {
+      minX: number;
+      minY: number;
+      maxX: number;
+      maxY: number;
+      width: number;
+      height: number;
+    };
+    segments: Array<{
+      id?: string;
+      x0: number;
+      y0: number;
+      x1: number;
+      y1: number;
+      type: 'cut' | 'crease' | 'perfo' | 'bleed' | 'dimension';
+    }>;
+    arcs: Array<{
+      id?: string;
+      cx: number;
+      cy: number;
+      r: number;
+      startAngle: number;
+      endAngle: number;
+      type: 'cut' | 'crease';
+    }>;
   };
   dieline: {
     bounds: {
@@ -29,7 +74,7 @@ export interface PLMPackProjectExchange {
       width: number;
       height: number;
     };
-    customTopology?: DielineTopology;
+    customTopology?: any;
     segments?: any[];
     lines: Array<{
       x1: number;
@@ -61,14 +106,65 @@ export interface PLMPackProjectExchange {
       height: number;
     };
   }>;
-  artwork?: {
-    textureDataUri?: string;
-    updatedAt?: string;
+  hinges: Array<{
+    hingeId: string;
+    parentPanelId: string;
+    childPanelId: string;
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    nominalAngleDeg: number;
+  }>;
+  substrate: {
+    id: string;
+    name: string;
+    code: string;
+    thickness: number;
+    outerColor: string;
+    innerColor: string;
   };
+  artwork?: {
+    vectorSvg?: string;
+    textureDataUri?: string;
+    previewPngUri?: string;
+    artworkType?: 'VECTOR_AND_RASTER' | 'VECTOR_ONLY' | 'RASTER_ONLY' | 'NONE';
+    hasVector?: boolean;
+    updatedAt?: string;
+    scale?: number;
+    position?: { x: number; y: number };
+    rotation?: number;
+    elementsCount?: number;
+    svgVectorData?: string;
+    artVersion?: number;
+  };
+  artworkMetadata?: {
+    format?: string;
+    width?: number;
+    height?: number;
+    dpi?: number;
+    colorSpace?: string;
+  };
+  units: 'mm';
+  scale: number;
+  timestamp: string;
+  jsx?: string;
+}
+
+// Compatibilidade retroativa transparente com o tipo anterior
+export type PLMPackProjectExchange = IllustratorProjectPayload;
+
+/**
+ * Gera um ID de sessão único e estável para a conexão com o Adobe Illustrator
+ */
+export function generateIllustratorSessionId(projectId: string): string {
+  const rand = Math.random().toString(36).substring(2, 9);
+  return `ai_sess_${projectId}_${Date.now()}_${rand}`;
 }
 
 /**
- * Monta o pacote de intercâmbio padronizado para sincronização com o Illustrator
+ * Monta o payload canônico para intercâmbio com o Adobe Illustrator.
+ * Consome EXCLUSIVAMENTE a geometria canônica e topologia do LoopTopologyEngine / FoldingTreeEngine.
  */
 export function createProjectExchangePackage(
   model: PackagingModel,
@@ -77,28 +173,33 @@ export function createProjectExchangePackage(
   dieline: DielineResult,
   geometryVersion: number = 1,
   artVersion: number = 0,
-  artworkDataUri?: string
-): PLMPackProjectExchange {
-  const topology: DielineTopology = dieline.customTopology || buildFoldingTopology(dieline);
+  artworkDataUri?: string,
+  sessionId?: string
+): IllustratorProjectPayload {
+  // Extrai a topologia usando EXCLUSIVAMENTE os motores certificados da Fase 3 e 4
+  const topo = LoopTopologyEngine.extractTopology(dieline);
+  const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, dieline);
 
-  const panels = topology.panels.map((p) => {
+  const panels = topo.panels.map((p) => {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
 
-    for (const pt of p.boundary) {
+    for (const pt of p.outerBoundary.vertices) {
       if (pt.x < minX) minX = pt.x;
       if (pt.x > maxX) maxX = pt.x;
       if (pt.y < minY) minY = pt.y;
       if (pt.y > maxY) maxY = pt.y;
     }
 
+    const isRoot = foldingTree.rootPanelId === p.id;
+
     return {
       id: p.id,
       name: p.name || p.id,
-      isRoot: !!p.isRoot,
-      polygon: p.boundary.map((pt) => ({ x: pt.x, y: pt.y })),
+      isRoot: Boolean(isRoot),
+      polygon: p.outerBoundary.vertices.map((pt) => ({ x: pt.x, y: pt.y })),
       bbox: {
         minX,
         minY,
@@ -110,16 +211,93 @@ export function createProjectExchangePackage(
     };
   });
 
+  const hinges = (foldingTree.hinges || []).map((h) => ({
+    hingeId: h.id,
+    parentPanelId: h.parentPanelId,
+    childPanelId: h.childPanelId,
+    x0: h.axisStart.x,
+    y0: h.axisStart.y,
+    x1: h.axisEnd.x,
+    y1: h.axisEnd.y,
+    nominalAngleDeg: h.foldAngle ?? (h.kinematics?.targetAngle ?? 90),
+  }));
+
+  const projectId = `proj_${model.id.toLowerCase()}`;
+  const effectiveSessionId = sessionId || generateIllustratorSessionId(projectId);
+
+  const canonicalGeometry = {
+    bounds: { ...dieline.bounds },
+    segments: (dieline.segments || []).map((s, idx) => ({
+      id: (s as any).id || `seg_${idx}`,
+      x0: s.x0,
+      y0: s.y0,
+      x1: s.x1,
+      y1: s.y1,
+      type: (s.type === 'perfo' ? 'perfo' : s.type) as 'cut' | 'crease' | 'perfo' | 'bleed' | 'dimension',
+    })),
+    arcs: (dieline.arcs || []).map((a, idx) => ({
+      id: (a as any).id || `arc_${idx}`,
+      cx: a.cx,
+      cy: a.cy,
+      r: a.r,
+      startAngle: a.startAngle,
+      endAngle: a.endAngle,
+      type: (a.type === 'crease' ? 'crease' : 'cut') as 'cut' | 'crease',
+    })),
+  };
+
+  const lines = [
+    ...(dieline.segments || []).map((s) => ({
+      x1: s.x0,
+      y1: s.y0,
+      x2: s.x1,
+      y2: s.y1,
+      type: (s.type === 'perfo' ? 'crease' : s.type) as 'cut' | 'crease' | 'bleed' | 'dimension',
+    })),
+    ...(dieline.dimensions || []).map((d) => ({
+      x1: d.x0,
+      y1: d.y0,
+      x2: d.x1,
+      y2: d.y1,
+      type: 'dimension' as const,
+    })),
+  ];
+
+  const arcs = (dieline.arcs || []).map((a) => ({
+    cx: a.cx,
+    cy: a.cy,
+    r: a.r,
+    startAngle: a.startAngle,
+    endAngle: a.endAngle,
+    type: (a.type === 'crease' ? 'crease' : 'cut') as 'cut' | 'crease',
+  }));
+
   return {
-    projectId: `proj_${model.id.toLowerCase()}`,
+    schemaVersion: 1,
+    projectRevision: geometryVersion,
+    illustratorSessionId: effectiveSessionId,
+    projectId,
     projectName: `${model.name} (${model.code})`,
     modelId: model.id,
     modelCode: model.code,
     modelName: model.name,
-    geometryVersion,
-    artVersion,
-    timestamp: new Date().toISOString(),
+    dimensions: {
+      L: params.L ?? 300,
+      B: params.B ?? 200,
+      H: params.H ?? 150,
+      ...params,
+    },
     parameters: { ...params },
+    canonicalGeometry,
+    dieline: {
+      bounds: { ...dieline.bounds },
+      customTopology: topo,
+      segments: dieline.segments || [],
+      lines,
+      arcs,
+    },
+    panels,
+    hinges,
     substrate: {
       id: profile.id,
       name: profile.name,
@@ -128,41 +306,96 @@ export function createProjectExchangePackage(
       outerColor: profile.outerColor || '#FFFFFF',
       innerColor: profile.innerColor || '#FFFFFF',
     },
-    dieline: {
-      bounds: { ...dieline.bounds },
-      customTopology: dieline.customTopology || topology,
-      segments: dieline.segments || [],
-      lines: [
-        ...(dieline.segments || []).map((s) => ({
-          x1: s.x0,
-          y1: s.y0,
-          x2: s.x1,
-          y2: s.y1,
-          type: (s.type === 'perfo' ? 'crease' : s.type) as 'cut' | 'crease' | 'bleed' | 'dimension',
-        })),
-        ...(dieline.dimensions || []).map((d) => ({
-          x1: d.x0,
-          y1: d.y0,
-          x2: d.x1,
-          y2: d.y1,
-          type: 'dimension' as const,
-        })),
-      ],
-      arcs: (dieline.arcs || []).map((a) => ({
-        cx: a.cx,
-        cy: a.cy,
-        r: a.r,
-        startAngle: a.startAngle,
-        endAngle: a.endAngle,
-        type: (a.type === 'crease' ? 'crease' : 'cut') as 'cut' | 'crease',
-      })),
-    },
-    panels,
     artwork: artworkDataUri
       ? {
           textureDataUri: artworkDataUri,
+          previewPngUri: artworkDataUri,
+          artworkType: 'RASTER_ONLY',
+          hasVector: false,
           updatedAt: new Date().toISOString(),
+          scale: 1.0,
+          position: { x: 0, y: 0 },
+          rotation: 0,
+          artVersion,
         }
       : undefined,
+    artworkMetadata: artworkDataUri
+      ? {
+          format: 'image/png',
+          dpi: 300,
+          colorSpace: 'sRGB',
+        }
+      : undefined,
+    units: 'mm',
+    scale: 1.0,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export const packageIllustratorExchangePayload = createProjectExchangePackage;
+
+/**
+ * Validador estrito de schema do IllustratorProjectPayload
+ */
+export function validateIllustratorPayload(payload: any): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (!payload || typeof payload !== 'object') {
+    return { valid: false, errors: ['Payload nulo ou inválido'] };
+  }
+
+  if (payload.schemaVersion !== 1) {
+    errors.push(`Versão de schema inválida: esperado 1, recebido ${payload.schemaVersion}`);
+  }
+
+  if (!payload.projectId || typeof payload.projectId !== 'string') {
+    errors.push('Campo obrigatório projectId ausente');
+  }
+
+  if (!payload.modelId || typeof payload.modelId !== 'string') {
+    errors.push('Campo obrigatório modelId ausente');
+  }
+
+  if (!payload.modelCode || typeof payload.modelCode !== 'string') {
+    errors.push('Campo obrigatório modelCode ausente');
+  }
+
+  if (!payload.dimensions || typeof payload.dimensions !== 'object') {
+    errors.push('Campo obrigatório dimensions ausente');
+  }
+
+  if (!payload.canonicalGeometry || typeof payload.canonicalGeometry !== 'object') {
+    errors.push('Campo obrigatório canonicalGeometry ausente');
+  } else {
+    if (!Array.isArray(payload.canonicalGeometry.segments)) {
+      errors.push('canonicalGeometry.segments deve ser um array');
+    }
+    if (!Array.isArray(payload.canonicalGeometry.arcs)) {
+      errors.push('canonicalGeometry.arcs deve ser um array');
+    }
+    if (!payload.canonicalGeometry.bounds) {
+      errors.push('canonicalGeometry.bounds ausente');
+    }
+  }
+
+  if (!Array.isArray(payload.panels)) {
+    errors.push('Campo obrigatório panels deve ser um array');
+  }
+
+  if (!Array.isArray(payload.hinges)) {
+    errors.push('Campo obrigatório hinges deve ser um array');
+  }
+
+  if (payload.units !== 'mm') {
+    errors.push(`Unidade de medida inválida: esperado 'mm', recebido '${payload.units}'`);
+  }
+
+  if (payload.scale !== 1.0) {
+    errors.push(`Escala métrica inválida: esperado 1.0, recebido ${payload.scale}`);
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
   };
 }

@@ -1,4 +1,5 @@
 // Compilador ExtendScript JSX oficial para Adobe Illustrator 2025 (versão CommonJS para Bridge Node.js)
+// Camadas semânticas: CUT, CREASE, PERF, ARTWORK, GUIDES_INFO
 
 function generateIllustratorJsx(projectData) {
   var jsonPayload = JSON.stringify(projectData);
@@ -35,7 +36,7 @@ function generateIllustratorJsx(projectData) {
     '  var projectData = ' + jsonPayload + ';\n\n' +
     '  var MM_TO_PT = 72.0 / 25.4; // 2.83464567 pt por mm\n' +
     '  var MARGIN_MM = 15.0;\n\n' +
-    '  var bounds = projectData.dieline.bounds;\n' +
+    '  var bounds = (projectData.dieline && projectData.dieline.bounds) || (projectData.canonicalGeometry && projectData.canonicalGeometry.bounds);\n' +
     '  var dielineWidthMm = bounds.width;\n' +
     '  var dielineHeightMm = bounds.height;\n\n' +
     '  var artboardWidthMm = dielineWidthMm + (MARGIN_MM * 2.0);\n' +
@@ -88,7 +89,8 @@ function generateIllustratorJsx(projectData) {
     '    return sc;\n' +
     '  }\n\n' +
     '  var cutSpotColor = getOrCreateSpotColor("Corte", 0, 100, 100, 0);\n' +
-    '  var creaseSpotColor = getOrCreateSpotColor("Vinco", 100, 0, 30, 0);\n\n' +
+    '  var creaseSpotColor = getOrCreateSpotColor("Vinco", 100, 0, 30, 0);\n' +
+    '  var perfSpotColor = getOrCreateSpotColor("Picote", 0, 50, 100, 0);\n\n' +
     '  var cmykCotas = new CMYKColor();\n' +
     '  cmykCotas.cyan = 0; cmykCotas.magenta = 40; cmykCotas.yellow = 100; cmykCotas.black = 0;\n\n' +
     '  var cmykSangria = new CMYKColor();\n' +
@@ -102,15 +104,14 @@ function generateIllustratorJsx(projectData) {
     '      return l;\n' +
     '    }\n' +
     '  }\n\n' +
-    '  var layerArte = getOrCreateLayer("PLMPACKLIB_ARTE");\n' +
+    '  var layerArte = getOrCreateLayer("ARTWORK");\n' +
     '  layerArte.locked = false;\n' +
     '  layerArte.printable = true;\n\n' +
-    '  var layerCorte = getOrCreateLayer("PLMPACKLIB_CORTE");\n' +
-    '  var layerVinco = getOrCreateLayer("PLMPACKLIB_VINCO");\n' +
-    '  var layerPaineis = getOrCreateLayer("PLMPACKLIB_PAINEIS");\n' +
-    '  var layerCotas = getOrCreateLayer("PLMPACKLIB_COTAS");\n' +
-    '  var layerRef = getOrCreateLayer("PLMPACKLIB_REFERENCIA");\n\n' +
-    '  var layersToClean = [layerCorte, layerVinco, layerPaineis, layerCotas, layerRef];\n' +
+    '  var layerCorte = getOrCreateLayer("CUT");\n' +
+    '  var layerVinco = getOrCreateLayer("CREASE");\n' +
+    '  var layerPicote = getOrCreateLayer("PERF");\n' +
+    '  var layerGuias = getOrCreateLayer("GUIDES_INFO");\n\n' +
+    '  var layersToClean = [layerCorte, layerVinco, layerPicote, layerGuias];\n' +
     '  for (var li = 0; li < layersToClean.length; li++) {\n' +
     '    try {\n' +
     '      layersToClean[li].locked = false;\n' +
@@ -119,28 +120,38 @@ function generateIllustratorJsx(projectData) {
     '      }\n' +
     '    } catch(e) {}\n' +
     '  }\n\n' +
-    '  var lines = projectData.dieline.lines || [];\n' +
+    '  var lines = (projectData.canonicalGeometry && projectData.canonicalGeometry.segments) || projectData.dieline.lines || [];\n' +
     '  for (var i = 0; i < lines.length; i++) {\n' +
     '    var l = lines[i];\n' +
-    '    var p1x = toPtX(l.x1);\n' +
-    '    var p1y = toPtY(l.y1);\n' +
-    '    var p2x = toPtX(l.x2);\n' +
-    '    var p2y = toPtY(l.y2);\n\n' +
+    '    var x1 = l.x0 !== undefined ? l.x0 : l.x1;\n' +
+    '    var y1 = l.y0 !== undefined ? l.y0 : l.y1;\n' +
+    '    var x2 = l.x1 !== undefined && l.x0 !== undefined ? l.x1 : l.x2;\n' +
+    '    var y2 = l.y1 !== undefined && l.y0 !== undefined ? l.y1 : l.y2;\n\n' +
+    '    var p1x = toPtX(x1);\n' +
+    '    var p1y = toPtY(y1);\n' +
+    '    var p2x = toPtX(x2);\n' +
+    '    var p2y = toPtY(y2);\n\n' +
     '    if (Math.abs(p1x - p2x) < 0.001 && Math.abs(p1y - p2y) < 0.001) {\n' +
     '      continue;\n' +
     '    }\n\n' +
     '    var targetLayer = layerCorte;\n' +
     '    var strokeColor = cutSpotColor;\n' +
-    '    var isDashed = false;\n\n' +
+    '    var isDashed = false;\n' +
+    '    var dashConfig = [4 * MM_TO_PT, 2 * MM_TO_PT];\n\n' +
     '    if (l.type === "crease") {\n' +
     '      targetLayer = layerVinco;\n' +
     '      strokeColor = creaseSpotColor;\n' +
     '      isDashed = true;\n' +
+    '    } else if (l.type === "perfo") {\n' +
+    '      targetLayer = layerPicote;\n' +
+    '      strokeColor = perfSpotColor;\n' +
+    '      isDashed = true;\n' +
+    '      dashConfig = [2 * MM_TO_PT, 1.5 * MM_TO_PT];\n' +
     '    } else if (l.type === "dimension") {\n' +
-    '      targetLayer = layerCotas;\n' +
+    '      targetLayer = layerGuias;\n' +
     '      strokeColor = cmykCotas;\n' +
     '    } else if (l.type === "bleed") {\n' +
-    '      targetLayer = layerRef;\n' +
+    '      targetLayer = layerGuias;\n' +
     '      strokeColor = cmykSangria;\n' +
     '      isDashed = true;\n' +
     '    }\n\n' +
@@ -152,11 +163,11 @@ function generateIllustratorJsx(projectData) {
     '      path.strokeColor = strokeColor;\n' +
     '      path.strokeWidth = 0.5 * MM_TO_PT;\n\n' +
     '      if (isDashed) {\n' +
-    '        path.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];\n' +
+    '        path.strokeDashes = dashConfig;\n' +
     '      }\n' +
     '    } catch(e) {}\n' +
     '  }\n\n' +
-    '  var arcs = projectData.dieline.arcs || [];\n' +
+    '  var arcs = (projectData.canonicalGeometry && projectData.canonicalGeometry.arcs) || projectData.dieline.arcs || [];\n' +
     '  for (var a = 0; a < arcs.length; a++) {\n' +
     '    var arc = arcs[a];\n' +
     '    if (!arc.r || arc.r <= 0.001) continue;\n' +
@@ -194,7 +205,7 @@ function generateIllustratorJsx(projectData) {
     '      polyPts.push([toPtX(panel.polygon[pt].x), toPtY(panel.polygon[pt].y)]);\n' +
     '    }\n\n' +
     '    try {\n' +
-    '      var panelGuide = layerPaineis.pathItems.add();\n' +
+    '      var panelGuide = layerGuias.pathItems.add();\n' +
     '      panelGuide.setEntirePath(polyPts);\n' +
     '      panelGuide.closed = true;\n' +
     '      panelGuide.filled = false;\n' +
@@ -207,9 +218,8 @@ function generateIllustratorJsx(projectData) {
     '  }\n\n' +
     '  try { layerCorte.locked = true; } catch(e) {}\n' +
     '  try { layerVinco.locked = true; } catch(e) {}\n' +
-    '  try { layerPaineis.locked = true; } catch(e) {}\n' +
-    '  try { layerCotas.locked = true; } catch(e) {}\n' +
-    '  try { layerRef.locked = true; } catch(e) {}\n\n' +
+    '  try { layerPicote.locked = true; } catch(e) {}\n' +
+    '  try { layerGuias.locked = true; } catch(e) {}\n\n' +
     '  try {\n' +
     '    layerArte.move(doc, ElementPlacement.PLACEATBEGINNING);\n' +
     '  } catch(e) {}\n' +
@@ -223,7 +233,11 @@ function generateIllustratorJsx(projectData) {
     '    artboardHeightMm: artboardHeightMm,\n' +
     '    isUpdate: isUpdate,\n' +
     '    projectId: projectData.projectId,\n' +
-    '    geometryVersion: projectData.geometryVersion\n' +
+    '    modelId: projectData.modelId,\n' +
+    '    modelCode: projectData.modelCode,\n' +
+    '    projectRevision: projectData.projectRevision || 1,\n' +
+    '    illustratorSessionId: projectData.illustratorSessionId || "",\n' +
+    '    schemaVersion: projectData.schemaVersion || 1\n' +
     '  });\n' +
     '} catch(err) {\n' +
     '  alert("PLMPackLib Erro ExtendScript: " + err.message + " (Linha: " + err.line + ")");\n' +
@@ -234,11 +248,33 @@ function generateIllustratorJsx(projectData) {
     '})();\n';
 }
 
-function generateArtworkExportJsx(projectData, outputPath) {
+function generateArtworkExportJsx(project, outputPath) {
   var cleanOutputPath = outputPath.replace(/\\/g, '/');
 
-  return '// Script de Exportação da Camada de Arte PLMPackLib\n' +
+  return '// Script de Exportação Vetorial e Raster da Camada de Arte PLMPackLib\n' +
     '#target illustrator\n\n' +
+    'if (typeof JSON !== "object") {\n' +
+    '  JSON = {\n' +
+    '    stringify: function(o) {\n' +
+    '      if (o === null) return "null";\n' +
+    '      if (typeof o === "number" || typeof o === "boolean") return "" + o;\n' +
+    '      if (typeof o === "string") return "\\"" + o.replace(/\\\\/g, "\\\\\\\\").replace(/"/g, "\\\\\\"").replace(/\\n/g, "\\\\n").replace(/\\r/g, "\\\\r") + "\\"";\n' +
+    '      if (o instanceof Array) {\n' +
+    '        var a = [];\n' +
+    '        for (var i = 0; i < o.length; i++) a.push(JSON.stringify(o[i]));\n' +
+    '        return "[" + a.join(",") + "]";\n' +
+    '      }\n' +
+    '      if (typeof o === "object") {\n' +
+    '        var p = [];\n' +
+    '        for (var k in o) {\n' +
+    '          if (o.hasOwnProperty(k)) p.push("\\"" + k + "\\":" + JSON.stringify(o[k]));\n' +
+    '        }\n' +
+    '        return "{" + p.join(",") + "}";\n' +
+    '      }\n' +
+    '      return "null";\n' +
+    '    }\n' +
+    '  };\n' +
+    '}\n\n' +
     '(function() {\n' +
     '  if (app.documents.length === 0) {\n' +
     '    return JSON.stringify({ error: "Nenhum documento aberto no Illustrator." });\n' +
@@ -246,37 +282,79 @@ function generateArtworkExportJsx(projectData, outputPath) {
     '  var doc = app.activeDocument;\n' +
     '  var layerArte = null;\n\n' +
     '  try {\n' +
-    '    layerArte = doc.layers.getByName("PLMPACKLIB_ARTE");\n' +
+    '    layerArte = doc.layers.getByName("ARTWORK");\n' +
     '  } catch(e) {\n' +
-    '    return JSON.stringify({ error: "Camada PLMPACKLIB_ARTE não encontrada no documento ativo." });\n' +
+    '    try {\n' +
+    '      layerArte = doc.layers.getByName("PLMPACKLIB_ARTE");\n' +
+    '    } catch(e2) {\n' +
+    '      return JSON.stringify({ error: "Camada ARTWORK não encontrada no documento ativo." });\n' +
+    '    }\n' +
     '  }\n\n' +
     '  var layersVisibility = [];\n' +
     '  for (var i = 0; i < doc.layers.length; i++) {\n' +
     '    var l = doc.layers[i];\n' +
     '    layersVisibility.push({ layer: l, visible: l.visible });\n' +
-    '    if (l.name !== "PLMPACKLIB_ARTE") {\n' +
+    '    if (l !== layerArte) {\n' +
     '      l.visible = false;\n' +
     '    } else {\n' +
     '      l.visible = true;\n' +
     '    }\n' +
     '  }\n\n' +
+    '  // 1. Exportação SVG Vetorial Real da Camada ARTWORK\n' +
+    '  var svgOptions = new ExportOptionsSVG();\n' +
+    '  svgOptions.embedRasterImages = true;\n' +
+    '  svgOptions.fontSubsetting = SVGFontSubsetting.GLYPHSUSED;\n' +
+    '  svgOptions.cssProperties = SVGCSSPropertyLocation.STYLEATTRIBUTES;\n' +
+    '  try { svgOptions.coordinatePrecision = 4; } catch(e) {}\n\n' +
+    '  var cleanPathStr = "' + cleanOutputPath + '";\n' +
+    '  var cleanSvgPath = cleanPathStr.replace(/\\.png$/i, ".svg");\n' +
+    '  if (cleanSvgPath === cleanPathStr) cleanSvgPath = cleanPathStr + ".svg";\n' +
+    '  var destSvgFile = new File(cleanSvgPath);\n' +
+    '  var hasVector = false;\n' +
+    '  var vectorSvg = "";\n' +
+    '  try {\n' +
+    '    doc.exportFile(destSvgFile, ExportType.SVG, svgOptions);\n' +
+    '    if (destSvgFile.exists && destSvgFile.length > 0) {\n' +
+    '      destSvgFile.open("r");\n' +
+    '      vectorSvg = destSvgFile.read();\n' +
+    '      destSvgFile.close();\n' +
+    '      if (vectorSvg && vectorSvg.length > 30) {\n' +
+    '        hasVector = true;\n' +
+    '      }\n' +
+    '    }\n' +
+    '  } catch(eSvg) {\n' +
+    '    hasVector = false;\n' +
+    '  }\n\n' +
+    '  // 2. Exportação PNG 24 bits a 300 DPI com transparência\n' +
     '  var exportOptions = new ExportOptionsPNG24();\n' +
     '  exportOptions.antiAliasing = true;\n' +
     '  exportOptions.transparency = true;\n' +
     '  exportOptions.artBoardClipping = true;\n' +
     '  exportOptions.matte = false;\n' +
-    '  exportOptions.horizontalScale = 416.666; // 300 DPI\n' +
+    '  exportOptions.horizontalScale = 416.666;\n' +
     '  exportOptions.verticalScale = 416.666;\n\n' +
-    '  var destFile = new File("' + cleanOutputPath + '");\n' +
+    '  var destFile = new File(cleanPathStr);\n' +
     '  doc.exportFile(destFile, ExportType.PNG24, exportOptions);\n\n' +
     '  for (var j = 0; j < layersVisibility.length; j++) {\n' +
     '    layersVisibility[j].layer.visible = layersVisibility[j].visible;\n' +
     '  }\n\n' +
+    '  var artworkType = hasVector ? "VECTOR_AND_RASTER" : (destFile.exists ? "RASTER_ONLY" : "NONE");\n' +
+    '  var vectorStatus = hasVector ? "VECTOR_SYNCHRONIZED" : "VECTOR_ARTWORK_UNAVAILABLE";\n\n' +
     '  return JSON.stringify({\n' +
     '    success: true,\n' +
+    '    hasVector: hasVector,\n' +
+    '    artworkType: artworkType,\n' +
+    '    vectorStatus: vectorStatus,\n' +
+    '    vectorSvg: vectorSvg,\n' +
+    '    svgPath: destSvgFile.fsName,\n' +
     '    filePath: destFile.fsName,\n' +
     '    exists: destFile.exists,\n' +
-    '    fileSize: destFile.length\n' +
+    '    fileSize: destFile.length,\n' +
+    '    projectId: "' + (project.projectId || '') + '",\n' +
+    '    modelId: "' + (project.modelId || '') + '",\n' +
+    '    modelCode: "' + (project.modelCode || '') + '",\n' +
+    '    projectRevision: ' + (project.projectRevision || 1) + ',\n' +
+    '    illustratorSessionId: "' + (project.illustratorSessionId || '') + '"\n' +
     '  });\n' +
     '})();\n';
 }
@@ -285,3 +363,4 @@ module.exports = {
   generateIllustratorJsx: generateIllustratorJsx,
   generateArtworkExportJsx: generateArtworkExportJsx,
 };
+

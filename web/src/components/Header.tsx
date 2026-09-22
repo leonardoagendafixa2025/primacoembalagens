@@ -13,8 +13,11 @@ import {
   ChevronDown,
   HelpCircle,
   Monitor,
+  FileUp,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+import type { BridgeStatus } from '../integrations/illustrator/IllustratorBridgeClient';
 
 const CATALOG_COUNT = modelsCatalog.length;
 
@@ -28,14 +31,16 @@ interface HeaderProps {
   onExportDXF: () => void;
   onExportSVG: () => void;
   onExportIllustratorJsx?: () => void;
+  onExportHtml3D?: () => void;
   onSaveProject: (name: string) => Promise<void>;
   onOpenProjectsModal: () => void;
   onOpenCatalog: () => void;
+  onOpenImportModal?: () => void;
   isSupabaseConnected: boolean;
   onGoHome?: () => void;
   onOpenInIllustrator?: () => void;
   isOpeningIllustrator?: boolean;
-  bridgeStatus?: { bridgeOnline: boolean; authenticated?: boolean; illustratorDetected: boolean };
+  bridgeStatus?: BridgeStatus;
   onSyncArtwork?: () => void;
   hasArtwork?: boolean;
   onClearArtwork?: () => void;
@@ -50,9 +55,11 @@ export const Header: React.FC<HeaderProps> = ({
   onExportDXF,
   onExportSVG,
   onExportIllustratorJsx,
+  onExportHtml3D,
   onSaveProject,
   onOpenProjectsModal,
   onOpenCatalog,
+  onOpenImportModal,
   isSupabaseConnected,
   onGoHome,
   onOpenInIllustrator,
@@ -183,6 +190,25 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {CATALOG_COUNT}
           </span>
+        </button>
+
+        {/* Botão Oficial Importar Minha Faca */}
+        <button
+          type="button"
+          onClick={onOpenImportModal}
+          className="cad-btn icon-only-mobile"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0, 210, 180, 0.15), rgba(0, 140, 255, 0.18))',
+            border: '1px solid var(--cad-accent, #00d2b4)',
+            color: 'var(--cad-accent, #00d2b4)',
+            padding: '5px 12px',
+            gap: 6,
+            fontWeight: 700,
+          }}
+          title="Importar Minha Faca (PDF, SVG, DXF)"
+        >
+          <FileUp size={14} />
+          <span style={{ fontWeight: 700 }}>Importar Minha Faca</span>
         </button>
 
         {/* Modelo Ativo Selecionado */}
@@ -355,17 +381,20 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         />
 
-        {/* Botão Oficial Adobe Illustrator (Ficar Online / Sincronizar) & Download do Plugin */}
+        {/* Botões Oficiais Adobe Illustrator (Fase 6 — Seção 3 e 34) */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          {/* BOTÃO 1: ABRIR NO ILLUSTRATOR */}
           <button
             type="button"
             onClick={onOpenInIllustrator}
             disabled={isOpeningIllustrator}
             className="cad-btn compact-btn"
             title={
-              bridgeStatus?.bridgeOnline
-                ? 'Illustrator Online: clique para abrir e sincronizar a faca no Illustrator'
-                : 'Conectar ao Adobe Illustrator (Ficar Online)'
+              bridgeStatus?.lastError
+                ? `Status: ${bridgeStatus.lastError.message}`
+                : bridgeStatus?.bridgeOnline
+                  ? 'Illustrator Conectado: clique para abrir a faca canônica e arte no Illustrator'
+                  : 'Conectar ao Adobe Illustrator (Bridge local 127.0.0.1:48123)'
             }
             style={{
               background: bridgeStatus?.bridgeOnline
@@ -401,10 +430,8 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
             <span className="hide-on-laptop">
               {isOpeningIllustrator
-                ? 'Conectando...'
-                : bridgeStatus?.bridgeOnline
-                  ? 'Illustrator (Online)'
-                  : 'Illustrator'}
+                ? 'Enviando...'
+                : (bridgeStatus?.stateLabel || (bridgeStatus?.bridgeOnline ? 'Abrir no Illustrator' : 'Illustrator'))}
             </span>
             <span
               style={{
@@ -414,9 +441,38 @@ export const Header: React.FC<HeaderProps> = ({
                 background: bridgeStatus?.bridgeOnline ? '#10b981' : '#f59e0b',
                 boxShadow: bridgeStatus?.bridgeOnline ? '0 0 6px #10b981' : '0 0 4px #f59e0b',
               }}
-              title={bridgeStatus?.bridgeOnline ? 'Illustrator Conectado e Online' : 'Clique para Ficar Online com o Illustrator'}
+              title={bridgeStatus?.stateLabel || (bridgeStatus?.bridgeOnline ? 'Conectado' : 'Desconectado')}
             />
           </button>
+
+          {/* BOTÃO 2: ENVIAR ARTE PARA PLMPACKLIB / SINCRONIZAR ARTE (Fase 6 — Seção 3 e 34) */}
+          {onSyncArtwork && (
+            <button
+              type="button"
+              onClick={onSyncArtwork}
+              className="cad-btn compact-btn"
+              title="Receber / Sincronizar arte criada no Adobe Illustrator de volta para o PLMPackLib Web"
+              style={{
+                background: hasArtwork
+                  ? 'rgba(16, 185, 129, 0.16)'
+                  : 'rgba(56, 189, 248, 0.12)',
+                border: hasArtwork
+                  ? '1px solid rgba(16, 185, 129, 0.6)'
+                  : '1px solid rgba(56, 189, 248, 0.45)',
+                color: hasArtwork ? '#34d399' : '#38bdf8',
+                fontWeight: 600,
+                fontSize: 11,
+                gap: 5,
+                padding: '5px 8px',
+                flexShrink: 0,
+              }}
+            >
+              <Download size={12} color={hasArtwork ? '#34d399' : '#38bdf8'} />
+              <span className="hide-on-laptop">
+                {hasArtwork ? 'Arte Sincronizada ✓' : 'Enviar Arte p/ PLM'}
+              </span>
+            </button>
+          )}
 
           {/* Botão de Download do Plugin */}
           <a
@@ -586,6 +642,34 @@ export const Header: React.FC<HeaderProps> = ({
                 <Download size={14} color="#f59e0b" />
                 <span style={{ fontWeight: 600 }}>SVG (Vetor Gráfico)</span>
               </button>
+
+              {onExportHtml3D && (
+                <button
+                  type="button"
+                  className="cad-btn"
+                  onClick={() => {
+                    onExportHtml3D();
+                    setIsExportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    background: 'rgba(37, 99, 235, 0.12)',
+                    border: '1px solid rgba(37, 99, 235, 0.4)',
+                    color: '#60a5fa',
+                    fontSize: 12,
+                    padding: '6px 8px',
+                    margin: '3px 0',
+                  }}
+                  title="Exportar arquivo HTML autônomo com visualizador 3D interativo WebGL"
+                >
+                  <Box size={14} color="#60a5fa" />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+                    <span style={{ fontWeight: 700 }}>Exportar HTML do 3D</span>
+                    <span style={{ fontSize: 9, color: 'var(--cad-text-muted)' }}>Cena 3D interativa independente</span>
+                  </div>
+                </button>
+              )}
 
               <div
                 style={{

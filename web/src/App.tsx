@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import type { PackagingModel, CardboardProfile } from './engine/types';
+import type { PackagingModel, CardboardProfile, DielineResult } from './engine/types';
 import { STANDARD_PROFILES } from './engine/types';
 import { MODELS, getModelById, CATALOG } from './engine/models';
 import { fetchAndParseSvgDieline, getLoadedSvgDieline } from './engine/svgDielineParser';
@@ -24,6 +24,7 @@ import { ImpositionView } from './components/ImpositionView';
 import { SavedProjectsModal } from './components/SavedProjectsModal';
 import { CatalogModal } from './components/CatalogModal';
 import { IllustratorPluginModal } from './components/IllustratorPluginModal';
+import { ImportCadModal } from './components/ImportCadModal';
 import { CadStatusBar } from './components/CadStatusBar';
 import {
   IllustratorBridgeClient,
@@ -31,6 +32,7 @@ import {
 } from './integrations/illustrator/IllustratorBridgeClient';
 import { createProjectExchangePackage } from './integrations/illustrator/projectExchange';
 import { generateIllustratorJsx } from './integrations/illustrator/jsxGenerator';
+import { downloadHtml3DFile } from './engine/export/Html3DExporter';
 
 export const App: React.FC = () => {
   // 1. Estados Centrais
@@ -108,6 +110,24 @@ export const App: React.FC = () => {
   const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
   const [isProjectsModalOpen, setIsProjectsModalOpen] = useState<boolean>(false);
   const [isIllustratorPluginModalOpen, setIsIllustratorPluginModalOpen] = useState<boolean>(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+
+  const handleImportSuccess = useCallback(
+    (model: PackagingModel, dielineRes: DielineResult) => {
+      setCurrentModel(model);
+      setCustomAngles({});
+      setSelectedPanelId(null);
+      setHingeList([]);
+      setParams({
+        L: Math.round(dielineRes.bounds.width) || 300,
+        B: Math.round(dielineRes.bounds.height) || 200,
+        H: 100,
+        Ep: selectedProfile.thickness,
+      });
+      setActiveTab('2d');
+    },
+    [selectedProfile.thickness]
+  );
 
   useEffect(() => {
     getSavedProjects().then(setSavedProjects);
@@ -292,14 +312,26 @@ export const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportHtml3D = () => {
+    const res = downloadHtml3DFile(currentModel, params, selectedProfile, dieline, {
+      artworkTextureUri,
+    });
+    if (res.success) {
+      confetti({ particleCount: 35, spread: 50, origin: { y: 0.1 } });
+    } else {
+      alert('Erro ao exportar HTML 3D: ' + res.message);
+    }
+  };
+
   const handleSyncArtwork = async () => {
     try {
       const client = IllustratorBridgeClient.getInstance();
       const res = await client.requestArtworkSync(currentModel.id);
       if (res.success && res.textureDataUri) {
         setArtworkTextureUri(res.textureDataUri);
+        confetti({ particleCount: 35, spread: 50, origin: { y: 0.2 } });
       } else {
-        alert(res.message);
+        alert(res.message || 'Nenhuma arte sincronizada encontrada na Bridge.');
       }
     } catch (e: any) {
       alert('Erro ao sincronizar arte: ' + (e?.message || e));
@@ -382,9 +414,11 @@ export const App: React.FC = () => {
         onExportDXF={handleExportDXF}
         onExportSVG={handleExportSVG}
         onExportIllustratorJsx={handleExportIllustratorJsx}
+        onExportHtml3D={handleExportHtml3D}
         onSaveProject={handleSaveProject}
         onOpenProjectsModal={() => setIsProjectsModalOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
+        onOpenImportModal={() => setIsImportModalOpen(true)}
         isSupabaseConnected={isSupabaseConfigured}
         onOpenInIllustrator={handleOpenInIllustrator}
         isOpeningIllustrator={isOpeningIllustrator}
@@ -521,6 +555,13 @@ export const App: React.FC = () => {
       <IllustratorPluginModal
         isOpen={isIllustratorPluginModalOpen}
         onClose={() => setIsIllustratorPluginModalOpen(false)}
+      />
+
+      {/* Modal Profissional de Importação de Faca CAD (PDF, SVG, DXF, DWG) */}
+      <ImportCadModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportSuccess={handleImportSuccess}
       />
     </div>
   );

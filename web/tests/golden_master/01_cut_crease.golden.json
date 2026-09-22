@@ -1,0 +1,16 @@
+{
+  "fixture": "01_cut_crease.dxf",
+  "segmentsCount": 6,
+  "arcsCount": 1,
+  "bounds": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 500,
+    "maxY": 300,
+    "width": 500,
+    "height": 300
+  },
+  "cuts": 5,
+  "creases": 2,
+  "perf": 0
+}

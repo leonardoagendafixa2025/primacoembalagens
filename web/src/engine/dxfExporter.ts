@@ -111,6 +111,9 @@ export function buildDxfContent(
  * Dispara o download de um arquivo no navegador
  */
 function downloadFile(content: string, filename: string, mimeType: string): void {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return;
+  }
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -162,7 +165,6 @@ export function exportToDXF(
 
 /**
  * Exporta a prancha gráfica de imposição completa para DXF
- * Inclui o contorno da chapa, linhas de margem e todas as poses individuais transformadas
  */
 export function exportImpositionToDXF(
   imposition: ImpositionResult,
@@ -205,13 +207,12 @@ export function exportImpositionToDXF(
 }
 
 /**
- * Exporta a faca em formato SVG vetorial em escala 1:1.
+ * Monta o conteúdo SVG vetorial em escala 1:1.
  */
-export function exportToSVG(
+export function buildSvgContent(
   dieline: DielineResult | PackagingGeometry,
-  filename = 'faca_embalagem.svg',
   options: ExportOptions = { includeBleed: true, includeRegistrationMarks: true, bleedMm: 5 }
-): void {
+): string {
   const margin = 25;
   const b = dieline.bounds;
   const viewBoxWidth = b.width + margin * 2;
@@ -307,6 +308,17 @@ export function exportToSVG(
   }
 
   svg += `</svg>`;
+  return svg;
+}
 
+/**
+ * Exporta a faca em formato SVG vetorial em escala 1:1.
+ */
+export function exportToSVG(
+  dieline: DielineResult | PackagingGeometry,
+  filename = 'faca_embalagem.svg',
+  options: ExportOptions = { includeBleed: true, includeRegistrationMarks: true, bleedMm: 5 }
+): void {
+  const svg = buildSvgContent(dieline, options);
   downloadFile(svg, filename.endsWith('.svg') ? filename : `${filename}.svg`, 'image/svg+xml;charset=utf-8');
 }

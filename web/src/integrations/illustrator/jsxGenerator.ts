@@ -1,11 +1,12 @@
-import type { PLMPackProjectExchange } from './projectExchange';
+import type { IllustratorProjectPayload } from './projectExchange';
 
 /**
  * Compilador de script ExtendScript (.jsx) oficial para Adobe Illustrator 2025.
- * Gera documentos vetoriais em escala métrica 1:1, camadas técnicas separadas e
- * canais de cor Spot (Corte e Vinco) com metadados para cada painel.
+ * Gera documentos vetoriais em escala métrica 1:1, camadas semânticas padronizadas:
+ * CUT, CREASE, PERF, ARTWORK, GUIDES_INFO
+ * Canais de cor Spot (Corte, Vinco, Picote) e metadados de sessão embutidos.
  */
-export function generateIllustratorJsx(project: PLMPackProjectExchange): string {
+export function generateIllustratorJsx(project: IllustratorProjectPayload): string {
   const jsonPayload = JSON.stringify(project);
 
   return `// PLMPackLib Oficial Bridge Script para Adobe Illustrator 2025
@@ -46,7 +47,7 @@ try {
   var MM_TO_PT = 72.0 / 25.4; // 2.83464567 pt por mm
   var MARGIN_MM = 15.0; // Margem de respiro ao redor da faca
 
-  var bounds = projectData.dieline.bounds;
+  var bounds = projectData.dieline.bounds || projectData.canonicalGeometry.bounds;
   var dielineWidthMm = bounds.width;
   var dielineHeightMm = bounds.height;
 
@@ -92,7 +93,7 @@ try {
 
   app.activeDocument = doc;
 
-  // 2. Criação ou recuperação de Tintas Especiais (Spot Colors) para Facaria
+  // 2. Criação ou recuperação de Tintas Especiais (Spot Colors) padronizadas
   function getOrCreateSpotColor(name, c, m, y, k) {
     var spot = null;
     try {
@@ -114,16 +115,18 @@ try {
     return sc;
   }
 
-  var cutSpotColor = getOrCreateSpotColor("Corte", 0, 100, 100, 0); // Vermelho faca
-  var creaseSpotColor = getOrCreateSpotColor("Vinco", 100, 0, 30, 0); // Verde-água vinco
+  var cutSpotColor = getOrCreateSpotColor("Corte", 0, 100, 100, 0); // Vermelho faca (CUT)
+  var creaseSpotColor = getOrCreateSpotColor("Vinco", 100, 0, 30, 0); // Verde-água vinco (CREASE)
+  var perfSpotColor = getOrCreateSpotColor("Picote", 0, 50, 100, 0); // Laranja picote (PERF)
 
   var cmykCotas = new CMYKColor();
-  cmykCotas.cyan = 0; cmykCotas.magenta = 40; cmykCotas.yellow = 100; cmykCotas.black = 0; // Âmbar cotas
+  cmykCotas.cyan = 0; cmykCotas.magenta = 40; cmykCotas.yellow = 100; cmykCotas.black = 0;
 
   var cmykSangria = new CMYKColor();
-  cmykSangria.cyan = 80; cmykSangria.magenta = 0; cmykSangria.yellow = 80; cmykSangria.black = 0; // Verde sangria
+  cmykSangria.cyan = 80; cmykSangria.magenta = 0; cmykSangria.yellow = 80; cmykSangria.black = 0;
 
-  // 3. Gerenciamento de Camadas (Sincronização Segura que Preserva a Arte)
+  // 3. Gerenciamento de Camadas Semânticas Padronizadas (Fase 6 — Seção 12)
+  // CUT, CREASE, PERF, ARTWORK, GUIDES / INFO
   function getOrCreateLayer(name) {
     try {
       return doc.layers.getByName(name);
@@ -134,19 +137,17 @@ try {
     }
   }
 
-  // Camadas de facaria
-  var layerArte = getOrCreateLayer("PLMPACKLIB_ARTE");
+  var layerArte = getOrCreateLayer("ARTWORK");
   layerArte.locked = false;
   layerArte.printable = true;
 
-  var layerCorte = getOrCreateLayer("PLMPACKLIB_CORTE");
-  var layerVinco = getOrCreateLayer("PLMPACKLIB_VINCO");
-  var layerPaineis = getOrCreateLayer("PLMPACKLIB_PAINEIS");
-  var layerCotas = getOrCreateLayer("PLMPACKLIB_COTAS");
-  var layerRef = getOrCreateLayer("PLMPACKLIB_REFERENCIA");
+  var layerCorte = getOrCreateLayer("CUT");
+  var layerVinco = getOrCreateLayer("CREASE");
+  var layerPicote = getOrCreateLayer("PERF");
+  var layerGuias = getOrCreateLayer("GUIDES_INFO");
 
   // Limpa apenas as camadas técnicas de geometria ao sincronizar, NUNCA a camada de arte!
-  var layersToClean = [layerCorte, layerVinco, layerPaineis, layerCotas, layerRef];
+  var layersToClean = [layerCorte, layerVinco, layerPicote, layerGuias];
   for (var li = 0; li < layersToClean.length; li++) {
     try {
       layersToClean[li].locked = false;
@@ -156,16 +157,20 @@ try {
     } catch(e) {}
   }
 
-  // 4. Desenhar Linhas Vetoriais da Faca
-  var lines = projectData.dieline.lines || [];
+  // 4. Desenhar Linhas Vetoriais da Faca Canônica
+  var lines = (projectData.canonicalGeometry && projectData.canonicalGeometry.segments) || projectData.dieline.lines || [];
   for (var i = 0; i < lines.length; i++) {
     var l = lines[i];
-    var p1x = toPtX(l.x1);
-    var p1y = toPtY(l.y1);
-    var p2x = toPtX(l.x2);
-    var p2y = toPtY(l.y2);
+    var x1 = l.x0 !== undefined ? l.x0 : l.x1;
+    var y1 = l.y0 !== undefined ? l.y0 : l.y1;
+    var x2 = l.x1 !== undefined && l.x0 !== undefined ? l.x1 : l.x2;
+    var y2 = l.y1 !== undefined && l.y0 !== undefined ? l.y1 : l.y2;
 
-    // Ignora linhas de comprimento zero para evitar erro de parâmetro inválido (PARM) no Illustrator
+    var p1x = toPtX(x1);
+    var p1y = toPtY(y1);
+    var p2x = toPtX(x2);
+    var p2y = toPtY(y2);
+
     if (Math.abs(p1x - p2x) < 0.001 && Math.abs(p1y - p2y) < 0.001) {
       continue;
     }
@@ -173,16 +178,22 @@ try {
     var targetLayer = layerCorte;
     var strokeColor = cutSpotColor;
     var isDashed = false;
+    var dashConfig = [4 * MM_TO_PT, 2 * MM_TO_PT];
 
     if (l.type === 'crease') {
       targetLayer = layerVinco;
       strokeColor = creaseSpotColor;
       isDashed = true;
+    } else if (l.type === 'perfo') {
+      targetLayer = layerPicote;
+      strokeColor = perfSpotColor;
+      isDashed = true;
+      dashConfig = [2 * MM_TO_PT, 1.5 * MM_TO_PT];
     } else if (l.type === 'dimension') {
-      targetLayer = layerCotas;
+      targetLayer = layerGuias;
       strokeColor = cmykCotas;
     } else if (l.type === 'bleed') {
-      targetLayer = layerRef;
+      targetLayer = layerGuias;
       strokeColor = cmykSangria;
       isDashed = true;
     }
@@ -193,16 +204,16 @@ try {
       path.filled = false;
       path.stroked = true;
       path.strokeColor = strokeColor;
-      path.strokeWidth = 0.5 * MM_TO_PT; // 0.5 mm
+      path.strokeWidth = 0.5 * MM_TO_PT;
 
       if (isDashed) {
-        path.strokeDashes = [4 * MM_TO_PT, 2 * MM_TO_PT];
+        path.strokeDashes = dashConfig;
       }
     } catch(e) {}
   }
 
-  // 5. Desenhar Arcos Vetoriais
-  var arcs = projectData.dieline.arcs || [];
+  // 5. Desenhar Arcos Vetoriais Canônicos
+  var arcs = (projectData.canonicalGeometry && projectData.canonicalGeometry.arcs) || projectData.dieline.arcs || [];
   for (var a = 0; a < arcs.length; a++) {
     var arc = arcs[a];
     if (!arc.r || arc.r <= 0.001) continue;
@@ -213,7 +224,6 @@ try {
     var arcLayer = arc.type === 'crease' ? layerVinco : layerCorte;
     var arcColor = arc.type === 'crease' ? creaseSpotColor : cutSpotColor;
 
-    // Aproximação de arco por pontos de Bézier
     var startRad = (arc.startAngle * Math.PI) / 180.0;
     var endRad = (arc.endAngle * Math.PI) / 180.0;
     var stepCount = Math.max(8, Math.round(Math.abs(arc.endAngle - arc.startAngle) / 10));
@@ -237,7 +247,7 @@ try {
     } catch(e) {}
   }
 
-  // 6. Desenhar Polígonos de Painéis com Metadados (Para Mapeamento de Arte 3D)
+  // 6. Desenhar Polígonos de Painéis com Metadados Canônicos
   var panels = projectData.panels || [];
   for (var p = 0; p < panels.length; p++) {
     var panel = panels[p];
@@ -249,7 +259,7 @@ try {
     }
 
     try {
-      var panelGuide = layerPaineis.pathItems.add();
+      var panelGuide = layerGuias.pathItems.add();
       panelGuide.setEntirePath(polyPts);
       panelGuide.closed = true;
       panelGuide.filled = false;
@@ -261,12 +271,11 @@ try {
     } catch(e) {}
   }
 
-  // 7. Configurações de Camadas e Segurança
+  // 7. Bloquear camadas técnicas para proteção da faca
   try { layerCorte.locked = true; } catch(e) {}
   try { layerVinco.locked = true; } catch(e) {}
-  try { layerPaineis.locked = true; } catch(e) {}
-  try { layerCotas.locked = true; } catch(e) {}
-  try { layerRef.locked = true; } catch(e) {}
+  try { layerPicote.locked = true; } catch(e) {}
+  try { layerGuias.locked = true; } catch(e) {}
 
   // Garante que a camada de arte fique no topo e ativa para edição direta pelo designer
   try {
@@ -283,7 +292,11 @@ try {
     artboardHeightMm: artboardHeightMm,
     isUpdate: isUpdate,
     projectId: projectData.projectId,
-    geometryVersion: projectData.geometryVersion
+    modelId: projectData.modelId,
+    modelCode: projectData.modelCode,
+    projectRevision: projectData.projectRevision || 1,
+    illustratorSessionId: projectData.illustratorSessionId || "",
+    schemaVersion: projectData.schemaVersion || 1
   });
 } catch(err) {
   alert("PLMPackLib Erro ExtendScript: " + err.message + " (Linha: " + err.line + ")");
@@ -296,9 +309,9 @@ try {
 }
 
 /**
- * Gera o script ExtendScript para exportação fotorrealista de 300 DPI da camada ARTE
+ * Gera o script ExtendScript para exportação de alta resolução (300 DPI) da camada ARTWORK
  */
-export function generateArtworkExportJsx(_project: PLMPackProjectExchange, outputPath: string): string {
+export function generateArtworkExportJsx(project: IllustratorProjectPayload, outputPath: string): string {
   const cleanOutputPath = outputPath.replace(/\\/g, '/');
 
   return `// Script de Exportação da Camada de Arte PLMPackLib
@@ -336,9 +349,13 @@ if (typeof JSON !== 'object') {
   var layerArte = null;
 
   try {
-    layerArte = doc.layers.getByName("PLMPACKLIB_ARTE");
+    layerArte = doc.layers.getByName("ARTWORK");
   } catch(e) {
-    return JSON.stringify({ error: "Camada PLMPACKLIB_ARTE não encontrada no documento ativo." });
+    try {
+      layerArte = doc.layers.getByName("PLMPACKLIB_ARTE");
+    } catch(e2) {
+      return JSON.stringify({ error: "Camada ARTWORK não encontrada no documento ativo." });
+    }
   }
 
   // Oculta temporariamente todas as camadas técnicas para exportar puramente a arte
@@ -346,14 +363,43 @@ if (typeof JSON !== 'object') {
   for (var i = 0; i < doc.layers.length; i++) {
     var l = doc.layers[i];
     layersVisibility.push({ layer: l, visible: l.visible });
-    if (l.name !== "PLMPACKLIB_ARTE") {
+    if (l !== layerArte) {
       l.visible = false;
     } else {
       l.visible = true;
     }
   }
 
-  // Configurações de exportação PNG 24 bits a 300 DPI com transparência
+  // 1. Exportação SVG Vetorial Real da Camada ARTWORK (Fase 6.1 — Seção 4 e 5)
+  var svgOptions = new ExportOptionsSVG();
+  svgOptions.embedRasterImages = true;
+  svgOptions.fontSubsetting = SVGFontSubsetting.GLYPHSUSED;
+  svgOptions.cssProperties = SVGCSSPropertyLocation.STYLEATTRIBUTES;
+  try { svgOptions.coordinatePrecision = 4; } catch(e) {}
+
+  var cleanPathStr = "${cleanOutputPath}";
+  var cleanSvgPath = cleanPathStr.replace(/\\.png$/i, '.svg');
+  if (cleanSvgPath === cleanPathStr) {
+    cleanSvgPath = cleanPathStr + '.svg';
+  }
+  var destSvgFile = new File(cleanSvgPath);
+  var hasVector = false;
+  var vectorSvg = "";
+  try {
+    doc.exportFile(destSvgFile, ExportType.SVG, svgOptions);
+    if (destSvgFile.exists && destSvgFile.length > 0) {
+      destSvgFile.open("r");
+      vectorSvg = destSvgFile.read();
+      destSvgFile.close();
+      if (vectorSvg && vectorSvg.length > 30) {
+        hasVector = true;
+      }
+    }
+  } catch(eSvg) {
+    hasVector = false;
+  }
+
+  // 2. Exportação PNG 24 bits a 300 DPI com transparência para Textura/Preview WebGL
   var exportOptions = new ExportOptionsPNG24();
   exportOptions.antiAliasing = true;
   exportOptions.transparency = true;
@@ -370,11 +416,24 @@ if (typeof JSON !== 'object') {
     layersVisibility[j].layer.visible = layersVisibility[j].visible;
   }
 
+  var artworkType = hasVector ? "VECTOR_AND_RASTER" : (destFile.exists ? "RASTER_ONLY" : "NONE");
+  var vectorStatus = hasVector ? "VECTOR_SYNCHRONIZED" : "VECTOR_ARTWORK_UNAVAILABLE";
+
   return JSON.stringify({
     success: true,
+    hasVector: hasVector,
+    artworkType: artworkType,
+    vectorStatus: vectorStatus,
+    vectorSvg: vectorSvg,
+    svgPath: destSvgFile.fsName,
     filePath: destFile.fsName,
     exists: destFile.exists,
-    fileSize: destFile.length
+    fileSize: destFile.length,
+    projectId: "${project.projectId}",
+    modelId: "${project.modelId}",
+    modelCode: "${project.modelCode || ''}",
+    projectRevision: ${project.projectRevision || 1},
+    illustratorSessionId: "${project.illustratorSessionId || ''}"
   });
 })();
 `;

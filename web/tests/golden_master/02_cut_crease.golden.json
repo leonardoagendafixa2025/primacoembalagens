@@ -1,0 +1,14 @@
+{
+  "fixture": "02_cut_crease.svg",
+  "bounds": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 500,
+    "maxY": 300,
+    "width": 500,
+    "height": 300
+  },
+  "cuts": 6,
+  "creases": 2,
+  "perf": 0
+}

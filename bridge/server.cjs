@@ -18,6 +18,8 @@ if (!fs.existsSync(WORKDIR)) {
 
 let activeProject = null;
 let latestArtworkDataUri = null;
+let latestArtworkVectorSvg = null;
+let latestArtworkMeta = null;
 let isProcessing = false;
 const wsClients = new Set();
 
@@ -304,28 +306,62 @@ const server = http.createServer(async (req, res) => {
   // 5. Recepção de Arte do Illustrator: POST /api/artwork ou /api/sync-artwork
   if ((url.pathname === '/api/artwork' || url.pathname === '/api/sync-artwork') && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', chunk => {
+      body += chunk;
+      // Proteção de segurança: limite de payload a 50MB (Fase 6 — Seção 16)
+      if (body.length > 50 * 1024 * 1024) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'PAYLOAD_TOO_LARGE' }));
+        req.destroy();
+      }
+    });
     req.on('end', () => {
       try {
         const payload = JSON.parse(body);
-        let base64 = payload.image || payload.artworkBase64 || payload.dataUri || '';
+        let base64 = payload.image || payload.artworkBase64 || payload.dataUri || payload.textureDataUri || '';
         if (base64.startsWith('data:image')) {
           latestArtworkDataUri = base64;
         } else if (base64) {
           latestArtworkDataUri = `data:image/png;base64,${base64}`;
         }
 
-        console.log('[Bridge Illustrator] Nova arte sincronizada do Illustrator!');
+        let vectorSvg = payload.vectorSvg || payload.vector || '';
+        if (vectorSvg) {
+          latestArtworkVectorSvg = vectorSvg;
+        }
+
+        const hasVector = !!latestArtworkVectorSvg;
+        const artworkType = (hasVector && latestArtworkDataUri)
+          ? 'VECTOR_AND_RASTER'
+          : (hasVector ? 'VECTOR_ONLY' : (latestArtworkDataUri ? 'RASTER_ONLY' : 'NONE'));
+
+        const artworkMetadata = {
+          textureDataUri: latestArtworkDataUri,
+          vectorSvg: latestArtworkVectorSvg,
+          hasVector: hasVector,
+          artworkType: artworkType,
+          vectorStatus: hasVector ? 'VECTOR_SYNCHRONIZED' : 'VECTOR_ARTWORK_UNAVAILABLE',
+          projectId: payload.projectId || (activeProject ? activeProject.projectId : null),
+          modelId: payload.modelId || (activeProject ? activeProject.modelId : null),
+          modelCode: payload.modelCode || (activeProject ? activeProject.modelCode : null),
+          projectRevision: payload.projectRevision !== undefined ? payload.projectRevision : (activeProject ? activeProject.projectRevision : 1),
+          sessionId: payload.sessionId || payload.illustratorSessionId || (activeProject ? activeProject.illustratorSessionId : null),
+          timestamp: Date.now(),
+        };
+
+        latestArtworkMeta = artworkMetadata;
+
+        console.log('[Bridge Illustrator] Nova arte sincronizada do Illustrator! Projeto:', artworkMetadata.projectId, 'Tipo:', artworkType, 'Rev:', artworkMetadata.projectRevision);
 
         broadcastWs({
           type: 'ARTWORK_UPDATED',
           source: 'illustrator',
-          data: { textureDataUri: latestArtworkDataUri },
+          data: artworkMetadata,
           timestamp: Date.now(),
         });
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, message: 'Arte do Illustrator sincronizada com sucesso!' }));
+        res.end(JSON.stringify({ success: true, message: 'Arte do Illustrator sincronizada com sucesso!', metadata: artworkMetadata }));
       } catch (e) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: e.message }));
@@ -336,10 +372,24 @@ const server = http.createServer(async (req, res) => {
 
   // 6. Última Arte Sincronizada: GET /api/latest-artwork
   if (url.pathname === '/api/latest-artwork' && req.method === 'GET') {
+    const hasVector = !!latestArtworkVectorSvg;
+    const artworkType = (hasVector && latestArtworkDataUri)
+      ? 'VECTOR_AND_RASTER'
+      : (hasVector ? 'VECTOR_ONLY' : (latestArtworkDataUri ? 'RASTER_ONLY' : 'NONE'));
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      hasArtwork: !!latestArtworkDataUri,
+      hasArtwork: !!latestArtworkDataUri || hasVector,
+      hasVector: hasVector,
+      artworkType: artworkType,
+      vectorStatus: hasVector ? 'VECTOR_SYNCHRONIZED' : 'VECTOR_ARTWORK_UNAVAILABLE',
+      vectorSvg: latestArtworkVectorSvg,
       textureDataUri: latestArtworkDataUri,
+      projectId: latestArtworkMeta?.projectId || null,
+      modelId: latestArtworkMeta?.modelId || null,
+      modelCode: latestArtworkMeta?.modelCode || null,
+      projectRevision: latestArtworkMeta?.projectRevision || 1,
+      sessionId: latestArtworkMeta?.sessionId || null,
     }));
     return;
   }

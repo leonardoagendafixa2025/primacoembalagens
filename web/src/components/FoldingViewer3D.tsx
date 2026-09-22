@@ -2,7 +2,15 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
-import { buildFoldable3DTree, type FoldableTreeResult, type HingeControlInfo } from '../engine/foldingEngine';
+import { LoopTopologyEngine } from '../engine/importers/LoopTopologyEngine';
+import { FoldingTreeEngine } from '../engine/importers/FoldingTreeEngine';
+import {
+  ThreeGeometryAdapter,
+  type ThreeModelController,
+  type HingeControlInfo,
+  type PanelProvenanceData,
+  type CreaseProvenanceData,
+} from '../engine/renderers/ThreeGeometryAdapter';
 import { Play, Pause, RotateCw, Box, Eye, Sliders } from 'lucide-react';
 
 interface FoldingViewer3DProps {
@@ -39,6 +47,10 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
 
+  // Estado de seleção e metadados para inspeção forense no 3D
+  const [selectedPanel, setSelectedPanel] = useState<PanelProvenanceData | null>(null);
+  const [selectedCrease, setSelectedCrease] = useState<CreaseProvenanceData | null>(null);
+
   // Lista interna de vincos para contagem e status
   const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
 
@@ -54,7 +66,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const controlsRef = useRef<OrbitControls | null>(null);
   const boxGroupRef = useRef<THREE.Group | null>(null);
   const updateProgressRef = useRef<((progress: number) => void) | null>(null);
-  const treeRef = useRef<FoldableTreeResult | null>(null);
+  const controllerRef = useRef<ThreeModelController | null>(null);
   const downPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Carrega textura sincronizada da arte do Illustrator quando fornecida,
@@ -62,7 +74,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   useEffect(() => {
     if (!artworkTextureUri) {
       setArtworkTexture(null);
-      treeRef.current?.updateArtwork?.(null);
+      controllerRef.current?.updateArtwork(null);
       return;
     }
 
@@ -88,7 +100,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       tex.flipY = true;
       tex.needsUpdate = true;
       setArtworkTexture(tex);
-      treeRef.current?.updateArtwork?.(tex);
+      controllerRef.current?.updateArtwork(tex);
     };
     img.onerror = (err) => {
       console.warn('[FoldingViewer3D] Erro ao carregar imagem de arte do Illustrator:', err);
@@ -209,6 +221,10 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     return () => {
       cancelAnimationFrame(reqId);
       resizeObserver.disconnect();
+      if (controllerRef.current) {
+        controllerRef.current.dispose();
+        controllerRef.current = null;
+      }
       if (controlsRef.current) {
         controlsRef.current.dispose();
       }
@@ -232,48 +248,60 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     const boxGroup = boxGroupRef.current;
     if (!boxGroup) return;
 
-    // Limpa malhas anteriores (isolamento absoluto entre modelos)
+    // Limpa malhas anteriores e desaloca buffers WebGL
+    if (controllerRef.current) {
+      controllerRef.current.dispose();
+      controllerRef.current = null;
+    }
     while (boxGroup.children.length > 0) {
       const obj = boxGroup.children[0];
       boxGroup.remove(obj);
     }
+    setSelectedPanel(null);
+    setSelectedCrease(null);
 
-    const Ep = Math.max(0.05, params.Ep || profile?.thickness || 0.4);
     const isFoldable =
       model.isFoldable !== false &&
       model.status !== 'NON_FOLDABLE';
 
     if (!isFoldable) {
-      treeRef.current = null;
       setHingeList([]);
       updateProgressRef.current = null;
       return;
     }
 
     try {
-      // UTILIZA EXATAMENTE A MESMA FACA DO 2D
+      // PIPELINE CANÔNICO OFICIAL DA FASE 4:
+      // PackagingGeometry -> TopologyReconstructor -> LoopTopologyEngine -> FoldingTreeEngine -> Kinematic3DEngine -> ThreeGeometryAdapter
       const currentDieline = dieline || model.calculate(params);
+      const topo = LoopTopologyEngine.extractTopology(currentDieline);
+      const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, currentDieline);
+
       const outerColor = profile?.outerColor || '#FFFFFF';
       const innerColor = profile?.innerColor || '#FFFFFF';
       const roughness = profile?.roughness ?? 0.28;
-      const tree = buildFoldable3DTree(
-        currentDieline,
-        Ep,
-        outerColor,
-        innerColor,
-        roughness,
-        customAngles,
-        artworkTexture
+
+      const controller = ThreeGeometryAdapter.createModelController(
+        topo.panels,
+        foldingTree,
+        {
+          outerColor,
+          innerColor,
+          roughness,
+          customAngles,
+          artworkTexture,
+        }
       );
-      treeRef.current = tree;
-      const list = tree.getHingeInfoList();
+      controllerRef.current = controller;
+
+      const list = controller.getHingeInfoList();
       setHingeList(list);
       onHingeListUpdate?.(list);
       if (selectedPanelId) {
-        tree.highlightPanel(selectedPanelId);
+        controller.highlightPanel(selectedPanelId);
       }
 
-      if (tree.panelsCount > 0) {
+      if (controller.panelsCount > 0) {
         // Verifica se é modelo tubular (FEFCO 02xx / 07xx / ECMA A, B, E) para manter a caixa em pé com o fundo no chão
         const codeStr = (model.code || model.id || '').toUpperCase();
         const isTubular =
@@ -303,13 +331,13 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
         if (isTubular) {
           // Rotaciona 90° em torno de X para colocar o fundo (+Z) voltado para o chão (-Y) e a tampa para cima (+Y)
-          tree.rootGroup.rotation.x = Math.PI / 2;
+          controller.rootGroup.rotation.x = Math.PI / 2;
         }
 
         // Função de fechamento que SEMPRE garante o FUNDO no chão perfeitamente apoiado a Y = 0 e centralizado em X e Z
         const updateWithGrounding = (progress: number) => {
-          tree.rootGroup.position.set(0, 0, 0);
-          tree.updateProgress(progress);
+          controller.rootGroup.position.set(0, 0, 0);
+          controller.updateFoldPercent(progress * 100);
           boxGroup.updateMatrixWorld(true);
           const bbox = new THREE.Box3().setFromObject(boxGroup);
 
@@ -317,11 +345,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
           const cx = (bbox.min.x + bbox.max.x) / 2;
           const cz = (bbox.min.z + bbox.max.z) / 2;
-          tree.rootGroup.position.set(-cx, groundY, -cz);
+          controller.rootGroup.position.set(-cx, groundY, -cz);
           boxGroup.updateMatrixWorld(true);
         };
 
-        boxGroup.add(tree.rootGroup);
+        boxGroup.add(controller.rootGroup);
         updateProgressRef.current = updateWithGrounding;
         updateWithGrounding(foldProgress);
 
@@ -342,12 +370,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
         }
         return;
       }
-      treeRef.current = null;
       setHingeList([]);
       updateProgressRef.current = null;
     } catch (e) {
       console.warn('[FoldingViewer3D] Erro na interpretação topológica:', e);
-      treeRef.current = null;
+      controllerRef.current = null;
       setHingeList([]);
       updateProgressRef.current = null;
     }
@@ -409,27 +436,27 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
   // Sincroniza destaque 3D quando a seleção vem do painel lateral esquerdo
   useEffect(() => {
-    if (treeRef.current) {
-      treeRef.current.highlightPanel(selectedPanelId || null);
+    if (controllerRef.current) {
+      controllerRef.current.highlightPanel(selectedPanelId || null);
     }
   }, [selectedPanelId]);
 
   // Sincroniza ângulos quando alterados no inspetor lateral
   useEffect(() => {
-    if (treeRef.current) {
+    if (controllerRef.current) {
       for (const [panelId, angle] of Object.entries(customAngles)) {
-        treeRef.current.setHingeAngle(panelId, angle);
+        controllerRef.current.setHingeAngle(panelId, angle);
       }
       if (updateProgressRef.current) {
         updateProgressRef.current(foldProgress);
       }
-      const list = treeRef.current.getHingeInfoList();
+      const list = controllerRef.current.getHingeInfoList();
       setHingeList(list);
       onHingeListUpdate?.(list);
     }
   }, [customAngles]);
 
-  // Raycasting 3D interativo para seleção de abas via clique
+  // Raycasting 3D interativo para seleção de abas ou vincos via clique
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     downPos.current = { x: e.clientX, y: e.clientY };
   };
@@ -441,8 +468,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
     const mount = mountRef.current;
     const camera = cameraRef.current;
-    const boxGroup = boxGroupRef.current;
-    if (!mount || !camera || !boxGroup) return;
+    const controller = controllerRef.current;
+    if (!mount || !camera || !controller) return;
 
     const rect = mount.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -452,29 +479,39 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(boxGroup.children, true);
 
-    let hitPanelId: string | null = null;
-    for (const hit of intersects) {
-      if (hit.object.userData && hit.object.userData.isPanel) {
-        hitPanelId = hit.object.userData.panelId;
-        break;
-      }
+    // Prioridade 1: Crease / Hinge Picking Tube
+    const hitCrease = controller.raycastCrease(raycaster);
+    if (hitCrease) {
+      setSelectedCrease(hitCrease.provenance);
+      setSelectedPanel(null);
+      controller.highlightCrease(hitCrease.creaseId);
+      controller.highlightPanel(null);
+      return;
     }
 
-    if (onSelectPanel) {
-      onSelectPanel(hitPanelId);
-    }
-    if (treeRef.current) {
-      treeRef.current.highlightPanel(hitPanelId);
+    // Prioridade 2: Painel Estrutural
+    const hitPanel = controller.raycastPanel(raycaster);
+    if (hitPanel) {
+      setSelectedPanel(hitPanel.provenance);
+      setSelectedCrease(null);
+      controller.highlightPanel(hitPanel.panelId);
+      controller.highlightCrease(null);
+      onSelectPanel?.(hitPanel.panelId);
+    } else {
+      setSelectedPanel(null);
+      setSelectedCrease(null);
+      controller.highlightPanel(null);
+      controller.highlightCrease(null);
+      onSelectPanel?.(null);
     }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const mount = mountRef.current;
     const camera = cameraRef.current;
-    const boxGroup = boxGroupRef.current;
-    if (!mount || !camera || !boxGroup) return;
+    const controller = controllerRef.current;
+    if (!mount || !camera || !controller) return;
 
     const rect = mount.getBoundingClientRect();
     const mouse = new THREE.Vector2(
@@ -484,10 +521,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(boxGroup.children, true);
 
-    const hasPanel = intersects.some((hit) => hit.object.userData && hit.object.userData.isPanel);
-    mount.style.cursor = hasPanel ? 'pointer' : 'grab';
+    const hasHit = controller.raycastCrease(raycaster) !== null || controller.raycastPanel(raycaster) !== null;
+    mount.style.cursor = hasHit ? 'pointer' : 'grab';
   };
 
   const modifiedCount = useMemo(() => {
@@ -503,6 +539,101 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
         onPointerMove={handlePointerMove}
         style={{ width: '100%', height: '100%', cursor: 'grab' }}
       />
+
+      {/* Card de Inspeção Forense de Painel Selecionado (Fase 4 - Seção 14) */}
+      {selectedPanel && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            background: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid #38BDF8',
+            borderRadius: 8,
+            padding: '12px 16px',
+            color: '#F8FAFC',
+            fontSize: 11,
+            zIndex: 20,
+            maxWidth: 320,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase' }}>
+              Painel Estrutural: {selectedPanel.panelId}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedPanel(null);
+                controllerRef.current?.highlightPanel(null);
+              }}
+              style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'monospace' }}>
+            <div>Área Líquida: <b>{selectedPanel.areaMm2.toFixed(2)} mm²</b></div>
+            <div>Triângulos GPU: <b>{selectedPanel.trianglesCount}</b></div>
+            <div>Furos (Holes): <b>{selectedPanel.holesCount}</b></div>
+            <div>Segmentos: <b>{selectedPanel.boundarySegmentsCount}</b> | Arcos: <b>{selectedPanel.boundaryArcsCount}</b></div>
+            <div style={{ marginTop: 4, fontSize: 10, color: '#94A3B8', wordBreak: 'break-all' }}>
+              Entidades Origem: {selectedPanel.sourceEntityIds.slice(0, 6).join(', ')}
+              {selectedPanel.sourceEntityIds.length > 6 ? ` (+${selectedPanel.sourceEntityIds.length - 6})` : ''}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Card de Inspeção Forense de Vinco/Hinge Selecionado (Fase 4 - Seção 14) */}
+      {selectedCrease && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            background: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid #0284C7',
+            borderRadius: 8,
+            padding: '12px 16px',
+            color: '#F8FAFC',
+            fontSize: 11,
+            zIndex: 20,
+            maxWidth: 340,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase' }}>
+              Vinco Articulado: {selectedCrease.creaseId}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCrease(null);
+                controllerRef.current?.highlightCrease(null);
+              }}
+              style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'monospace' }}>
+            <div>sourceCreaseId: <b>{selectedCrease.sourceCreaseId}</b></div>
+            <div>matchedHalfEdge: <b>{selectedCrease.matchedHalfEdgeId}</b></div>
+            <div>Hierarquia: <b>{selectedCrease.parentPanelId} &rarr; {selectedCrease.childPanelId}</b></div>
+            <div>Comprimento: <b>{selectedCrease.lengthMm} mm</b></div>
+            <div>Ângulo Alvo: <b>{selectedCrease.targetAngleDeg}°</b> (Fonte: {selectedCrease.angleSource})</div>
+            <div>Sinal Topológico: <b>{selectedCrease.topologicalSign > 0 ? '+1' : '-1'}</b> (Fonte: {selectedCrease.signSource})</div>
+            <div style={{ color: selectedCrease.physicalDirection === 'NOT_DETERMINED' ? '#F59E0B' : '#10B981' }}>
+              Direção Física: <b>{selectedCrease.physicalDirection}</b>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Estação de Controle CAD de Dobra e Câmera 3D */}
       <div

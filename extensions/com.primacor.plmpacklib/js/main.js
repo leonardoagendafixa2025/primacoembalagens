@@ -409,10 +409,23 @@
           return;
         }
 
+        var vectorSvg = res.vectorSvg || '';
+        if (!vectorSvg && res.svgFilePath) {
+          try {
+            var reqFn2 = (typeof require === 'function') ? require : (typeof window !== 'undefined' && typeof window.require === 'function' ? window.require : null);
+            if (reqFn2) {
+              var fs2 = reqFn2('fs');
+              if (fs2.existsSync(res.svgFilePath)) {
+                vectorSvg = fs2.readFileSync(res.svgFilePath, 'utf-8');
+              }
+            }
+          } catch(e) {}
+        }
+
         // ATUALIZA VARIÁVEL GLOBAL DA ARTE
         lastLoadedArtworkUri = dataUri;
         artVersion++;
-        if (elVersion) elVersion.textContent = 'Arte: v' + artVersion;
+        if (elVersion) elVersion.textContent = 'Arte: v' + artVersion + (vectorSvg ? ' (VETOR)' : '');
 
         // Atualiza imediatamente o Estúdio 3D dentro do Illustrator
         if (window.PLMStudio) {
@@ -426,12 +439,18 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            projectId: currentProject ? currentProject.projectId : null,
             modelId: (currentProject && (currentProject.modelId || currentProject.modelCode)) || 'current',
-            textureDataUri: dataUri
+            modelCode: currentProject ? currentProject.modelCode : null,
+            projectRevision: currentProject ? currentProject.projectRevision : 1,
+            textureDataUri: dataUri,
+            vectorSvg: vectorSvg,
+            hasVector: !!vectorSvg,
+            artworkType: vectorSvg ? 'VECTOR_AND_RASTER' : 'RASTER_ONLY'
           })
         })
         .then(function() {
-          setStatus('Arte sincronizada no 3D e com a Web!');
+          setStatus('Arte vetorial e textura 3D sincronizadas com sucesso!');
         })
         .catch(function() {
           // Servidor embutido já possui a arte em lastLoadedArtworkUri

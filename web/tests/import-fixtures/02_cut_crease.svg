@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="500mm" height="300mm" viewBox="0 0 500 300">
+  <g id="CORTE" stroke="#FF0000" stroke-width="1" fill="none">
+    <line x1="0" y1="0" x2="500" y2="0" />
+    <line x1="500" y1="0" x2="500" y2="300" />
+    <line x1="500" y1="300" x2="0" y2="300" />
+    <line x1="0" y1="300" x2="0" y2="0" />
+    <path d="M 225,150 C 225,136.2 236.2,125 250,125 C 263.8,125 275,136.2 275,150" />
+  </g>
+  <g id="VINCO" stroke="#00FF00" stroke-width="1" fill="none">
+    <line x1="100" y1="0" x2="100" y2="300" />
+    <line x1="400" y1="0" x2="400" y2="300" />
+  </g>
+</svg>
