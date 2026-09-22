@@ -1,6 +1,9 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -22,6 +25,7 @@ namespace PrimacorEmbalagens.Desktop
 
         public MainWindow()
         {
+            EnsureBridgeRunning();
             InitializeWindow();
             CreateSplashUI();
             CreateErrorUI();
@@ -202,11 +206,19 @@ namespace PrimacorEmbalagens.Desktop
                 );
                 Directory.CreateDirectory(userDataFolder);
 
-                var environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
+                var options = new CoreWebView2EnvironmentOptions();
+                options.AdditionalBrowserArguments = "--allow-running-insecure-content --disable-web-security --unsafely-treat-insecure-origin-as-secure=http://127.0.0.1:48123,http://localhost:48123,ws://127.0.0.1:48123,ws://localhost:48123 --disable-features=BlockInsecurePrivateNetworkRequests";
+
+                var environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
                 await webView.EnsureCoreWebView2Async(environment);
 
                 ConfigureWebViewSettings();
                 InjectDesktopBridge();
+
+                // Intercepta e projeta requisições da Bridge local contornando restrições de Mixed Content do Chromium
+                webView.CoreWebView2.AddWebResourceRequestedFilter("http://127.0.0.1:48123/*", CoreWebView2WebResourceContext.All);
+                webView.CoreWebView2.AddWebResourceRequestedFilter("http://localhost:48123/*", CoreWebView2WebResourceContext.All);
+                webView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
 
                 webView.NavigationStarting += WebView_NavigationStarting;
                 webView.NavigationCompleted += WebView_NavigationCompleted;
@@ -228,7 +240,7 @@ namespace PrimacorEmbalagens.Desktop
             var settings = webView.CoreWebView2.Settings;
             settings.IsStatusBarEnabled = false;
             settings.AreDefaultContextMenusEnabled = true;
-            settings.AreDevToolsEnabled = false; // Disabled in production
+            settings.AreDevToolsEnabled = true; // Habilitado para depuração e diagnóstico
             settings.IsBuiltInErrorPageEnabled = false;
             settings.AreHostObjectsAllowed = true;
             settings.IsScriptEnabled = true;
@@ -332,6 +344,139 @@ namespace PrimacorEmbalagens.Desktop
             else
             {
                 InitializeWebViewAsync();
+            }
+        }
+
+        private void EnsureBridgeRunning()
+        {
+            try
+            {
+                // Verifica se a porta 48123 já está aberta
+                using (var tcp = new TcpClient())
+                {
+                    var ar = tcp.BeginConnect("127.0.0.1", 48123, null, null);
+                    bool success = ar.AsyncWaitHandle.WaitOne(400);
+                    if (success && tcp.Connected)
+                    {
+                        return; // Bridge já está ativa e escutando!
+                    }
+                }
+            }
+            catch {}
+
+            // Tenta localizar e iniciar a Bridge automaticamente em segundo plano
+            try
+            {
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string[] potentialBridgePaths = new string[]
+                {
+                    Path.Combine(baseDir, "bridge", "server.cjs"),
+                    Path.Combine(baseDir, "..", "bridge", "server.cjs"),
+                    Path.Combine(baseDir, "..", "..", "bridge", "server.cjs"),
+                    Path.Combine(baseDir, "Iniciar_Bridge.bat"),
+                    Path.Combine(baseDir, "..", "Iniciar_Bridge.bat"),
+                    Path.Combine(baseDir, "..", "..", "Iniciar_Bridge.bat"),
+                };
+
+                foreach (var bPath in potentialBridgePaths)
+                {
+                    if (File.Exists(bPath))
+                    {
+                        var psi = new System.Diagnostics.ProcessStartInfo();
+                        if (bPath.EndsWith(".bat"))
+                        {
+                            psi.FileName = bPath;
+                            psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Minimized;
+                        }
+                        else
+                        {
+                            psi.FileName = "node";
+                            psi.Arguments = "\"" + bPath + "\"";
+                            psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+                            psi.CreateNoWindow = true;
+                        }
+                        psi.UseShellExecute = true;
+                        System.Diagnostics.Process.Start(psi);
+                        break;
+                    }
+                }
+            }
+            catch {}
+        }
+
+        private void CoreWebView2_WebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            try
+            {
+                var uri = new Uri(e.Request.Uri);
+
+                if (e.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+                {
+                    string optHeaders = "HTTP/1.1 204 No Content\r\n" +
+                                        "Access-Control-Allow-Origin: *\r\n" +
+                                        "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n" +
+                                        "Access-Control-Allow-Headers: *\r\n" +
+                                        "Access-Control-Allow-Private-Network: true\r\n\r\n";
+                    e.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(
+                        new MemoryStream(),
+                        204,
+                        "No Content",
+                        optHeaders
+                    );
+                    return;
+                }
+
+                var httpReq = (HttpWebRequest)WebRequest.Create(uri);
+                httpReq.Method = e.Request.Method;
+                httpReq.Timeout = 12000;
+
+                if (e.Request.Content != null && (e.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase) || e.Request.Method.Equals("PUT", StringComparison.OrdinalIgnoreCase)))
+                {
+                    httpReq.ContentType = "application/json";
+                    using (var reqStream = httpReq.GetRequestStream())
+                    {
+                        e.Request.Content.CopyTo(reqStream);
+                    }
+                }
+
+                using (var httpRes = (HttpWebResponse)httpReq.GetResponse())
+                {
+                    var memoryStream = new MemoryStream();
+                    httpRes.GetResponseStream().CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+
+                    string headers = "HTTP/1.1 " + (int)httpRes.StatusCode + " " + httpRes.StatusDescription + "\r\n" +
+                                     "Access-Control-Allow-Origin: *\r\n" +
+                                     "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n" +
+                                     "Access-Control-Allow-Headers: *\r\n" +
+                                     "Access-Control-Allow-Private-Network: true\r\n" +
+                                     "Content-Type: application/json\r\n\r\n";
+
+                    e.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(
+                        memoryStream,
+                        (int)httpRes.StatusCode,
+                        httpRes.StatusDescription,
+                        headers
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                string errJson = "{\"bridgeOnline\":false,\"error\":\"" + ex.Message.Replace("\"", "\\\"") + "\"}";
+                byte[] bytes = Encoding.UTF8.GetBytes(errJson);
+                var memoryStream = new MemoryStream(bytes);
+                string headers = "HTTP/1.1 200 OK\r\n" +
+                                 "Access-Control-Allow-Origin: *\r\n" +
+                                 "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n" +
+                                 "Access-Control-Allow-Headers: *\r\n" +
+                                 "Access-Control-Allow-Private-Network: true\r\n" +
+                                 "Content-Type: application/json\r\n\r\n";
+                e.Response = webView.CoreWebView2.Environment.CreateWebResourceResponse(
+                    memoryStream,
+                    200,
+                    "OK",
+                    headers
+                );
             }
         }
 

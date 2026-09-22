@@ -38,6 +38,16 @@ $resDest = Join-Path $payloadStage "resources"
 if (-not (Test-Path $resDest)) { New-Item -ItemType Directory -Path $resDest -Force | Out-Null }
 Copy-Item (Join-Path $desktopDir "resources\primacor.ico") -Destination (Join-Path $resDest "primacor.ico") -Force
 
+# Incluir Bridge local e script de inicializacao no payload
+$bridgeSrc = Join-Path $rootDir "bridge"
+if (Test-Path $bridgeSrc) {
+    Copy-Item $bridgeSrc -Destination (Join-Path $payloadStage "bridge") -Recurse -Force
+}
+$initBat = Join-Path $rootDir "Iniciar_Bridge.bat"
+if (Test-Path $initBat) {
+    Copy-Item $initBat -Destination (Join-Path $payloadStage "Iniciar_Bridge.bat") -Force
+}
+
 # 3. Gerar zip do Payload
 $payloadZip = Join-Path $tempDir "PrimacorPayload.zip"
 if (Test-Path $payloadZip) { Remove-Item $payloadZip -Force }

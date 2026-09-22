@@ -69,6 +69,13 @@ export class IllustratorBridgeClient {
   private ws: WebSocket | null = null;
 
   private constructor() {
+    if (typeof window !== 'undefined' && (window as any).PrimacorDesktop?.bridgeUrl) {
+      const desktopBridgeUrl = (window as any).PrimacorDesktop.bridgeUrl;
+      if (!this.bridgeUrls.includes(desktopBridgeUrl)) {
+        this.bridgeUrls.unshift(desktopBridgeUrl);
+      }
+      this.currentBridgeUrl = desktopBridgeUrl;
+    }
     this.checkStatus();
     setInterval(() => this.checkStatus(), 2500);
     this.initWebSocket();
@@ -137,6 +144,11 @@ export class IllustratorBridgeClient {
 
   private initWebSocket() {
     if (typeof window === 'undefined') return;
+    // Em navegadores padrão sob HTTPS, conexões ws:// para 127.0.0.1 disparam SecurityError.
+    // O monitoramento por HTTP polling com proxy nativo no desktop garante a sincronização contínua.
+    if (typeof window !== 'undefined' && window.location?.protocol === 'https:' && !(window as any).PrimacorDesktop) {
+      return;
+    }
     const wsUrl = 'ws://127.0.0.1:48123';
     try {
       this.ws = new WebSocket(wsUrl);
