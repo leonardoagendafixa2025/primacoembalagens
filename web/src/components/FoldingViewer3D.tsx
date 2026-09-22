@@ -2,8 +2,9 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
-import { LoopTopologyEngine } from '../engine/importers/LoopTopologyEngine';
-import { FoldingTreeEngine } from '../engine/importers/FoldingTreeEngine';
+import { LoopTopologyEngine, type StructuralPanel } from '../engine/importers/LoopTopologyEngine';
+import { FoldingTreeEngine, type FoldingTreeResult } from '../engine/importers/FoldingTreeEngine';
+import { convertDielineTopologyToStructural, buildFoldingTopology } from '../engine/dielineTopology';
 import {
   ThreeGeometryAdapter,
   type ThreeModelController,
@@ -272,17 +273,30 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
     try {
       // PIPELINE CANÔNICO OFICIAL DA FASE 4:
-      // PackagingGeometry -> TopologyReconstructor -> LoopTopologyEngine -> FoldingTreeEngine -> Kinematic3DEngine -> ThreeGeometryAdapter
+      // Prioriza a topologia canônica da faca (customTopology || buildFoldingTopology)
+      // para garantir a presença de 100% dos painéis industriais (incluindo abas de canto / dust flaps).
       const currentDieline = dieline || model.calculate(params);
-      const topo = LoopTopologyEngine.extractTopology(currentDieline);
-      const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, currentDieline);
+      const customTopo = currentDieline.customTopology || buildFoldingTopology(currentDieline);
+
+      let panels: StructuralPanel[];
+      let foldingTree: FoldingTreeResult;
+
+      if (customTopo && customTopo.panels && customTopo.panels.length > 0) {
+        const converted = convertDielineTopologyToStructural(customTopo);
+        panels = converted.panels;
+        foldingTree = converted.foldingTree;
+      } else {
+        const topo = LoopTopologyEngine.extractTopology(currentDieline);
+        foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, currentDieline);
+        panels = topo.panels;
+      }
 
       const outerColor = profile?.outerColor || '#FFFFFF';
       const innerColor = profile?.innerColor || '#FFFFFF';
       const roughness = profile?.roughness ?? 0.28;
 
       const controller = ThreeGeometryAdapter.createModelController(
-        topo.panels,
+        panels,
         foldingTree,
         {
           outerColor,

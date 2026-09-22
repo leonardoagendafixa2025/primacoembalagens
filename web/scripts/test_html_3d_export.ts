@@ -44,7 +44,7 @@ async function runHtml3DExportTests() {
   // --------------------------------------------------------------------------
   // TESTE 1: Exportação de Modelo Canônico FEFCO 0201
   // --------------------------------------------------------------------------
-  test('1. Geração de HTML 3D para FEFCO 0201 (5 Painéis, 4 Hinges)', () => {
+  test('1. Geração de HTML 3D para FEFCO 0201 (13 Painéis, 12 Hinges)', () => {
     const model0201 = getModelById('fefco_0201') || MODELS[0];
     const dieline0201 = model0201.calculate(model0201.defaultParams);
 
@@ -53,8 +53,8 @@ async function runHtml3DExportTests() {
     });
 
     assert(res.success, `Exportação deve ser bem-sucedida: ${res.errorMessage}`);
-    assert(res.panelsCount === 5, `Deve conter 5 painéis (encontrado: ${res.panelsCount})`);
-    assert(res.hingesCount === 4, `Deve conter 4 hinges (encontrado: ${res.hingesCount})`);
+    assert(res.panelsCount === 13, `Deve conter 13 painéis (encontrado: ${res.panelsCount})`);
+    assert(res.hingesCount === 12, `Deve conter 12 hinges (encontrado: ${res.hingesCount})`);
     assert(res.html.length > 5000, `HTML gerado deve ter tamanho substancial (>5KB, encontrado ${res.html.length} bytes)`);
 
     // Salva arquivo no scratch para validação física
@@ -137,7 +137,7 @@ async function runHtml3DExportTests() {
   // --------------------------------------------------------------------------
   // TESTE 6: Exportação de Modelo Complexo FEFCO 0429 com 6 Arcos R15
   // --------------------------------------------------------------------------
-  test('6. Modelo Complexo FEFCO 0429 (115 Entidades, 17 Painéis, 12 Hinges) no HTML 3D', () => {
+  test('6. Modelo Complexo FEFCO 0429 (115 Entidades, 17 Painéis, 16 Hinges) no HTML 3D', () => {
     const model0429 = getModelById('fefco_0429');
     assert(model0429 !== undefined, 'FEFCO 0429 deve existir');
     const dieline0429 = model0429!.calculate(model0429!.defaultParams);
@@ -145,7 +145,7 @@ async function runHtml3DExportTests() {
     const res = generateStandaloneHtml3D(model0429!, model0429!.defaultParams, profile, dieline0429);
     assert(res.success, `FEFCO 0429 deve ser exportado com sucesso: ${res.errorMessage}`);
     assert(res.panelsCount === 17, `FEFCO 0429 deve ter 17 painéis (encontrado: ${res.panelsCount})`);
-    assert(res.hingesCount === 12, `FEFCO 0429 deve ter 12 hinges (encontrado: ${res.hingesCount})`);
+    assert(res.hingesCount === 16, `FEFCO 0429 deve ter 16 hinges (encontrado: ${res.hingesCount})`);
 
     const filePath = path.join(scratchDir, res.filename);
     fs.writeFileSync(filePath, res.html, 'utf-8');

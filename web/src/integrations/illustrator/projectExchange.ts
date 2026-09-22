@@ -1,6 +1,7 @@
-import type { DielineResult, PackagingModel, CardboardProfile } from '../../engine/types';
+import type { DielineResult, PackagingModel, CardboardProfile, Point2D } from '../../engine/types';
 import { LoopTopologyEngine } from '../../engine/importers/LoopTopologyEngine';
 import { FoldingTreeEngine } from '../../engine/importers/FoldingTreeEngine';
+import { buildFoldingTopology, type TopologicalPanel, type TopologicalHinge } from '../../engine/dielineTopology';
 
 // Códigos de Erro Padronizados da Fase 6
 export const BRIDGE_ERROR_CODES = {
@@ -176,51 +177,121 @@ export function createProjectExchangePackage(
   artworkDataUri?: string,
   sessionId?: string
 ): IllustratorProjectPayload {
-  // Extrai a topologia usando EXCLUSIVAMENTE os motores certificados da Fase 3 e 4
-  const topo = LoopTopologyEngine.extractTopology(dieline);
-  const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, dieline);
+  // Extrai a topologia usando a topologia canônica da faca (customTopology / buildFoldingTopology) ou LoopTopologyEngine
+  const customTopo = dieline.customTopology || buildFoldingTopology(dieline);
 
-  const panels = topo.panels.map((p) => {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+  let panels: Array<{
+    id: string;
+    name: string;
+    isRoot: boolean;
+    polygon: Array<{ x: number; y: number }>;
+    bbox: { minX: number; minY: number; maxX: number; maxY: number; width: number; height: number };
+  }> = [];
 
-    for (const pt of p.outerBoundary.vertices) {
-      if (pt.x < minX) minX = pt.x;
-      if (pt.x > maxX) maxX = pt.x;
-      if (pt.y < minY) minY = pt.y;
-      if (pt.y > maxY) maxY = pt.y;
-    }
+  let hinges: Array<{
+    hingeId: string;
+    parentPanelId: string;
+    childPanelId: string;
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    nominalAngleDeg: number;
+  }> = [];
 
-    const isRoot = foldingTree.rootPanelId === p.id;
+  if (customTopo && customTopo.panels && customTopo.panels.length > 0) {
+    const rootPanelId =
+      customTopo.rootPanelId ||
+      customTopo.panels.find((p: TopologicalPanel) => p.isRoot)?.id ||
+      customTopo.panels[0].id;
 
-    return {
-      id: p.id,
-      name: p.name || p.id,
-      isRoot: Boolean(isRoot),
-      polygon: p.outerBoundary.vertices.map((pt) => ({ x: pt.x, y: pt.y })),
-      bbox: {
-        minX,
-        minY,
-        maxX,
-        maxY,
-        width: maxX - minX,
-        height: maxY - minY,
-      },
-    };
-  });
+    panels = customTopo.panels.map((p: TopologicalPanel) => {
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
 
-  const hinges = (foldingTree.hinges || []).map((h) => ({
-    hingeId: h.id,
-    parentPanelId: h.parentPanelId,
-    childPanelId: h.childPanelId,
-    x0: h.axisStart.x,
-    y0: h.axisStart.y,
-    x1: h.axisEnd.x,
-    y1: h.axisEnd.y,
-    nominalAngleDeg: h.foldAngle ?? (h.kinematics?.targetAngle ?? 90),
-  }));
+      for (const pt of p.boundary) {
+        if (pt.x < minX) minX = pt.x;
+        if (pt.x > maxX) maxX = pt.x;
+        if (pt.y < minY) minY = pt.y;
+        if (pt.y > maxY) maxY = pt.y;
+      }
+
+      const isRoot = p.id === rootPanelId || Boolean(p.isRoot);
+
+      return {
+        id: p.id,
+        name: p.name || p.id,
+        isRoot,
+        polygon: p.boundary.map((pt: Point2D) => ({ x: pt.x, y: pt.y })),
+        bbox: {
+          minX,
+          minY,
+          maxX,
+          maxY,
+          width: maxX - minX,
+          height: maxY - minY,
+        },
+      };
+    });
+
+    hinges = (customTopo.hinges || []).map((h: TopologicalHinge) => ({
+      hingeId: h.id,
+      parentPanelId: h.parentPanelId,
+      childPanelId: h.childPanelId,
+      x0: h.x0,
+      y0: h.y0,
+      x1: h.x1,
+      y1: h.y1,
+      nominalAngleDeg: h.targetAngleDeg ?? 90,
+    }));
+  } else {
+    const topo = LoopTopologyEngine.extractTopology(dieline);
+    const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, dieline);
+
+    panels = topo.panels.map((p) => {
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      for (const pt of p.outerBoundary.vertices) {
+        if (pt.x < minX) minX = pt.x;
+        if (pt.x > maxX) maxX = pt.x;
+        if (pt.y < minY) minY = pt.y;
+        if (pt.y > maxY) maxY = pt.y;
+      }
+
+      const isRoot = foldingTree.rootPanelId === p.id;
+
+      return {
+        id: p.id,
+        name: p.name || p.id,
+        isRoot: Boolean(isRoot),
+        polygon: p.outerBoundary.vertices.map((pt) => ({ x: pt.x, y: pt.y })),
+        bbox: {
+          minX,
+          minY,
+          maxX,
+          maxY,
+          width: maxX - minX,
+          height: maxY - minY,
+        },
+      };
+    });
+
+    hinges = (foldingTree.hinges || []).map((h) => ({
+      hingeId: h.id,
+      parentPanelId: h.parentPanelId,
+      childPanelId: h.childPanelId,
+      x0: h.axisStart.x,
+      y0: h.axisStart.y,
+      x1: h.axisEnd.x,
+      y1: h.axisEnd.y,
+      nominalAngleDeg: h.foldAngle ?? (h.kinematics?.targetAngle ?? 90),
+    }));
+  }
 
   const projectId = `proj_${model.id.toLowerCase()}`;
   const effectiveSessionId = sessionId || generateIllustratorSessionId(projectId);
@@ -291,7 +362,7 @@ export function createProjectExchangePackage(
     canonicalGeometry,
     dieline: {
       bounds: { ...dieline.bounds },
-      customTopology: topo,
+      customTopology: customTopo,
       segments: dieline.segments || [],
       lines,
       arcs,

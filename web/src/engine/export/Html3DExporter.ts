@@ -1,7 +1,7 @@
-import type { DielineResult, PackagingModel, CardboardProfile } from '../types';
+import type { DielineResult, PackagingModel, CardboardProfile, Point2D } from '../types';
 import { LoopTopologyEngine } from '../importers/LoopTopologyEngine';
 import { FoldingTreeEngine } from '../importers/FoldingTreeEngine';
-import { Kinematic3DEngine } from '../importers/Kinematic3DEngine';
+import { buildFoldingTopology, type TopologicalPanel, type TopologicalHinge } from '../dielineTopology';
 import { BRIDGE_ERROR_CODES } from '../../integrations/illustrator/projectExchange';
 
 export interface Html3DExportOptions {
@@ -24,9 +24,11 @@ export interface Html3DExportResult {
 }
 
 /**
- * Exportador Oficial de HTML 3D Autônomo (Fase 6 — Padrão Industrial Primacor)
- * Gera um arquivo HTML 100% autossuficiente com Three.js real, cinemática analítica de vincos,
- * aterramento automático, iluminação de estúdio profissional e visual ultra-premium.
+ * Motor Exportador de Modelos 3D Autônomos em HTML5 Standalone (Fase 6)
+ * 
+ * Regra Arquitetural Absoluta:
+ * Exporta um arquivo .html autossuficiente com renderizador WebGL/Three.js embutido.
+ * Consome EXCLUSIVAMENTE a geometria canônica 1:1 e a topologia matemática da faca.
  * NÃO utiliza BoxGeometry, NÃO utiliza fallbacks genéricos.
  */
 export function generateStandaloneHtml3D(
@@ -51,24 +53,121 @@ export function generateStandaloneHtml3D(
     }
 
     // 1. Extração Topológica e Cinemática Canônica
-    const topo = LoopTopologyEngine.extractTopology(dieline);
-    const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, dieline);
+    // Prioriza a topologia canônica da faca (customTopology || buildFoldingTopology),
+    // preservando integralmente todas as abas estruturais (abas de canto / dust flaps) e furos de trava (mortises).
+    const customTopo = dieline.customTopology || buildFoldingTopology(dieline);
 
-    if (topo.panels.length === 0) {
-      return {
-        success: false,
-        filename: `${model.code || 'modelo'}_3d.html`,
-        html: '',
-        modelCode: model.code || 'UNKNOWN',
-        panelsCount: 0,
-        hingesCount: 0,
-        errorCode: BRIDGE_ERROR_CODES.HTML_3D_INVALID_MODEL,
-        errorMessage: 'Nenhum painel estrutural fechado encontrado na faca canônica',
-      };
+    let serializedPanels: Array<{
+      id: string;
+      name: string;
+      isRoot: boolean;
+      boundary: Array<{ x: number; y: number }>;
+      holes: Array<Array<{ x: number; y: number }>>;
+      areaMm2: number;
+    }> = [];
+
+    let serializedHinges: Array<{
+      hingeId: string;
+      parentPanelId: string;
+      childPanelId: string;
+      x0: number;
+      y0: number;
+      x1: number;
+      y1: number;
+      lengthMm: number;
+      targetAngleDeg: number;
+      topologicalSign: number;
+      foldOrder: number;
+    }> = [];
+
+    let rootPanelId = '';
+
+    if (customTopo && customTopo.panels && customTopo.panels.length > 0) {
+      rootPanelId =
+        customTopo.rootPanelId ||
+        customTopo.panels.find((p: TopologicalPanel) => p.isRoot)?.id ||
+        customTopo.panels[0].id;
+      serializedPanels = customTopo.panels.map((p: TopologicalPanel) => ({
+        id: p.id,
+        name: p.name || p.id,
+        isRoot: Boolean(p.isRoot || p.id === rootPanelId),
+        boundary: p.boundary.map((pt: Point2D) => ({ x: pt.x, y: pt.y })),
+        holes: (p.holes || []).map((hole: Point2D[]) => hole.map((pt: Point2D) => ({ x: pt.x, y: pt.y }))),
+        areaMm2: p.area,
+      }));
+
+      serializedHinges = (customTopo.hinges || []).map((h: TopologicalHinge) => {
+        const pChild = customTopo.panels.find((p: TopologicalPanel) => p.id === h.childPanelId);
+        const midX = (h.x0 + h.x1) / 2;
+        const midY = (h.y0 + h.y1) / 2;
+        const toCx = (pChild?.centroid?.x ?? midX) - midX;
+        const toCy = (pChild?.centroid?.y ?? midY) - midY;
+        const dx = h.x1 - h.x0;
+        const dy = h.y1 - h.y0;
+        const cross = dx * toCy - dy * toCx;
+        const topologicalSign = cross >= 0 ? 1 : -1;
+
+        return {
+          hingeId: h.id,
+          parentPanelId: h.parentPanelId,
+          childPanelId: h.childPanelId,
+          x0: h.x0,
+          y0: h.y0,
+          x1: h.x1,
+          y1: h.y1,
+          lengthMm: h.length,
+          targetAngleDeg: h.targetAngleDeg ?? 90,
+          topologicalSign,
+          foldOrder: h.foldOrder ?? 1,
+        };
+      });
+    } else {
+      const topo = LoopTopologyEngine.extractTopology(dieline);
+      const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, dieline);
+      rootPanelId = foldingTree.rootPanelId;
+
+      if (topo.panels.length === 0) {
+        return {
+          success: false,
+          filename: `${model.code || 'modelo'}_3d.html`,
+          html: '',
+          modelCode: model.code || 'UNKNOWN',
+          panelsCount: 0,
+          hingesCount: 0,
+          errorCode: BRIDGE_ERROR_CODES.HTML_3D_INVALID_MODEL,
+          errorMessage: 'Nenhum painel estrutural fechado encontrado na faca canônica',
+        };
+      }
+
+      serializedPanels = topo.panels.map((p) => {
+        const boundary = p.outerBoundary.vertices.map((pt) => ({ x: pt.x, y: pt.y }));
+        const holes = (p.holes || []).map((hole) => hole.vertices.map((pt) => ({ x: pt.x, y: pt.y })));
+        const isRoot = foldingTree.rootPanelId === p.id;
+
+        return {
+          id: p.id,
+          name: p.name || p.id,
+          isRoot: Boolean(isRoot),
+          boundary,
+          holes,
+          areaMm2: p.area,
+        };
+      });
+
+      serializedHinges = (foldingTree.hinges || []).map((h) => ({
+        hingeId: h.id,
+        parentPanelId: h.parentPanelId,
+        childPanelId: h.childPanelId,
+        x0: h.axisStart.x,
+        y0: h.axisStart.y,
+        x1: h.axisEnd.x,
+        y1: h.axisEnd.y,
+        lengthMm: h.length,
+        targetAngleDeg: h.foldAngle ?? (h.kinematics?.targetAngle ?? 90),
+        topologicalSign: h.foldSign ?? (h.kinematics?.topologicalSign ?? 1),
+        foldOrder: h.foldOrder ?? 1,
+      }));
     }
-
-    // Calcula cinemática canônica a 100% (foldPercent = 100) para registrar matrizes rígidas
-    const kin100 = Kinematic3DEngine.computeFoldedState(topo.panels, foldingTree, 100);
 
     const outerColor = options.outerColor || profile.outerColor || '#FFFFFF';
     const innerColor = options.innerColor || profile.innerColor || '#FBF8F3';
@@ -93,39 +192,6 @@ export function generateStandaloneHtml3D(
       codeStr.startsWith('ECMA_E') ||
       codeStr.startsWith('ECMA_X');
 
-    // 2. Serialização dos Painéis com Geometria Exata (Pontos e Furos)
-    const serializedPanels = topo.panels.map((p) => {
-      const boundary = p.outerBoundary.vertices.map((pt) => ({ x: pt.x, y: pt.y }));
-      const holes = (p.holes || []).map((hole) => hole.vertices.map((pt) => ({ x: pt.x, y: pt.y })));
-      const fp = kin100.panels.find((panel3d) => panel3d.sourcePanelId === p.id);
-      const isRoot = fp ? fp.isRoot : foldingTree.rootPanelId === p.id;
-
-      return {
-        id: p.id,
-        name: p.name || p.id,
-        isRoot: Boolean(isRoot),
-        boundary,
-        holes,
-        areaMm2: p.area,
-        rigidTransform100: fp?.transform.elements || [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-      };
-    });
-
-    // 3. Serialização da Árvore de Dobra e Eixos de Hinge
-    const serializedHinges = (foldingTree.hinges || []).map((h) => ({
-      hingeId: h.id,
-      parentPanelId: h.parentPanelId,
-      childPanelId: h.childPanelId,
-      x0: h.axisStart.x,
-      y0: h.axisStart.y,
-      x1: h.axisEnd.x,
-      y1: h.axisEnd.y,
-      lengthMm: h.length,
-      targetAngleDeg: h.foldAngle ?? (h.kinematics?.targetAngle ?? 90),
-      topologicalSign: h.foldSign ?? (h.kinematics?.topologicalSign ?? 1),
-      foldOrder: h.foldOrder ?? 1,
-    }));
-
     // Metadados do Projeto para Reconstrução Forense
     const metadata = {
       generator: 'PLMPackLib Web CAD Pro v2.4 (Fase 6)',
@@ -134,7 +200,7 @@ export function generateStandaloneHtml3D(
       modelId: model.id,
       modelCode: model.code,
       modelName: model.name,
-      foldingTreeRootId: foldingTree.rootPanelId,
+      foldingTreeRootId: rootPanelId,
       isTubular,
       dimensions: {
         L: params.L ?? 300,

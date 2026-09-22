@@ -1,4 +1,11 @@
 import type { Point2D, DielineResult } from './types';
+import type { StructuralPanel, ClosedLoop } from './importers/LoopTopologyEngine';
+import type {
+  FoldingTreeResult,
+  TopologicalHinge as TreeHinge,
+  FoldingTreeNode,
+} from './importers/FoldingTreeEngine';
+import { computeBoundingBox } from './geometry';
 
 export interface TopologicalHinge {
   id: string;
@@ -819,4 +826,200 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     rawSegmentsCount: dieline.segments.length,
     rawArcsCount: dieline.arcs.length,
   };
+}
+
+/**
+ * Converte a topologia planar exata (DielineTopology) em painéis estruturais (StructuralPanel)
+ * e árvore de dobras (FoldingTreeResult) consumíveis pelos adaptadores Three.js e exportadores 3D.
+ */
+export function convertDielineTopologyToStructural(customTopo: DielineTopology): {
+  panels: StructuralPanel[];
+  foldingTree: FoldingTreeResult;
+} {
+  const rootPanelId =
+    customTopo.rootPanelId ||
+    customTopo.panels.find((p) => p.isRoot)?.id ||
+    customTopo.panels[0]?.id ||
+    '';
+
+  const structuralPanels: StructuralPanel[] = customTopo.panels.map((p) => {
+    const bSegs = p.boundary.map((pt, i) => {
+      const next = p.boundary[(i + 1) % p.boundary.length];
+      return {
+        id: `seg_${p.id}_${i}`,
+        x0: pt.x,
+        y0: pt.y,
+        x1: next.x,
+        y1: next.y,
+        type: 'cut' as const,
+      };
+    });
+
+    const outerBounds = computeBoundingBox({ segments: bSegs, arcs: [] });
+
+    const outerLoop: ClosedLoop = {
+      id: `loop_${p.id}`,
+      vertices: p.boundary,
+      edges: bSegs.map((s, i) => ({
+        type: 'segment',
+        id: `edge_${p.id}_${i}`,
+        sourceType: 'cut',
+        entity: s,
+        p0: { x: s.x0, y: s.y0 },
+        p1: { x: s.x1, y: s.y1 },
+        direction: 'FORWARD',
+      })),
+      area: p.area,
+      signedArea: p.area,
+      isExternal: false,
+      orientation: 'CCW',
+      bounds: outerBounds,
+      centroid: p.centroid,
+    };
+
+    const holeLoops: ClosedLoop[] = (p.holes || []).map((h, hIdx) => {
+      const hSegs = h.map((pt, i) => {
+        const next = h[(i + 1) % h.length];
+        return {
+          id: `hole_seg_${p.id}_${hIdx}_${i}`,
+          x0: pt.x,
+          y0: pt.y,
+          x1: next.x,
+          y1: next.y,
+          type: 'cut' as const,
+        };
+      });
+      const hBounds = computeBoundingBox({ segments: hSegs, arcs: [] });
+      return {
+        id: `hole_${p.id}_${hIdx}`,
+        vertices: h,
+        edges: hSegs.map((s, i) => ({
+          type: 'segment',
+          id: `hole_edge_${p.id}_${hIdx}_${i}`,
+          sourceType: 'cut',
+          entity: s,
+          p0: { x: s.x0, y: s.y0 },
+          p1: { x: s.x1, y: s.y1 },
+          direction: 'FORWARD',
+        })),
+        area: 231,
+        signedArea: 231,
+        isExternal: false,
+        orientation: 'CW',
+        bounds: hBounds,
+        centroid: { x: (hBounds.minX + hBounds.maxX) / 2, y: (hBounds.minY + hBounds.maxY) / 2 },
+      };
+    });
+
+    return {
+      id: p.id,
+      name: p.name || p.id,
+      outerBoundary: outerLoop,
+      holes: holeLoops,
+      area: p.area,
+      bounds: outerBounds,
+      centroid: p.centroid,
+      segments: bSegs,
+      arcs: [],
+      creases: [],
+      cuts: bSegs,
+      manifest: `Panel ${p.id} (${p.name || 'Structural'})`,
+    };
+  });
+
+  const panelMap = new Map<string, StructuralPanel>();
+  for (const sp of structuralPanels) {
+    panelMap.set(sp.id, sp);
+  }
+
+  const hinges: TreeHinge[] = (customTopo.hinges || []).map((h) => {
+    const pChild = customTopo.panels.find((p) => p.id === h.childPanelId);
+    const midX = (h.x0 + h.x1) / 2;
+    const midY = (h.y0 + h.y1) / 2;
+    const toCx = (pChild?.centroid?.x ?? midX) - midX;
+    const toCy = (pChild?.centroid?.y ?? midY) - midY;
+    const dx = h.x1 - h.x0;
+    const dy = h.y1 - h.y0;
+    const cross = dx * toCy - dy * toCx;
+    const topologicalSign: 1 | -1 = cross >= 0 ? 1 : -1;
+    const len = Math.hypot(dx, dy);
+
+    return {
+      id: h.id,
+      creaseId: h.id,
+      parentPanelId: h.parentPanelId,
+      childPanelId: h.childPanelId,
+      axisStart: { x: h.x0, y: h.y0 },
+      axisEnd: { x: h.x1, y: h.y1 },
+      length: len,
+      direction: { x: len > 0 ? dx / len : 1, y: len > 0 ? dy / len : 0 },
+      foldAngle: h.targetAngleDeg ?? 90,
+      foldSign: topologicalSign,
+      foldOrder: h.foldOrder ?? 1,
+      status: 'ACTIVE',
+      kinematics: {
+        targetAngle: h.targetAngleDeg ?? 90,
+        angleSource: 'MODEL',
+        topologicalSign,
+        signSource: 'MODEL_RULE',
+        physicalDirection: 'MOUNTAIN',
+      },
+    };
+  });
+
+  const rootStructural = panelMap.get(rootPanelId) || structuralPanels[0];
+  const treeNodes = new Map<string, FoldingTreeNode>();
+  for (const sp of structuralPanels) {
+    treeNodes.set(sp.id, {
+      panelId: sp.id,
+      panel: sp,
+      depth: 0,
+      children: [],
+    });
+  }
+
+  for (const h of hinges) {
+    const parentNode = treeNodes.get(h.parentPanelId);
+    const childNode = treeNodes.get(h.childPanelId);
+    if (parentNode && childNode) {
+      childNode.depth = parentNode.depth + 1;
+      childNode.incomingHinge = h;
+      parentNode.children.push(childNode);
+    }
+  }
+
+  const primaryTree = treeNodes.get(rootPanelId) || {
+    panelId: rootStructural.id,
+    panel: rootStructural,
+    depth: 0,
+    children: [],
+  };
+
+  const foldingTree: FoldingTreeResult = {
+    rootPanelId,
+    rootPanel: rootStructural,
+    rootSource: 'MODEL_RULE',
+    tree: primaryTree,
+    hinges,
+    edges: [],
+    components: [],
+    orphanCreases: [],
+    cycles: [],
+    disconnectedComponents: [],
+    invalidHingeCreaseMappings: [],
+    manifest: 'Canonical Folding Tree from DielineTopology',
+    stats: {
+      totalPanels: structuralPanels.length,
+      totalHinges: hinges.length,
+      totalCreases: hinges.length,
+      connectedPanelsCount: structuralPanels.length,
+      componentsCount: 1,
+      cyclesCount: 0,
+      disconnectedPanelsCount: 0,
+      orphanCreasesCount: 0,
+      invalidMappingsCount: 0,
+    },
+  };
+
+  return { panels: structuralPanels, foldingTree };
 }
