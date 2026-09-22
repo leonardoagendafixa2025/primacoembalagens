@@ -356,8 +356,35 @@ export class Kinematic3DEngine {
         hinge.kinematics.targetAngle;
 
       const angleRad = (targetDeg * Math.PI) / 180;
-      // Ângulo interpolado pelo foldPercent e sinal topológico da meia-aresta
-      const currentAngleRad = (clampedFold / 100) * angleRad * hinge.kinematics.topologicalSign;
+
+      // Progressão física de fechamento sequencial por abas (Padrão Heidelberg Package Designer / ArtiosCAD)
+      const t = clampedFold / 100;
+      const order = hinge.foldOrder ?? 1;
+      let localProgress = t;
+
+      if (t <= 0) {
+        localProgress = 0;
+      } else if (t >= 1) {
+        localProgress = 1;
+      } else if (order === 1) {
+        // Paredes principais erguem de 0% a 40%
+        localProgress = Math.min(1, t / 0.40);
+      } else if (order === 2) {
+        // Abas de poeira e cantos recolhem de 20% a 60%
+        localProgress = Math.max(0, Math.min(1, (t - 0.20) / 0.40));
+      } else if (order === 3) {
+        // Paredes duplas e travamento interno de 40% a 75%
+        localProgress = Math.max(0, Math.min(1, (t - 0.40) / 0.35));
+      } else if (order === 4) {
+        // Tampa fecha de 60% a 90%
+        localProgress = Math.max(0, Math.min(1, (t - 0.60) / 0.30));
+      } else {
+        // Abas da tampa e trava frontal inserem de 75% a 100%
+        localProgress = Math.max(0, Math.min(1, (t - 0.75) / 0.25));
+      }
+
+      // Ângulo interpolado sequencialmente pela ordem da aba
+      const currentAngleRad = localProgress * angleRad * hinge.kinematics.topologicalSign;
 
       // Hinge rigid transform: T(P0) * Rot(axis, theta) * T(-P0)
       const tToOrigin = Mat4.translation(-p0.x, -p0.y, -p0.z);

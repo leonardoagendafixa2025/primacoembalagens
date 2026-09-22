@@ -899,6 +899,18 @@ export function generateStandaloneHtml3D(
         var queue = [rootId];
         var visited = {};
         visited[rootId] = true;
+        var t = Math.max(0, Math.min(1, pct / 100.0));
+
+        // Fechamento sequencial por abas (Padrão Heidelberg Package Designer / ArtiosCAD)
+        function getHingeProgress(order) {
+          if (t <= 0) return 0;
+          if (t >= 1) return 1;
+          if (order === 1) return Math.min(1, t / 0.40);
+          if (order === 2) return Math.max(0, Math.min(1, (t - 0.20) / 0.40));
+          if (order === 3) return Math.max(0, Math.min(1, (t - 0.40) / 0.35));
+          if (order === 4) return Math.max(0, Math.min(1, (t - 0.60) / 0.30));
+          return Math.max(0, Math.min(1, (t - 0.75) / 0.25));
+        }
 
         while (queue.length > 0) {
           var parentId = queue.shift();
@@ -913,7 +925,8 @@ export function generateStandaloneHtml3D(
             var dx = h.x1 - h.x0;
             var dy = h.y1 - h.y0;
             var len = Math.hypot(dx, dy);
-            var angleRad = (pct / 100.0) * (h.targetAngleDeg * Math.PI / 180) * h.topologicalSign;
+            var localT = getHingeProgress(h.foldOrder || 1);
+            var angleRad = localT * (h.targetAngleDeg * Math.PI / 180) * h.topologicalSign;
 
             var tTo0 = mat4Trans(-h.x0, -h.y0, 0);
             var rRot = mat4RotAxis(dx / len, dy / len, 0, angleRad);
