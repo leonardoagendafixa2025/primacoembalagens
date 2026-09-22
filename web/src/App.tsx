@@ -338,17 +338,6 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleUploadArtworkFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (result) {
-        setArtworkTextureUri(result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   // Salvar projeto
   const handleSaveProject = async (name: string) => {
     const saved = await saveProject({
@@ -426,7 +415,6 @@ export const App: React.FC = () => {
         onSyncArtwork={handleSyncArtwork}
         hasArtwork={Boolean(artworkTextureUri)}
         onClearArtwork={() => setArtworkTextureUri(null)}
-        onUploadArtworkFile={handleUploadArtworkFile}
         onOpenIllustratorPluginModal={() => setIsIllustratorPluginModalOpen(true)}
       />
 

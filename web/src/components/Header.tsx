@@ -44,7 +44,6 @@ interface HeaderProps {
   onSyncArtwork?: () => void;
   hasArtwork?: boolean;
   onClearArtwork?: () => void;
-  onUploadArtworkFile?: (file: File) => void;
   onOpenIllustratorPluginModal?: () => void;
 }
 
@@ -68,13 +67,11 @@ export const Header: React.FC<HeaderProps> = ({
   onSyncArtwork,
   hasArtwork,
   onClearArtwork,
-  onUploadArtworkFile,
   onOpenIllustratorPluginModal,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
 
   const handleSaveClick = async () => {
@@ -366,21 +363,6 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hide-on-tablet">{isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Salvar'}</span>
         </button>
 
-        {/* Input Oculto para upload manual de arte PNG/JPG */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept="image/png,image/jpeg"
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              onUploadArtworkFile?.(file);
-              e.target.value = '';
-            }
-          }}
-        />
-
         {/* Botões Oficiais Adobe Illustrator (Fase 6 — Seção 3 e 34) */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           {/* BOTÃO 1: ABRIR NO ILLUSTRATOR */}
@@ -445,13 +427,13 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </button>
 
-          {/* BOTÃO 2: ENVIAR ARTE PARA PLMPACKLIB / SINCRONIZAR ARTE (Fase 6 — Seção 3 e 34) */}
+          {/* BOTÃO 2: SINCRONIZAR ARTE VINDA DO ILLUSTRATOR (ARTE CRIADA SOMENTE NO ILLUSTRATOR) */}
           {onSyncArtwork && (
             <button
               type="button"
               onClick={onSyncArtwork}
               className="cad-btn compact-btn"
-              title="Receber / Sincronizar arte criada no Adobe Illustrator de volta para o PLMPackLib Web"
+              title="Receber / Sincronizar arte criada no Adobe Illustrator (camada ARTWORK) para visualização no 3D"
               style={{
                 background: hasArtwork
                   ? 'rgba(16, 185, 129, 0.16)'
@@ -469,7 +451,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Download size={12} color={hasArtwork ? '#34d399' : '#38bdf8'} />
               <span className="hide-on-laptop">
-                {hasArtwork ? 'Arte Sincronizada ✓' : 'Enviar Arte p/ PLM'}
+                {hasArtwork ? 'Arte do Illustrator ✓' : 'Sincronizar Arte (Ai)'}
               </span>
             </button>
           )}
@@ -827,27 +809,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {onUploadArtworkFile && (
-                <button
-                  type="button"
-                  className="cad-btn"
-                  onClick={() => {
-                    fileInputRef.current?.click();
-                    setIsExportMenuOpen(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    justifyContent: 'flex-start',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--cad-text-primary)',
-                    fontSize: 12,
-                  }}
-                >
-                  <FolderOpen size={14} color="#38bdf8" />
-                  <span>Carregar Arte PNG / JPG</span>
-                </button>
-              )}
+
 
               {hasArtwork && onClearArtwork && (
                 <button
