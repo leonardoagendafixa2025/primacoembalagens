@@ -517,12 +517,12 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({ dieline, model: _model
         }}
       />
 
-      {/* Toolbar Flutuante Superior Direita com Ferramentas Rápidas */}
+      {/* Toolbar Flutuante Inferior Direita com Ferramentas Rápidas (sem sobreposição com Exportar) */}
       <div
         style={{
           position: 'absolute',
-          top: 12,
-          right: 12,
+          bottom: 14,
+          right: 14,
           display: 'flex',
           gap: 4,
           padding: 4,

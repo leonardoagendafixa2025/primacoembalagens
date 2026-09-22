@@ -309,13 +309,7 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
 }
 
 .header-container {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-.header-container::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  overflow: visible !important;
 }
 
 @media (max-width: 1650px) {

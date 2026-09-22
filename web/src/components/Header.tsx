@@ -14,6 +14,8 @@ import {
   HelpCircle,
   Monitor,
   FileUp,
+  RefreshCw,
+  Puzzle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -108,6 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
         zIndex: 50,
         userSelect: 'none',
         gap: 6,
+        overflow: 'visible',
       }}
     >
       {/* 1. Logotipo Oficial Primacor & Identificador CAD Pro */}
@@ -459,7 +462,7 @@ export const Header: React.FC<HeaderProps> = ({
                 flexShrink: 0,
               }}
             >
-              <Download size={13} color={hasArtwork ? '#34d399' : '#38bdf8'} />
+              <RefreshCw size={13} color={hasArtwork ? '#34d399' : '#38bdf8'} />
               <span className="hide-on-compact">
                 {hasArtwork ? 'Arte Ai ✓' : 'Sincronizar'}
               </span>
@@ -487,7 +490,7 @@ export const Header: React.FC<HeaderProps> = ({
               flexShrink: 0,
             }}
           >
-            <Download size={13} />
+            <Puzzle size={13} />
             <span className="hide-on-compact">Plugin</span>
           </a>
 
