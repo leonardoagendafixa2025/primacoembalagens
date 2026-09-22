@@ -136,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
               objectFit: 'contain',
             }}
           />
-          <div className="hide-on-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
+          <div className="hide-on-laptop" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
             <span
               style={{
                 fontSize: 9,
@@ -172,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
           title="Biblioteca de Modelos Paramétricos (Atalho: Ctrl+K)"
         >
           <BookOpen size={14} color="var(--cad-accent)" />
-          <span style={{ fontWeight: 600 }}>Biblioteca</span>
+          <span className="hide-on-laptop" style={{ fontWeight: 600 }}>Biblioteca</span>
           <span
             className="keep-badge"
             style={{
@@ -205,7 +205,8 @@ export const Header: React.FC<HeaderProps> = ({
           title="Importar Minha Faca (PDF, SVG, DXF)"
         >
           <FileUp size={14} />
-          <span style={{ fontWeight: 700 }}>Importar Minha Faca</span>
+          <span className="app-windows-full" style={{ fontWeight: 700 }}>Importar Minha Faca</span>
+          <span className="app-windows-short" style={{ fontWeight: 700 }}>Importar Faca</span>
         </button>
 
         {/* Modelo Ativo Selecionado */}
@@ -230,9 +231,9 @@ export const Header: React.FC<HeaderProps> = ({
           <span style={{ color: 'var(--cad-accent)', fontWeight: 700, letterSpacing: 0.3 }}>
             {currentModel.code}
           </span>
-          <span className="hide-on-mobile" style={{ color: 'var(--cad-border-hover)' }}>|</span>
+          <span className="hide-on-laptop" style={{ color: 'var(--cad-border-hover)' }}>|</span>
           <span
-            className="hide-on-mobile"
+            className="hide-on-laptop"
             style={{
               color: 'var(--cad-text-secondary)',
               fontWeight: 500,
@@ -481,30 +482,22 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hide-on-laptop">Plugin</span>
           </a>
 
-          {/* Botão Oficial para Baixar Aplicativo Windows */}
+          {/* Botão Oficial para Baixar Aplicativo Windows - NUNCA ESCONDIDO */}
           <a
             href="/downloads/PRIMACOR_EMBALAGENS_Setup.exe"
             download="PRIMACOR_EMBALAGENS_Setup.exe"
-            className="cad-btn compact-btn"
+            className="cad-btn compact-btn app-windows-btn"
             title="Baixar Aplicativo Windows Oficial PRIMACOR EMBALAGENS (.EXE)"
             style={{
-              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(3, 105, 161, 0.35))',
-              border: '1px solid rgba(56, 189, 248, 0.5)',
-              color: '#38bdf8',
-              padding: '5px 9px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
+              padding: '5px 10px',
               fontSize: 11,
-              fontWeight: 700,
               textDecoration: 'none',
               boxSizing: 'border-box',
-              flexShrink: 0,
-              boxShadow: '0 1px 6px rgba(56, 189, 248, 0.2)',
             }}
           >
-            <Monitor size={13} color="#38bdf8" />
-            <span className="hide-on-laptop">App Windows (.exe)</span>
+            <Monitor size={14} color="#38bdf8" />
+            <span className="app-windows-full">App Windows (.exe)</span>
+            <span className="app-windows-short">App .exe</span>
           </a>
         </div>
 

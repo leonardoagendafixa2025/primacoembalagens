@@ -303,6 +303,44 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
   opacity: 1;
 }
 
+/* App Windows button responsiveness - NUNCA ESCONDIDO */
+.app-windows-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  flex-shrink: 0 !important;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(3, 105, 161, 0.45)) !important;
+  border: 1.5px solid #38bdf8 !important;
+  color: #38bdf8 !important;
+  font-weight: 700 !important;
+  border-radius: var(--cad-radius-sm) !important;
+  box-shadow: 0 1px 8px rgba(56, 189, 248, 0.25) !important;
+  white-space: nowrap !important;
+}
+
+.app-windows-btn:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(3, 105, 161, 0.65)) !important;
+  border-color: #7dd3fc !important;
+  color: #ffffff !important;
+}
+
+.app-windows-full {
+  display: inline;
+}
+
+.app-windows-short {
+  display: none;
+}
+
+@media (max-width: 1400px) {
+  .app-windows-full {
+    display: none !important;
+  }
+  .app-windows-short {
+    display: inline !important;
+  }
+}
+
 /* Responsive Layout Adaptations (Desktop Médio, Tablet e Mobile) */
 @media (max-width: 1280px) {
   .hide-on-laptop {
