@@ -794,8 +794,10 @@ export function generateStandaloneHtml3D(
       });
 
       var cutLineMat = new THREE.LineBasicMaterial({
-        color: 0x0F172A,
-        linewidth: 1.5,
+        color: 0x94A3B8,
+        linewidth: 1,
+        transparent: true,
+        opacity: 0.45,
       });
 
       panelsData.forEach(function(p) {

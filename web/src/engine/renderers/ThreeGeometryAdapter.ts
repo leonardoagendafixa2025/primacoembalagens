@@ -146,9 +146,9 @@ export class ThreeGeometryAdapter {
     const creasePickTubes = new Map<string, THREE.Mesh>();
 
     const outerColor = new THREE.Color(options.outerColor || '#FFFFFF');
-    const cutLineColor = options.cutLineColor || '#0F172A';
-    const creaseLineColor = options.creaseLineColor || '#0284C7';
-    const perfLineColor = options.perfLineColor || '#10B981';
+    const cutLineColor = options.cutLineColor || '#94A3B8';
+    const creaseLineColor = options.creaseLineColor || '#CBD5E1';
+    const perfLineColor = options.perfLineColor || '#94A3B8';
     const roughness = options.roughness ?? 0.35;
     const metalness = options.metalness ?? 0.05;
     const arcSamples = options.arcSegments ?? 32;
@@ -172,24 +172,30 @@ export class ThreeGeometryAdapter {
       side: THREE.DoubleSide,
     });
 
-    // Material de linha de corte
+    // Material de linha de corte (elegante, sutil e natural)
     const cutLineMaterial = new THREE.LineBasicMaterial({
       color: new THREE.Color(cutLineColor),
-      linewidth: 1.5,
+      linewidth: 1,
+      transparent: true,
+      opacity: 0.45,
     });
 
-    // Material de vinco (CREASE)
+    // Material de vinco (CREASE - marca suave e realista de vinco)
     const creaseLineMaterial = new THREE.LineBasicMaterial({
       color: new THREE.Color(creaseLineColor),
-      linewidth: 1.5,
+      linewidth: 1,
+      transparent: true,
+      opacity: 0.4,
     });
 
     // Material de picote (PERF)
     const perfLineMaterial = new THREE.LineDashedMaterial({
       color: new THREE.Color(perfLineColor),
-      linewidth: 1.2,
+      linewidth: 1,
       dashSize: 3,
       gapSize: 2,
+      transparent: true,
+      opacity: 0.4,
     });
 
     // Material invisível para tubos de clique do vinco
