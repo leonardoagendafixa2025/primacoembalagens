@@ -3,7 +3,7 @@
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-  // web/node_modules/three/build/three.core.js
+  // node_modules/three/build/three.core.js
   var REVISION = "186";
   var MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
   var TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -15813,32 +15813,6 @@
       return new _PlaneGeometry(data.width, data.height, data.widthSegments, data.heightSegments);
     }
   };
-  var ShadowMaterial = class extends Material {
-    /**
-     * Constructs a new shadow material.
-     *
-     * @param {Object} [parameters] - An object with one or more properties
-     * defining the material's appearance. Any property of the material
-     * (including any property from inherited materials) can be passed
-     * in here. Color values can be passed any type of value accepted
-     * by {@link Color#set}.
-     */
-    constructor(parameters) {
-      super();
-      this.isShadowMaterial = true;
-      this.type = "ShadowMaterial";
-      this.color = new Color(0);
-      this.transparent = true;
-      this.fog = true;
-      this.setValues(parameters);
-    }
-    copy(source) {
-      super.copy(source);
-      this.color.copy(source.color);
-      this.fog = source.fog;
-      return this;
-    }
-  };
   function cloneUniforms(src) {
     const dst = {};
     for (const u in src) {
@@ -18685,52 +18659,6 @@
   };
   _Matrix2.prototype.isMatrix2 = true;
   var Matrix2 = _Matrix2;
-  var GridHelper = class extends LineSegments {
-    /**
-     * Constructs a new grid helper.
-     *
-     * @param {number} [size=10] - The size of the grid.
-     * @param {number} [divisions=10] - The number of divisions across the grid.
-     * @param {number|Color|string} [color1=0x444444] - The color of the center line.
-     * @param {number|Color|string} [color2=0x888888] - The color of the lines of the grid.
-     */
-    constructor(size = 10, divisions = 10, color1 = 4473924, color2 = 8947848) {
-      color1 = new Color(color1);
-      color2 = new Color(color2);
-      const center = divisions / 2;
-      const step = size / divisions;
-      const halfSize = size / 2;
-      const vertices = [], colors = [];
-      for (let i = 0, j = 0, k = -halfSize; i <= divisions; i++, k += step) {
-        vertices.push(-halfSize, 0, k, halfSize, 0, k);
-        vertices.push(k, 0, -halfSize, k, 0, halfSize);
-        const color = i === center ? color1 : color2;
-        color.toArray(colors, j);
-        j += 3;
-        color.toArray(colors, j);
-        j += 3;
-        color.toArray(colors, j);
-        j += 3;
-        color.toArray(colors, j);
-        j += 3;
-      }
-      const geometry = new BufferGeometry();
-      geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
-      geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
-      const material = new LineBasicMaterial({ vertexColors: true, toneMapped: false });
-      super(geometry, material);
-      this.type = "GridHelper";
-    }
-    /**
-     * Frees the GPU-related resources allocated by this instance. Call this
-     * method whenever this instance is no longer used in your app.
-     */
-    dispose() {
-      super.dispose();
-      this.geometry.dispose();
-      this.material.dispose();
-    }
-  };
   var Controls = class extends EventDispatcher {
     /**
      * Constructs a new controls instance.
@@ -18903,7 +18831,7 @@
     }
   }
 
-  // web/node_modules/three/build/three.module.js
+  // node_modules/three/build/three.module.js
   function WebGLAnimation() {
     let context = null;
     let isAnimating = false;
@@ -30401,7 +30329,7 @@ void main() {
     }
   };
 
-  // web/node_modules/three/examples/jsm/controls/OrbitControls.js
+  // node_modules/three/examples/jsm/controls/OrbitControls.js
   var _changeEvent = { type: "change" };
   var _startEvent = { type: "start" };
   var _endEvent = { type: "end" };
@@ -31317,7 +31245,7 @@ void main() {
     }
   }
 
-  // web/src/engine/dielineTopology.ts
+  // src/engine/dielineTopology.ts
   function buildFoldingTopology(dieline) {
     const rawSegs = [];
     for (const seg of dieline.segments) {
@@ -31935,7 +31863,7 @@ void main() {
     };
   }
 
-  // web/src/engine/foldingEngine.ts
+  // src/engine/foldingEngine.ts
   function createPanelMesh(panel, thickness, materials, dielineBounds) {
     const shape = new Shape();
     if (panel.boundary.length > 0) {
@@ -31995,7 +31923,7 @@ void main() {
     mesh.add(edgeLines);
     return mesh;
   }
-  function buildFoldable3DTree(dieline, thickness, outerColor = "#FFFFFF", innerColor = "#FFFFFF", roughness = 0.28, customAngles, artworkTexture) {
+  function buildFoldable3DTree(dieline, thickness, outerColor = "#FFFFFF", innerColor = "#FFFFFF", roughness = 0.28, customAngles, artworkTexture, innerArtworkTexture) {
     const rootGroup = new Group();
     const topology = dieline.customTopology || buildFoldingTopology(dieline);
     const panels = topology.panels;
@@ -32032,7 +31960,8 @@ void main() {
         emissiveIntensity: 0
       });
       const matEdge = new MeshStandardMaterial({
-        color: innerColor,
+        color: innerArtworkTexture ? "#FFFFFF" : innerColor,
+        map: innerArtworkTexture || null,
         roughness: Math.min(1, roughness + 0.15),
         metalness: 0.01,
         side: DoubleSide
@@ -32182,14 +32111,22 @@ void main() {
         }
       }
     };
-    const updateArtwork = (texture) => {
+    const updateArtwork = (texture, innerTexture) => {
       for (const item of itemsMap.values()) {
         const mesh = item.mesh;
-        if (Array.isArray(mesh.material) && mesh.material[0] instanceof MeshStandardMaterial) {
-          const mat = mesh.material[0];
-          mat.map = texture;
-          mat.color.set(texture ? "#FFFFFF" : outerColor);
-          mat.needsUpdate = true;
+        if (Array.isArray(mesh.material)) {
+          if (mesh.material[0] instanceof MeshStandardMaterial) {
+            const mat = mesh.material[0];
+            mat.map = texture;
+            mat.color.set(texture ? "#FFFFFF" : outerColor);
+            mat.needsUpdate = true;
+          }
+          if (innerTexture !== void 0 && mesh.material[1] instanceof MeshStandardMaterial) {
+            const matInner = mesh.material[1];
+            matInner.map = innerTexture;
+            matInner.color.set(innerTexture ? "#FFFFFF" : innerColor);
+            matInner.needsUpdate = true;
+          }
         }
       }
     };
@@ -32208,7 +32145,7 @@ void main() {
     };
   }
 
-  // web/src/integrations/illustrator/cepStudioEntry.ts
+  // src/integrations/illustrator/cepStudioEntry.ts
   var PLMStudioViewer = class {
     constructor() {
       __publicField(this, "container", null);
@@ -32219,6 +32156,10 @@ void main() {
       __publicField(this, "boxGroup");
       __publicField(this, "currentTree", null);
       __publicField(this, "currentTexture", null);
+      __publicField(this, "currentInnerTexture", null);
+      __publicField(this, "lastArtworkDataUri", null);
+      __publicField(this, "lastOuterArtworkDataUri", null);
+      __publicField(this, "lastInnerArtworkDataUri", null);
       __publicField(this, "currentProject", null);
       __publicField(this, "foldProgress", 1);
       __publicField(this, "isAutoRotating", false);
@@ -32250,7 +32191,6 @@ void main() {
         };
         loop();
       });
-      __publicField(this, "lastArtworkDataUri", null);
       this.scene = new Scene();
       this.scene.background = new Color(1250844);
       this.camera = new PerspectiveCamera(40, 1, 1, 1e4);
@@ -32269,19 +32209,9 @@ void main() {
       const fillLight = new DirectionalLight(14412542, 0.8);
       fillLight.position.set(-350, 300, -250);
       this.scene.add(fillLight);
-      const rimLight = new DirectionalLight(16777215, 0.6);
-      rimLight.position.set(0, -400, 200);
+      const rimLight = new DirectionalLight(16777215, 0.8);
+      rimLight.position.set(0, -600, 0);
       this.scene.add(rimLight);
-      const floorGeo = new PlaneGeometry(3e3, 3e3);
-      const floorMat = new ShadowMaterial({ opacity: 0.25 });
-      const floor = new Mesh(floorGeo, floorMat);
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -0.5;
-      floor.receiveShadow = true;
-      this.scene.add(floor);
-      const grid = new GridHelper(2e3, 40, 3516574, 1713192);
-      grid.position.y = 0;
-      this.scene.add(grid);
     }
     init(container) {
       if (this.isInitialized && this.renderer) return;
@@ -32319,8 +32249,14 @@ void main() {
       this.controls = new OrbitControls(this.camera, this.renderer.domElement);
       this.controls.enableDamping = true;
       this.controls.dampingFactor = 0.08;
-      this.controls.maxDistance = 3e3;
-      this.controls.minDistance = 40;
+      this.controls.screenSpacePanning = true;
+      this.controls.maxDistance = 5e3;
+      this.controls.minDistance = 30;
+      this.controls.minPolarAngle = 1e-3;
+      this.controls.maxPolarAngle = Math.PI - 1e-3;
+      this.controls.minAzimuthAngle = -Infinity;
+      this.controls.maxAzimuthAngle = Infinity;
+      this.controls.target.set(0, 0, 0);
       window.addEventListener("resize", this.onResize);
       if (typeof ResizeObserver !== "undefined") {
         try {
@@ -32407,7 +32343,8 @@ void main() {
           innerColor,
           0.26,
           {},
-          this.currentTexture
+          this.currentTexture,
+          this.currentInnerTexture
         );
         const codeStr = (project.modelCode || project.projectName || "").toUpperCase();
         const isTubular = codeStr.includes("FEFCO 02") || codeStr.includes("FEFCO 07") || codeStr.includes("FEFCO_02") || codeStr.includes("FEFCO_07") || codeStr.includes("FEFCO_F2") || codeStr.includes("FEFCO_F7") || codeStr.startsWith("ECMA A") || codeStr.startsWith("ECMA B") || codeStr.startsWith("ECMA E") || codeStr.startsWith("ECMA X") || codeStr.startsWith("ECMA_A") || codeStr.startsWith("ECMA_B") || codeStr.startsWith("ECMA_E") || codeStr.startsWith("ECMA_X");
@@ -32418,63 +32355,91 @@ void main() {
         this.updateWithGrounding(this.foldProgress);
         this.boxGroup.updateMatrixWorld(true);
         const bbox = new Box3().setFromObject(this.boxGroup);
-        const boxH = Math.max(30, bbox.max.y - bbox.min.y);
         const sphere = new Sphere();
         bbox.getBoundingSphere(sphere);
         const dist = Math.max(250, sphere.radius * 2.2);
-        this.camera.position.set(dist * 0.75, dist * 0.65 + boxH * 0.45, dist * 0.75);
+        this.camera.position.set(dist * 0.75, dist * 0.65, dist * 0.75);
         if (this.controls) {
-          this.controls.target.set(0, boxH * 0.45, 0);
+          this.controls.target.set(0, 0, 0);
           this.controls.update();
         }
-        if (this.lastArtworkDataUri) {
-          this.updateArtwork(this.lastArtworkDataUri);
+        if (this.lastOuterArtworkDataUri || this.lastArtworkDataUri) {
+          this.updateArtwork(this.lastOuterArtworkDataUri || this.lastArtworkDataUri || "", "outer");
+        }
+        if (this.lastInnerArtworkDataUri) {
+          this.updateArtwork(this.lastInnerArtworkDataUri, "inner");
         }
       } catch (err) {
         console.error("[PLMStudio] Erro ao construir \xE1rvore 3D do modelo:", err);
       }
     }
-    // Função que SEMPRE garante o FUNDO da embalagem perfeitamente apoiado no chão a Y = 0 e centralizado em X e Z
+    // Função que SEMPRE centraliza o centróide 3D da embalagem na origem (0, 0, 0)
     updateWithGrounding(progress) {
       if (!this.currentTree) return;
       this.currentTree.rootGroup.position.set(0, 0, 0);
       this.currentTree.updateProgress(progress);
       this.boxGroup.updateMatrixWorld(true);
       const bbox = new Box3().setFromObject(this.boxGroup);
-      const groundY = -bbox.min.y;
       const cx = (bbox.min.x + bbox.max.x) / 2;
+      const cy = (bbox.min.y + bbox.max.y) / 2;
       const cz = (bbox.min.z + bbox.max.z) / 2;
-      this.currentTree.rootGroup.position.set(-cx, groundY, -cz);
+      this.currentTree.rootGroup.position.set(-cx, -cy, -cz);
       this.boxGroup.position.set(0, 0, 0);
       this.boxGroup.updateMatrixWorld(true);
     }
-    updateArtwork(dataUri) {
-      this.lastArtworkDataUri = dataUri;
+    updateArtwork(dataUri, side = "outer", innerDataUri) {
+      if (!dataUri && !innerDataUri) return;
       const isKraft = this.substrateMode === "kraft";
       const substrateColor = isKraft ? "#C89D68" : "#FFFFFF";
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.fillStyle = substrateColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        const tex = new CanvasTexture(canvas);
-        tex.colorSpace = SRGBColorSpace;
-        tex.flipY = true;
-        tex.needsUpdate = true;
-        this.currentTexture = tex;
-        if (this.currentTree) {
-          this.currentTree.updateArtwork(tex);
-        }
-      };
-      img.onerror = (err) => {
-        console.error("[PLMStudio] Erro ao carregar imagem de arte:", err);
-      };
-      img.src = dataUri;
+      if (side === "inner" || side === "both" && innerDataUri) {
+        const targetUri = side === "inner" ? dataUri : innerDataUri;
+        this.lastInnerArtworkDataUri = targetUri;
+        const imgIn = new Image();
+        imgIn.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = imgIn.naturalWidth || imgIn.width;
+          canvas.height = imgIn.naturalHeight || imgIn.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.fillStyle = substrateColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(imgIn, 0, 0);
+          const texIn = new CanvasTexture(canvas);
+          texIn.colorSpace = SRGBColorSpace;
+          texIn.flipY = true;
+          texIn.needsUpdate = true;
+          this.currentInnerTexture = texIn;
+          if (this.currentTree) {
+            this.currentTree.updateArtwork(this.currentTexture, texIn);
+          }
+        };
+        imgIn.src = targetUri;
+      }
+      if (side === "outer" || side === "both") {
+        const targetOuterUri = dataUri;
+        this.lastArtworkDataUri = targetOuterUri;
+        this.lastOuterArtworkDataUri = targetOuterUri;
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.fillStyle = substrateColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          const tex = new CanvasTexture(canvas);
+          tex.colorSpace = SRGBColorSpace;
+          tex.flipY = true;
+          tex.needsUpdate = true;
+          this.currentTexture = tex;
+          if (this.currentTree) {
+            this.currentTree.updateArtwork(tex, this.currentInnerTexture);
+          }
+        };
+        img.src = targetOuterUri;
+      }
     }
     setFoldProgress(val) {
       this.foldProgress = Math.max(0, Math.min(1, val));

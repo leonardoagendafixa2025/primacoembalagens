@@ -46,6 +46,8 @@ export const App: React.FC = () => {
 
   // Estados da Integração Oficial Adobe Illustrator 2025
   const [artworkTextureUri, setArtworkTextureUri] = useState<string | null>(null);
+  const [outerArtworkTextureUri, setOuterArtworkTextureUri] = useState<string | null>(null);
+  const [innerArtworkTextureUri, setInnerArtworkTextureUri] = useState<string | null>(null);
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>({
     bridgeOnline: false,
     illustratorDetected: false,
@@ -152,11 +154,21 @@ export const App: React.FC = () => {
 
     const unsubscribe = client.addListener((event) => {
       if (event.type === 'ARTWORK_UPDATED') {
-        const uri =
+        const outerUri =
+          event.data?.outerArtworkDataUri ||
           event.data?.textureDataUri ||
           (typeof event.data === 'string' ? event.data : null);
-        if (uri) {
-          setArtworkTextureUri(uri);
+        const innerUri = event.data?.innerArtworkDataUri || null;
+
+        if (outerUri) {
+          setArtworkTextureUri(outerUri);
+          setOuterArtworkTextureUri(outerUri);
+        }
+        if (innerUri) {
+          setInnerArtworkTextureUri(innerUri);
+        }
+
+        if (outerUri || innerUri) {
           try {
             confetti({ particleCount: 30, spread: 50, origin: { y: 0.2 } });
           } catch {}
@@ -314,7 +326,9 @@ export const App: React.FC = () => {
 
   const handleExportHtml3D = () => {
     const res = downloadHtml3DFile(currentModel, params, selectedProfile, dieline, {
-      artworkTextureUri,
+      artworkTextureUri: outerArtworkTextureUri || artworkTextureUri,
+      outerArtworkTextureUri: outerArtworkTextureUri || artworkTextureUri,
+      innerArtworkTextureUri: innerArtworkTextureUri,
     });
     if (res.success) {
       confetti({ particleCount: 35, spread: 50, origin: { y: 0.1 } });
@@ -327,8 +341,16 @@ export const App: React.FC = () => {
     try {
       const client = IllustratorBridgeClient.getInstance();
       const res = await client.requestArtworkSync(currentModel.id);
-      if (res.success && res.textureDataUri) {
-        setArtworkTextureUri(res.textureDataUri);
+      if (res.success && (res.outerArtworkDataUri || res.textureDataUri || res.innerArtworkDataUri)) {
+        const outer = res.outerArtworkDataUri || res.textureDataUri || null;
+        const inner = res.innerArtworkDataUri || null;
+        if (outer) {
+          setArtworkTextureUri(outer);
+          setOuterArtworkTextureUri(outer);
+        }
+        if (inner) {
+          setInnerArtworkTextureUri(inner);
+        }
         confetti({ particleCount: 35, spread: 50, origin: { y: 0.2 } });
       } else {
         alert(res.message || 'Nenhuma arte sincronizada encontrada na Bridge.');
@@ -336,6 +358,12 @@ export const App: React.FC = () => {
     } catch (e: any) {
       alert('Erro ao sincronizar arte: ' + (e?.message || e));
     }
+  };
+
+  const handleClearArtwork = () => {
+    setArtworkTextureUri(null);
+    setOuterArtworkTextureUri(null);
+    setInnerArtworkTextureUri(null);
   };
 
   // Salvar projeto
@@ -413,8 +441,8 @@ export const App: React.FC = () => {
         isOpeningIllustrator={isOpeningIllustrator}
         bridgeStatus={bridgeStatus}
         onSyncArtwork={handleSyncArtwork}
-        hasArtwork={Boolean(artworkTextureUri)}
-        onClearArtwork={() => setArtworkTextureUri(null)}
+        hasArtwork={Boolean(outerArtworkTextureUri || innerArtworkTextureUri || artworkTextureUri)}
+        onClearArtwork={handleClearArtwork}
         onOpenIllustratorPluginModal={() => setIsIllustratorPluginModalOpen(true)}
       />
 
@@ -499,7 +527,9 @@ export const App: React.FC = () => {
               onHingeListUpdate={setHingeList}
               onOpenFoldInspector={handleOpenFoldInspector}
               isFoldInspectorActive={sidebarPanel === 'folds'}
-              artworkTextureUri={artworkTextureUri}
+              artworkTextureUri={outerArtworkTextureUri || artworkTextureUri}
+              outerArtworkTextureUri={outerArtworkTextureUri || artworkTextureUri}
+              innerArtworkTextureUri={innerArtworkTextureUri}
             />
           )}
 

@@ -26,6 +26,8 @@ interface FoldingViewer3DProps {
   onOpenFoldInspector?: () => void;
   isFoldInspectorActive?: boolean;
   artworkTextureUri?: string | null;
+  outerArtworkTextureUri?: string | null;
+  innerArtworkTextureUri?: string | null;
 }
 
 export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
@@ -40,6 +42,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   onOpenFoldInspector,
   isFoldInspectorActive = false,
   artworkTextureUri = null,
+  outerArtworkTextureUri = null,
+  innerArtworkTextureUri = null,
 }) => {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
@@ -55,10 +59,10 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   // Lista interna de vincos para contagem e status
   const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
 
-  // Textura de Arte vinda do Adobe Illustrator
-  const [artworkTexture, setArtworkTexture] = useState<THREE.Texture | null>(null);
-  const artworkTextureRef = useRef<THREE.Texture | null>(null);
-  artworkTextureRef.current = artworkTexture;
+  // Texturas de Arte vinda do Adobe Illustrator (Externa + Interna)
+  const effectiveOuterUri = outerArtworkTextureUri || artworkTextureUri;
+  const [outerArtworkTexture, setOuterArtworkTexture] = useState<THREE.Texture | null>(null);
+  const [innerArtworkTexture, setInnerArtworkTexture] = useState<THREE.Texture | null>(null);
 
   // Refs Three.js
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -70,12 +74,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const controllerRef = useRef<ThreeModelController | null>(null);
   const downPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Carrega textura sincronizada da arte do Illustrator quando fornecida,
-  // compondo sobre a cor do papel/substrato para eliminar qualquer fundo preto indesejado
+  // Carrega textura externa sincronizada da arte do Illustrator
   useEffect(() => {
-    if (!artworkTextureUri) {
-      setArtworkTexture(null);
-      controllerRef.current?.updateArtwork(null);
+    if (!effectiveOuterUri) {
+      setOuterArtworkTexture(null);
+      controllerRef.current?.updateArtwork(null, innerArtworkTexture);
       return;
     }
 
@@ -88,26 +91,52 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // 1. Pinta o fundo com a cor real do substrato (ex: Branco do Cartão ou Bege/Marrom do Kraft)
       const substrateColor = profile?.outerColor || '#FFFFFF';
       ctx.fillStyle = substrateColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // 2. Desenha a arte vetorial/impressa com sua transparência sobreposta ao papel
       ctx.drawImage(img, 0, 0);
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.flipY = true;
       tex.needsUpdate = true;
-      setArtworkTexture(tex);
-      controllerRef.current?.updateArtwork(tex);
+      setOuterArtworkTexture(tex);
+      controllerRef.current?.updateArtwork(tex, innerArtworkTexture);
     };
-    img.onerror = (err) => {
-      console.warn('[FoldingViewer3D] Erro ao carregar imagem de arte do Illustrator:', err);
+    img.src = effectiveOuterUri;
+  }, [effectiveOuterUri, profile?.outerColor]);
+
+  // Carrega textura interna sincronizada da arte do Illustrator
+  useEffect(() => {
+    if (!innerArtworkTextureUri) {
+      setInnerArtworkTexture(null);
+      controllerRef.current?.updateArtwork(outerArtworkTexture, null);
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const substrateColor = profile?.innerColor || '#FFFFFF';
+      ctx.fillStyle = substrateColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.flipY = true;
+      tex.needsUpdate = true;
+      setInnerArtworkTexture(tex);
+      controllerRef.current?.updateArtwork(outerArtworkTexture, tex);
     };
-    img.src = artworkTextureUri;
-  }, [artworkTextureUri, profile?.outerColor]);
+    img.src = innerArtworkTextureUri;
+  }, [innerArtworkTextureUri, profile?.innerColor]);
 
   // Configuração inicial da cena Three.js com OrbitControls profissional
   useEffect(() => {
@@ -287,7 +316,10 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           innerColor,
           roughness,
           customAngles,
-          artworkTexture,
+          artworkTexture: outerArtworkTexture,
+          outerArtworkTexture,
+          innerArtworkTexture,
+          dielineBounds: currentDieline.bounds,
         }
       );
       controllerRef.current = controller;
@@ -374,7 +406,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       setHingeList([]);
       updateProgressRef.current = null;
     }
-  }, [model, params, dieline, profile, customAngles, artworkTexture]);
+  }, [model, params, dieline, profile, customAngles, outerArtworkTexture, innerArtworkTexture]);
 
   // Atualiza as rotações de dobra conforme o foldProgress (0% = aberta, 100% = montada)
   useEffect(() => {

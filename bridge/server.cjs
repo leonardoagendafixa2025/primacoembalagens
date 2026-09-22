@@ -318,11 +318,41 @@ const server = http.createServer(async (req, res) => {
     req.on('end', () => {
       try {
         const payload = JSON.parse(body);
-        let base64 = payload.image || payload.artworkBase64 || payload.dataUri || payload.textureDataUri || '';
-        if (base64.startsWith('data:image')) {
-          latestArtworkDataUri = base64;
-        } else if (base64) {
-          latestArtworkDataUri = `data:image/png;base64,${base64}`;
+        let base64 = payload.image || payload.artworkBase64 || payload.dataUri || payload.textureDataUri || payload.outerArtworkDataUri || '';
+        let innerBase64 = payload.innerArtworkDataUri || payload.innerDataUri || payload.innerImage || '';
+        const side = payload.side || 'outer';
+
+        if (side === 'inner') {
+          if (base64.startsWith('data:image')) {
+            latestInnerArtworkDataUri = base64;
+          } else if (base64) {
+            latestInnerArtworkDataUri = `data:image/png;base64,${base64}`;
+          }
+        } else if (side === 'both') {
+          if (base64.startsWith('data:image')) {
+            latestArtworkDataUri = base64;
+          } else if (base64) {
+            latestArtworkDataUri = `data:image/png;base64,${base64}`;
+          }
+          if (innerBase64.startsWith('data:image')) {
+            latestInnerArtworkDataUri = innerBase64;
+          } else if (innerBase64) {
+            latestInnerArtworkDataUri = `data:image/png;base64,${innerBase64}`;
+          }
+        } else {
+          // outer
+          if (base64.startsWith('data:image')) {
+            latestArtworkDataUri = base64;
+          } else if (base64) {
+            latestArtworkDataUri = `data:image/png;base64,${base64}`;
+          }
+          if (innerBase64) {
+            if (innerBase64.startsWith('data:image')) {
+              latestInnerArtworkDataUri = innerBase64;
+            } else {
+              latestInnerArtworkDataUri = `data:image/png;base64,${innerBase64}`;
+            }
+          }
         }
 
         let vectorSvg = payload.vectorSvg || payload.vector || '';
@@ -337,6 +367,9 @@ const server = http.createServer(async (req, res) => {
 
         const artworkMetadata = {
           textureDataUri: latestArtworkDataUri,
+          outerArtworkDataUri: latestArtworkDataUri,
+          innerArtworkDataUri: latestInnerArtworkDataUri,
+          side: side,
           vectorSvg: latestArtworkVectorSvg,
           hasVector: hasVector,
           artworkType: artworkType,
@@ -351,7 +384,7 @@ const server = http.createServer(async (req, res) => {
 
         latestArtworkMeta = artworkMetadata;
 
-        console.log('[Bridge Illustrator] Nova arte sincronizada do Illustrator! Projeto:', artworkMetadata.projectId, 'Tipo:', artworkType, 'Rev:', artworkMetadata.projectRevision);
+        console.log('[Bridge Illustrator] Nova arte sincronizada do Illustrator! Projeto:', artworkMetadata.projectId, 'Lado:', side, 'Tipo:', artworkType, 'Rev:', artworkMetadata.projectRevision);
 
         broadcastWs({
           type: 'ARTWORK_UPDATED',
@@ -379,17 +412,20 @@ const server = http.createServer(async (req, res) => {
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      hasArtwork: !!latestArtworkDataUri || hasVector,
+      hasArtwork: !!latestArtworkDataUri || !!latestInnerArtworkDataUri || hasVector,
       hasVector: hasVector,
       artworkType: artworkType,
       vectorStatus: hasVector ? 'VECTOR_SYNCHRONIZED' : 'VECTOR_ARTWORK_UNAVAILABLE',
       vectorSvg: latestArtworkVectorSvg,
       textureDataUri: latestArtworkDataUri,
+      outerArtworkDataUri: latestArtworkDataUri,
+      innerArtworkDataUri: latestInnerArtworkDataUri,
       projectId: latestArtworkMeta?.projectId || null,
       modelId: latestArtworkMeta?.modelId || null,
       modelCode: latestArtworkMeta?.modelCode || null,
       projectRevision: latestArtworkMeta?.projectRevision || 1,
       sessionId: latestArtworkMeta?.sessionId || null,
+      metadata: latestArtworkMeta,
     }));
     return;
   }

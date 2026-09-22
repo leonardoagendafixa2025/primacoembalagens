@@ -25,6 +25,10 @@ class PLMStudioViewer {
   private boxGroup: THREE.Group;
   private currentTree: FoldableTreeResult | null = null;
   private currentTexture: THREE.Texture | null = null;
+  private currentInnerTexture: THREE.Texture | null = null;
+  private lastArtworkDataUri: string | null = null;
+  private lastOuterArtworkDataUri: string | null = null;
+  private lastInnerArtworkDataUri: string | null = null;
   private currentProject: StudioProjectData | null = null;
 
   private foldProgress: number = 1.0;
@@ -176,8 +180,6 @@ class PLMStudioViewer {
     }
   }
 
-  private lastArtworkDataUri: string | null = null;
-
   public loadModel(project: StudioProjectData) {
     this.currentProject = project;
 
@@ -248,7 +250,8 @@ class PLMStudioViewer {
         innerColor,
         0.26,
         {},
-        this.currentTexture
+        this.currentTexture,
+        this.currentInnerTexture
       );
 
       // Verifica se é modelo tubular (FEFCO 02xx / 07xx / ECMA A, B, E, X) para manter a caixa em pé com o fundo no chão
@@ -291,8 +294,11 @@ class PLMStudioViewer {
       }
 
       // Se houver arte anterior, reaplica com a cor atual do substrato
-      if (this.lastArtworkDataUri) {
-        this.updateArtwork(this.lastArtworkDataUri);
+      if (this.lastOuterArtworkDataUri || this.lastArtworkDataUri) {
+        this.updateArtwork(this.lastOuterArtworkDataUri || this.lastArtworkDataUri || '', 'outer');
+      }
+      if (this.lastInnerArtworkDataUri) {
+        this.updateArtwork(this.lastInnerArtworkDataUri, 'inner');
       }
     } catch (err) {
       console.error('[PLMStudio] Erro ao construir árvore 3D do modelo:', err);
@@ -315,40 +321,69 @@ class PLMStudioViewer {
     this.boxGroup.updateMatrixWorld(true);
   }
 
-  public updateArtwork(dataUri: string) {
-    this.lastArtworkDataUri = dataUri;
+  public updateArtwork(dataUri: string, side: 'outer' | 'inner' | 'both' = 'outer', innerDataUri?: string) {
+    if (!dataUri && !innerDataUri) return;
     const isKraft = this.substrateMode === 'kraft';
     const substrateColor = isKraft ? '#C89D68' : '#FFFFFF';
 
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth || img.width;
-      canvas.height = img.naturalHeight || img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    if (side === 'inner' || (side === 'both' && innerDataUri)) {
+      const targetUri = side === 'inner' ? dataUri : innerDataUri!;
+      this.lastInnerArtworkDataUri = targetUri;
+      const imgIn = new Image();
+      imgIn.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = imgIn.naturalWidth || imgIn.width;
+        canvas.height = imgIn.naturalHeight || imgIn.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.fillStyle = substrateColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(imgIn, 0, 0);
 
-      // 1. Pinta todo o fundo com a cor do papel/substrato (elimina o fundo preto)
-      ctx.fillStyle = substrateColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const texIn = new THREE.CanvasTexture(canvas);
+        texIn.colorSpace = THREE.SRGBColorSpace;
+        texIn.flipY = true;
+        texIn.needsUpdate = true;
+        this.currentInnerTexture = texIn;
 
-      // 2. Desenha a arte impressa com transparência preservada por cima
-      ctx.drawImage(img, 0, 0);
+        if (this.currentTree) {
+          this.currentTree.updateArtwork(this.currentTexture, texIn);
+        }
+      };
+      imgIn.src = targetUri;
+    }
 
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.flipY = true;
-      tex.needsUpdate = true;
-      this.currentTexture = tex;
+    if (side === 'outer' || side === 'both') {
+      const targetOuterUri = dataUri;
+      this.lastArtworkDataUri = targetOuterUri;
+      this.lastOuterArtworkDataUri = targetOuterUri;
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-      if (this.currentTree) {
-        this.currentTree.updateArtwork(tex);
-      }
-    };
-    img.onerror = (err) => {
-      console.error('[PLMStudio] Erro ao carregar imagem de arte:', err);
-    };
-    img.src = dataUri;
+        // 1. Pinta todo o fundo com a cor do papel/substrato (elimina o fundo preto)
+        ctx.fillStyle = substrateColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. Desenha a arte impressa com transparência preservada por cima
+        ctx.drawImage(img, 0, 0);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.flipY = true;
+        tex.needsUpdate = true;
+        this.currentTexture = tex;
+
+        if (this.currentTree) {
+          this.currentTree.updateArtwork(tex, this.currentInnerTexture);
+        }
+      };
+      img.src = targetOuterUri;
+    }
   }
 
   public setFoldProgress(val: number) {

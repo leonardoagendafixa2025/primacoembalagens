@@ -10,6 +10,8 @@ export interface Html3DExportOptions {
   outerColor?: string;
   innerColor?: string;
   artworkTextureUri?: string | null;
+  outerArtworkTextureUri?: string | null;
+  innerArtworkTextureUri?: string | null;
 }
 
 export interface Html3DExportResult {
@@ -173,6 +175,8 @@ export function generateStandaloneHtml3D(
     const innerColor = options.innerColor || profile.innerColor || '#FBF8F3';
     const thickness = profile.thickness || 0.4;
     const initialFold = options.foldPercent !== undefined ? options.foldPercent : 1.0;
+    const outerArtworkUri = options.outerArtworkTextureUri || options.artworkTextureUri || null;
+    const innerArtworkUri = options.innerArtworkTextureUri || null;
 
     // Detecta se é tubular
     const codeStr = (model.code || model.id || '').toUpperCase();
@@ -784,14 +788,19 @@ export function generateStandaloneHtml3D(
         boxGroup.rotation.x = Math.PI / 2;
       }
 
-      var panelNodes = new Map();
+      var textureLoader = new THREE.TextureLoader();
+      var outerTexture = ${outerArtworkUri ? `textureLoader.load(${JSON.stringify(outerArtworkUri)})` : 'null'};
+      if (outerTexture) {
+        outerTexture.encoding = THREE.sRGBEncoding;
+        outerTexture.anisotropy = 16;
+      }
+      var innerTexture = ${innerArtworkUri ? `textureLoader.load(${JSON.stringify(innerArtworkUri)})` : 'null'};
+      if (innerTexture) {
+        innerTexture.encoding = THREE.sRGBEncoding;
+        innerTexture.anisotropy = 16;
+      }
 
-      var frontMat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(outerColorHex),
-        roughness: 0.38,
-        metalness: 0.02,
-        side: THREE.DoubleSide,
-      });
+      var panelNodes = new Map();
 
       var cutLineMat = new THREE.LineBasicMaterial({
         color: 0x94A3B8,
@@ -799,6 +808,11 @@ export function generateStandaloneHtml3D(
         transparent: true,
         opacity: 0.45,
       });
+
+      var bboxMinX = ${dieline.bounds.minX};
+      var bboxMinY = ${dieline.bounds.minY};
+      var bboxW = ${dieline.bounds.width || 1};
+      var bboxH = ${dieline.bounds.height || 1};
 
       panelsData.forEach(function(p) {
         var shape = new THREE.Shape();
@@ -827,14 +841,52 @@ export function generateStandaloneHtml3D(
         var geom = new THREE.ShapeGeometry(shape);
         geom.computeVertexNormals();
 
+        var pos = geom.attributes.position;
+        var uvs = [];
+        var innerUvs = [];
+        for (var vi = 0; vi < pos.count; vi++) {
+          var vx = pos.getX(vi);
+          var vy = pos.getY(vi);
+          var u = (vx - bboxMinX) / bboxW;
+          var v = (vy - bboxMinY) / bboxH;
+          uvs.push(u, v);
+          innerUvs.push(1.0 - u, v);
+        }
+        geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
         var group = new THREE.Group();
         group.name = 'panel_' + p.id;
 
-        var mesh = new THREE.Mesh(geom, frontMat);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        mesh.matrixAutoUpdate = false;
-        group.add(mesh);
+        var outerMat = new THREE.MeshStandardMaterial({
+          color: outerTexture ? 0xFFFFFF : new THREE.Color(outerColorHex),
+          map: outerTexture || null,
+          roughness: 0.38,
+          metalness: 0.02,
+          side: innerTexture ? THREE.FrontSide : THREE.DoubleSide,
+        });
+
+        var outerMesh = new THREE.Mesh(geom, outerMat);
+        outerMesh.castShadow = true;
+        outerMesh.receiveShadow = true;
+        outerMesh.matrixAutoUpdate = false;
+        group.add(outerMesh);
+
+        if (innerTexture) {
+          var innerGeom = geom.clone();
+          innerGeom.setAttribute('uv', new THREE.Float32BufferAttribute(innerUvs, 2));
+          var innerMat = new THREE.MeshStandardMaterial({
+            color: 0xFFFFFF,
+            map: innerTexture,
+            roughness: 0.42,
+            metalness: 0.02,
+            side: THREE.BackSide,
+          });
+          var innerMesh = new THREE.Mesh(innerGeom, innerMat);
+          innerMesh.castShadow = true;
+          innerMesh.receiveShadow = true;
+          innerMesh.matrixAutoUpdate = false;
+          group.add(innerMesh);
+        }
 
         var edges = new THREE.EdgesGeometry(geom);
         var lines = new THREE.LineSegments(edges, cutLineMat);

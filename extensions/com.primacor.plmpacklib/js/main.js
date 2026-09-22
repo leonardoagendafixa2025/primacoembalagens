@@ -10,7 +10,8 @@
   var elStatusText = document.getElementById('statusText');
   var elModelTag = document.getElementById('modelTag');
   var elStatusMsg = document.getElementById('txtStatusMsg');
-  var elVersion = document.getElementById('txtVersion');
+  var elVersionOuter = document.getElementById('txtVersionOuter');
+  var elVersionInner = document.getElementById('txtVersionInner');
   var elEmptyState = document.getElementById('emptyStateOverlay');
 
   var sliderFold = document.getElementById('sliderFold');
@@ -18,6 +19,8 @@
   var btnPlayFold = document.getElementById('btnPlayFold');
 
   var btnSyncArtwork = document.getElementById('btnSyncArtwork');
+  var btnSyncArtworkOuter = document.getElementById('btnSyncArtworkOuter');
+  var btnSyncArtworkInner = document.getElementById('btnSyncArtworkInner');
   var btnUpdateDieline = document.getElementById('btnUpdateDieline');
   var btnOpenWeb = document.getElementById('btnOpenWeb');
   var btnOpenWebEmpty = document.getElementById('btnOpenWebEmpty');
@@ -34,7 +37,10 @@
   var currentProject = null;
   var isPlayingAnim = false;
   var animInterval = null;
-  var artVersion = 0;
+  var outerArtVersion = 0;
+  var innerArtVersion = 0;
+  var lastOuterArtworkUri = null;
+  var lastInnerArtworkUri = null;
   var lastLoadedArtworkUri = null;
 
   function setStatus(msg) {
@@ -346,93 +352,117 @@
 
   startEmbeddedServer();
 
-  // 3. Captura de Arte do Illustrator e Projeção no 3D (com suporte a callback)
-  function syncArtwork(callback) {
+  function readDataUriFromFile(filePath) {
+    if (!filePath) return null;
+    try {
+      var reqFn = (typeof require === 'function') ? require : (typeof window !== 'undefined' && typeof window.require === 'function' ? window.require : null);
+      if (reqFn) {
+        var fs = reqFn('fs');
+        if (fs.existsSync(filePath)) {
+          var buf = fs.readFileSync(filePath);
+          return 'data:image/png;base64,' + buf.toString('base64');
+        }
+      }
+    } catch(nodeErr) {}
+
+    if (window.cep && window.cep.fs) {
+      var readRes = window.cep.fs.readFile(filePath, window.cep.encoding.Base64);
+      if (readRes.err === 0 && readRes.data) {
+        return 'data:image/png;base64,' + readRes.data;
+      }
+    }
+    return null;
+  }
+
+  // 3. Captura de Arte do Illustrator (Externa, Interna ou Ambas) e Projeção no 3D
+  function syncArtwork(side, callback) {
     if (!currentProject) {
       setStatus('Nenhum modelo 3D carregado para aplicar arte.');
       if (typeof callback === 'function') callback('Nenhum modelo ativo');
       return;
     }
 
-    setStatus('Capturando camada de arte do Illustrator...');
-    if (btnSyncArtwork) {
-      btnSyncArtwork.disabled = true;
-      btnSyncArtwork.style.opacity = '0.7';
-    }
+    var targetSide = side || 'both';
+    var isBoth = targetSide === 'both';
+    var sideLabel = isBoth ? 'Externa e Interna' : (targetSide === 'inner' ? 'Interna' : 'Externa');
+    setStatus('Capturando camada de arte ' + sideLabel + ' do Illustrator...');
 
-    cs.evalScript('exportArtworkFromIllustrator()', function(resStr) {
-      if (btnSyncArtwork) {
-        btnSyncArtwork.disabled = false;
-        btnSyncArtwork.style.opacity = '1';
-      }
+    var disableBtns = [btnSyncArtwork, btnSyncArtworkOuter, btnSyncArtworkInner];
+    disableBtns.forEach(function(b) {
+      if (b) { b.disabled = true; b.style.opacity = '0.7'; }
+    });
+
+    var scriptCmd = isBoth ? 'exportBothArtworksFromIllustrator()' : 'exportArtworkFromIllustrator("' + targetSide + '")';
+
+    cs.evalScript(scriptCmd, function(resStr) {
+      disableBtns.forEach(function(b) {
+        if (b) { b.disabled = false; b.style.opacity = '1'; }
+      });
 
       try {
         var res = JSON.parse(resStr);
-        if (res.error) {
+        if (res.error && !res.outer && !res.inner) {
           setStatus('Erro no Illustrator: ' + res.error);
           if (typeof callback === 'function') callback(res.error);
           return;
         }
 
-        if (!res.filePath) {
-          setStatus('Arquivo de arte não gerado.');
-          if (typeof callback === 'function') callback('Arquivo não gerado');
-          return;
-        }
+        var outerUri = null;
+        var innerUri = null;
+        var vectorSvg = '';
 
-        // Leitura rápida via Node.js embutido no CEP
-        var dataUri = null;
-        try {
-          var reqFn = (typeof require === 'function') ? require : (typeof window !== 'undefined' && typeof window.require === 'function' ? window.require : null);
-          if (reqFn) {
-            var fs = reqFn('fs');
-            if (fs.existsSync(res.filePath)) {
-              var buf = fs.readFileSync(res.filePath);
-              dataUri = 'data:image/png;base64,' + buf.toString('base64');
-            }
+        if (isBoth) {
+          if (res.outer && res.outer.filePath) {
+            outerUri = readDataUriFromFile(res.outer.filePath);
+            vectorSvg = res.outer.vectorSvg || '';
           }
-        } catch(nodeErr) {
-          console.warn('Node.js fs indisponível, usando fallback cep:', nodeErr);
-        }
-
-        // Fallback CSInterface window.cep
-        if (!dataUri && window.cep && window.cep.fs) {
-          var readRes = window.cep.fs.readFile(res.filePath, window.cep.encoding.Base64);
-          if (readRes.err === 0) {
-            dataUri = 'data:image/png;base64,' + readRes.data;
+          if (res.inner && res.inner.filePath) {
+            innerUri = readDataUriFromFile(res.inner.filePath);
+          }
+        } else if (targetSide === 'inner') {
+          if (res.filePath) {
+            innerUri = readDataUriFromFile(res.filePath);
+          }
+        } else {
+          // outer
+          if (res.filePath) {
+            outerUri = readDataUriFromFile(res.filePath);
+            vectorSvg = res.vectorSvg || '';
           }
         }
 
-        if (!dataUri) {
-          setStatus('Não foi possível carregar a imagem exportada.');
-          if (typeof callback === 'function') callback('Falha ao ler PNG');
+        if (outerUri) {
+          lastOuterArtworkUri = outerUri;
+          lastLoadedArtworkUri = outerUri;
+          outerArtVersion++;
+          if (elVersionOuter) elVersionOuter.textContent = 'Ext: v' + outerArtVersion;
+        }
+
+        if (innerUri) {
+          lastInnerArtworkUri = innerUri;
+          innerArtVersion++;
+          if (elVersionInner) elVersionInner.textContent = 'Int: v' + innerArtVersion;
+        }
+
+        if (!outerUri && !innerUri) {
+          var errDetail = res.error || (isBoth ? 'Nenhuma camada ARTWORK_EXTERNA ou ARTWORK_INTERNA encontrada com elementos.' : 'Camada de arte não encontrada.');
+          setStatus(errDetail);
+          if (typeof callback === 'function') callback(errDetail);
           return;
         }
-
-        var vectorSvg = res.vectorSvg || '';
-        if (!vectorSvg && res.svgFilePath) {
-          try {
-            var reqFn2 = (typeof require === 'function') ? require : (typeof window !== 'undefined' && typeof window.require === 'function' ? window.require : null);
-            if (reqFn2) {
-              var fs2 = reqFn2('fs');
-              if (fs2.existsSync(res.svgFilePath)) {
-                vectorSvg = fs2.readFileSync(res.svgFilePath, 'utf-8');
-              }
-            }
-          } catch(e) {}
-        }
-
-        // ATUALIZA VARIÁVEL GLOBAL DA ARTE
-        lastLoadedArtworkUri = dataUri;
-        artVersion++;
-        if (elVersion) elVersion.textContent = 'Arte: v' + artVersion + (vectorSvg ? ' (VETOR)' : '');
 
         // Atualiza imediatamente o Estúdio 3D dentro do Illustrator
         if (window.PLMStudio) {
-          window.PLMStudio.updateArtwork(dataUri);
+          if (isBoth) {
+            window.PLMStudio.updateArtwork(outerUri || lastOuterArtworkUri || '', 'both', innerUri || lastInnerArtworkUri || '');
+          } else if (targetSide === 'inner') {
+            window.PLMStudio.updateArtwork(innerUri!, 'inner');
+          } else {
+            window.PLMStudio.updateArtwork(outerUri!, 'outer');
+          }
         }
 
-        setStatus('Arte projetada no 3D! Sincronizando com a Web...');
+        setStatus('Arte ' + sideLabel + ' projetada no 3D! Sincronizando com a Web...');
 
         // Notifica bridge server se houver porta aberta externa
         fetch(BRIDGE_URL + '/api/artwork', {
@@ -443,22 +473,24 @@
             modelId: (currentProject && (currentProject.modelId || currentProject.modelCode)) || 'current',
             modelCode: currentProject ? currentProject.modelCode : null,
             projectRevision: currentProject ? currentProject.projectRevision : 1,
-            textureDataUri: dataUri,
+            side: targetSide,
+            textureDataUri: lastOuterArtworkUri || outerUri || '',
+            outerArtworkDataUri: lastOuterArtworkUri || outerUri || '',
+            innerArtworkDataUri: lastInnerArtworkUri || innerUri || '',
             vectorSvg: vectorSvg,
             hasVector: !!vectorSvg,
             artworkType: vectorSvg ? 'VECTOR_AND_RASTER' : 'RASTER_ONLY'
           })
         })
         .then(function() {
-          setStatus('Arte vetorial e textura 3D sincronizadas com sucesso!');
+          setStatus('Arte ' + sideLabel + ' sincronizada com sucesso no 3D e na Web!');
         })
         .catch(function() {
-          // Servidor embutido já possui a arte em lastLoadedArtworkUri
-          setStatus('Arte aplicada no 3D e pronta para a Web!');
+          setStatus('Arte ' + sideLabel + ' aplicada no 3D!');
         });
 
         if (typeof callback === 'function') {
-          callback(null, dataUri);
+          callback(null, { outerUri: outerUri, innerUri: innerUri });
         }
 
       } catch (err) {
@@ -557,9 +589,15 @@
     });
   }
 
-  // 7. Botão Atualizar 3D com Arte
+  // 7. Botões de Atualização de Arte (Ambas, Externa, Interna)
   if (btnSyncArtwork) {
-    btnSyncArtwork.addEventListener('click', syncArtwork);
+    btnSyncArtwork.addEventListener('click', function() { syncArtwork('both'); });
+  }
+  if (btnSyncArtworkOuter) {
+    btnSyncArtworkOuter.addEventListener('click', function() { syncArtwork('outer'); });
+  }
+  if (btnSyncArtworkInner) {
+    btnSyncArtworkInner.addEventListener('click', function() { syncArtwork('inner'); });
   }
 
   // 8. Botão Atualizar Faca no Documento Illustrator

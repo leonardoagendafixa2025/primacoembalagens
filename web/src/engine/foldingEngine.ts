@@ -24,7 +24,7 @@ export interface FoldableTreeResult {
   resetAllHingeAngles: () => void;
   getHingeInfoList: () => HingeControlInfo[];
   highlightPanel: (panelId: string | null) => void;
-  updateArtwork: (texture: THREE.Texture | null) => void;
+  updateArtwork: (texture: THREE.Texture | null, innerTexture?: THREE.Texture | null) => void;
 }
 
 /**
@@ -132,7 +132,8 @@ export function buildFoldable3DTree(
   innerColor: string = '#FFFFFF',
   roughness: number = 0.28,
   customAngles?: Record<string, number>,
-  artworkTexture?: THREE.Texture | null
+  artworkTexture?: THREE.Texture | null,
+  innerArtworkTexture?: THREE.Texture | null
 ): FoldableTreeResult {
   const rootGroup = new THREE.Group();
   const topology: DielineTopology = dieline.customTopology || buildFoldingTopology(dieline);
@@ -169,7 +170,8 @@ export function buildFoldable3DTree(
       emissiveIntensity: 0.0,
     });
     const matEdge = new THREE.MeshStandardMaterial({
-      color: innerColor,
+      color: innerArtworkTexture ? '#FFFFFF' : innerColor,
+      map: innerArtworkTexture || null,
       roughness: Math.min(1.0, roughness + 0.15),
       metalness: 0.01,
       side: THREE.DoubleSide,
@@ -360,14 +362,22 @@ export function buildFoldable3DTree(
     }
   };
 
-  const updateArtwork = (texture: THREE.Texture | null) => {
+  const updateArtwork = (texture: THREE.Texture | null, innerTexture?: THREE.Texture | null) => {
     for (const item of itemsMap.values()) {
       const mesh = item.mesh;
-      if (Array.isArray(mesh.material) && mesh.material[0] instanceof THREE.MeshStandardMaterial) {
-        const mat = mesh.material[0];
-        mat.map = texture;
-        mat.color.set(texture ? '#FFFFFF' : outerColor);
-        mat.needsUpdate = true;
+      if (Array.isArray(mesh.material)) {
+        if (mesh.material[0] instanceof THREE.MeshStandardMaterial) {
+          const mat = mesh.material[0];
+          mat.map = texture;
+          mat.color.set(texture ? '#FFFFFF' : outerColor);
+          mat.needsUpdate = true;
+        }
+        if (innerTexture !== undefined && mesh.material[1] instanceof THREE.MeshStandardMaterial) {
+          const matInner = mesh.material[1];
+          matInner.map = innerTexture;
+          matInner.color.set(innerTexture ? '#FFFFFF' : innerColor);
+          matInner.needsUpdate = true;
+        }
       }
     }
   };

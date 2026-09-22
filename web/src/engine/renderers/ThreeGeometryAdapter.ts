@@ -23,6 +23,8 @@ export interface ThreeGeometryAdapterOptions extends Kinematic3DOptions {
   arcSegments?: number;
   dielineBounds?: BoundingBox2D;
   artworkTexture?: THREE.Texture | null;
+  outerArtworkTexture?: THREE.Texture | null;
+  innerArtworkTexture?: THREE.Texture | null;
 }
 
 /**
@@ -99,7 +101,7 @@ export interface ThreeModelController {
   resetHingeAngle: (panelId: string) => void;
   resetAllHingeAngles: () => void;
   getHingeInfoList: () => HingeControlInfo[];
-  updateArtwork: (texture: THREE.Texture | null) => void;
+  updateArtwork: (outerTexture: THREE.Texture | null, innerTexture?: THREE.Texture | null) => void;
   highlightPanel: (panelId: string | null) => void;
   highlightCrease: (creaseId: string | null) => void;
   raycastPanel: (raycaster: THREE.Raycaster) => {
@@ -146,6 +148,7 @@ export class ThreeGeometryAdapter {
     const creasePickTubes = new Map<string, THREE.Mesh>();
 
     const outerColor = new THREE.Color(options.outerColor || '#FFFFFF');
+    const innerColor = new THREE.Color(options.innerColor || '#FFFFFF');
     const cutLineColor = options.cutLineColor || '#94A3B8';
     const creaseLineColor = options.creaseLineColor || '#CBD5E1';
     const perfLineColor = options.perfLineColor || '#94A3B8';
@@ -153,14 +156,27 @@ export class ThreeGeometryAdapter {
     const metalness = options.metalness ?? 0.05;
     const arcSamples = options.arcSegments ?? 32;
 
-    // Material padrão para os painéis
-    const panelMaterial = new THREE.MeshStandardMaterial({
-      color: outerColor,
+    const initialOuterTex = options.outerArtworkTexture || options.artworkTexture || null;
+    const initialInnerTex = options.innerArtworkTexture || null;
+
+    // Material da Face Externa (Frente)
+    const outerPanelMaterial = new THREE.MeshStandardMaterial({
+      color: initialOuterTex ? 0xffffff : outerColor,
       roughness,
       metalness,
-      side: THREE.DoubleSide,
-      shadowSide: THREE.DoubleSide,
-      map: options.artworkTexture || null,
+      side: THREE.FrontSide,
+      shadowSide: THREE.FrontSide,
+      map: initialOuterTex,
+    });
+
+    // Material da Face Interna (Verso)
+    const innerPanelMaterial = new THREE.MeshStandardMaterial({
+      color: initialInnerTex ? 0xffffff : innerColor,
+      roughness: Math.min(1.0, roughness + 0.1),
+      metalness,
+      side: THREE.BackSide,
+      shadowSide: THREE.BackSide,
+      map: initialInnerTex,
     });
 
     // Material de destaque quando selecionado
@@ -203,40 +219,67 @@ export class ThreeGeometryAdapter {
       visible: false,
     });
 
-    // 1. Triangulação Estática de Cada Painel Estrutural
+    // 1. Triangulação Estática de Cada Painel Estrutural (Frente + Verso)
     for (const panel of panels) {
       const shape = ThreeGeometryAdapter.buildPanelShape(panel, arcSamples);
-      const geometry = new THREE.ShapeGeometry(shape);
+      const outerGeometry = new THREE.ShapeGeometry(shape);
+      const innerGeometry = new THREE.ShapeGeometry(shape);
 
-      // Gera coordenadas UV proporcionais às dimensões globais da faca se fornecidas
+      // Gera coordenadas UV proporcionais às dimensões globais da faca
       if (options.dielineBounds) {
-        const pos = geometry.attributes.position;
-        const uvs = new Float32Array(pos.count * 2);
         const b = options.dielineBounds;
         const w = b.width > 0 ? b.width : 1;
         const h = b.height > 0 ? b.height : 1;
 
-        for (let i = 0; i < pos.count; i++) {
-          const x = pos.getX(i);
-          const y = pos.getY(i);
-          uvs[i * 2] = (x - b.minX) / w;
-          uvs[i * 2 + 1] = (y - b.minY) / h;
+        // UVs Face Externa (Frente)
+        const posOut = outerGeometry.attributes.position;
+        const uvsOut = new Float32Array(posOut.count * 2);
+        for (let i = 0; i < posOut.count; i++) {
+          const x = posOut.getX(i);
+          const y = posOut.getY(i);
+          uvsOut[i * 2] = (x - b.minX) / w;
+          uvsOut[i * 2 + 1] = (y - b.minY) / h;
         }
-        geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+        outerGeometry.setAttribute('uv', new THREE.BufferAttribute(uvsOut, 2));
+
+        // UVs Face Interna (Verso espelhado horizontalmente)
+        const posIn = innerGeometry.attributes.position;
+        const uvsIn = new Float32Array(posIn.count * 2);
+        for (let i = 0; i < posIn.count; i++) {
+          const x = posIn.getX(i);
+          const y = posIn.getY(i);
+          uvsIn[i * 2] = 1.0 - ((x - b.minX) / w);
+          uvsIn[i * 2 + 1] = (y - b.minY) / h;
+        }
+        innerGeometry.setAttribute('uv', new THREE.BufferAttribute(uvsIn, 2));
       }
 
-      geometry.computeVertexNormals();
+      outerGeometry.computeVertexNormals();
+      innerGeometry.computeVertexNormals();
 
-      const mesh = new THREE.Mesh(geometry, panelMaterial);
-      mesh.name = `PanelMesh_${panel.id}`;
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.matrixAutoUpdate = false; // Controle matricial direto via SE(3)
+      const panelContainer = new THREE.Group() as any;
+      panelContainer.name = `PanelMesh_${panel.id}`;
+      panelContainer.matrixAutoUpdate = false; // Controle matricial direto via SE(3)
 
-      mesh.userData = {
+      const outerMesh = new THREE.Mesh(outerGeometry, outerPanelMaterial);
+      outerMesh.castShadow = true;
+      outerMesh.receiveShadow = true;
+      outerMesh.name = `OuterFace_${panel.id}`;
+      panelContainer.add(outerMesh);
+
+      const innerMesh = new THREE.Mesh(innerGeometry, innerPanelMaterial);
+      innerMesh.castShadow = true;
+      innerMesh.receiveShadow = true;
+      innerMesh.name = `InnerFace_${panel.id}`;
+      panelContainer.add(innerMesh);
+
+      panelContainer.userData = {
         sourcePanelId: panel.id,
         panel,
-        originalMaterial: panelMaterial,
+        originalOuterMaterial: outerPanelMaterial,
+        originalInnerMaterial: innerPanelMaterial,
+        outerMesh,
+        innerMesh,
       };
 
       // 2. Constrói Linhas CAD em Espaço Local (Corte, Vinco, Picote)
@@ -248,11 +291,11 @@ export class ThreeGeometryAdapter {
         arcSamples
       );
       if (cadLines) {
-        mesh.add(cadLines);
+        panelContainer.add(cadLines);
       }
 
-      panelsGroup.add(mesh);
-      panelMeshes.set(panel.id, mesh);
+      panelsGroup.add(panelContainer);
+      panelMeshes.set(panel.id, panelContainer);
     }
 
     // 3. Constrói Tubos de Picking para as Hinges / CREASEs
@@ -354,18 +397,29 @@ export class ThreeGeometryAdapter {
       });
     };
 
-    const updateArtwork = (texture: THREE.Texture | null) => {
-      panelMaterial.map = texture;
-      panelMaterial.needsUpdate = true;
+    const updateArtwork = (outerTex: THREE.Texture | null, innerTex?: THREE.Texture | null) => {
+      outerPanelMaterial.map = outerTex || null;
+      outerPanelMaterial.color.set(outerTex ? 0xffffff : outerColor);
+      outerPanelMaterial.needsUpdate = true;
+
+      if (innerTex !== undefined) {
+        innerPanelMaterial.map = innerTex || null;
+        innerPanelMaterial.color.set(innerTex ? 0xffffff : innerColor);
+        innerPanelMaterial.needsUpdate = true;
+      }
     };
 
     // Destaca painel por ID
     const highlightPanel = (panelId: string | null) => {
       panelMeshes.forEach((mesh, id) => {
+        const outer = mesh.userData.outerMesh;
+        const inner = mesh.userData.innerMesh;
         if (panelId && id === panelId) {
-          mesh.material = highlightMaterial;
+          if (outer) outer.material = highlightMaterial;
+          if (inner) inner.material = highlightMaterial;
         } else {
-          mesh.material = mesh.userData.originalMaterial || panelMaterial;
+          if (outer) outer.material = mesh.userData.originalOuterMaterial || outerPanelMaterial;
+          if (inner) inner.material = mesh.userData.originalInnerMaterial || innerPanelMaterial;
         }
       });
     };
@@ -514,7 +568,8 @@ export class ThreeGeometryAdapter {
       creasePickTubes.forEach((tube) => {
         tube.geometry.dispose();
       });
-      panelMaterial.dispose();
+      outerPanelMaterial.dispose();
+      innerPanelMaterial.dispose();
       highlightMaterial.dispose();
       cutLineMaterial.dispose();
       creaseLineMaterial.dispose();

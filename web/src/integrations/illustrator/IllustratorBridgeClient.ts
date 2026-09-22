@@ -65,6 +65,8 @@ export class IllustratorBridgeClient {
   private currentProjectId: string | null = null;
   private currentRevision: number = 1;
   private lastArtworkUri: string | null = null;
+  private lastOuterArtworkUri: string | null = null;
+  private lastInnerArtworkUri: string | null = null;
   private lastVectorSvg: string | null = null;
   private ws: WebSocket | null = null;
 
@@ -112,7 +114,15 @@ export class IllustratorBridgeClient {
   }
 
   public getLastArtworkUri(): string | null {
-    return this.lastArtworkUri;
+    return this.lastArtworkUri || this.lastOuterArtworkUri;
+  }
+
+  public getLastOuterArtworkUri(): string | null {
+    return this.lastOuterArtworkUri || this.lastArtworkUri;
+  }
+
+  public getLastInnerArtworkUri(): string | null {
+    return this.lastInnerArtworkUri;
   }
 
   public getLastVectorSvg(): string | null {
@@ -161,7 +171,9 @@ export class IllustratorBridgeClient {
           const msg = JSON.parse(e.data);
           if (msg.type === 'ARTWORK_UPDATED') {
             const rawData = msg.data || {};
-            const uri = rawData.textureDataUri || msg.data;
+            const uri = rawData.textureDataUri || rawData.outerArtworkDataUri || msg.data;
+            const outerUri = rawData.outerArtworkDataUri || rawData.textureDataUri || null;
+            const innerUri = rawData.innerArtworkDataUri || null;
             const incomingProjectId = rawData.projectId;
             const incomingRevision = rawData.projectRevision;
 
@@ -204,11 +216,18 @@ export class IllustratorBridgeClient {
               return;
             }
 
-            if (uri || rawData.vectorSvg) {
+            if (uri || outerUri || innerUri || rawData.vectorSvg) {
               if (uri) this.lastArtworkUri = uri;
+              if (outerUri) this.lastOuterArtworkUri = outerUri;
+              if (innerUri) this.lastInnerArtworkUri = innerUri;
               if (rawData.vectorSvg) this.lastVectorSvg = rawData.vectorSvg;
               this.setState('SYNCHRONIZED', 'Sincronizado');
-              this.notify('ARTWORK_UPDATED', rawData);
+              this.notify('ARTWORK_UPDATED', {
+                ...rawData,
+                outerArtworkDataUri: outerUri || this.lastOuterArtworkUri,
+                innerArtworkDataUri: innerUri || this.lastInnerArtworkUri,
+                textureDataUri: uri || this.lastArtworkUri,
+              });
             }
           }
         } catch (err) {
@@ -261,9 +280,28 @@ export class IllustratorBridgeClient {
             this.setState('CONNECTED', 'Conectado');
           }
 
-          if (data.latestArtworkDataUri && data.latestArtworkDataUri !== this.lastArtworkUri) {
-            this.lastArtworkUri = data.latestArtworkDataUri;
-            this.notify('ARTWORK_UPDATED', { textureDataUri: this.lastArtworkUri });
+          if (data.outerArtworkDataUri || data.innerArtworkDataUri || data.latestArtworkDataUri) {
+            let changed = false;
+            if (data.outerArtworkDataUri && data.outerArtworkDataUri !== this.lastOuterArtworkUri) {
+              this.lastOuterArtworkUri = data.outerArtworkDataUri;
+              this.lastArtworkUri = data.outerArtworkDataUri;
+              changed = true;
+            } else if (data.latestArtworkDataUri && data.latestArtworkDataUri !== this.lastArtworkUri) {
+              this.lastArtworkUri = data.latestArtworkDataUri;
+              this.lastOuterArtworkUri = data.latestArtworkDataUri;
+              changed = true;
+            }
+            if (data.innerArtworkDataUri && data.innerArtworkDataUri !== this.lastInnerArtworkUri) {
+              this.lastInnerArtworkUri = data.innerArtworkDataUri;
+              changed = true;
+            }
+            if (changed) {
+              this.notify('ARTWORK_UPDATED', {
+                textureDataUri: this.lastArtworkUri,
+                outerArtworkDataUri: this.lastOuterArtworkUri,
+                innerArtworkDataUri: this.lastInnerArtworkUri,
+              });
+            }
           }
 
           return this.status;
@@ -368,8 +406,10 @@ export class IllustratorBridgeClient {
     modelId?: string
   ): Promise<{
     success: boolean;
-    textureDataUri?: string;
-    vectorSvg?: string;
+    textureDataUri?: string | null;
+    outerArtworkDataUri?: string | null;
+    innerArtworkDataUri?: string | null;
+    vectorSvg?: string | null;
     hasVector?: boolean;
     artworkType?: string;
     message?: string;
@@ -386,7 +426,7 @@ export class IllustratorBridgeClient {
 
         if (res.ok) {
           const data = await res.json();
-          if (data.hasArtwork && (data.textureDataUri || data.vectorSvg)) {
+          if (data.hasArtwork && (data.textureDataUri || data.outerArtworkDataUri || data.innerArtworkDataUri || data.vectorSvg)) {
             // Verifica conflito de projeto se informado
             if (modelId && data.modelId && data.modelId !== modelId) {
               const conflictErr = {
@@ -397,11 +437,17 @@ export class IllustratorBridgeClient {
               return { success: false, message: conflictErr.message, errorCode: conflictErr.code };
             }
 
-            this.lastArtworkUri = data.textureDataUri || null;
+            const outerUri = data.outerArtworkDataUri || data.textureDataUri || null;
+            const innerUri = data.innerArtworkDataUri || null;
+            this.lastArtworkUri = outerUri;
+            this.lastOuterArtworkUri = outerUri;
+            this.lastInnerArtworkUri = innerUri;
             this.lastVectorSvg = data.vectorSvg || null;
             this.setState('SYNCHRONIZED', 'Sincronizado');
             this.notify('ARTWORK_UPDATED', {
-              textureDataUri: data.textureDataUri,
+              textureDataUri: this.lastArtworkUri,
+              outerArtworkDataUri: this.lastOuterArtworkUri,
+              innerArtworkDataUri: this.lastInnerArtworkUri,
               vectorSvg: data.vectorSvg,
               hasVector: data.hasVector,
               artworkType: data.artworkType,
@@ -410,7 +456,9 @@ export class IllustratorBridgeClient {
             });
             return {
               success: true,
-              textureDataUri: data.textureDataUri,
+              textureDataUri: this.lastArtworkUri,
+              outerArtworkDataUri: this.lastOuterArtworkUri,
+              innerArtworkDataUri: this.lastInnerArtworkUri,
               vectorSvg: data.vectorSvg,
               hasVector: data.hasVector,
               artworkType: data.artworkType,
@@ -423,7 +471,7 @@ export class IllustratorBridgeClient {
 
     const notFoundErr = {
       code: BRIDGE_ERROR_CODES.ILLUSTRATOR_IMPORT_FAILED,
-      message: 'Nenhuma arte sincronizada encontrada na Bridge. Exporte a camada ARTWORK no Illustrator.',
+      message: 'Nenhuma arte sincronizada encontrada na Bridge. Exporte a camada ARTWORK (Externa/Interna) no Illustrator.',
     };
     this.setState('CONNECTED', 'Conectado', notFoundErr);
     return { success: false, message: notFoundErr.message, errorCode: notFoundErr.code };

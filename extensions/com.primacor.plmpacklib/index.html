@@ -464,10 +464,21 @@
 
     <!-- Action Buttons -->
     <div class="actions-grid">
-      <button id="btnSyncArtwork" class="btn-sync">
+      <button id="btnSyncArtwork" class="btn-sync" title="Capturar e aplicar ambas as camadas de arte no 3D">
         <span>🔄</span>
-        <span>ATUALIZAR 3D COM ARTE</span>
+        <span>ATUALIZAR ARTE (EXTERNA + INTERNA)</span>
       </button>
+
+      <div class="artwork-dual-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+        <button id="btnSyncArtworkOuter" class="btn-secondary" style="border-color: rgba(0, 210, 180, 0.4); color: #00d2b4; font-weight: 700;" title="Atualizar somente a camada ARTWORK_EXTERNA">
+          <span>🎨</span>
+          <span>Arte Externa</span>
+        </button>
+        <button id="btnSyncArtworkInner" class="btn-secondary" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 700;" title="Atualizar somente a camada ARTWORK_INTERNA">
+          <span>📦</span>
+          <span>Arte Interna</span>
+        </button>
+      </div>
 
       <div class="sub-actions">
         <button id="btnUpdateDieline" class="btn-secondary" title="Atualizar faca no Illustrator">
@@ -487,7 +498,11 @@
 
     <div class="status-bar">
       <span id="txtStatusMsg" class="status-msg">Aguardando envio de projeto da Web...</span>
-      <span id="txtVersion">Arte: v0</span>
+      <div style="display: flex; gap: 6px; font-size: 9px; font-weight: 700;">
+        <span id="txtVersionOuter" style="color: #00d2b4;">Ext: v0</span>
+        <span style="color: rgba(255,255,255,0.2);">|</span>
+        <span id="txtVersionInner" style="color: #38bdf8;">Int: v0</span>
+      </div>
     </div>
   </footer>
 

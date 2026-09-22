@@ -137,16 +137,21 @@ try {
     }
   }
 
-  var layerArte = getOrCreateLayer("ARTWORK");
-  layerArte.locked = false;
-  layerArte.printable = true;
+  // Camadas de Arte Externa e Interna (Face Frontal e Face Verso)
+  var layerArteExterna = getOrCreateLayer("ARTWORK_EXTERNA");
+  layerArteExterna.locked = false;
+  layerArteExterna.printable = true;
+
+  var layerArteInterna = getOrCreateLayer("ARTWORK_INTERNA");
+  layerArteInterna.locked = false;
+  layerArteInterna.printable = true;
 
   var layerCorte = getOrCreateLayer("CUT");
   var layerVinco = getOrCreateLayer("CREASE");
   var layerPicote = getOrCreateLayer("PERF");
   var layerGuias = getOrCreateLayer("GUIDES_INFO");
 
-  // Limpa apenas as camadas técnicas de geometria ao sincronizar, NUNCA a camada de arte!
+  // Limpa apenas as camadas técnicas de geometria ao sincronizar, NUNCA as camadas de arte!
   var layersToClean = [layerCorte, layerVinco, layerPicote, layerGuias];
   for (var li = 0; li < layersToClean.length; li++) {
     try {
