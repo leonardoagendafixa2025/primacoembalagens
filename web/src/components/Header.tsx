@@ -96,6 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header
+      className="header-container"
       style={{
         height: 'var(--cad-header-height)',
         background: 'var(--cad-bg-header)',
@@ -103,13 +104,14 @@ export const Header: React.FC<HeaderProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 14px',
+        padding: '0 8px',
         zIndex: 50,
         userSelect: 'none',
+        gap: 6,
       }}
     >
       {/* 1. Logotipo Oficial Primacor & Identificador CAD Pro */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flexShrink: 1 }}>
         <button
           type="button"
           onClick={onGoHome}
@@ -117,13 +119,14 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 8,
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            padding: '4px 6px',
+            padding: '3px 4px',
             borderRadius: 'var(--cad-radius-sm)',
             transition: 'opacity 0.15s ease',
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
@@ -132,11 +135,11 @@ export const Header: React.FC<HeaderProps> = ({
             src="/primacor-logo-horizontal.png"
             alt="Primacor Gráfica"
             style={{
-              height: 28,
+              height: 26,
               objectFit: 'contain',
             }}
           />
-          <div className="hide-on-laptop" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
+          <div className="hide-on-compact" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
             <span
               style={{
                 fontSize: 9,
@@ -155,24 +158,25 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Separador Vertical */}
-        <div className="hide-on-mobile" style={{ width: 1, height: 24, background: 'var(--cad-border-subtle)' }} />
+        <div className="hide-on-compact" style={{ width: 1, height: 20, background: 'var(--cad-border-subtle)', flexShrink: 0 }} />
 
         {/* Botão da Biblioteca Geral */}
         <button
           type="button"
           onClick={onOpenCatalog}
-          className="cad-btn icon-only-mobile"
+          className="cad-btn"
           style={{
             background: 'var(--cad-bg-panel)',
             border: '1px solid var(--cad-border-default)',
             color: 'var(--cad-text-primary)',
-            padding: '5px 10px',
-            gap: 7,
+            padding: '5px 8px',
+            gap: 5,
+            flexShrink: 0,
           }}
           title="Biblioteca de Modelos Paramétricos (Atalho: Ctrl+K)"
         >
           <BookOpen size={14} color="var(--cad-accent)" />
-          <span className="hide-on-laptop" style={{ fontWeight: 600 }}>Biblioteca</span>
+          <span className="hide-on-compact" style={{ fontWeight: 600 }}>Biblioteca</span>
           <span
             className="keep-badge"
             style={{
@@ -193,37 +197,38 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           type="button"
           onClick={onOpenImportModal}
-          className="cad-btn icon-only-mobile"
+          className="cad-btn"
           style={{
             background: 'linear-gradient(135deg, rgba(0, 210, 180, 0.15), rgba(0, 140, 255, 0.18))',
             border: '1px solid var(--cad-accent, #00d2b4)',
             color: 'var(--cad-accent, #00d2b4)',
-            padding: '5px 12px',
-            gap: 6,
+            padding: '5px 9px',
+            gap: 5,
             fontWeight: 700,
+            flexShrink: 0,
           }}
           title="Importar Minha Faca (PDF, SVG, DXF)"
         >
           <FileUp size={14} />
-          <span className="app-windows-full" style={{ fontWeight: 700 }}>Importar Minha Faca</span>
-          <span className="app-windows-short" style={{ fontWeight: 700 }}>Importar Faca</span>
+          <span style={{ fontWeight: 700 }}>Importar <span className="hide-on-compact">Minha </span>Faca</span>
         </button>
 
         {/* Modelo Ativo Selecionado */}
         <div
           onClick={onOpenCatalog}
-          title="Clique para trocar modelo na Biblioteca"
+          title={`Modelo: ${currentModel.code} - ${currentModel.name} (Clique para trocar)`}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '4px 8px',
+            gap: 6,
+            padding: '4px 7px',
             borderRadius: 'var(--cad-radius-sm)',
             background: 'var(--cad-bg-input)',
             border: '1px solid var(--cad-border-subtle)',
             cursor: 'pointer',
             fontSize: 12,
             transition: 'border-color 0.15s ease',
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--cad-accent-border)')}
           onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--cad-border-subtle)')}
@@ -231,13 +236,13 @@ export const Header: React.FC<HeaderProps> = ({
           <span style={{ color: 'var(--cad-accent)', fontWeight: 700, letterSpacing: 0.3 }}>
             {currentModel.code}
           </span>
-          <span className="hide-on-laptop" style={{ color: 'var(--cad-border-hover)' }}>|</span>
+          <span className="hide-on-compact" style={{ color: 'var(--cad-border-hover)' }}>|</span>
           <span
-            className="hide-on-laptop"
+            className="hide-on-compact"
             style={{
               color: 'var(--cad-text-secondary)',
               fontWeight: 500,
-              maxWidth: 140,
+              maxWidth: 110,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -257,6 +262,7 @@ export const Header: React.FC<HeaderProps> = ({
           borderRadius: 'var(--cad-radius-md)',
           border: '1px solid var(--cad-border-subtle)',
           boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)',
+          flexShrink: 0,
         }}
       >
         <button
@@ -266,8 +272,8 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            padding: '6px 14px',
+            gap: 5,
+            padding: '5px 11px',
             borderRadius: 'var(--cad-radius-sm)',
             fontSize: 12,
             fontWeight: activeTab === '2d' ? 600 : 500,
@@ -279,7 +285,7 @@ export const Header: React.FC<HeaderProps> = ({
             cursor: 'pointer',
           }}
         >
-          <FileCode size={14} />
+          <FileCode size={13} />
           <span>2D</span>
         </button>
 
@@ -290,8 +296,8 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            padding: '6px 14px',
+            gap: 5,
+            padding: '5px 11px',
             borderRadius: 'var(--cad-radius-sm)',
             fontSize: 12,
             fontWeight: activeTab === '3d' ? 600 : 500,
@@ -303,7 +309,7 @@ export const Header: React.FC<HeaderProps> = ({
             cursor: 'pointer',
           }}
         >
-          <Box size={14} />
+          <Box size={13} />
           <span>3D</span>
         </button>
 
@@ -314,8 +320,8 @@ export const Header: React.FC<HeaderProps> = ({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            padding: '6px 14px',
+            gap: 5,
+            padding: '5px 11px',
             borderRadius: 'var(--cad-radius-sm)',
             fontSize: 12,
             fontWeight: activeTab === 'imposition' ? 600 : 500,
@@ -327,24 +333,24 @@ export const Header: React.FC<HeaderProps> = ({
             cursor: 'pointer',
           }}
         >
-          <LayoutGrid size={14} />
+          <LayoutGrid size={13} />
           <span className="hide-on-mobile">Imposição</span>
           <span style={{ display: 'none' }} className="keep-badge">Imp.</span>
         </button>
       </div>
 
-      {/* 3. Ações Técnicas: Projetos, Salvar e Exportações */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+      {/* 3. Ações Técnicas: Projetos, Salvar, Illustrator, Plugin, App Windows e Exportação */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
         {/* Projetos Salvos */}
         <button
           type="button"
           onClick={onOpenProjectsModal}
-          className="cad-btn icon-only-mobile"
+          className="cad-btn"
           title={isSupabaseConnected ? 'Projetos sincronizados na Nuvem' : 'Projetos salvos localmente'}
-          style={{ flexShrink: 0 }}
+          style={{ flexShrink: 0, padding: '5px 7px', gap: 5 }}
         >
           <FolderOpen size={14} />
-          <span className="hide-on-tablet">Projetos</span>
+          <span className="hide-on-compact">Projetos</span>
         </button>
 
         {/* Salvar Projeto */}
@@ -352,16 +358,19 @@ export const Header: React.FC<HeaderProps> = ({
           type="button"
           onClick={handleSaveClick}
           disabled={isSaving}
-          className="cad-btn icon-only-mobile"
+          className="cad-btn"
+          title="Salvar Projeto"
           style={{
             flexShrink: 0,
+            padding: '5px 7px',
+            gap: 5,
             background: saveSuccess ? 'rgba(16, 185, 129, 0.2)' : 'var(--cad-bg-panel)',
             borderColor: saveSuccess ? '#10b981' : 'var(--cad-border-default)',
             color: saveSuccess ? '#10b981' : 'var(--cad-text-primary)',
           }}
         >
           {saveSuccess ? <Check size={14} color="#10b981" /> : <Save size={14} />}
-          <span className="hide-on-tablet">{isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Salvar'}</span>
+          <span className="hide-on-compact">{isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Salvar'}</span>
         </button>
 
         {/* Botões Oficiais Adobe Illustrator (Fase 6 — Seção 3 e 34) */}
@@ -388,8 +397,8 @@ export const Header: React.FC<HeaderProps> = ({
                 : '1px solid rgba(255, 154, 0, 0.55)',
               color: bridgeStatus?.bridgeOnline ? '#34d399' : '#ff9a00',
               fontWeight: 600,
-              gap: 6,
-              padding: '5px 9px',
+              gap: 5,
+              padding: '5px 7px',
               flexShrink: 0,
               boxShadow: bridgeStatus?.bridgeOnline
                 ? '0 1px 8px rgba(16, 185, 129, 0.3)'
@@ -411,10 +420,10 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Ai
             </span>
-            <span className="hide-on-laptop">
+            <span className="hide-on-compact">
               {isOpeningIllustrator
                 ? 'Enviando...'
-                : (bridgeStatus?.stateLabel || (bridgeStatus?.bridgeOnline ? 'Abrir no Illustrator' : 'Illustrator'))}
+                : (bridgeStatus?.bridgeOnline ? 'Conectado' : 'Offline')}
             </span>
             <span
               style={{
@@ -446,13 +455,13 @@ export const Header: React.FC<HeaderProps> = ({
                 fontWeight: 600,
                 fontSize: 11,
                 gap: 5,
-                padding: '5px 8px',
+                padding: '5px 7px',
                 flexShrink: 0,
               }}
             >
-              <Download size={12} color={hasArtwork ? '#34d399' : '#38bdf8'} />
-              <span className="hide-on-laptop">
-                {hasArtwork ? 'Arte do Illustrator ✓' : 'Sincronizar Arte (Ai)'}
+              <Download size={13} color={hasArtwork ? '#34d399' : '#38bdf8'} />
+              <span className="hide-on-compact">
+                {hasArtwork ? 'Arte Ai ✓' : 'Sincronizar'}
               </span>
             </button>
           )}
@@ -479,7 +488,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
           >
             <Download size={13} />
-            <span className="hide-on-laptop">Plugin</span>
+            <span className="hide-on-compact">Plugin</span>
           </a>
 
           {/* Botão Oficial para Baixar Aplicativo Windows - NUNCA ESCONDIDO */}
@@ -489,10 +498,14 @@ export const Header: React.FC<HeaderProps> = ({
             className="cad-btn compact-btn app-windows-btn"
             title="Baixar Aplicativo Windows Oficial PRIMACOR EMBALAGENS (.EXE)"
             style={{
-              padding: '5px 10px',
+              padding: '5px 9px',
               fontSize: 11,
               textDecoration: 'none',
               boxSizing: 'border-box',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
             }}
           >
             <Monitor size={14} color="#38bdf8" />
@@ -500,29 +513,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="app-windows-short">App .exe</span>
           </a>
         </div>
-
-
-        {/* Indicador de Arte 3D Ativa */}
-        {hasArtwork && (
-          <button
-            type="button"
-            onClick={onSyncArtwork}
-            className="cad-btn"
-            title="Arte 3D ativa no Three.js! Clique para resincronizar ou use o menu Exportar para remover."
-            style={{
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid #10b981',
-              color: '#10b981',
-              fontWeight: 600,
-              padding: '5px 8px',
-              fontSize: 11,
-              gap: 4,
-              flexShrink: 0,
-            }}
-          >
-            <span>Arte 3D ✓</span>
-          </button>
-        )}
 
         {/* Dropdown de Exportação CAD (Sempre Visível e Protegido) */}
         <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -535,10 +525,10 @@ export const Header: React.FC<HeaderProps> = ({
               flexShrink: 0,
               whiteSpace: 'nowrap',
               fontWeight: 700,
-              padding: '5px 12px',
+              padding: '5px 10px',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 6,
+              gap: 5,
             }}
           >
             <Download size={14} />

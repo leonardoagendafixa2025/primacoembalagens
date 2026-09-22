@@ -303,7 +303,34 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
   opacity: 1;
 }
 
-/* App Windows button responsiveness - NUNCA ESCONDIDO */
+/* Header Responsiveness - Anti-overflow e Adaptação Ultra-Fina */
+.hide-on-compact {
+  display: inline;
+}
+
+.header-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.header-container::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+@media (max-width: 1650px) {
+  .hide-on-compact {
+    display: none !important;
+  }
+  .app-windows-full {
+    display: none !important;
+  }
+  .app-windows-short {
+    display: inline !important;
+  }
+}
+
+/* App Windows button styling - NUNCA ESCONDIDO */
 .app-windows-btn {
   display: inline-flex !important;
   align-items: center !important;
@@ -324,14 +351,6 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
   color: #ffffff !important;
 }
 
-.app-windows-full {
-  display: inline;
-}
-
-.app-windows-short {
-  display: none;
-}
-
 @media (max-width: 1400px) {
   .app-windows-full {
     display: none !important;
@@ -347,7 +366,7 @@ input[type="range"].cad-slider::-webkit-slider-thumb:hover {
     display: none !important;
   }
   .compact-btn {
-    padding: 5px 8px !important;
+    padding: 5px 6px !important;
     gap: 4px !important;
   }
 }
