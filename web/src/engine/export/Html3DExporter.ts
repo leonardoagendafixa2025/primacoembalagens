@@ -656,10 +656,13 @@ export function generateStandaloneHtml3D(
             var oc = new THREE.OrbitControls(camera, domElement);
             oc.enableDamping = true;
             oc.dampingFactor = 0.08;
+            oc.screenSpacePanning = true;
             oc.minDistance = 30;
             oc.maxDistance = 6000;
-            oc.minPolarAngle = 0.01;
-            oc.maxPolarAngle = Math.PI - 0.01;
+            oc.minPolarAngle = 0.001;
+            oc.maxPolarAngle = Math.PI - 0.001;
+            oc.minAzimuthAngle = -Infinity;
+            oc.maxAzimuthAngle = Infinity;
             return oc;
           } catch(e) {
             console.warn('Fallback para controlador nativo de câmera');
@@ -680,7 +683,7 @@ export function generateStandaloneHtml3D(
           if (autoRotate && !isDragging) {
             theta += 0.008;
           }
-          phi = Math.max(0.02, Math.min(Math.PI - 0.02, phi));
+          phi = Math.max(0.001, Math.min(Math.PI - 0.001, phi));
           radius = Math.max(30, Math.min(6000, radius));
           camera.position.x = target.x + radius * Math.sin(phi) * Math.sin(theta);
           camera.position.y = target.y + radius * Math.cos(phi);
@@ -748,21 +751,17 @@ export function generateStandaloneHtml3D(
       container.appendChild(renderer.domElement);
 
       var controls = initControls(camera, renderer.domElement);
-      controls.target.set(0, 50, 0);
+      controls.target.set(0, 0, 0);
 
-      // 4. Iluminação de Estúdio Industrial
+      // 4. Iluminação de Estúdio Industrial Balanceada
       var ambient = new THREE.AmbientLight(0xFFFFFF, 0.95);
       scene.add(ambient);
 
       var keyLight = new THREE.DirectionalLight(0xFFFFFF, 1.35);
       keyLight.position.set(450, 800, 500);
-      keyLight.castShadow = true;
-      keyLight.shadow.mapSize.width = 2048;
-      keyLight.shadow.mapSize.height = 2048;
-      keyLight.shadow.bias = -0.0001;
       scene.add(keyLight);
 
-      var fillLight = new THREE.DirectionalLight(0x38BDF8, 0.55);
+      var fillLight = new THREE.DirectionalLight(0x38BDF8, 0.65);
       fillLight.position.set(-500, 350, -350);
       scene.add(fillLight);
 
@@ -770,23 +769,9 @@ export function generateStandaloneHtml3D(
       rimLight.position.set(0, 500, -600);
       scene.add(rimLight);
 
-      var underLight = new THREE.DirectionalLight(0xFFFFFF, 0.35);
-      underLight.position.set(0, -500, 0);
+      var underLight = new THREE.DirectionalLight(0xFFFFFF, 0.8);
+      underLight.position.set(0, -600, 0);
       scene.add(underLight);
-
-      // Chão de Estúdio e Grade Milimétrica
-      var ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(4000, 4000),
-        new THREE.ShadowMaterial({ opacity: 0.28 })
-      );
-      ground.rotation.x = -Math.PI / 2;
-      ground.position.y = -0.1;
-      ground.receiveShadow = true;
-      scene.add(ground);
-
-      var grid = new THREE.GridHelper(2400, 48, 0x00D2B4, 0x1E293B);
-      grid.position.y = 0;
-      scene.add(grid);
 
       // 5. Construção dos Painéis com Geometria Exata
       var modelRoot = new THREE.Group();
@@ -941,7 +926,7 @@ export function generateStandaloneHtml3D(
         return worldMap;
       }
 
-      // Função de Atualização de Dobra com Aterramento no Chão Y = 0
+      // Função de Atualização de Dobra com Centralização no Centróide 3D (0, 0, 0)
       function updateFold(percent) {
         var clamped = Math.max(0, Math.min(100, percent));
         var transforms = computeTransforms(clamped);
@@ -955,18 +940,18 @@ export function generateStandaloneHtml3D(
           node.updateMatrixWorld(true);
         });
 
-        // Aterramento em Y=0 e centralização no chão
+        // Centralização perfeita do centróide 3D da caixa na origem (0, 0, 0)
         boxGroup.position.set(0, 0, 0);
         boxGroup.updateMatrixWorld(true);
         var bbox = new THREE.Box3().setFromObject(boxGroup);
-        var groundY = -bbox.min.y;
         var cx = (bbox.min.x + bbox.max.x) / 2;
+        var cy = (bbox.min.y + bbox.max.y) / 2;
         var cz = (bbox.min.z + bbox.max.z) / 2;
-        boxGroup.position.set(-cx, groundY, -cz);
+        boxGroup.position.set(-cx, -cy, -cz);
         boxGroup.updateMatrixWorld(true);
 
         if (controls && controls.target) {
-          controls.target.set(0, Math.max(20, (bbox.max.y - bbox.min.y) * 0.45), 0);
+          controls.target.set(0, 0, 0);
         }
       }
 
@@ -978,7 +963,7 @@ export function generateStandaloneHtml3D(
       initialBBox.getBoundingSphere(sphere);
       var targetDist = Math.max(380, (sphere.radius || 200) * 2.3);
       camera.position.set(targetDist * 0.7, targetDist * 0.65, targetDist * 0.7);
-      controls.target.set(0, (initialBBox.max.y - initialBBox.min.y) * 0.45, 0);
+      controls.target.set(0, 0, 0);
       controls.update();
 
       // 8. Loop de Renderização & Animação Contínua Fluida

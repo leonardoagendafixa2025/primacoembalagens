@@ -136,17 +136,19 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. OrbitControls com rotação 360° total (horizontal e vertical em torno da base)
+    // 4. OrbitControls com rotação 360° x 360° total livre em torno do centro do modelo
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 60;
-    controls.maxDistance = 5000;
-    // Permite girar 360 graus em torno da base e inspecionar por todos os ângulos
-    controls.minPolarAngle = 0.02;
-    controls.maxPolarAngle = Math.PI - 0.02;
-    controls.target.set(0, 50, 0);
+    controls.screenSpacePanning = true;
+    controls.minDistance = 40;
+    controls.maxDistance = 6000;
+    // Permite girar 360 graus completos horizontalmente e verticalmente em torno da caixa
+    controls.minPolarAngle = 0.001;
+    controls.maxPolarAngle = Math.PI - 0.001;
+    controls.minAzimuthAngle = -Infinity;
+    controls.maxAzimuthAngle = Infinity;
+    controls.target.set(0, 0, 0);
     controls.autoRotate = false;
     controls.autoRotateSpeed = 2.5;
     controlsRef.current = controls;
@@ -157,39 +159,21 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
     const mainLight = new THREE.DirectionalLight(0xffffff, 1.4);
     mainLight.position.set(450, 800, 500);
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 2048;
-    mainLight.shadow.mapSize.height = 2048;
-    mainLight.shadow.bias = -0.0001;
     scene.add(mainLight);
 
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.7);
     fillLight.position.set(-500, 400, -300);
     scene.add(fillLight);
 
-    const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    const backLight = new THREE.DirectionalLight(0xffffff, 0.6);
     backLight.position.set(0, 600, -500);
     scene.add(backLight);
 
-    const bottomLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    const bottomLight = new THREE.DirectionalLight(0xffffff, 0.8);
     bottomLight.position.set(0, -600, 0);
     scene.add(bottomLight);
 
-    // 6. Piso semi-transparente para permitir visualização por baixo da base
-    const floorGeo = new THREE.PlaneGeometry(5000, 5000);
-    const floorMat = new THREE.ShadowMaterial({ opacity: 0.25 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.5;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
-    // Grade no chão ancorada em Y=0
-    const grid = new THREE.GridHelper(2000, 40, 0x35a89e, 0x1a2428);
-    grid.position.y = 0;
-    scene.add(grid);
-
-    // 7. Grupo da Caixa
+    // 6. Grupo da Caixa (sem chão ou grade, permitindo inspeção flutuante 360° pura)
     const boxGroup = new THREE.Group();
     boxGroup.position.set(0, 0, 0);
     scene.add(boxGroup);
@@ -348,31 +332,29 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           controller.rootGroup.rotation.x = Math.PI / 2;
         }
 
-        // Função de fechamento que SEMPRE garante o FUNDO no chão perfeitamente apoiado a Y = 0 e centralizado em X e Z
-        const updateWithGrounding = (progress: number) => {
+        // Função de fechamento que SEMPRE centraliza o centróide 3D da caixa exatamente na origem (0, 0, 0)
+        const updateWithCentering = (progress: number) => {
           controller.rootGroup.position.set(0, 0, 0);
           controller.updateFoldPercent(progress * 100);
           boxGroup.updateMatrixWorld(true);
           const bbox = new THREE.Box3().setFromObject(boxGroup);
 
-          const groundY = -bbox.min.y;
-
           const cx = (bbox.min.x + bbox.max.x) / 2;
+          const cy = (bbox.min.y + bbox.max.y) / 2;
           const cz = (bbox.min.z + bbox.max.z) / 2;
-          controller.rootGroup.position.set(-cx, groundY, -cz);
+          controller.rootGroup.position.set(-cx, -cy, -cz);
           boxGroup.updateMatrixWorld(true);
         };
 
         boxGroup.add(controller.rootGroup);
-        updateProgressRef.current = updateWithGrounding;
-        updateWithGrounding(foldProgress);
+        updateProgressRef.current = updateWithCentering;
+        updateWithCentering(foldProgress);
 
-        // Auto-enquadramento suave da câmera na altura real da caixa
+        // Auto-enquadramento suave da câmera em torno do centro 3D do modelo
         boxGroup.updateMatrixWorld(true);
         const bbox = new THREE.Box3().setFromObject(boxGroup);
-        const boxH = Math.max(30, bbox.max.y - bbox.min.y);
         if (controlsRef.current && cameraRef.current) {
-          controlsRef.current.target.set(0, boxH * 0.45, 0);
+          controlsRef.current.target.set(0, 0, 0);
 
           const sphere = new THREE.Sphere();
           bbox.getBoundingSphere(sphere);
@@ -431,8 +413,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     const controls = controlsRef.current;
     const camera = cameraRef.current;
     if (!controls || !camera) return;
-    const boxH = Math.max(30, params.H || 100);
-    controls.target.set(0, boxH * 0.4, 0);
+    controls.target.set(0, 0, 0);
     const dist = 750;
     camera.position.set(dist * 0.7, dist * 0.65, dist * 0.7);
     controls.update();

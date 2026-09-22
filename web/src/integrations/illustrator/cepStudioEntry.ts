@@ -62,23 +62,9 @@ class PLMStudioViewer {
     this.scene.add(fillLight);
 
     // Luz de contorno superior (Rim Light)
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    rimLight.position.set(0, -400, 200);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    rimLight.position.set(0, -600, 0);
     this.scene.add(rimLight);
-
-    // Piso semi-transparente para permitir visualização por baixo da base
-    const floorGeo = new THREE.PlaneGeometry(3000, 3000);
-    const floorMat = new THREE.ShadowMaterial({ opacity: 0.25 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.5;
-    floor.receiveShadow = true;
-    this.scene.add(floor);
-
-    // Grade no chão ancorada em Y=0 (idêntica à Web)
-    const grid = new THREE.GridHelper(2000, 40, 0x35a89e, 0x1a2428);
-    grid.position.y = 0;
-    this.scene.add(grid);
   }
 
   public isInitialized: boolean = false;
@@ -126,8 +112,14 @@ class PLMStudioViewer {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
-    this.controls.maxDistance = 3000;
-    this.controls.minDistance = 40;
+    this.controls.screenSpacePanning = true;
+    this.controls.maxDistance = 5000;
+    this.controls.minDistance = 30;
+    this.controls.minPolarAngle = 0.001;
+    this.controls.maxPolarAngle = Math.PI - 0.001;
+    this.controls.minAzimuthAngle = -Infinity;
+    this.controls.maxAzimuthAngle = Infinity;
+    this.controls.target.set(0, 0, 0);
 
     window.addEventListener('resize', this.onResize);
     if (typeof ResizeObserver !== 'undefined') {
@@ -285,17 +277,16 @@ class PLMStudioViewer {
       this.boxGroup.add(this.currentTree.rootGroup);
       this.updateWithGrounding(this.foldProgress);
 
-      // Auto-enquadramento suave da câmera na altura real da caixa
+      // Auto-enquadramento suave da câmera no centro 3D da caixa
       this.boxGroup.updateMatrixWorld(true);
       const bbox = new THREE.Box3().setFromObject(this.boxGroup);
-      const boxH = Math.max(30, bbox.max.y - bbox.min.y);
       const sphere = new THREE.Sphere();
       bbox.getBoundingSphere(sphere);
       const dist = Math.max(250, sphere.radius * 2.2);
 
-      this.camera.position.set(dist * 0.75, dist * 0.65 + boxH * 0.45, dist * 0.75);
+      this.camera.position.set(dist * 0.75, dist * 0.65, dist * 0.75);
       if (this.controls) {
-        this.controls.target.set(0, boxH * 0.45, 0);
+        this.controls.target.set(0, 0, 0);
         this.controls.update();
       }
 
@@ -308,7 +299,7 @@ class PLMStudioViewer {
     }
   }
 
-  // Função que SEMPRE garante o FUNDO da embalagem perfeitamente apoiado no chão a Y = 0 e centralizado em X e Z
+  // Função que SEMPRE centraliza o centróide 3D da embalagem na origem (0, 0, 0)
   private updateWithGrounding(progress: number) {
     if (!this.currentTree) return;
     this.currentTree.rootGroup.position.set(0, 0, 0);
@@ -316,11 +307,10 @@ class PLMStudioViewer {
     this.boxGroup.updateMatrixWorld(true);
     const bbox = new THREE.Box3().setFromObject(this.boxGroup);
 
-    const groundY = -bbox.min.y;
-
     const cx = (bbox.min.x + bbox.max.x) / 2;
+    const cy = (bbox.min.y + bbox.max.y) / 2;
     const cz = (bbox.min.z + bbox.max.z) / 2;
-    this.currentTree.rootGroup.position.set(-cx, groundY, -cz);
+    this.currentTree.rootGroup.position.set(-cx, -cy, -cz);
     this.boxGroup.position.set(0, 0, 0);
     this.boxGroup.updateMatrixWorld(true);
   }
