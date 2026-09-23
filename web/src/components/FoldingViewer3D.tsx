@@ -73,6 +73,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const updateProgressRef = useRef<((progress: number) => void) | null>(null);
   const controllerRef = useRef<ThreeModelController | null>(null);
   const downPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const isPointerDownRef = useRef(false);
   const autoRotateRef = useRef(false);
 
   useEffect(() => {
@@ -171,16 +172,17 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. TrackballControls: rotação 360° x 360° esférica contínua sem limites em ambos os eixos
+    // 4. TrackballControls: resposta em TEMPO REAL DIRETA 1:1 sem atraso/lag elástico
     const controls = new TrackballControls(camera, renderer.domElement);
-    controls.rotateSpeed = 2.2;
+    controls.rotateSpeed = 3.0;
     controls.zoomSpeed = 1.2;
     controls.panSpeed = 0.8;
-    controls.staticMoving = false;
-    controls.dynamicDampingFactor = 0.15;
+    controls.staticMoving = true; // Tempo real instantâneo e síncrono com o mouse
+    controls.dynamicDampingFactor = 0.9;
     controls.minDistance = 30;
     controls.maxDistance = 8000;
     controls.target.set(0, 0, 0);
+    controls.handleResize();
     controlsRef.current = controls;
 
     // 5. Luzes de estúdio balanceadas (Daylight Neutro para fidelidade do papel cartão BRANCO)
@@ -497,10 +499,12 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
   // Raycasting 3D interativo para seleção de abas ou vincos via clique
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    isPointerDownRef.current = true;
     downPos.current = { x: e.clientX, y: e.clientY };
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    isPointerDownRef.current = false;
     const dx = Math.abs(e.clientX - downPos.current.x);
     const dy = Math.abs(e.clientY - downPos.current.y);
     if (dx > 5 || dy > 5) return; // Orbit/pan da câmera, não conta como clique
@@ -547,6 +551,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPointerDownRef.current) return; // Ignora raycast durante rotação em tempo real para 60/120 FPS cravados
     const mount = mountRef.current;
     const camera = cameraRef.current;
     const controller = controllerRef.current;

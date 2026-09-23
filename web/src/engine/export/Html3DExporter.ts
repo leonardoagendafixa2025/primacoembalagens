@@ -660,14 +660,15 @@ export function generateStandaloneHtml3D(
         if (typeof THREE.TrackballControls === 'function') {
           try {
             var tc = new THREE.TrackballControls(camera, domElement);
-            tc.rotateSpeed = 2.2;
+            tc.rotateSpeed = 3.0;
             tc.zoomSpeed = 1.2;
             tc.panSpeed = 0.8;
-            tc.staticMoving = false;
-            tc.dynamicDampingFactor = 0.15;
+            tc.staticMoving = true;
+            tc.dynamicDampingFactor = 0.9;
             tc.minDistance = 30;
             tc.maxDistance = 8000;
             tc.target.set(0, 0, 0);
+            tc.handleResize();
             return tc;
           } catch(e) {
             console.warn('Fallback para controlador nativo de câmera');

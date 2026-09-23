@@ -114,14 +114,15 @@ class PLMStudioViewer {
     this.camera.updateProjectionMatrix();
 
     this.controls = new TrackballControls(this.camera, this.renderer.domElement);
-    this.controls.rotateSpeed = 2.2;
+    this.controls.rotateSpeed = 3.0;
     this.controls.zoomSpeed = 1.2;
     this.controls.panSpeed = 0.8;
-    this.controls.staticMoving = false;
-    this.controls.dynamicDampingFactor = 0.15;
+    this.controls.staticMoving = true;
+    this.controls.dynamicDampingFactor = 0.9;
     this.controls.minDistance = 30;
     this.controls.maxDistance = 8000;
     this.controls.target.set(0, 0, 0);
+    this.controls.handleResize();
 
     window.addEventListener('resize', this.onResize);
     if (typeof ResizeObserver !== 'undefined') {
