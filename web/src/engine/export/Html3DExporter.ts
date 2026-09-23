@@ -562,6 +562,7 @@ export function generateStandaloneHtml3D(
       document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\\/script>');
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TrackballControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
@@ -654,32 +655,27 @@ export function generateStandaloneHtml3D(
       var innerColorHex = '${innerColor}';
       var isTrayOrFolder = ${isTrayOrFolder};
 
-      // 2. Controlador de Câmera Orbit Standalone (NUNCA FALHA)
+      // 2. Controlador de Câmera Trackball Standalone (360° Horizontal e Vertical LIVRE)
       function initControls(camera, domElement) {
-        if (typeof THREE.OrbitControls === 'function') {
+        if (typeof THREE.TrackballControls === 'function') {
           try {
-            var oc = new THREE.OrbitControls(camera, domElement);
-            oc.enableDamping = true;
-            oc.dampingFactor = 0.08;
-            oc.screenSpacePanning = true;
-            oc.minDistance = 30;
-            oc.maxDistance = 8000;
-            oc.rotateSpeed = 1.0;
-            oc.minPolarAngle = 0.02;
-            oc.maxPolarAngle = Math.PI - 0.02;
-            oc.minAzimuthAngle = -Infinity;
-            oc.maxAzimuthAngle = Infinity;
-            return oc;
+            var tc = new THREE.TrackballControls(camera, domElement);
+            tc.rotateSpeed = 2.2;
+            tc.zoomSpeed = 1.2;
+            tc.panSpeed = 0.8;
+            tc.staticMoving = false;
+            tc.dynamicDampingFactor = 0.15;
+            tc.minDistance = 30;
+            tc.maxDistance = 8000;
+            tc.target.set(0, 0, 0);
+            return tc;
           } catch(e) {
             console.warn('Fallback para controlador nativo de câmera');
           }
         }
 
-        // Controlador de Órbita Nativo sem dependência externa
+        // Controlador Quaterniônico Esférico Nativo 360° x 360° sem dependência externa
         var target = new THREE.Vector3(0, 0, 0);
-        var radius = camera.position.length() || 600;
-        var theta = Math.atan2(camera.position.x, camera.position.z) || 0.8;
-        var phi = Math.acos(Math.max(-1, Math.min(1, camera.position.y / (radius || 1)))) || 1.1;
         var isDragging = false;
         var isPanning = false;
         var prevX = 0, prevY = 0;
@@ -687,14 +683,15 @@ export function generateStandaloneHtml3D(
 
         function update() {
           if (autoRotate && !isDragging) {
-            theta += 0.008;
+            var rotAngle = 0.008;
+            var cosA = Math.cos(rotAngle);
+            var sinA = Math.sin(rotAngle);
+            var x = camera.position.x;
+            var z = camera.position.z;
+            camera.position.x = x * cosA - z * sinA;
+            camera.position.z = x * sinA + z * cosA;
+            camera.lookAt(target);
           }
-          phi = Math.max(0.02, Math.min(Math.PI - 0.02, phi));
-          radius = Math.max(30, Math.min(8000, radius));
-          camera.position.x = target.x + radius * Math.sin(phi) * Math.sin(theta);
-          camera.position.y = target.y + radius * Math.cos(phi);
-          camera.position.z = target.z + radius * Math.sin(phi) * Math.cos(theta);
-          camera.lookAt(target);
         }
 
         domElement.addEventListener('contextmenu', function(e) { e.preventDefault(); });
@@ -711,29 +708,45 @@ export function generateStandaloneHtml3D(
           prevX = e.clientX;
           prevY = e.clientY;
 
+          var dist = camera.position.distanceTo(target);
+
           if (isPanning) {
-            var panScale = radius * 0.0012;
+            var panScale = dist * 0.0012;
             var fwd = new THREE.Vector3().subVectors(target, camera.position).normalize();
             var right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
             var up = new THREE.Vector3().crossVectors(right, fwd).normalize();
             target.addScaledVector(right, -dx * panScale);
             target.addScaledVector(up, dy * panScale);
           } else {
-            theta -= dx * 0.007;
-            phi -= dy * 0.007;
+            // Rotação esférica 360° x 360° contínua em ambos os eixos
+            var eye = new THREE.Vector3().subVectors(camera.position, target);
+            var fwd = eye.clone().normalize().negate();
+            var right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
+
+            var qYaw = new THREE.Quaternion().setFromAxisAngle(camera.up, -dx * 0.007);
+            var qPitch = new THREE.Quaternion().setFromAxisAngle(right, -dy * 0.007);
+            var qRot = new THREE.Quaternion().multiplyQuaternions(qPitch, qYaw);
+
+            eye.applyQuaternion(qRot);
+            camera.position.copy(target).add(eye);
+            camera.up.applyQuaternion(qRot).normalize();
+            camera.lookAt(target);
           }
-          update();
         });
         window.addEventListener('mouseup', function() { isDragging = false; });
         domElement.addEventListener('wheel', function(e) {
           e.preventDefault();
-          radius *= (e.deltaY < 0 ? 0.9 : 1.1);
-          update();
+          var eye = new THREE.Vector3().subVectors(camera.position, target);
+          var scale = (e.deltaY < 0 ? 0.9 : 1.1);
+          var newDist = Math.max(30, Math.min(8000, eye.length() * scale));
+          eye.setLength(newDist);
+          camera.position.copy(target).add(eye);
         }, { passive: false });
 
         return {
           target: target,
           update: update,
+          handleResize: function() {},
           get autoRotate() { return autoRotate; },
           set autoRotate(v) { autoRotate = v; },
           dispose: function() {}

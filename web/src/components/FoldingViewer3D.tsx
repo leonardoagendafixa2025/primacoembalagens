@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
 import { LoopTopologyEngine, type StructuralPanel } from '../engine/importers/LoopTopologyEngine';
 import { FoldingTreeEngine, type FoldingTreeResult } from '../engine/importers/FoldingTreeEngine';
@@ -68,11 +68,16 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const controlsRef = useRef<OrbitControls | null>(null);
+  const controlsRef = useRef<TrackballControls | null>(null);
   const boxGroupRef = useRef<THREE.Group | null>(null);
   const updateProgressRef = useRef<((progress: number) => void) | null>(null);
   const controllerRef = useRef<ThreeModelController | null>(null);
   const downPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const autoRotateRef = useRef(false);
+
+  useEffect(() => {
+    autoRotateRef.current = autoRotate;
+  }, [autoRotate]);
 
   // Carrega textura externa sincronizada da arte do Illustrator
   useEffect(() => {
@@ -138,7 +143,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     img.src = innerArtworkTextureUri;
   }, [innerArtworkTextureUri, profile?.innerColor]);
 
-  // Configuração inicial da cena Three.js com OrbitControls profissional
+  // Configuração inicial da cena Three.js com TrackballControls profissional (360° Horizontal e Vertical Livres)
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -154,6 +159,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     // 2. Câmera
     const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
     camera.position.set(500, 400, 500);
+    camera.up.set(0, 1, 0);
     cameraRef.current = camera;
 
     // 3. Renderer
@@ -165,22 +171,16 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. OrbitControls com rotação 360° horizontal e vertical contínua em torno do modelo
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.screenSpacePanning = true;
+    // 4. TrackballControls: rotação 360° x 360° esférica contínua sem limites em ambos os eixos
+    const controls = new TrackballControls(camera, renderer.domElement);
+    controls.rotateSpeed = 2.2;
+    controls.zoomSpeed = 1.2;
+    controls.panSpeed = 0.8;
+    controls.staticMoving = false;
+    controls.dynamicDampingFactor = 0.15;
     controls.minDistance = 30;
     controls.maxDistance = 8000;
-    controls.rotateSpeed = 1.0;
-    // Evita singularidade de pólo (gimbal lock) em Y=0/Y=PI para rotação horizontal fluida em qualquer ângulo
-    controls.minPolarAngle = 0.02;
-    controls.maxPolarAngle = Math.PI - 0.02;
-    controls.minAzimuthAngle = -Infinity;
-    controls.maxAzimuthAngle = Infinity;
     controls.target.set(0, 0, 0);
-    controls.autoRotate = false;
-    controls.autoRotateSpeed = 2.5;
     controlsRef.current = controls;
 
     // 5. Luzes de estúdio balanceadas (Daylight Neutro para fidelidade do papel cartão BRANCO)
@@ -217,15 +217,29 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
+          controls.handleResize();
         }
       }
     });
     resizeObserver.observe(mount);
 
-    // Loop de Animação suave com Damping do OrbitControls
+    // Loop de Animação suave com Damping do TrackballControls e suporte a AutoRotate
     let reqId = 0;
     const animate = () => {
       reqId = requestAnimationFrame(animate);
+
+      if (autoRotateRef.current && controlsRef.current) {
+        // Gira 360° horizontalmente em torno do centróide (0, 0, 0)
+        const angle = 0.008;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        const x = camera.position.x;
+        const z = camera.position.z;
+        camera.position.x = x * cosA - z * sinA;
+        camera.position.z = x * sinA + z * cosA;
+        camera.lookAt(controlsRef.current.target);
+      }
+
       if (controlsRef.current) {
         controlsRef.current.update();
       }
@@ -249,14 +263,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       renderer.dispose();
     };
   }, []);
-
-  // Atualiza autoRotate sem destruir a cena Three.js
-  useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.autoRotate = autoRotate;
-      controlsRef.current.autoRotateSpeed = 2.5;
-    }
-  }, [autoRotate]);
 
   // Recria a geometria 3D articulada a partir da MESMA faca 2D real
   useEffect(() => {
@@ -391,6 +397,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           if (sphere.radius > 10) {
             const dist = Math.max(450, sphere.radius * 2.2);
             cameraRef.current.position.set(dist * 0.7, dist * 0.65, dist * 0.7);
+            cameraRef.current.up.set(0, 1, 0);
+            cameraRef.current.lookAt(0, 0, 0);
             controlsRef.current.update();
           }
         }
@@ -428,15 +436,16 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     return () => clearInterval(interval);
   }, [isPlaying]);
 
-  // Funções de câmera para validação visual rápida em 360 graus
+  // Funções de câmera para validação visual rápida em 360° x 360°
   const snapToTopView = () => {
     const controls = controlsRef.current;
     const camera = cameraRef.current;
     if (!controls || !camera) return;
     controls.target.set(0, 0, 0);
     const dist = camera.position.length() || 800;
-    // Ângulo ligeiramente inclinado para manter coordenadas esféricas bem definidas e girar 360° horizontal livre
-    camera.position.set(0, dist * 0.99, dist * 0.08);
+    camera.position.set(0, dist, 0);
+    camera.up.set(0, 0, -1);
+    camera.lookAt(0, 0, 0);
     controls.update();
   };
 
@@ -447,6 +456,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     controls.target.set(0, 0, 0);
     const dist = 750;
     camera.position.set(dist * 0.7, dist * 0.65, dist * 0.7);
+    camera.up.set(0, 1, 0);
+    camera.lookAt(0, 0, 0);
     controls.update();
   };
 
@@ -456,7 +467,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     if (!controls || !camera) return;
     controls.target.set(0, 0, 0);
     const dist = camera.position.length() || 800;
-    camera.position.set(0, -dist * 0.99, dist * 0.08);
+    camera.position.set(0, -dist, 0);
+    camera.up.set(0, 0, 1);
+    camera.lookAt(0, 0, 0);
     controls.update();
   };
 

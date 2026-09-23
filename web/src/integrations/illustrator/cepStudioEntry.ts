@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { buildFoldable3DTree, type FoldableTreeResult } from '../../engine/foldingEngine';
 import type { DielineResult } from '../../engine/types';
 
@@ -21,7 +21,7 @@ class PLMStudioViewer {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer | null = null;
-  private controls: OrbitControls | null = null;
+  private controls: TrackballControls | null = null;
   private boxGroup: THREE.Group;
   private currentTree: FoldableTreeResult | null = null;
   private currentTexture: THREE.Texture | null = null;
@@ -113,17 +113,14 @@ class PLMStudioViewer {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
-    this.controls.screenSpacePanning = true;
-    this.controls.maxDistance = 8000;
+    this.controls = new TrackballControls(this.camera, this.renderer.domElement);
+    this.controls.rotateSpeed = 2.2;
+    this.controls.zoomSpeed = 1.2;
+    this.controls.panSpeed = 0.8;
+    this.controls.staticMoving = false;
+    this.controls.dynamicDampingFactor = 0.15;
     this.controls.minDistance = 30;
-    this.controls.rotateSpeed = 1.0;
-    this.controls.minPolarAngle = 0.02;
-    this.controls.maxPolarAngle = Math.PI - 0.02;
-    this.controls.minAzimuthAngle = -Infinity;
-    this.controls.maxAzimuthAngle = Infinity;
+    this.controls.maxDistance = 8000;
     this.controls.target.set(0, 0, 0);
 
     window.addEventListener('resize', this.onResize);
@@ -149,6 +146,7 @@ class PLMStudioViewer {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
+    this.controls?.handleResize();
   };
 
   private startRenderLoop = () => {
@@ -157,7 +155,14 @@ class PLMStudioViewer {
 
       if (this.controls) {
         if (this.isAutoRotating) {
-          this.boxGroup.rotation.y += 0.008;
+          const angle = 0.008;
+          const cosA = Math.cos(angle);
+          const sinA = Math.sin(angle);
+          const x = this.camera.position.x;
+          const z = this.camera.position.z;
+          this.camera.position.x = x * cosA - z * sinA;
+          this.camera.position.z = x * sinA + z * cosA;
+          this.camera.lookAt(this.controls.target);
         }
         this.controls.update();
       }
