@@ -62,8 +62,12 @@
     if (isEmpty) {
       currentProject = null;
       lastLoadedArtworkUri = null;
-      artVersion = 0;
-      if (elVersion) elVersion.textContent = 'Arte: v0';
+      lastOuterArtworkUri = null;
+      lastInnerArtworkUri = null;
+      outerArtVersion = 0;
+      innerArtVersion = 0;
+      if (elVersionOuter) elVersionOuter.textContent = 'Arte Ext: v0';
+      if (elVersionInner) elVersionInner.textContent = 'Arte Int: v0';
 
       if (elEmptyState) elEmptyState.style.display = 'flex';
       if (elModelTag) {
@@ -75,10 +79,20 @@
         btnSyncArtwork.style.opacity = '0.5';
         btnSyncArtwork.style.cursor = 'not-allowed';
       }
+      if (btnSyncArtworkOuter) {
+        btnSyncArtworkOuter.disabled = true;
+        btnSyncArtworkOuter.style.opacity = '0.5';
+      }
+      if (btnSyncArtworkInner) {
+        btnSyncArtworkInner.disabled = true;
+        btnSyncArtworkInner.style.opacity = '0.5';
+      }
       if (sliderFold) sliderFold.disabled = true;
       if (btnPlayFold) btnPlayFold.disabled = true;
       if (btnUpdateDieline) btnUpdateDieline.disabled = true;
 
+      // O plugin do Illustrator TEM que ficar offline até conectar na Web
+      setOnline(false);
       setStatus(message || 'Aguardando envio de projeto do PLMPackLib Web...');
     } else {
       if (elEmptyState) elEmptyState.style.display = 'none';
@@ -89,6 +103,14 @@
         btnSyncArtwork.disabled = false;
         btnSyncArtwork.style.opacity = '1';
         btnSyncArtwork.style.cursor = 'pointer';
+      }
+      if (btnSyncArtworkOuter) {
+        btnSyncArtworkOuter.disabled = false;
+        btnSyncArtworkOuter.style.opacity = '1';
+      }
+      if (btnSyncArtworkInner) {
+        btnSyncArtworkInner.disabled = false;
+        btnSyncArtworkInner.style.opacity = '1';
       }
       if (sliderFold) sliderFold.disabled = false;
       if (btnPlayFold) btnPlayFold.disabled = false;
@@ -341,8 +363,8 @@
 
         server.listen(48123, '127.0.0.1', function() {
           embeddedServerOnline = true;
-          setOnline(true);
-          console.log('[CEP] Servidor HTTP local ativo na porta 48123!');
+          // O plugin permanece OFFLINE até que a Web envie um projeto
+          console.log('[CEP] Servidor HTTP local ativo na porta 48123 (aguardando conexão da Web)...');
         });
       }
     } catch(e) {
@@ -678,17 +700,22 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (isClearing) return;
-        setOnline(true);
-        if (data.activeProject) {
+        if (data && data.activeProject) {
+          setOnline(true);
           if (!currentProject || currentProject.projectId !== data.activeProject) {
             fetchProjectGeometry();
           }
-        } else if (!data.activeProject && currentProject) {
-          // Projeto foi limpo na bridge
-          if (window.PLMStudio) window.PLMStudio.clearModel();
-          setEmptyState(true);
+        } else {
+          // Nenhum projeto ativo enviado pela Web: permanece OFFLINE
+          if (!currentProject) {
+            setOnline(false);
+          } else {
+            // Projeto foi limpo na bridge
+            if (window.PLMStudio) window.PLMStudio.clearModel();
+            setEmptyState(true);
+          }
         }
-        if (data.latestArtworkDataUri && data.latestArtworkDataUri !== lastLoadedArtworkUri) {
+        if (data && data.latestArtworkDataUri && data.latestArtworkDataUri !== lastLoadedArtworkUri) {
           lastLoadedArtworkUri = data.latestArtworkDataUri;
           if (window.PLMStudio) {
             window.PLMStudio.updateArtwork(data.latestArtworkDataUri);
@@ -696,7 +723,9 @@
         }
       })
       .catch(function() {
-        setOnline(false);
+        if (!currentProject) {
+          setOnline(false);
+        }
       });
   }
 
