@@ -165,16 +165,17 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. OrbitControls com rotação 360° x 360° total livre em torno do centro do modelo
+    // 4. OrbitControls com rotação 360° horizontal e vertical contínua em torno do modelo
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.06;
+    controls.dampingFactor = 0.08;
     controls.screenSpacePanning = true;
-    controls.minDistance = 40;
-    controls.maxDistance = 6000;
-    // Permite girar 360 graus completos horizontalmente e verticalmente em torno da caixa
-    controls.minPolarAngle = 0.001;
-    controls.maxPolarAngle = Math.PI - 0.001;
+    controls.minDistance = 30;
+    controls.maxDistance = 8000;
+    controls.rotateSpeed = 1.0;
+    // Evita singularidade de pólo (gimbal lock) em Y=0/Y=PI para rotação horizontal fluida em qualquer ângulo
+    controls.minPolarAngle = 0.02;
+    controls.maxPolarAngle = Math.PI - 0.02;
     controls.minAzimuthAngle = -Infinity;
     controls.maxAzimuthAngle = Infinity;
     controls.target.set(0, 0, 0);
@@ -332,36 +333,33 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       }
 
       if (controller.panelsCount > 0) {
-        // Verifica se é modelo tubular (FEFCO 02xx / 07xx / ECMA A, B, E) para manter a caixa em pé com o fundo no chão
+        // Orienta o modelo de modo que o topo fique sempre em +Y e o fundo em -Y/plano horizontal:
+        // - Para bandejas/envelopes (FEFCO 04xx / 03xx / 09xx): a base 2D está no plano XY e as abas dobram em +Z.
+        //   Rotacionamos -90° em X para que a base fique horizontal (plano XZ) e as abas subam em +Y.
+        // - Para modelos tubulares (FEFCO 02xx / 07xx / ECMA A/B/E): os painéis já formam um tubo vertical ao longo de Y,
+        //   portanto permanecem perfeitamente eretos com rotation.x = 0.
         const codeStr = (model.code || model.id || '').toUpperCase();
-        const isTubular =
-          codeStr.includes('FEFCO 02') ||
-          codeStr.includes('FEFCO 07') ||
-          codeStr.includes('FEFCO_02') ||
-          codeStr.includes('FEFCO_07') ||
-          codeStr.includes('FEFCO_F2') ||
-          codeStr.includes('FEFCO_F7') ||
-          codeStr.startsWith('ECMA A') ||
-          codeStr.startsWith('ECMA B') ||
-          codeStr.startsWith('ECMA E') ||
-          codeStr.startsWith('ECMA X') ||
-          codeStr.startsWith('ECMA_A') ||
-          codeStr.startsWith('ECMA_B') ||
-          codeStr.startsWith('ECMA_E') ||
-          codeStr.startsWith('ECMA_X') ||
+        const isTrayOrFolder =
+          codeStr.includes('FEFCO 04') ||
+          codeStr.includes('FEFCO_04') ||
+          codeStr.includes('FEFCO_F4') ||
+          codeStr.includes('FEFCO 03') ||
+          codeStr.includes('FEFCO_03') ||
+          codeStr.includes('FEFCO_F3') ||
+          codeStr.includes('FEFCO 09') ||
+          codeStr.includes('FEFCO_09') ||
           Boolean(model.series && (
-            model.series.includes('0200') ||
-            model.series.includes('0700') ||
-            model.series.includes('Grupo A') ||
-            model.series.includes('Grupo B') ||
-            model.series.includes('Grupo E') ||
-            model.series.includes('Série X') ||
-            model.series.includes('Serie X')
+            model.series.includes('0400') ||
+            model.series.includes('0300') ||
+            model.series.includes('0900') ||
+            model.series.includes('Bandejas') ||
+            model.series.includes('Gavetas')
           ));
 
-        if (isTubular) {
-          // Rotaciona 90° em torno de X para colocar o fundo (+Z) voltado para o chão (-Y) e a tampa para cima (+Y)
-          controller.rootGroup.rotation.x = Math.PI / 2;
+        if (isTrayOrFolder) {
+          controller.rootGroup.rotation.x = -Math.PI / 2;
+        } else {
+          controller.rootGroup.rotation.x = 0;
         }
 
         // Função de fechamento que SEMPRE centraliza o centróide 3D da caixa exatamente na origem (0, 0, 0)
@@ -437,7 +435,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     if (!controls || !camera) return;
     controls.target.set(0, 0, 0);
     const dist = camera.position.length() || 800;
-    camera.position.set(0, dist, 0);
+    // Ângulo ligeiramente inclinado para manter coordenadas esféricas bem definidas e girar 360° horizontal livre
+    camera.position.set(0, dist * 0.99, dist * 0.08);
     controls.update();
   };
 
@@ -457,7 +456,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     if (!controls || !camera) return;
     controls.target.set(0, 0, 0);
     const dist = camera.position.length() || 800;
-    camera.position.set(0, -dist * 0.9, 0.01);
+    camera.position.set(0, -dist * 0.99, dist * 0.08);
     controls.update();
   };
 
@@ -564,7 +563,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerMove={handlePointerMove}
-        style={{ width: '100%', height: '100%', cursor: 'grab' }}
+        style={{ width: '100%', height: '100%', cursor: 'grab', touchAction: 'none', userSelect: 'none' }}
       />
 
       {/* Card de Inspeção Forense de Painel Selecionado (Fase 4 - Seção 14) */}

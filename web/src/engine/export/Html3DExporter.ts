@@ -178,23 +178,24 @@ export function generateStandaloneHtml3D(
     const outerArtworkUri = options.outerArtworkTextureUri || options.artworkTextureUri || null;
     const innerArtworkUri = options.innerArtworkTextureUri || null;
 
-    // Detecta se é tubular
+    // Detecta se é modelo de bandeja/envelope vs tubular
     const codeStr = (model.code || model.id || '').toUpperCase();
-    const isTubular =
-      codeStr.includes('FEFCO 02') ||
-      codeStr.includes('FEFCO 07') ||
-      codeStr.includes('FEFCO_02') ||
-      codeStr.includes('FEFCO_07') ||
-      codeStr.includes('FEFCO_F2') ||
-      codeStr.includes('FEFCO_F7') ||
-      codeStr.startsWith('ECMA A') ||
-      codeStr.startsWith('ECMA B') ||
-      codeStr.startsWith('ECMA E') ||
-      codeStr.startsWith('ECMA X') ||
-      codeStr.startsWith('ECMA_A') ||
-      codeStr.startsWith('ECMA_B') ||
-      codeStr.startsWith('ECMA_E') ||
-      codeStr.startsWith('ECMA_X');
+    const isTrayOrFolder =
+      codeStr.includes('FEFCO 04') ||
+      codeStr.includes('FEFCO_04') ||
+      codeStr.includes('FEFCO_F4') ||
+      codeStr.includes('FEFCO 03') ||
+      codeStr.includes('FEFCO_03') ||
+      codeStr.includes('FEFCO_F3') ||
+      codeStr.includes('FEFCO 09') ||
+      codeStr.includes('FEFCO_09') ||
+      Boolean(model.series && (
+        model.series.includes('0400') ||
+        model.series.includes('0300') ||
+        model.series.includes('0900') ||
+        model.series.includes('Bandejas') ||
+        model.series.includes('Gavetas')
+      ));
 
     // Metadados do Projeto para Reconstrução Forense
     const metadata = {
@@ -205,7 +206,7 @@ export function generateStandaloneHtml3D(
       modelCode: model.code,
       modelName: model.name,
       foldingTreeRootId: rootPanelId,
-      isTubular,
+      isTrayOrFolder,
       dimensions: {
         L: params.L ?? 300,
         B: params.B ?? 200,
@@ -651,7 +652,7 @@ export function generateStandaloneHtml3D(
       var metadata = ${JSON.stringify(metadata)};
       var outerColorHex = '${outerColor}';
       var innerColorHex = '${innerColor}';
-      var isTubular = ${isTubular};
+      var isTrayOrFolder = ${isTrayOrFolder};
 
       // 2. Controlador de Câmera Orbit Standalone (NUNCA FALHA)
       function initControls(camera, domElement) {
@@ -662,9 +663,10 @@ export function generateStandaloneHtml3D(
             oc.dampingFactor = 0.08;
             oc.screenSpacePanning = true;
             oc.minDistance = 30;
-            oc.maxDistance = 6000;
-            oc.minPolarAngle = 0.001;
-            oc.maxPolarAngle = Math.PI - 0.001;
+            oc.maxDistance = 8000;
+            oc.rotateSpeed = 1.0;
+            oc.minPolarAngle = 0.02;
+            oc.maxPolarAngle = Math.PI - 0.02;
             oc.minAzimuthAngle = -Infinity;
             oc.maxAzimuthAngle = Infinity;
             return oc;
@@ -687,8 +689,8 @@ export function generateStandaloneHtml3D(
           if (autoRotate && !isDragging) {
             theta += 0.008;
           }
-          phi = Math.max(0.001, Math.min(Math.PI - 0.001, phi));
-          radius = Math.max(30, Math.min(6000, radius));
+          phi = Math.max(0.02, Math.min(Math.PI - 0.02, phi));
+          radius = Math.max(30, Math.min(8000, radius));
           camera.position.x = target.x + radius * Math.sin(phi) * Math.sin(theta);
           camera.position.y = target.y + radius * Math.cos(phi);
           camera.position.z = target.z + radius * Math.sin(phi) * Math.cos(theta);
@@ -784,8 +786,8 @@ export function generateStandaloneHtml3D(
       var boxGroup = new THREE.Group();
       modelRoot.add(boxGroup);
 
-      if (isTubular) {
-        boxGroup.rotation.x = Math.PI / 2;
+      if (isTrayOrFolder) {
+        boxGroup.rotation.x = -Math.PI / 2;
       }
 
       var textureLoader = new THREE.TextureLoader();

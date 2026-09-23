@@ -117,10 +117,11 @@ class PLMStudioViewer {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.screenSpacePanning = true;
-    this.controls.maxDistance = 5000;
+    this.controls.maxDistance = 8000;
     this.controls.minDistance = 30;
-    this.controls.minPolarAngle = 0.001;
-    this.controls.maxPolarAngle = Math.PI - 0.001;
+    this.controls.rotateSpeed = 1.0;
+    this.controls.minPolarAngle = 0.02;
+    this.controls.maxPolarAngle = Math.PI - 0.02;
     this.controls.minAzimuthAngle = -Infinity;
     this.controls.maxAzimuthAngle = Infinity;
     this.controls.target.set(0, 0, 0);
@@ -254,27 +255,22 @@ class PLMStudioViewer {
         this.currentInnerTexture
       );
 
-      // Verifica se é modelo tubular (FEFCO 02xx / 07xx / ECMA A, B, E, X) para manter a caixa em pé com o fundo no chão
+      // Detecta se é modelo de bandeja/envelope vs tubular
       const codeStr = (project.modelCode || project.projectName || '').toUpperCase();
-      const isTubular =
-        codeStr.includes('FEFCO 02') ||
-        codeStr.includes('FEFCO 07') ||
-        codeStr.includes('FEFCO_02') ||
-        codeStr.includes('FEFCO_07') ||
-        codeStr.includes('FEFCO_F2') ||
-        codeStr.includes('FEFCO_F7') ||
-        codeStr.startsWith('ECMA A') ||
-        codeStr.startsWith('ECMA B') ||
-        codeStr.startsWith('ECMA E') ||
-        codeStr.startsWith('ECMA X') ||
-        codeStr.startsWith('ECMA_A') ||
-        codeStr.startsWith('ECMA_B') ||
-        codeStr.startsWith('ECMA_E') ||
-        codeStr.startsWith('ECMA_X');
+      const isTrayOrFolder =
+        codeStr.includes('FEFCO 04') ||
+        codeStr.includes('FEFCO_04') ||
+        codeStr.includes('FEFCO_F4') ||
+        codeStr.includes('FEFCO 03') ||
+        codeStr.includes('FEFCO_03') ||
+        codeStr.includes('FEFCO_F3') ||
+        codeStr.includes('FEFCO 09') ||
+        codeStr.includes('FEFCO_09');
 
-      if (isTubular) {
-        // Rotaciona 90° em torno de X para colocar o fundo (+Z) voltado para o chão (-Y) e a tampa para cima (+Y)
-        this.currentTree.rootGroup.rotation.x = Math.PI / 2;
+      if (isTrayOrFolder) {
+        this.currentTree.rootGroup.rotation.x = -Math.PI / 2;
+      } else {
+        this.currentTree.rootGroup.rotation.x = 0;
       }
 
       this.boxGroup.add(this.currentTree.rootGroup);
