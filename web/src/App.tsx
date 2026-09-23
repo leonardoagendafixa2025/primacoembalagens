@@ -150,7 +150,14 @@ export const App: React.FC = () => {
   // Monitora a conexão com o Adobe Illustrator e escuta sincronização de arte
   useEffect(() => {
     const client = IllustratorBridgeClient.getInstance();
+    
+    // Checagem inicial
     client.checkStatus().then(setBridgeStatus);
+
+    // Polling contínuo a cada 3 segundos para manter status online/offline em tempo real
+    const timer = setInterval(() => {
+      client.checkStatus().then(setBridgeStatus);
+    }, 3000);
 
     const unsubscribe = client.addListener((event) => {
       if (event.type === 'ARTWORK_UPDATED') {
@@ -178,7 +185,10 @@ export const App: React.FC = () => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearInterval(timer);
+      unsubscribe();
+    };
   }, []);
 
   // Quando troca o modelo, redefine os parâmetros para os padrões dele
@@ -289,17 +299,29 @@ export const App: React.FC = () => {
         dieline
       );
       const client = IllustratorBridgeClient.getInstance();
+
+      // Primeiro revalida a conexão com a ponte local imediatamente
+      const currentSt = await client.checkStatus();
+      setBridgeStatus(currentSt);
+
       const res = await client.openInIllustrator(exchangePkg);
       if (res.success) {
         confetti({ particleCount: 35, spread: 45, origin: { y: 0.1 } });
       } else {
-        // Se a ponte estiver offline, abre o modal explicativo
-        // SEM BAIXAR NENHUM ARQUIVO .JSX AUTOMATICAMENTE
-        setIsIllustratorPluginModalOpen(true);
+        alert(
+          'Adobe Illustrator não conectado na porta 48123.\n\n' +
+          'Para conectar:\n' +
+          '1. Verifique se o Adobe Illustrator está aberto.\n' +
+          '2. No Illustrator, acesse o menu: Janela > Extensões > PRIMACOR EMBALAGENS (ou execute Iniciar_Bridge.bat).\n\n' +
+          'Assim que o painel abrir, a conexão com a Web ficará ativa automaticamente!'
+        );
       }
     } catch (e: any) {
       console.warn('Falha na comunicação com Illustrator:', e);
-      setIsIllustratorPluginModalOpen(true);
+      alert(
+        'Aviso: Não foi possível conectar ao Adobe Illustrator na porta 48123.\n\n' +
+        'Abra o painel "PRIMACOR EMBALAGENS" dentro do Illustrator (Janela > Extensões) para ativar a conexão.'
+      );
     } finally {
       setIsOpeningIllustrator(false);
     }
