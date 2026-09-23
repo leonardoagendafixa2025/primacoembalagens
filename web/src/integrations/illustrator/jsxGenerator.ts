@@ -276,18 +276,29 @@ try {
     } catch(e) {}
   }
 
-  // 7. Bloquear camadas técnicas para proteção da faca
+  // 7. Bloquear apenas as camadas técnicas de corte/vinco para não serem alteradas acidentalmente
   try { layerCorte.locked = true; } catch(e) {}
   try { layerVinco.locked = true; } catch(e) {}
   try { layerPicote.locked = true; } catch(e) {}
   try { layerGuias.locked = true; } catch(e) {}
 
-  // Garante que a camada de arte fique no topo e ativa para edição direta pelo designer
+  // 8. Organiza a hierarquia no painel de camadas: Faca no topo e Artes logo abaixo
   try {
-    layerArte.move(doc, ElementPlacement.PLACEATBEGINNING);
+    layerCorte.move(doc, ElementPlacement.PLACEATBEGINNING);
+    layerVinco.move(layerCorte, ElementPlacement.PLACEAFTER);
+    layerPicote.move(layerVinco, ElementPlacement.PLACEAFTER);
+    layerGuias.move(layerPicote, ElementPlacement.PLACEAFTER);
+    layerArteExterna.move(layerGuias, ElementPlacement.PLACEAFTER);
+    layerArteInterna.move(layerArteExterna, ElementPlacement.PLACEAFTER);
   } catch(e) {}
+
+  // 9. Garante que as camadas de arte fiquem 100% DESBLOQUEADAS e a ARTWORK_EXTERNA seja a camada ativa selecionada para desenho imediato
   try {
-    doc.activeLayer = layerArte;
+    layerArteExterna.locked = false;
+    layerArteExterna.visible = true;
+    layerArteInterna.locked = false;
+    layerArteInterna.visible = true;
+    doc.activeLayer = layerArteExterna;
   } catch(e) {}
 
   return JSON.stringify({
@@ -351,16 +362,15 @@ if (typeof JSON !== 'object') {
   }
 
   var doc = app.activeDocument;
-  var layerArte = null;
+  var artworkLayers = [];
 
-  try {
-    layerArte = doc.layers.getByName("ARTWORK");
-  } catch(e) {
-    try {
-      layerArte = doc.layers.getByName("PLMPACKLIB_ARTE");
-    } catch(e2) {
-      return JSON.stringify({ error: "Camada ARTWORK não encontrada no documento ativo." });
-    }
+  try { artworkLayers.push(doc.layers.getByName("ARTWORK_EXTERNA")); } catch(e) {}
+  try { artworkLayers.push(doc.layers.getByName("ARTWORK_INTERNA")); } catch(e) {}
+  try { artworkLayers.push(doc.layers.getByName("ARTWORK")); } catch(e) {}
+  try { artworkLayers.push(doc.layers.getByName("PLMPACKLIB_ARTE")); } catch(e) {}
+
+  if (artworkLayers.length === 0) {
+    return JSON.stringify({ error: "Nenhuma camada de arte encontrada no documento ativo." });
   }
 
   // Oculta temporariamente todas as camadas técnicas para exportar puramente a arte
@@ -368,11 +378,14 @@ if (typeof JSON !== 'object') {
   for (var i = 0; i < doc.layers.length; i++) {
     var l = doc.layers[i];
     layersVisibility.push({ layer: l, visible: l.visible });
-    if (l !== layerArte) {
-      l.visible = false;
-    } else {
-      l.visible = true;
+    var isArtLayer = false;
+    for (var k = 0; k < artworkLayers.length; k++) {
+      if (l === artworkLayers[k]) {
+        isArtLayer = true;
+        break;
+      }
     }
+    l.visible = isArtLayer;
   }
 
   // 1. Exportação SVG Vetorial Real da Camada ARTWORK (Fase 6.1 — Seção 4 e 5)

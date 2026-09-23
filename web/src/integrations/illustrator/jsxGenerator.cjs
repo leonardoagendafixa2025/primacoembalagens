@@ -104,9 +104,12 @@ function generateIllustratorJsx(projectData) {
     '      return l;\n' +
     '    }\n' +
     '  }\n\n' +
-    '  var layerArte = getOrCreateLayer("ARTWORK");\n' +
-    '  layerArte.locked = false;\n' +
-    '  layerArte.printable = true;\n\n' +
+    '  var layerArteExterna = getOrCreateLayer("ARTWORK_EXTERNA");\n' +
+    '  layerArteExterna.locked = false;\n' +
+    '  layerArteExterna.printable = true;\n\n' +
+    '  var layerArteInterna = getOrCreateLayer("ARTWORK_INTERNA");\n' +
+    '  layerArteInterna.locked = false;\n' +
+    '  layerArteInterna.printable = true;\n\n' +
     '  var layerCorte = getOrCreateLayer("CUT");\n' +
     '  var layerVinco = getOrCreateLayer("CREASE");\n' +
     '  var layerPicote = getOrCreateLayer("PERF");\n' +
@@ -221,10 +224,19 @@ function generateIllustratorJsx(projectData) {
     '  try { layerPicote.locked = true; } catch(e) {}\n' +
     '  try { layerGuias.locked = true; } catch(e) {}\n\n' +
     '  try {\n' +
-    '    layerArte.move(doc, ElementPlacement.PLACEATBEGINNING);\n' +
+    '    layerCorte.move(doc, ElementPlacement.PLACEATBEGINNING);\n' +
+    '    layerVinco.move(layerCorte, ElementPlacement.PLACEAFTER);\n' +
+    '    layerPicote.move(layerVinco, ElementPlacement.PLACEAFTER);\n' +
+    '    layerGuias.move(layerPicote, ElementPlacement.PLACEAFTER);\n' +
+    '    layerArteExterna.move(layerGuias, ElementPlacement.PLACEAFTER);\n' +
+    '    layerArteInterna.move(layerArteExterna, ElementPlacement.PLACEAFTER);\n' +
     '  } catch(e) {}\n' +
     '  try {\n' +
-    '    doc.activeLayer = layerArte;\n' +
+    '    layerArteExterna.locked = false;\n' +
+    '    layerArteExterna.visible = true;\n' +
+    '    layerArteInterna.locked = false;\n' +
+    '    layerArteInterna.visible = true;\n' +
+    '    doc.activeLayer = layerArteExterna;\n' +
     '  } catch(e) {}\n\n' +
     '  return JSON.stringify({\n' +
     '    success: true,\n' +
@@ -280,25 +292,26 @@ function generateArtworkExportJsx(project, outputPath) {
     '    return JSON.stringify({ error: "Nenhum documento aberto no Illustrator." });\n' +
     '  }\n\n' +
     '  var doc = app.activeDocument;\n' +
-    '  var layerArte = null;\n\n' +
-    '  try {\n' +
-    '    layerArte = doc.layers.getByName("ARTWORK");\n' +
-    '  } catch(e) {\n' +
-    '    try {\n' +
-    '      layerArte = doc.layers.getByName("PLMPACKLIB_ARTE");\n' +
-    '    } catch(e2) {\n' +
-    '      return JSON.stringify({ error: "Camada ARTWORK não encontrada no documento ativo." });\n' +
-    '    }\n' +
+    '  var artworkLayers = [];\n\n' +
+    '  try { artworkLayers.push(doc.layers.getByName("ARTWORK_EXTERNA")); } catch(e) {}\n' +
+    '  try { artworkLayers.push(doc.layers.getByName("ARTWORK_INTERNA")); } catch(e) {}\n' +
+    '  try { artworkLayers.push(doc.layers.getByName("ARTWORK")); } catch(e) {}\n' +
+    '  try { artworkLayers.push(doc.layers.getByName("PLMPACKLIB_ARTE")); } catch(e) {}\n\n' +
+    '  if (artworkLayers.length === 0) {\n' +
+    '    return JSON.stringify({ error: "Nenhuma camada de arte encontrada no documento ativo." });\n' +
     '  }\n\n' +
     '  var layersVisibility = [];\n' +
     '  for (var i = 0; i < doc.layers.length; i++) {\n' +
     '    var l = doc.layers[i];\n' +
     '    layersVisibility.push({ layer: l, visible: l.visible });\n' +
-    '    if (l !== layerArte) {\n' +
-    '      l.visible = false;\n' +
-    '    } else {\n' +
-    '      l.visible = true;\n' +
+    '    var isArtLayer = false;\n' +
+    '    for (var k = 0; k < artworkLayers.length; k++) {\n' +
+    '      if (l === artworkLayers[k]) {\n' +
+    '        isArtLayer = true;\n' +
+    '        break;\n' +
+    '      }\n' +
     '    }\n' +
+    '    l.visible = isArtLayer;\n' +
     '  }\n\n' +
     '  // 1. Exportação SVG Vetorial Real da Camada ARTWORK\n' +
     '  var svgOptions = new ExportOptionsSVG();\n' +
