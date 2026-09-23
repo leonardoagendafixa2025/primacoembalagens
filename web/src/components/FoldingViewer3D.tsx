@@ -80,11 +80,15 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     autoRotateRef.current = autoRotate;
   }, [autoRotate]);
 
+  const outerTexRef = useRef<THREE.Texture | null>(null);
+  const innerTexRef = useRef<THREE.Texture | null>(null);
+
   // Carrega textura externa sincronizada da arte do Illustrator
   useEffect(() => {
     if (!effectiveOuterUri) {
+      outerTexRef.current = null;
       setOuterArtworkTexture(null);
-      controllerRef.current?.updateArtwork(null, innerArtworkTexture);
+      controllerRef.current?.updateArtwork(null, innerTexRef.current);
       return;
     }
 
@@ -106,8 +110,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.flipY = true;
       tex.needsUpdate = true;
+      outerTexRef.current = tex;
       setOuterArtworkTexture(tex);
-      controllerRef.current?.updateArtwork(tex, innerArtworkTexture);
+      controllerRef.current?.updateArtwork(tex, innerTexRef.current);
     };
     img.src = effectiveOuterUri;
   }, [effectiveOuterUri, profile?.outerColor]);
@@ -115,8 +120,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   // Carrega textura interna sincronizada da arte do Illustrator
   useEffect(() => {
     if (!innerArtworkTextureUri) {
+      innerTexRef.current = null;
       setInnerArtworkTexture(null);
-      controllerRef.current?.updateArtwork(outerArtworkTexture, null);
+      controllerRef.current?.updateArtwork(outerTexRef.current, null);
       return;
     }
 
@@ -138,8 +144,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.flipY = true;
       tex.needsUpdate = true;
+      innerTexRef.current = tex;
       setInnerArtworkTexture(tex);
-      controllerRef.current?.updateArtwork(outerArtworkTexture, tex);
+      controllerRef.current?.updateArtwork(outerTexRef.current, tex);
     };
     img.src = innerArtworkTextureUri;
   }, [innerArtworkTextureUri, profile?.innerColor]);
@@ -325,9 +332,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           innerColor,
           roughness,
           customAngles,
-          artworkTexture: outerArtworkTexture,
-          outerArtworkTexture,
-          innerArtworkTexture,
+          artworkTexture: outerTexRef.current || outerArtworkTexture,
+          outerArtworkTexture: outerTexRef.current || outerArtworkTexture,
+          innerArtworkTexture: innerTexRef.current || innerArtworkTexture,
           dielineBounds: currentDieline.bounds,
         }
       );
@@ -414,7 +421,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       setHingeList([]);
       updateProgressRef.current = null;
     }
-  }, [model, params, dieline, profile, customAngles, outerArtworkTexture, innerArtworkTexture]);
+  }, [model, params, dieline, profile, customAngles]);
 
   // Atualiza as rotações de dobra conforme o foldProgress (0% = aberta, 100% = montada)
   useEffect(() => {

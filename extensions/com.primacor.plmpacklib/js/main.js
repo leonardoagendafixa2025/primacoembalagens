@@ -456,9 +456,9 @@
           if (isBoth) {
             window.PLMStudio.updateArtwork(outerUri || lastOuterArtworkUri || '', 'both', innerUri || lastInnerArtworkUri || '');
           } else if (targetSide === 'inner') {
-            window.PLMStudio.updateArtwork(innerUri!, 'inner');
+            window.PLMStudio.updateArtwork(innerUri || lastInnerArtworkUri || '', 'inner');
           } else {
-            window.PLMStudio.updateArtwork(outerUri!, 'outer');
+            window.PLMStudio.updateArtwork(outerUri || lastOuterArtworkUri || '', 'outer');
           }
         }
 
@@ -470,7 +470,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             projectId: currentProject ? currentProject.projectId : null,
-            modelId: (currentProject && (currentProject.modelId || currentProject.modelCode)) || 'current',
+            modelId: currentProject ? (currentProject.modelId || currentProject.modelCode || null) : null,
             modelCode: currentProject ? currentProject.modelCode : null,
             projectRevision: currentProject ? currentProject.projectRevision : 1,
             side: targetSide,

@@ -57,6 +57,9 @@ function exportSingleArtworkSide(side) {
     }
   }
 
+  var wasLocked = targetLayer.locked;
+  targetLayer.locked = false;
+
   // Salva visibilidade original de todas as camadas
   var layersVisibility = [];
   for (var i = 0; i < doc.layers.length; i++) {
@@ -96,7 +99,7 @@ function exportSingleArtworkSide(side) {
     hasVector = false;
   }
 
-  // 2. Exportação PNG 300 DPI
+  // 2. Exportação PNG 300 DPI com recorte exato da prancheta (1:1 com a faca + 15mm margem)
   var exportOptions = new ExportOptionsPNG24();
   exportOptions.antiAliasing = true;
   exportOptions.transparency = true;
@@ -105,9 +108,13 @@ function exportSingleArtworkSide(side) {
   exportOptions.verticalScale = 416.666;
 
   var destFile = new File(tempFolder.fsName + "/plmpack_cep_artwork_" + fileSuffix + ".png");
+  if (destFile.exists) {
+    try { destFile.remove(); } catch(eDel) {}
+  }
   doc.exportFile(destFile, ExportType.PNG24, exportOptions);
 
-  // Restaura visibilidade das camadas
+  // Restaura visibilidade e bloqueio das camadas
+  targetLayer.locked = wasLocked;
   for (var j = 0; j < layersVisibility.length; j++) {
     layersVisibility[j].layer.visible = layersVisibility[j].visible;
   }
@@ -139,6 +146,12 @@ function exportBothArtworksFromIllustrator() {
 
     var outerRes = exportSingleArtworkSide("outer");
     var innerRes = exportSingleArtworkSide("inner");
+
+    if (outerRes.error && innerRes.error) {
+      return JSON.stringify({
+        error: "Nenhuma camada de arte (" + (outerRes.error || innerRes.error) + ") encontrada no documento."
+      });
+    }
 
     return JSON.stringify({
       success: true,

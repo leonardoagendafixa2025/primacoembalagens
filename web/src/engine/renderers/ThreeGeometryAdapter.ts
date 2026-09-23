@@ -225,11 +225,14 @@ export class ThreeGeometryAdapter {
       const outerGeometry = new THREE.ShapeGeometry(shape);
       const innerGeometry = new THREE.ShapeGeometry(shape);
 
-      // Gera coordenadas UV proporcionais às dimensões globais da faca
+      // Gera coordenadas UV proporcionais às dimensões globais da faca com margem de respiro do Illustrator (15mm)
       if (options.dielineBounds) {
         const b = options.dielineBounds;
-        const w = b.width > 0 ? b.width : 1;
-        const h = b.height > 0 ? b.height : 1;
+        const margin = 15.0; // Margem padrão de 15mm do script do Illustrator
+        const totalW = (b.width > 0 ? b.width : 1) + margin * 2.0;
+        const totalH = (b.height > 0 ? b.height : 1) + margin * 2.0;
+        const originX = margin - b.minX;
+        const originY = margin - b.minY;
 
         // UVs Face Externa (Frente)
         const posOut = outerGeometry.attributes.position;
@@ -237,8 +240,8 @@ export class ThreeGeometryAdapter {
         for (let i = 0; i < posOut.count; i++) {
           const x = posOut.getX(i);
           const y = posOut.getY(i);
-          uvsOut[i * 2] = (x - b.minX) / w;
-          uvsOut[i * 2 + 1] = (y - b.minY) / h;
+          uvsOut[i * 2] = (x + originX) / totalW;
+          uvsOut[i * 2 + 1] = (y + originY) / totalH;
         }
         outerGeometry.setAttribute('uv', new THREE.BufferAttribute(uvsOut, 2));
 
@@ -248,8 +251,8 @@ export class ThreeGeometryAdapter {
         for (let i = 0; i < posIn.count; i++) {
           const x = posIn.getX(i);
           const y = posIn.getY(i);
-          uvsIn[i * 2] = 1.0 - ((x - b.minX) / w);
-          uvsIn[i * 2 + 1] = (y - b.minY) / h;
+          uvsIn[i * 2] = 1.0 - ((x + originX) / totalW);
+          uvsIn[i * 2 + 1] = (y + originY) / totalH;
         }
         innerGeometry.setAttribute('uv', new THREE.BufferAttribute(uvsIn, 2));
       }
