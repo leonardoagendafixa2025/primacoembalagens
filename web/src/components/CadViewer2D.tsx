@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import type { DielineResult, PackagingModel, Segment2D } from '../engine/types';
+import type { DielineResult, PackagingModel, Segment2D, Arc2D } from '../engine/types';
 import {
   ZoomIn,
   ZoomOut,
@@ -32,6 +32,43 @@ function distPointToSeg(
   return Math.hypot(px - (x0 + t * dx), py - (y0 + t * dy));
 }
 
+// Distance from point to arc (screen space)
+function distPointToArc(
+  px: number, py: number,
+  cx: number, cy: number, r: number,
+  startAngleDeg: number, endAngleDeg: number
+): number {
+  const dToCenter = Math.hypot(px - cx, py - cy);
+  const radDist = Math.abs(dToCenter - r);
+
+  let ang = (-Math.atan2(py - cy, px - cx) * 180) / Math.PI;
+  if (ang < 0) ang += 360;
+
+  let sa = startAngleDeg % 360;
+  let ea = endAngleDeg % 360;
+  if (sa < 0) sa += 360;
+  if (ea < 0) ea += 360;
+
+  let inSpan = false;
+  if (Math.abs(Math.abs(endAngleDeg - startAngleDeg) - 360) < 1 || (startAngleDeg === 0 && endAngleDeg === 360)) {
+    inSpan = true;
+  } else if (sa <= ea) {
+    inSpan = ang >= sa && ang <= ea;
+  } else {
+    inSpan = ang >= sa || ang <= ea;
+  }
+
+  if (inSpan) return radDist;
+
+  const saRad = (-sa * Math.PI) / 180;
+  const eaRad = (-ea * Math.PI) / 180;
+  const p0x = cx + r * Math.cos(saRad);
+  const p0y = cy + r * Math.sin(saRad);
+  const p1x = cx + r * Math.cos(eaRad);
+  const p1y = cy + r * Math.sin(eaRad);
+  return Math.min(Math.hypot(px - p0x, py - p0y), Math.hypot(px - p1x, py - p1y));
+}
+
 // Check if a line segment is inside or intersects a rectangular region (in mm coords)
 function isSegmentInRect(
   x0: number, y0: number,
@@ -44,20 +81,17 @@ function isSegmentInRect(
   const minY = Math.min(ry0, ry1);
   const maxY = Math.max(ry0, ry1);
 
-  // 1. Either endpoint inside
   if ((x0 >= minX && x0 <= maxX && y0 >= minY && y0 <= maxY) ||
       (x1 >= minX && x1 <= maxX && y1 >= minY && y1 <= maxY)) {
     return true;
   }
 
-  // 2. Midpoint inside
   const mx = (x0 + x1) / 2;
   const my = (y0 + y1) / 2;
   if (mx >= minX && mx <= maxX && my >= minY && my <= maxY) {
     return true;
   }
 
-  // 3. Line intersects any of the 4 bounding box sides
   const segIntersects = (
     ax: number, ay: number, bx: number, by: number,
     cx: number, cy: number, dx: number, dy: number
@@ -75,6 +109,33 @@ function isSegmentInRect(
     segIntersects(x0, y0, x1, y1, maxX, maxY, minX, maxY) ||
     segIntersects(x0, y0, x1, y1, minX, maxY, minX, minY)
   );
+}
+
+// Check if an arc is inside a rectangular region (in mm coords)
+function isArcInRect(
+  arc: Arc2D,
+  rx0: number, ry0: number,
+  rx1: number, ry1: number
+): boolean {
+  const minX = Math.min(rx0, rx1);
+  const maxX = Math.max(rx0, rx1);
+  const minY = Math.min(ry0, ry1);
+  const maxY = Math.max(ry0, ry1);
+
+  if (arc.cx >= minX && arc.cx <= maxX && arc.cy >= minY && arc.cy <= maxY) return true;
+
+  const a0 = (arc.startAngle * Math.PI) / 180;
+  const a1 = (arc.endAngle * Math.PI) / 180;
+  let sweep = a1 - a0;
+  if (sweep < 0) sweep += 2 * Math.PI;
+  const steps = 8;
+  for (let s = 0; s <= steps; s++) {
+    const ang = a0 + (s / steps) * sweep;
+    const px = arc.cx + arc.r * Math.cos(ang);
+    const py = arc.cy + arc.r * Math.sin(ang);
+    if (px >= minX && px <= maxX && py >= minY && py <= maxY) return true;
+  }
+  return false;
 }
 
 const TYPE_OPTIONS: { type: Segment2D['type']; label: string; color: string }[] = [
@@ -115,9 +176,12 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
   // Edit mode
   const [editMode, setEditMode] = useState(false);
   const [localSegs, setLocalSegs] = useState<Segment2D[]>([]);
+  const [localArcs, setLocalArcs] = useState<Arc2D[]>([]);
   const [selectedSegIndices, setSelectedSegIndices] = useState<number[]>([]);
+  const [selectedArcIndices, setSelectedArcIndices] = useState<number[]>([]);
   const [hoveredSegIdx, setHoveredSegIdx] = useState<number | null>(null);
-  const [undoStack, setUndoStack] = useState<Segment2D[][]>([]);
+  const [hoveredArcIdx, setHoveredArcIdx] = useState<number | null>(null);
+  const [undoStack, setUndoStack] = useState<Array<{ segs: Segment2D[]; arcs: Arc2D[] }>>([]);
   const [draggingEndpoint, setDraggingEndpoint] = useState<{
     segIdx: number;
     endpoint: 'p0' | 'p1';
@@ -132,18 +196,22 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     shiftHeld?: boolean;
   } | null>(null);
 
-  // Sync localSegs whenever the dieline changes from outside (model / params change)
+  // Sync localSegs and localArcs whenever the dieline changes from outside
   useEffect(() => {
     setLocalSegs(dieline.segments.map((s, i) => ({ ...s, id: s.id ?? i })));
+    setLocalArcs((dieline.arcs || []).map((a, i) => ({ ...a, id: a.id ?? i })));
     setSelectedSegIndices([]);
+    setSelectedArcIndices([]);
     setHoveredSegIdx(null);
+    setHoveredArcIdx(null);
     setUndoStack([]);
     setDraggingEndpoint(null);
     setSelectionBox(null);
   }, [dieline]);
 
-  // Which segments to display
+  // Which elements to display
   const displaySegs = editMode ? localSegs : dieline.segments;
+  const displayArcs = editMode ? localArcs : (dieline.arcs || []);
 
   // Fit to screen
   const fitToScreen = useCallback(() => {
@@ -195,6 +263,26 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     [localSegs, pan, zoom]
   );
 
+  const findClosestArc = useCallback(
+    (screenX: number, screenY: number, threshold = 10): number | null => {
+      let best: number | null = null;
+      let bestDist = threshold;
+      for (let i = 0; i < localArcs.length; i++) {
+        const a = localArcs[i];
+        const cx = pan.x + a.cx * zoom;
+        const cy = pan.y - a.cy * zoom;
+        const r = a.r * zoom;
+        const d = distPointToArc(screenX, screenY, cx, cy, r, a.startAngle, a.endAngle);
+        if (d < bestDist) {
+          bestDist = d;
+          best = i;
+        }
+      }
+      return best;
+    },
+    [localArcs, pan, zoom]
+  );
+
   const findClosestEndpoint = useCallback(
     (screenX: number, screenY: number, segIdx: number, threshold = 10): 'p0' | 'p1' | null => {
       const s = localSegs[segIdx];
@@ -210,44 +298,55 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     [localSegs, pan, zoom]
   );
 
-  const pushUndo = (segs: Segment2D[]) => {
-    setUndoStack((prev) => [...prev.slice(-19), [...segs]]);
+  const pushUndo = (segs: Segment2D[], arcs: Arc2D[]) => {
+    setUndoStack((prev) => [...prev.slice(-19), { segs: [...segs], arcs: [...arcs] }]);
   };
 
   const handleUndo = useCallback(() => {
     if (undoStack.length === 0) return;
     const prev = undoStack[undoStack.length - 1];
-    setLocalSegs(prev);
+    setLocalSegs(prev.segs);
+    setLocalArcs(prev.arcs);
     setUndoStack((s) => s.slice(0, -1));
     setSelectedSegIndices([]);
-    onDielineEdit?.({ ...dieline, segments: prev });
+    setSelectedArcIndices([]);
+    onDielineEdit?.({ ...dieline, segments: prev.segs, arcs: prev.arcs });
   }, [undoStack, dieline, onDielineEdit]);
 
   const handleDeleteSelected = useCallback(() => {
-    if (selectedSegIndices.length === 0) return;
-    pushUndo(localSegs);
-    const set = new Set(selectedSegIndices);
-    const next = localSegs.filter((_, i) => !set.has(i));
-    setLocalSegs(next);
+    if (selectedSegIndices.length === 0 && selectedArcIndices.length === 0) return;
+    pushUndo(localSegs, localArcs);
+    const segSet = new Set(selectedSegIndices);
+    const nextSegs = localSegs.filter((_, i) => !segSet.has(i));
+    const arcSet = new Set(selectedArcIndices);
+    const nextArcs = localArcs.filter((_, i) => !arcSet.has(i));
+    setLocalSegs(nextSegs);
+    setLocalArcs(nextArcs);
     setSelectedSegIndices([]);
-    onDielineEdit?.({ ...dieline, segments: next });
-  }, [selectedSegIndices, localSegs, dieline, onDielineEdit]);
+    setSelectedArcIndices([]);
+    onDielineEdit?.({ ...dieline, segments: nextSegs, arcs: nextArcs });
+  }, [selectedSegIndices, selectedArcIndices, localSegs, localArcs, dieline, onDielineEdit]);
 
   const handleChangeType = useCallback((type: Segment2D['type']) => {
-    if (selectedSegIndices.length === 0) return;
-    pushUndo(localSegs);
-    const set = new Set(selectedSegIndices);
-    const next = localSegs.map((s, i) => (set.has(i) ? { ...s, type } : s));
-    setLocalSegs(next);
-    onDielineEdit?.({ ...dieline, segments: next });
-  }, [selectedSegIndices, localSegs, dieline, onDielineEdit]);
+    if (selectedSegIndices.length === 0 && selectedArcIndices.length === 0) return;
+    pushUndo(localSegs, localArcs);
+    const segSet = new Set(selectedSegIndices);
+    const nextSegs = localSegs.map((s, i) => (segSet.has(i) ? { ...s, type } : s));
+    const arcSet = new Set(selectedArcIndices);
+    const nextArcs = localArcs.map((a, i) => (arcSet.has(i) ? { ...a, type } : a));
+    setLocalSegs(nextSegs);
+    setLocalArcs(nextArcs);
+    onDielineEdit?.({ ...dieline, segments: nextSegs, arcs: nextArcs });
+  }, [selectedSegIndices, selectedArcIndices, localSegs, localArcs, dieline, onDielineEdit]);
 
   const handleSelectAll = useCallback(() => {
     setSelectedSegIndices(localSegs.map((_, i) => i));
-  }, [localSegs]);
+    setSelectedArcIndices(localArcs.map((_, i) => i));
+  }, [localSegs, localArcs]);
 
   const handleClearSelection = useCallback(() => {
     setSelectedSegIndices([]);
+    setSelectedArcIndices([]);
   }, []);
 
   // Keyboard Shortcuts (Delete, Ctrl+A, Ctrl+Z, Escape)
@@ -276,7 +375,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
         }
         if (e.key === 'Escape') {
           e.preventDefault();
-          if (selectedSegIndices.length > 0) {
+          if (selectedSegIndices.length > 0 || selectedArcIndices.length > 0) {
             handleClearSelection();
           } else {
             setEditMode(false);
@@ -288,7 +387,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [editMode, selectedSegIndices, handleSelectAll, handleUndo, handleDeleteSelected, handleClearSelection]);
+  }, [editMode, selectedSegIndices, selectedArcIndices, handleSelectAll, handleUndo, handleDeleteSelected, handleClearSelection]);
 
   // ─── Canvas Render ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -448,12 +547,17 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     }
     ctx.setLineDash([]);
 
-    // Arcs
-    if (dieline.arcs && dieline.arcs.length > 0) {
-      for (const arc of dieline.arcs) {
+    // ── Arcs ──
+    if (displayArcs && displayArcs.length > 0) {
+      for (let arcIdx = 0; arcIdx < displayArcs.length; arcIdx++) {
+        const arc = displayArcs[arcIdx];
         const ax = scX(arc.cx); const ay = scY(arc.cy);
         const ar = Math.max(0.1, Math.abs(arc.r * zoom));
         if (!isFinite(ax) || !isFinite(ay) || !isFinite(ar) || ar <= 0) continue;
+
+        const isSelected = editMode && selectedArcIndices.includes(arcIdx);
+        const isHovered = editMode && hoveredArcIdx === arcIdx && !isSelected;
+
         ctx.beginPath();
         const isFull =
           Math.abs(Math.abs(arc.endAngle - arc.startAngle) - 360) < 1 ||
@@ -465,8 +569,24 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
           while (ea < sa) ea += 360;
           ctx.arc(ax, ay, ar, (-sa * Math.PI) / 180, (-ea * Math.PI) / 180, true);
         }
-        if (arc.type === 'cut')    { ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.6; ctx.setLineDash([]); }
-        else if (arc.type === 'crease') { ctx.strokeStyle = '#00d2b4'; ctx.lineWidth = 1.4; ctx.setLineDash([5 * Math.max(0.5, zoom * 0.4), 3 * Math.max(0.5, zoom * 0.4)]); }
+
+        if (isSelected) {
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = selectedArcIndices.length === 1 && selectedSegIndices.length === 0 ? 3.5 : 3.0;
+          ctx.setLineDash([]);
+        } else if (isHovered) {
+          ctx.strokeStyle = '#fde68a';
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([]);
+        } else if (arc.type === 'cut') {
+          ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.6; ctx.setLineDash([]);
+        } else if (arc.type === 'crease') {
+          ctx.strokeStyle = '#00d2b4'; ctx.lineWidth = 1.4;
+          ctx.setLineDash([5 * Math.max(0.5, zoom * 0.4), 3 * Math.max(0.5, zoom * 0.4)]);
+        } else if (arc.type === 'perfo') {
+          ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1.3;
+          ctx.setLineDash([2.5 * Math.max(0.5, zoom * 0.4), 2.5 * Math.max(0.5, zoom * 0.4)]);
+        }
         ctx.stroke();
       }
     }
@@ -546,6 +666,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     }
   }, [
     displaySegs,
+    displayArcs,
     dieline,
     zoom,
     pan,
@@ -555,7 +676,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     showRegMarks,
     editMode,
     selectedSegIndices,
+    selectedArcIndices,
     hoveredSegIdx,
+    hoveredArcIdx,
     selectionBox,
   ]);
 
@@ -568,33 +691,40 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
 
     if (editMode) {
       // 1. Check endpoint of single selected segment first
-      if (selectedSegIndices.length === 1) {
+      if (selectedSegIndices.length === 1 && selectedArcIndices.length === 0) {
         const ep = findClosestEndpoint(screenX, screenY, selectedSegIndices[0], 10);
         if (ep) {
-          pushUndo(localSegs);
+          pushUndo(localSegs, localArcs);
           setDraggingEndpoint({ segIdx: selectedSegIndices[0], endpoint: ep });
           return;
         }
       }
 
-      // 2. Check if clicked directly on a line segment
-      const clickedIdx = findClosestSeg(screenX, screenY, 12);
+      // 2. Check if clicked directly on a line segment or arc
+      const clickedSegIdx = findClosestSeg(screenX, screenY, 12);
+      const clickedArcIdx = clickedSegIdx === null ? findClosestArc(screenX, screenY, 12) : null;
       const isShiftOrCtrl = e.shiftKey || e.ctrlKey || e.metaKey;
 
-      if (clickedIdx !== null) {
+      if (clickedSegIdx !== null) {
         if (isShiftOrCtrl) {
-          // Toggle segment in multi-selection
           setSelectedSegIndices((prev) =>
-            prev.includes(clickedIdx) ? prev.filter((i) => i !== clickedIdx) : [...prev, clickedIdx]
+            prev.includes(clickedSegIdx) ? prev.filter((i) => i !== clickedSegIdx) : [...prev, clickedSegIdx]
           );
         } else {
-          // Single select or keep selection if clicked on an already multi-selected element
-          if (selectedSegIndices.includes(clickedIdx) && selectedSegIndices.length > 1) {
-            // Keep current multi-selection or select single
-            setSelectedSegIndices([clickedIdx]);
-          } else {
-            setSelectedSegIndices([clickedIdx]);
-          }
+          setSelectedSegIndices([clickedSegIdx]);
+          setSelectedArcIndices([]);
+        }
+        return;
+      }
+
+      if (clickedArcIdx !== null) {
+        if (isShiftOrCtrl) {
+          setSelectedArcIndices((prev) =>
+            prev.includes(clickedArcIdx) ? prev.filter((i) => i !== clickedArcIdx) : [...prev, clickedArcIdx]
+          );
+        } else {
+          setSelectedArcIndices([clickedArcIdx]);
+          setSelectedSegIndices([]);
         }
         return;
       }
@@ -602,6 +732,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
       // 3. Clicked empty space -> start Box Selection
       if (!isShiftOrCtrl) {
         setSelectedSegIndices([]);
+        setSelectedArcIndices([]);
       }
       setSelectionBox({
         startX: screenX,
@@ -648,7 +779,9 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
 
     // Hover highlight in edit mode
     if (editMode) {
-      setHoveredSegIdx(findClosestSeg(screenX, screenY, 12));
+      const hSeg = findClosestSeg(screenX, screenY, 12);
+      setHoveredSegIdx(hSeg);
+      setHoveredArcIdx(hSeg === null ? findClosestArc(screenX, screenY, 12) : null);
     }
 
     // Normal pan
@@ -668,7 +801,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     // 1. Endpoint drag finish
     if (draggingEndpoint) {
       setDraggingEndpoint(null);
-      onDielineEdit?.({ ...dieline, segments: localSegs });
+      onDielineEdit?.({ ...dieline, segments: localSegs, arcs: localArcs });
       return;
     }
 
@@ -682,27 +815,34 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
       const widthPx = maxX - minX;
       const heightPx = maxY - minY;
 
-      // Only perform area selection if the user dragged more than 4px
       if (widthPx > 4 || heightPx > 4) {
-        // Convert screen box to mm coords
         const rectMmMinX = (minX - pan.x) / zoom;
         const rectMmMaxX = (maxX - pan.x) / zoom;
         const rectMmMinY = (pan.y - maxY) / zoom;
         const rectMmMaxY = (pan.y - minY) / zoom;
 
-        const insideIndices: number[] = [];
+        const insideSegIndices: number[] = [];
         for (let i = 0; i < localSegs.length; i++) {
           const s = localSegs[i];
           if (isSegmentInRect(s.x0, s.y0, s.x1, s.y1, rectMmMinX, rectMmMinY, rectMmMaxX, rectMmMaxY)) {
-            insideIndices.push(i);
+            insideSegIndices.push(i);
+          }
+        }
+
+        const insideArcIndices: number[] = [];
+        for (let i = 0; i < localArcs.length; i++) {
+          const a = localArcs[i];
+          if (isArcInRect(a, rectMmMinX, rectMmMinY, rectMmMaxX, rectMmMaxY)) {
+            insideArcIndices.push(i);
           }
         }
 
         if (selectionBox.shiftHeld || e.shiftKey || e.ctrlKey || e.metaKey) {
-          // Merge with existing
-          setSelectedSegIndices((prev) => Array.from(new Set([...prev, ...insideIndices])));
+          setSelectedSegIndices((prev) => Array.from(new Set([...prev, ...insideSegIndices])));
+          setSelectedArcIndices((prev) => Array.from(new Set([...prev, ...insideArcIndices])));
         } else {
-          setSelectedSegIndices(insideIndices);
+          setSelectedSegIndices(insideSegIndices);
+          setSelectedArcIndices(insideArcIndices);
         }
       }
       setSelectionBox(null);

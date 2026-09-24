@@ -235,6 +235,7 @@ export function parsePdfDocument(
     let currentSubpath: SubPathItem[] = [];
     let curX = 0, curY = 0;
     let startX = 0, startY = 0;
+    let hasCurrentPoint = false;
 
     let idx = 0;
     const stack: number[] = [];
@@ -340,6 +341,7 @@ export function parsePdfDocument(
         curY = stack[stack.length - 1];
         startX = curX;
         startY = curY;
+        hasCurrentPoint = true;
         stack.length = 0;
         continue;
       }
@@ -347,12 +349,19 @@ export function parsePdfDocument(
       if (tok === 'l' && stack.length >= 2) {
         const x = stack[stack.length - 2];
         const y = stack[stack.length - 1];
-        const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
-        const p1 = applyTransform({ x, y }, currentState.ctm);
-
-        currentSubpath.push({ type: 'LINE', p0, p1 });
-        curX = x;
-        curY = y;
+        if (!hasCurrentPoint) {
+          curX = x;
+          curY = y;
+          startX = x;
+          startY = y;
+          hasCurrentPoint = true;
+        } else {
+          const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
+          const p1 = applyTransform({ x, y }, currentState.ctm);
+          currentSubpath.push({ type: 'LINE', p0, p1 });
+          curX = x;
+          curY = y;
+        }
         stack.length = 0;
         continue;
       }
@@ -365,14 +374,21 @@ export function parsePdfDocument(
         const x3 = stack[stack.length - 2];
         const y3 = stack[stack.length - 1];
 
-        const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
-        const cp1 = applyTransform({ x: x1, y: y1 }, currentState.ctm);
-        const cp2 = applyTransform({ x: x2, y: y2 }, currentState.ctm);
-        const p1 = applyTransform({ x: x3, y: y3 }, currentState.ctm);
-
-        currentSubpath.push({ type: 'BEZIER', p0, cp1, cp2, p1 });
-        curX = x3;
-        curY = y3;
+        if (!hasCurrentPoint) {
+          curX = x3;
+          curY = y3;
+          startX = x3;
+          startY = y3;
+          hasCurrentPoint = true;
+        } else {
+          const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
+          const cp1 = applyTransform({ x: x1, y: y1 }, currentState.ctm);
+          const cp2 = applyTransform({ x: x2, y: y2 }, currentState.ctm);
+          const p1 = applyTransform({ x: x3, y: y3 }, currentState.ctm);
+          currentSubpath.push({ type: 'BEZIER', p0, cp1, cp2, p1 });
+          curX = x3;
+          curY = y3;
+        }
         stack.length = 0;
         continue;
       }
@@ -384,14 +400,21 @@ export function parsePdfDocument(
         const x3 = stack[stack.length - 2];
         const y3 = stack[stack.length - 1];
 
-        const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
-        const cp1 = { ...p0 };
-        const cp2 = applyTransform({ x: x2, y: y2 }, currentState.ctm);
-        const p1 = applyTransform({ x: x3, y: y3 }, currentState.ctm);
-
-        currentSubpath.push({ type: 'BEZIER', p0, cp1, cp2, p1 });
-        curX = x3;
-        curY = y3;
+        if (!hasCurrentPoint) {
+          curX = x3;
+          curY = y3;
+          startX = x3;
+          startY = y3;
+          hasCurrentPoint = true;
+        } else {
+          const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
+          const cp1 = { ...p0 };
+          const cp2 = applyTransform({ x: x2, y: y2 }, currentState.ctm);
+          const p1 = applyTransform({ x: x3, y: y3 }, currentState.ctm);
+          currentSubpath.push({ type: 'BEZIER', p0, cp1, cp2, p1 });
+          curX = x3;
+          curY = y3;
+        }
         stack.length = 0;
         continue;
       }
@@ -403,14 +426,21 @@ export function parsePdfDocument(
         const x3 = stack[stack.length - 2];
         const y3 = stack[stack.length - 1];
 
-        const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
-        const cp1 = applyTransform({ x: x1, y: y1 }, currentState.ctm);
-        const p1 = applyTransform({ x: x3, y: y3 }, currentState.ctm);
-        const cp2 = { ...p1 };
-
-        currentSubpath.push({ type: 'BEZIER', p0, cp1, cp2, p1 });
-        curX = x3;
-        curY = y3;
+        if (!hasCurrentPoint) {
+          curX = x3;
+          curY = y3;
+          startX = x3;
+          startY = y3;
+          hasCurrentPoint = true;
+        } else {
+          const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
+          const cp1 = applyTransform({ x: x1, y: y1 }, currentState.ctm);
+          const p1 = applyTransform({ x: x3, y: y3 }, currentState.ctm);
+          const cp2 = { ...p1 };
+          currentSubpath.push({ type: 'BEZIER', p0, cp1, cp2, p1 });
+          curX = x3;
+          curY = y3;
+        }
         stack.length = 0;
         continue;
       }
@@ -434,12 +464,13 @@ export function parsePdfDocument(
         curY = ry;
         startX = rx;
         startY = ry;
+        hasCurrentPoint = true;
         stack.length = 0;
         continue;
       }
 
       if (tok === 'h') {
-        if (Math.hypot(curX - startX, curY - startY) > 0.001) {
+        if (hasCurrentPoint && Math.hypot(curX - startX, curY - startY) > 0.001) {
           const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
           const p1 = applyTransform({ x: startX, y: startY }, currentState.ctm);
           currentSubpath.push({ type: 'LINE', p0, p1 });
@@ -475,7 +506,7 @@ export function parsePdfDocument(
       if (['S', 's', 'B', 'B*', 'b', 'b*', 'f', 'F', 'f*'].includes(tok)) {
         // Operadores com fechamento automático de subpath (s, b, b*)
         if (['s', 'b', 'b*'].includes(tok)) {
-          if (Math.hypot(curX - startX, curY - startY) > 0.001) {
+          if (hasCurrentPoint && Math.hypot(curX - startX, curY - startY) > 0.001) {
             const p0 = applyTransform({ x: curX, y: curY }, currentState.ctm);
             const p1 = applyTransform({ x: startX, y: startY }, currentState.ctm);
             currentSubpath.push({ type: 'LINE', p0, p1 });
@@ -522,12 +553,14 @@ export function parsePdfDocument(
           }
         }
         currentSubpath = [];
+        hasCurrentPoint = false;
         stack.length = 0;
         continue;
       }
 
-      if (tok === 'n') {
+      if (tok === 'n' || tok === 'W' || tok === 'W*') {
         currentSubpath = [];
+        hasCurrentPoint = false;
         stack.length = 0;
         continue;
       }

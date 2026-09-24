@@ -462,29 +462,15 @@ export class FoldingTreeEngine {
         });
       }
 
-      if (!parentBoundaryEdge) {
-        // Fallback robusto analítico baseado no vetor do vinco ao centróide do painel filho
-        const midX = (edge.axisStart.x + edge.axisEnd.x) / 2;
-        const midY = (edge.axisStart.y + edge.axisEnd.y) / 2;
-        const childPanel = childPanelId ? panelMap.get(childPanelId) : undefined;
-        const toChildX = (childPanel?.centroid.x ?? midX) - midX;
-        const toChildY = (childPanel?.centroid.y ?? midY) - midY;
-        const cross = edge.direction.x * toChildY - edge.direction.y * toChildX;
-        const fallbackSign: 1 | -1 = cross >= 0 ? 1 : -1;
-
-        return {
-          topologicalSign: fallbackSign,
-          signSource: 'MODEL_RULE',
-          physicalDirection: 'MOUNTAIN',
-        };
-      }
-
-      const tParentX = parentBoundaryEdge.p1.x - parentBoundaryEdge.p0.x;
-      const tParentY = parentBoundaryEdge.p1.y - parentBoundaryEdge.p0.y;
-      const dot = tParentX * edge.direction.x + tParentY * edge.direction.y;
-      let rawSign: 1 | -1 = dot >= 0 ? 1 : -1;
-      let signSource: 'HALF_EDGE_ORIENTATION' | 'CAD_METADATA' | 'MODEL_RULE' | 'DEFAULT' | 'INVALID_MAPPING' = 'HALF_EDGE_ORIENTATION';
-      let physicalDirection: 'MOUNTAIN' | 'VALLEY' | 'NOT_DETERMINED' = 'NOT_DETERMINED';
+      const midX = (edge.axisStart.x + edge.axisEnd.x) / 2;
+      const midY = (edge.axisStart.y + edge.axisEnd.y) / 2;
+      const childPanel = childPanelId ? panelMap.get(childPanelId) : undefined;
+      const toChildX = (childPanel?.centroid.x ?? midX) - midX;
+      const toChildY = (childPanel?.centroid.y ?? midY) - midY;
+      const cross = edge.direction.x * toChildY - edge.direction.y * toChildX;
+      let rawSign: 1 | -1 = cross >= 0 ? 1 : -1;
+      let signSource: 'HALF_EDGE_ORIENTATION' | 'CAD_METADATA' | 'MODEL_RULE' | 'DEFAULT' | 'INVALID_MAPPING' = 'MODEL_RULE';
+      let physicalDirection: 'MOUNTAIN' | 'VALLEY' | 'NOT_DETERMINED' = 'MOUNTAIN';
 
       const creaseLayer = String((edge.crease as any).layer || '').toUpperCase();
       if (creaseLayer.includes('REVERSE') || creaseLayer.includes('VALLEY')) {
@@ -497,7 +483,7 @@ export class FoldingTreeEngine {
         topologicalSign: rawSign,
         signSource,
         physicalDirection,
-        matchedHalfEdgeId: String(parentBoundaryEdge.id),
+        matchedHalfEdgeId: parentBoundaryEdge ? String(parentBoundaryEdge.id) : undefined,
       };
     }
 
