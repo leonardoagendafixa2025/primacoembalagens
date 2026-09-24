@@ -613,14 +613,28 @@ export class ThreeGeometryAdapter {
       }
     };
 
-    // Controle de modo Aramado (Wireframe)
+    // Controle de modo Aramado (CAD Wireframe fiel ao 2D)
     const setWireframe = (wireframe: boolean) => {
-      outerPanelMaterial.wireframe = wireframe;
-      innerPanelMaterial.wireframe = wireframe;
-      highlightMaterial.wireframe = wireframe;
-      outerPanelMaterial.needsUpdate = true;
-      innerPanelMaterial.needsUpdate = true;
-      highlightMaterial.needsUpdate = true;
+      panelMeshes.forEach((container) => {
+        const outer = container.userData.outerMesh as THREE.Mesh;
+        const inner = container.userData.innerMesh as THREE.Mesh;
+        if (outer) outer.visible = !wireframe;
+        if (inner) inner.visible = !wireframe;
+      });
+
+      if (wireframe) {
+        cutLineMaterial.color.set('#ef4444');
+        cutLineMaterial.opacity = 1.0;
+        creaseLineMaterial.color.set('#00d2b4');
+        creaseLineMaterial.opacity = 1.0;
+      } else {
+        cutLineMaterial.color.set(cutLineColor);
+        cutLineMaterial.opacity = 0.45;
+        creaseLineMaterial.color.set(creaseLineColor);
+        creaseLineMaterial.opacity = 0.4;
+      }
+      cutLineMaterial.needsUpdate = true;
+      creaseLineMaterial.needsUpdate = true;
     };
 
     return {

@@ -114,24 +114,18 @@ function computeLoopSignedAreaAndCentroid(
     cy += (p1.y + p2.y) * cross;
   }
 
-  let totalArea = shoelace / 2;
+  const polyArea = Math.abs(shoelace / 2);
+  let totalArea = polyArea;
 
   // Ajuste analítico exato para arcos circulares (área do segmento circular sem discretização)
   for (const edge of edges) {
     if (edge.type === 'arc') {
       const arc = edge.entity as Arc2D;
-      const aStartRad = (arc.startAngle * Math.PI) / 180;
-      const aEndRad = (arc.endAngle * Math.PI) / 180;
-      let dTheta = aEndRad - aStartRad;
-      if (dTheta < 0) dTheta += 2 * Math.PI;
-
-      // Área do segmento circular = (R^2 / 2) * (theta - sin(theta))
-      const circularSegmentArea = 0.5 * arc.r * arc.r * (dTheta - Math.sin(dTheta));
-      if (edge.direction === 'FORWARD') {
-        totalArea += circularSegmentArea;
-      } else {
-        totalArea -= circularSegmentArea;
-      }
+      let spanDeg = Math.abs(arc.endAngle - arc.startAngle) % 360;
+      if (spanDeg > 180) spanDeg = 360 - spanDeg;
+      const spanRad = (spanDeg * Math.PI) / 180;
+      const circularSegmentArea = 0.5 * arc.r * arc.r * Math.max(0, spanRad - Math.sin(spanRad));
+      totalArea += circularSegmentArea;
     }
   }
 
@@ -143,9 +137,11 @@ function computeLoopSignedAreaAndCentroid(
     cy = vertices.reduce((sum, p) => sum + p.y, 0) / vertices.length;
   }
 
+  // O sinal da área DEVE ser estritamente governado pelo sentido do polígono dos vértices (shoelace >= 0 -> CCW, < 0 -> CW)
+  const isCCW = shoelace >= 0;
   return {
-    signedArea: totalArea,
-    area: Math.abs(totalArea),
+    signedArea: isCCW ? totalArea : -totalArea,
+    area: Math.max(0.01, totalArea),
     centroid: { x: cx, y: cy },
   };
 }
