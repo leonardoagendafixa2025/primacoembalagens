@@ -256,8 +256,17 @@
               illustratorDetected: true,
               illustratorVersion: 'Adobe Illustrator 2025 (Painel PRIMACOR Ativo)',
               activeProject: currentProject ? (currentProject.projectId || currentProject.modelCode) : null,
-              hasArtwork: !!lastLoadedArtworkUri,
-              latestArtworkDataUri: lastLoadedArtworkUri,
+              projectId: currentProject ? (currentProject.projectId || currentProject.modelCode) : null,
+              modelId: currentProject ? (currentProject.modelId || currentProject.modelCode) : null,
+              modelCode: currentProject ? currentProject.modelCode : null,
+              hasArtwork: !!(lastOuterArtworkUri || lastInnerArtworkUri || lastLoadedArtworkUri),
+              textureDataUri: lastOuterArtworkUri || lastLoadedArtworkUri,
+              outerArtworkDataUri: lastOuterArtworkUri,
+              innerArtworkDataUri: lastInnerArtworkUri,
+              latestArtworkDataUri: lastOuterArtworkUri || lastLoadedArtworkUri,
+              outerVersion: outerArtVersion,
+              innerVersion: innerArtVersion,
+              timestamp: Date.now()
             }));
             return;
           }
@@ -288,7 +297,28 @@
               success: !!currentProject,
               project: currentProject,
               projectId: currentProject ? (currentProject.projectId || currentProject.modelCode) : null,
-              latestArtworkDataUri: lastLoadedArtworkUri
+              latestArtworkDataUri: lastOuterArtworkUri || lastLoadedArtworkUri,
+              outerArtworkDataUri: lastOuterArtworkUri,
+              innerArtworkDataUri: lastInnerArtworkUri
+            }));
+            return;
+          }
+
+          // Endpoint consumido pela Web para buscar a última arte sincronizada
+          if ((pathname === '/api/latest-artwork' || pathname === '/api/latest_artwork') && req.method === 'GET') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              hasArtwork: !!(lastOuterArtworkUri || lastInnerArtworkUri || lastLoadedArtworkUri),
+              textureDataUri: lastOuterArtworkUri || lastLoadedArtworkUri,
+              outerArtworkDataUri: lastOuterArtworkUri,
+              innerArtworkDataUri: lastInnerArtworkUri,
+              projectId: currentProject ? (currentProject.projectId || currentProject.modelCode) : null,
+              modelId: currentProject ? (currentProject.modelId || currentProject.modelCode) : null,
+              modelCode: currentProject ? currentProject.modelCode : null,
+              outerVersion: outerArtVersion,
+              innerVersion: innerArtVersion,
+              timestamp: Date.now()
             }));
             return;
           }
@@ -297,9 +327,12 @@
           if (pathname === '/api/artwork' && req.method === 'GET') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
-              success: !!lastLoadedArtworkUri,
-              textureDataUri: lastLoadedArtworkUri,
-              artworkVersion: artVersion
+              success: !!(lastOuterArtworkUri || lastInnerArtworkUri || lastLoadedArtworkUri),
+              textureDataUri: lastOuterArtworkUri || lastLoadedArtworkUri,
+              outerArtworkDataUri: lastOuterArtworkUri,
+              innerArtworkDataUri: lastInnerArtworkUri,
+              outerVersion: outerArtVersion,
+              innerVersion: innerArtVersion
             }));
             return;
           }
@@ -310,14 +343,15 @@
             req.on('end', function() {
               try {
                 var payload = JSON.parse(artBody);
-                if (payload.textureDataUri) {
-                  lastLoadedArtworkUri = payload.textureDataUri;
-                  artVersion++;
-                  if (elVersion) elVersion.textContent = 'Arte: v' + artVersion;
-                  if (window.PLMStudio) window.PLMStudio.updateArtwork(lastLoadedArtworkUri);
+                if (payload.outerArtworkDataUri || payload.textureDataUri) {
+                  lastOuterArtworkUri = payload.outerArtworkDataUri || payload.textureDataUri;
+                  lastLoadedArtworkUri = lastOuterArtworkUri;
+                }
+                if (payload.innerArtworkDataUri) {
+                  lastInnerArtworkUri = payload.innerArtworkDataUri;
                 }
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, message: 'Arte atualizada com sucesso!' }));
+                res.end(JSON.stringify({ success: true, message: 'Arte recebida e sincronizada!' }));
               } catch(e) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: false, error: e.message }));

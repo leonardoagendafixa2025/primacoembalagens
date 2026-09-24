@@ -259,7 +259,7 @@ export class IllustratorBridgeClient {
     for (const url of this.bridgeUrls) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1800);
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(`${url}/api/status`, {
           method: 'GET',
           signal: controller.signal,
@@ -296,6 +296,7 @@ export class IllustratorBridgeClient {
               changed = true;
             }
             if (changed) {
+              this.setState('SYNCHRONIZED', 'Sincronizado');
               this.notify('ARTWORK_UPDATED', {
                 textureDataUri: this.lastArtworkUri,
                 outerArtworkDataUri: this.lastOuterArtworkUri,

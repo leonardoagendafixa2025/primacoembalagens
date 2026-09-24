@@ -150,8 +150,10 @@ const server = http.createServer(async (req, res) => {
       corelDetected: corelRunning,
       corelVersion: 'CorelDRAW Graphics Suite 2025',
       activeProject: activeProject ? activeProject.projectId : null,
-      hasArtwork: !!latestArtworkDataUri,
+      hasArtwork: !!latestArtworkDataUri || !!latestInnerArtworkDataUri,
       latestArtworkDataUri: latestArtworkDataUri,
+      outerArtworkDataUri: latestArtworkDataUri,
+      innerArtworkDataUri: latestInnerArtworkDataUri,
     }));
     return;
   }
