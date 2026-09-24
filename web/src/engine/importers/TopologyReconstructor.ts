@@ -156,6 +156,13 @@ export class TopologyReconstructor {
    * 6. Preservação de Arc2D e PERF
    * 7. IDs determinísticos
    */
+  public static reconstructPlanarTopology(
+    inputGeometry: PackagingGeometry,
+    tolerances: Partial<TopologyToleranceConfig> = {}
+  ): TopologyReconstructionResult {
+    return TopologyReconstructor.reconstructConnectivity(inputGeometry, tolerances);
+  }
+
   public static reconstructConnectivity(
     inputGeometry: PackagingGeometry,
     tolerances: Partial<TopologyToleranceConfig> = {}

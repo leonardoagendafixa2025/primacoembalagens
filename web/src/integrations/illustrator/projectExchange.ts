@@ -250,7 +250,7 @@ export function createProjectExchangePackage(
         nominalAngleDeg: h.targetAngleDeg ?? 90,
       }));
     } else {
-      const recon = TopologyReconstructor.reconstructPlanarTopology(dieline, {
+      const recon = TopologyReconstructor.reconstructConnectivity(dieline, {
         gapToleranceMm: 0.35,
         tJunctionToleranceMm: 0.35,
         coincidentToleranceMm: 0.08,
