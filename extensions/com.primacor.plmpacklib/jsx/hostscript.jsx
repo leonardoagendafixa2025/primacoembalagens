@@ -36,6 +36,19 @@ function findLayerByNames(doc, names) {
   return null;
 }
 
+function hasLayerAnyContent(layer) {
+  if (!layer) return false;
+  try {
+    if (layer.pageItems && layer.pageItems.length > 0) return true;
+    if (layer.layers && layer.layers.length > 0) {
+      for (var s = 0; s < layer.layers.length; s++) {
+        if (hasLayerAnyContent(layer.layers[s])) return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
 function exportSingleArtworkSide(side) {
   if (app.documents.length === 0) {
     return { error: "Nenhum documento aberto no Illustrator." };
@@ -44,17 +57,31 @@ function exportSingleArtworkSide(side) {
   var doc = app.activeDocument;
   var targetLayer = null;
   var sideName = (side || "outer").toLowerCase();
+  var isInner = (sideName === "inner" || sideName === "interna" || sideName === "inside");
 
-  if (sideName === "inner" || sideName === "interna" || sideName === "inside") {
+  if (isInner) {
     targetLayer = findLayerByNames(doc, ["ARTWORK_INTERNA", "ARTE_INTERNA", "ARTWORK_INNER", "ARTE INTERNA", "INNER_ARTWORK"]);
     if (!targetLayer) {
-      return { error: "Camada ARTWORK_INTERNA não encontrada no documento ativo.", notFound: true, side: "inner" };
+      return { success: true, empty: true, notFound: true, side: "inner", filePath: null };
     }
   } else {
     targetLayer = findLayerByNames(doc, ["ARTWORK_EXTERNA", "ARTWORK", "ARTE_EXTERNA", "PLMPACKLIB_ARTE", "ARTE EXTERNA", "OUTER_ARTWORK"]);
     if (!targetLayer) {
-      return { error: "Camada ARTWORK_EXTERNA (ou ARTWORK) não encontrada no documento ativo.", notFound: true, side: "outer" };
+      return { success: true, empty: true, notFound: true, side: "outer", filePath: null };
     }
+  }
+
+  // Se a camada de arte estiver vazia (sem nenhum elemento desenhado), retorna imediatamente
+  // sem travar o Illustrator nem tentar exportar prancheta em branco
+  if (!hasLayerAnyContent(targetLayer)) {
+    return {
+      success: true,
+      empty: true,
+      side: isInner ? "inner" : "outer",
+      filePath: null,
+      hasVector: false,
+      vectorSvg: ""
+    };
   }
 
   var wasLocked = targetLayer.locked;
@@ -73,58 +100,64 @@ function exportSingleArtworkSide(side) {
   }
 
   var tempFolder = Folder.temp;
-  var fileSuffix = (sideName === "inner" || sideName === "interna" || sideName === "inside") ? "inner" : "outer";
+  var fileSuffix = isInner ? "inner" : "outer";
+  var destFile = new File(tempFolder.fsName + "/plmpack_cep_artwork_" + fileSuffix + ".png");
 
-  // 1. Exportação SVG Vetorial
-  var svgOptions = new ExportOptionsSVG();
-  svgOptions.embedRasterImages = true;
-  svgOptions.fontSubsetting = SVGFontSubsetting.GLYPHSUSED;
-  svgOptions.cssProperties = SVGCSSPropertyLocation.STYLEATTRIBUTES;
-  try { svgOptions.coordinatePrecision = 4; } catch(e) {}
-
-  var destSvgFile = new File(tempFolder.fsName + "/plmpack_cep_artwork_" + fileSuffix + ".svg");
-  var hasVector = false;
-  var vectorSvg = "";
-  try {
-    doc.exportFile(destSvgFile, ExportType.SVG, svgOptions);
-    if (destSvgFile.exists && destSvgFile.length > 0) {
-      destSvgFile.open("r");
-      vectorSvg = destSvgFile.read();
-      destSvgFile.close();
-      if (vectorSvg && vectorSvg.length > 30) {
-        hasVector = true;
-      }
-    }
-  } catch(eSvg) {
-    hasVector = false;
-  }
-
-  // 2. Exportação PNG 300 DPI com recorte exato da prancheta (1:1 com a faca + 15mm margem)
+  // Exportação PNG otimizada para tempo real e alta fidelidade 3D (evita estouro de VRAM e travamentos)
   var exportOptions = new ExportOptionsPNG24();
   exportOptions.antiAliasing = true;
   exportOptions.transparency = true;
   exportOptions.artBoardClipping = true;
-  exportOptions.horizontalScale = 416.666; // 300 DPI
-  exportOptions.verticalScale = 416.666;
 
-  var destFile = new File(tempFolder.fsName + "/plmpack_cep_artwork_" + fileSuffix + ".png");
-  if (destFile.exists) {
-    try { destFile.remove(); } catch(eDel) {}
+  // Resolução calculada: 150 DPI padrão (208.33%) — nítido e super veloz (sub-segundo)
+  // Pranchetas muito grandes têm escala ajustada para manter tamanho sob limites de GPU WebGL
+  var maxPt = Math.max(doc.width, doc.height);
+  var targetDpi = 150;
+  if (maxPt > 2800) {
+    targetDpi = 96;
+  } else if (maxPt < 1000) {
+    targetDpi = 180;
   }
-  doc.exportFile(destFile, ExportType.PNG24, exportOptions);
+  var scaleFactor = (targetDpi / 72.0) * 100.0;
+  exportOptions.horizontalScale = scaleFactor;
+  exportOptions.verticalScale = scaleFactor;
 
-  // Restaura visibilidade e bloqueio das camadas
-  targetLayer.locked = wasLocked;
-  for (var j = 0; j < layersVisibility.length; j++) {
-    layersVisibility[j].layer.visible = layersVisibility[j].visible;
+  var exportSuccess = false;
+  var exportError = null;
+
+  try {
+    if (destFile.exists) {
+      try { destFile.remove(); } catch(eDel) {}
+    }
+    doc.exportFile(destFile, ExportType.PNG24, exportOptions);
+    exportSuccess = destFile.exists && destFile.length > 0;
+  } catch(eExp) {
+    exportError = eExp.message;
+    exportSuccess = false;
+  } finally {
+    // SEMPRE restaura a visibilidade e o bloqueio originais das camadas no documento!
+    try {
+      targetLayer.locked = wasLocked;
+      for (var j = 0; j < layersVisibility.length; j++) {
+        layersVisibility[j].layer.visible = layersVisibility[j].visible;
+      }
+    } catch(eRestore) {}
+  }
+
+  if (!exportSuccess) {
+    return {
+      success: false,
+      error: exportError || "Falha ao gerar arquivo de imagem da arte.",
+      side: isInner ? "inner" : "outer"
+    };
   }
 
   return {
     success: true,
-    side: (sideName === "inner" || sideName === "interna" || sideName === "inside") ? "inner" : "outer",
-    hasVector: hasVector,
-    vectorSvg: vectorSvg,
-    svgFilePath: destSvgFile.fsName,
+    empty: false,
+    side: isInner ? "inner" : "outer",
+    hasVector: false,
+    vectorSvg: "",
     filePath: destFile.fsName
   };
 }
@@ -146,12 +179,6 @@ function exportBothArtworksFromIllustrator() {
 
     var outerRes = exportSingleArtworkSide("outer");
     var innerRes = exportSingleArtworkSide("inner");
-
-    if (outerRes.error && innerRes.error) {
-      return JSON.stringify({
-        error: "Nenhuma camada de arte (" + (outerRes.error || innerRes.error) + ") encontrada no documento."
-      });
-    }
 
     return JSON.stringify({
       success: true,

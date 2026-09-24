@@ -385,13 +385,20 @@
           return 'data:image/png;base64,' + buf.toString('base64');
         }
       }
-    } catch(nodeErr) {}
+    } catch(nodeErr) {
+      console.warn('[CEP] Leitura Node.js fs indisponível:', nodeErr);
+    }
 
-    if (window.cep && window.cep.fs) {
-      var readRes = window.cep.fs.readFile(filePath, window.cep.encoding.Base64);
-      if (readRes.err === 0 && readRes.data) {
-        return 'data:image/png;base64,' + readRes.data;
+    try {
+      if (window.cep && window.cep.fs) {
+        var enc = (window.cep.encoding && window.cep.encoding.Base64) || (typeof cep !== 'undefined' && cep.encoding && cep.encoding.Base64) || 'Base64';
+        var readRes = window.cep.fs.readFile(filePath, enc);
+        if (readRes.err === 0 && readRes.data) {
+          return 'data:image/png;base64,' + readRes.data;
+        }
       }
+    } catch(cepErr) {
+      console.warn('[CEP] Leitura window.cep.fs indisponível:', cepErr);
     }
     return null;
   }
@@ -434,20 +441,20 @@
         var vectorSvg = '';
 
         if (isBoth) {
-          if (res.outer && res.outer.filePath) {
+          if (res.outer && res.outer.success && res.outer.filePath) {
             outerUri = readDataUriFromFile(res.outer.filePath);
             vectorSvg = res.outer.vectorSvg || '';
           }
-          if (res.inner && res.inner.filePath) {
+          if (res.inner && res.inner.success && res.inner.filePath) {
             innerUri = readDataUriFromFile(res.inner.filePath);
           }
         } else if (targetSide === 'inner') {
-          if (res.filePath) {
+          if (res.success && res.filePath) {
             innerUri = readDataUriFromFile(res.filePath);
           }
         } else {
           // outer
-          if (res.filePath) {
+          if (res.success && res.filePath) {
             outerUri = readDataUriFromFile(res.filePath);
             vectorSvg = res.vectorSvg || '';
           }
@@ -467,7 +474,16 @@
         }
 
         if (!outerUri && !innerUri) {
-          var errDetail = res.error || (isBoth ? 'Nenhuma camada ARTWORK_EXTERNA ou ARTWORK_INTERNA encontrada com elementos.' : 'Camada de arte não encontrada.');
+          var errDetail = res.error;
+          if (!errDetail) {
+            if (isBoth) {
+              errDetail = 'Nenhum desenho encontrado na ARTWORK_EXTERNA ou ARTWORK_INTERNA.';
+            } else if (targetSide === 'inner') {
+              errDetail = 'A camada ARTWORK_INTERNA está vazia.';
+            } else {
+              errDetail = 'A camada ARTWORK_EXTERNA está vazia.';
+            }
+          }
           setStatus(errDetail);
           if (typeof callback === 'function') callback(errDetail);
           return;
@@ -484,7 +500,18 @@
           }
         }
 
-        setStatus('Arte ' + sideLabel + ' projetada no 3D! Sincronizando com a Web...');
+        var successMessage = '';
+        if (outerUri && innerUri) {
+          successMessage = 'Artes Externa e Interna projetadas no 3D!';
+        } else if (outerUri) {
+          successMessage = 'Arte Externa projetada no 3D! (Interna vazia)';
+        } else if (innerUri) {
+          successMessage = 'Arte Interna projetada no 3D! (Externa vazia)';
+        } else {
+          successMessage = 'Arte projetada no 3D!';
+        }
+
+        setStatus(successMessage + ' Sincronizando com a Web...');
 
         // Notifica bridge server se houver porta aberta externa
         fetch(BRIDGE_URL + '/api/artwork', {
@@ -505,10 +532,10 @@
           })
         })
         .then(function() {
-          setStatus('Arte ' + sideLabel + ' sincronizada com sucesso no 3D e na Web!');
+          setStatus(successMessage + ' Sincronizado com a Web!');
         })
         .catch(function() {
-          setStatus('Arte ' + sideLabel + ' aplicada no 3D!');
+          setStatus(successMessage);
         });
 
         if (typeof callback === 'function') {

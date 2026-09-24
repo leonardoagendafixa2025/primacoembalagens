@@ -3,7 +3,7 @@
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-  // web/node_modules/three/build/three.core.js
+  // node_modules/three/build/three.core.js
   var REVISION = "186";
   var MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
   var CullFaceNone = 0;
@@ -18742,7 +18742,7 @@
     }
   }
 
-  // web/node_modules/three/build/three.module.js
+  // node_modules/three/build/three.module.js
   function WebGLAnimation() {
     let context = null;
     let isAnimating = false;
@@ -30240,7 +30240,7 @@ void main() {
     }
   };
 
-  // web/node_modules/three/examples/jsm/controls/TrackballControls.js
+  // node_modules/three/examples/jsm/controls/TrackballControls.js
   var _changeEvent = { type: "change" };
   var _startEvent = { type: "start" };
   var _endEvent = { type: "end" };
@@ -30797,7 +30797,7 @@ void main() {
     this.dispatchEvent(_endEvent);
   }
 
-  // web/src/engine/dielineTopology.ts
+  // src/engine/dielineTopology.ts
   function buildFoldingTopology(dieline) {
     const rawSegs = [];
     for (const seg of dieline.segments) {
@@ -31415,7 +31415,7 @@ void main() {
     };
   }
 
-  // web/src/engine/foldingEngine.ts
+  // src/engine/foldingEngine.ts
   function createPanelMesh(panel, thickness, materials, dielineBounds) {
     const shape = new Shape();
     if (panel.boundary.length > 0) {
@@ -31697,7 +31697,7 @@ void main() {
     };
   }
 
-  // web/src/integrations/illustrator/cepStudioEntry.ts
+  // src/integrations/illustrator/cepStudioEntry.ts
   var PLMStudioViewer = class {
     constructor() {
       __publicField(this, "container", null);
@@ -31952,54 +31952,58 @@ void main() {
       if (!dataUri && !innerDataUri) return;
       const isKraft = this.substrateMode === "kraft";
       const substrateColor = isKraft ? "#C89D68" : "#FFFFFF";
-      if (side === "inner" || side === "both" && innerDataUri) {
+      if (side === "inner" || side === "both" && innerDataUri && innerDataUri.length > 20) {
         const targetUri = side === "inner" ? dataUri : innerDataUri;
-        this.lastInnerArtworkDataUri = targetUri;
-        const imgIn = new Image();
-        imgIn.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = imgIn.naturalWidth || imgIn.width;
-          canvas.height = imgIn.naturalHeight || imgIn.height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return;
-          ctx.fillStyle = substrateColor;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(imgIn, 0, 0);
-          const texIn = new CanvasTexture(canvas);
-          texIn.colorSpace = SRGBColorSpace;
-          texIn.flipY = true;
-          texIn.needsUpdate = true;
-          this.currentInnerTexture = texIn;
-          if (this.currentTree) {
-            this.currentTree.updateArtwork(this.currentTexture, texIn);
-          }
-        };
-        imgIn.src = targetUri;
+        if (targetUri && targetUri.length > 20) {
+          this.lastInnerArtworkDataUri = targetUri;
+          const imgIn = new Image();
+          imgIn.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = imgIn.naturalWidth || imgIn.width;
+            canvas.height = imgIn.naturalHeight || imgIn.height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+            ctx.fillStyle = substrateColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(imgIn, 0, 0);
+            const texIn = new CanvasTexture(canvas);
+            texIn.colorSpace = SRGBColorSpace;
+            texIn.flipY = true;
+            texIn.needsUpdate = true;
+            this.currentInnerTexture = texIn;
+            if (this.currentTree) {
+              this.currentTree.updateArtwork(this.currentTexture, texIn);
+            }
+          };
+          imgIn.src = targetUri;
+        }
       }
       if (side === "outer" || side === "both") {
         const targetOuterUri = dataUri;
-        this.lastArtworkDataUri = targetOuterUri;
-        this.lastOuterArtworkDataUri = targetOuterUri;
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return;
-          ctx.fillStyle = substrateColor;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
-          const tex = new CanvasTexture(canvas);
-          tex.colorSpace = SRGBColorSpace;
-          tex.flipY = true;
-          tex.needsUpdate = true;
-          this.currentTexture = tex;
-          if (this.currentTree) {
-            this.currentTree.updateArtwork(tex, this.currentInnerTexture);
-          }
-        };
-        img.src = targetOuterUri;
+        if (targetOuterUri && targetOuterUri.length > 20) {
+          this.lastArtworkDataUri = targetOuterUri;
+          this.lastOuterArtworkDataUri = targetOuterUri;
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+            ctx.fillStyle = substrateColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            const tex = new CanvasTexture(canvas);
+            tex.colorSpace = SRGBColorSpace;
+            tex.flipY = true;
+            tex.needsUpdate = true;
+            this.currentTexture = tex;
+            if (this.currentTree) {
+              this.currentTree.updateArtwork(tex, this.currentInnerTexture);
+            }
+          };
+          img.src = targetOuterUri;
+        }
       }
     }
     setFoldProgress(val) {

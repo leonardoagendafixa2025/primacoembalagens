@@ -328,63 +328,67 @@ class PLMStudioViewer {
     const isKraft = this.substrateMode === 'kraft';
     const substrateColor = isKraft ? '#C89D68' : '#FFFFFF';
 
-    if (side === 'inner' || (side === 'both' && innerDataUri)) {
+    if (side === 'inner' || (side === 'both' && innerDataUri && innerDataUri.length > 20)) {
       const targetUri = side === 'inner' ? dataUri : innerDataUri!;
-      this.lastInnerArtworkDataUri = targetUri;
-      const imgIn = new Image();
-      imgIn.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = imgIn.naturalWidth || imgIn.width;
-        canvas.height = imgIn.naturalHeight || imgIn.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.fillStyle = substrateColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(imgIn, 0, 0);
+      if (targetUri && targetUri.length > 20) {
+        this.lastInnerArtworkDataUri = targetUri;
+        const imgIn = new Image();
+        imgIn.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = imgIn.naturalWidth || imgIn.width;
+          canvas.height = imgIn.naturalHeight || imgIn.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          ctx.fillStyle = substrateColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(imgIn, 0, 0);
 
-        const texIn = new THREE.CanvasTexture(canvas);
-        texIn.colorSpace = THREE.SRGBColorSpace;
-        texIn.flipY = true;
-        texIn.needsUpdate = true;
-        this.currentInnerTexture = texIn;
+          const texIn = new THREE.CanvasTexture(canvas);
+          texIn.colorSpace = THREE.SRGBColorSpace;
+          texIn.flipY = true;
+          texIn.needsUpdate = true;
+          this.currentInnerTexture = texIn;
 
-        if (this.currentTree) {
-          this.currentTree.updateArtwork(this.currentTexture, texIn);
-        }
-      };
-      imgIn.src = targetUri;
+          if (this.currentTree) {
+            this.currentTree.updateArtwork(this.currentTexture, texIn);
+          }
+        };
+        imgIn.src = targetUri;
+      }
     }
 
     if (side === 'outer' || side === 'both') {
       const targetOuterUri = dataUri;
-      this.lastArtworkDataUri = targetOuterUri;
-      this.lastOuterArtworkDataUri = targetOuterUri;
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+      if (targetOuterUri && targetOuterUri.length > 20) {
+        this.lastArtworkDataUri = targetOuterUri;
+        this.lastOuterArtworkDataUri = targetOuterUri;
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
 
-        // 1. Pinta todo o fundo com a cor do papel/substrato (elimina o fundo preto)
-        ctx.fillStyle = substrateColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+          // 1. Pinta todo o fundo com a cor do papel/substrato (elimina o fundo preto)
+          ctx.fillStyle = substrateColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. Desenha a arte impressa com transparência preservada por cima
-        ctx.drawImage(img, 0, 0);
+          // 2. Desenha a arte impressa com transparência preservada por cima
+          ctx.drawImage(img, 0, 0);
 
-        const tex = new THREE.CanvasTexture(canvas);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.flipY = true;
-        tex.needsUpdate = true;
-        this.currentTexture = tex;
+          const tex = new THREE.CanvasTexture(canvas);
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.flipY = true;
+          tex.needsUpdate = true;
+          this.currentTexture = tex;
 
-        if (this.currentTree) {
-          this.currentTree.updateArtwork(tex, this.currentInnerTexture);
-        }
-      };
-      img.src = targetOuterUri;
+          if (this.currentTree) {
+            this.currentTree.updateArtwork(tex, this.currentInnerTexture);
+          }
+        };
+        img.src = targetOuterUri;
+      }
     }
   }
 
