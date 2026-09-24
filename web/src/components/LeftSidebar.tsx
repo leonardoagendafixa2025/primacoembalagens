@@ -22,6 +22,8 @@ interface LeftSidebarProps {
   onResetAllAngles?: () => void;
   activePanel: 'params' | 'folds' | null;
   onSelectActivePanel: (panel: 'params' | 'folds' | null) => void;
+  onOpenImportModal?: () => void;
+  onResetToCatalog?: () => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -41,6 +43,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onResetAllAngles,
   activePanel,
   onSelectActivePanel,
+  onOpenImportModal,
+  onResetToCatalog,
 }) => {
   const is3D = activeMode === '3d';
 
@@ -272,6 +276,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             dieline={dieline}
             isCollapsed={false}
             activeMode={activeMode}
+            onOpenImportModal={onOpenImportModal}
+            onResetToCatalog={onResetToCatalog}
           />
         ) : (
           <FlapAngleInspector

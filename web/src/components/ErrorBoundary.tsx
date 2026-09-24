@@ -156,6 +156,10 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={() => {
+                  try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                  } catch (_) {}
                   window.location.href = window.location.pathname;
                 }}
                 style={{
@@ -172,6 +176,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   fontWeight: 600,
                   cursor: 'pointer',
                 }}
+                title="Voltar ao início limpo"
               >
                 <Home size={15} />
               </button>

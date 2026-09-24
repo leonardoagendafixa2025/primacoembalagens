@@ -197,24 +197,40 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Botão Oficial Importar Minha Faca */}
-        <button
-          type="button"
-          onClick={onOpenImportModal}
-          className="cad-btn"
-          style={{
-            background: 'linear-gradient(135deg, rgba(0, 210, 180, 0.15), rgba(0, 140, 255, 0.18))',
-            border: '1px solid var(--cad-accent, #00d2b4)',
-            color: 'var(--cad-accent, #00d2b4)',
-            padding: '5px 9px',
-            gap: 5,
-            fontWeight: 700,
-            flexShrink: 0,
-          }}
-          title="Importar Minha Faca (PDF, SVG, DXF)"
-        >
-          <FileUp size={14} />
-          <span style={{ fontWeight: 700 }}>Importar <span className="hide-on-compact">Minha </span>Faca</span>
-        </button>
+        {(() => {
+          const isCustomImport = currentModel.category === 'PERSONALIZADO' || currentModel.id.startsWith('imported_');
+          return (
+            <button
+              type="button"
+              onClick={onOpenImportModal}
+              className="cad-btn"
+              style={{
+                background: isCustomImport
+                  ? 'linear-gradient(135deg, rgba(0, 210, 180, 0.25), rgba(0, 140, 255, 0.25))'
+                  : 'linear-gradient(135deg, rgba(0, 210, 180, 0.15), rgba(0, 140, 255, 0.18))',
+                border: isCustomImport
+                  ? '1.5px solid var(--cad-accent, #00d2b4)'
+                  : '1px solid var(--cad-accent, #00d2b4)',
+                color: 'var(--cad-accent, #00d2b4)',
+                padding: '5px 10px',
+                gap: 6,
+                fontWeight: 700,
+                flexShrink: 0,
+                boxShadow: isCustomImport ? '0 0 12px rgba(0, 210, 180, 0.3)' : 'none',
+              }}
+              title={
+                isCustomImport
+                  ? 'Faca importada ativa! Clique para importar outro arquivo e substituir a faca atual'
+                  : 'Importar Minha Faca (PDF, SVG, DXF, DWG)'
+              }
+            >
+              <FileUp size={14} />
+              <span style={{ fontWeight: 700 }}>
+                {isCustomImport ? 'Substituir / Nova Faca' : <>Importar <span className="hide-on-compact">Minha </span>Faca</>}
+              </span>
+            </button>
+          );
+        })()}
 
         {/* Modelo Ativo Selecionado */}
         <div

@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { CATALOG, getModelById } from '../engine/models';
 import type { PackagingModel } from '../engine/types';
-import { X, Search, Box, Grid, Filter, ArrowRight, Check } from 'lucide-react';
+import { X, Search, Box, Grid, Filter, ArrowRight, Check, FileUp } from 'lucide-react';
 
 interface CatalogModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectModel: (model: PackagingModel) => void;
   currentModelId: string;
+  onOpenImportCad?: () => void;
 }
 
 export const CatalogModal: React.FC<CatalogModalProps> = ({
@@ -15,6 +16,7 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
   onClose,
   onSelectModel,
   currentModelId,
+  onOpenImportCad,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'FEFCO' | 'ECMA'>('ALL');
@@ -180,6 +182,33 @@ export const CatalogModal: React.FC<CatalogModalProps> = ({
                 </button>
               )}
             </div>
+
+            {onOpenImportCad && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenImportCad();
+                }}
+                className="cad-btn"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 210, 180, 0.18), rgba(0, 140, 255, 0.22))',
+                  border: '1px solid var(--cad-accent, #00d2b4)',
+                  color: 'var(--cad-accent, #00d2b4)',
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  gap: 6,
+                  borderRadius: 'var(--cad-radius-sm)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+                title="Importar Faca personalizada (PDF, SVG, DXF, DWG)"
+              >
+                <FileUp size={14} />
+                <span>Importar Minha Faca</span>
+              </button>
+            )}
 
             <button
               type="button"

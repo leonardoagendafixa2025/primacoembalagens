@@ -523,6 +523,8 @@ export const App: React.FC = () => {
             onResetAllAngles={handleResetAllAngles}
             activePanel={sidebarPanel}
             onSelectActivePanel={setSidebarPanel}
+            onOpenImportModal={() => setIsImportModalOpen(true)}
+            onResetToCatalog={() => handleSelectModel(MODELS[0])}
           />
         </div>
 
@@ -583,6 +585,7 @@ export const App: React.FC = () => {
           setIsCatalogOpen(false);
         }}
         currentModelId={currentModel.id}
+        onOpenImportCad={() => setIsImportModalOpen(true)}
       />
 
       {/* Modal de Projetos Salvos */}

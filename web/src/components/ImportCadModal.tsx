@@ -65,6 +65,24 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const handleResetFile = () => {
+    setFile(null);
+    setDoc(null);
+    setValidationReport(null);
+    setColorOverrides({});
+    setLayerOverrides({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSelectNewFile = () => {
+    handleResetFile();
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 50);
+  };
+
   if (!isOpen) return null;
 
   const handleFileSelect = async (selectedFile: File) => {
@@ -260,6 +278,7 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
 
     confetti({ particleCount: 40, spread: 60, origin: { y: 0.15 } });
     onImportSuccess(importedModel, dieline, geometry);
+    handleResetFile();
     onClose();
   };
 
@@ -345,21 +364,61 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--cad-text-muted, #8b949e)',
-              cursor: 'pointer',
-              padding: 6,
-              borderRadius: 6,
-            }}
-          >
-            <X size={18} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {doc && (
+              <button
+                type="button"
+                onClick={handleSelectNewFile}
+                className="cad-btn"
+                style={{
+                  background: 'rgba(0, 210, 180, 0.15)',
+                  border: '1px solid var(--cad-accent, #00d2b4)',
+                  color: 'var(--cad-accent, #00d2b4)',
+                  borderRadius: 6,
+                  padding: '5px 12px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                }}
+                title="Escolher outro arquivo de faca CAD para substituir o atual"
+              >
+                <RefreshCw size={13} />
+                <span>Trocar Arquivo</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--cad-text-muted, #8b949e)',
+                cursor: 'pointer',
+                padding: 6,
+                borderRadius: 6,
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
+
+        {/* Hidden File Input (Always accessible in DOM) */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.svg,.dxf,.dwg"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFileSelect(f);
+            e.target.value = '';
+          }}
+        />
 
         {/* Barra de Progresso das Etapas de Importação (1 a 5) */}
         <div
@@ -369,12 +428,37 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
             borderBottom: '1px solid var(--cad-border-subtle, #2a313d)',
             display: 'flex',
             gap: 6,
+            alignItems: 'center',
             overflowX: 'auto',
           }}
         >
-          <div style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: !doc ? 'var(--cad-accent, #00d2b4)' : '#10b981', color: '#000' }}>
-            ETAPA 1: Analisar Arquivo
-          </div>
+          {doc ? (
+            <button
+              type="button"
+              onClick={handleSelectNewFile}
+              style={{
+                padding: '3px 10px',
+                borderRadius: 4,
+                fontSize: 11,
+                fontWeight: 700,
+                background: 'rgba(255, 255, 255, 0.12)',
+                color: '#fff',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+              title="Clique para escolher outro arquivo de faca CAD"
+            >
+              <FileUp size={12} color="var(--cad-accent)" />
+              <span>← Escolher Outra Faca</span>
+            </button>
+          ) : (
+            <div style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: 'var(--cad-accent, #00d2b4)', color: '#000' }}>
+              ETAPA 1: Analisar Arquivo
+            </div>
+          )}
           <div style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: doc ? (validationReport ? '#10b981' : 'var(--cad-accent, #00d2b4)') : 'rgba(255,255,255,0.08)', color: doc ? '#000' : '#888' }}>
             ETAPA 2: Geometria Encontrada
           </div>
@@ -444,16 +528,6 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
                   </span>
                 ))}
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.svg,.dxf,.dwg"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFileSelect(f);
-                }}
-              />
             </div>
           ) : (
             <>
@@ -471,7 +545,29 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
                     IMPORT_FAILED
                   </div>
                   <div style={{ fontSize: 12, color: '#ffaaaa' }}>
-                    <strong>Motivo:</strong> PDF não contém geometria vetorial utilizável (apenas imagens rasterizadas ou sem linhas/arcos CAD).
+                    <strong>Motivo:</strong> O arquivo não contém geometria vetorial utilizável (apenas imagens rasterizadas ou sem linhas/arcos CAD).
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <button
+                      type="button"
+                      onClick={handleSelectNewFile}
+                      style={{
+                        background: '#ef4444',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '7px 14px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <FileUp size={14} />
+                      <span>Selecionar Outra Faca CAD</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -490,8 +586,31 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
               >
                 <div>
                   <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', display: 'block' }}>Arquivo:</span>
-                  <strong style={{ fontSize: 13, color: '#fff', wordBreak: 'break-all' }}>{doc.filename}</strong>
-                  <span style={{ fontSize: 10, color: 'var(--cad-accent)', marginLeft: 6 }}>({doc.format})</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <strong style={{ fontSize: 13, color: '#fff', wordBreak: 'break-all' }}>{doc.filename}</strong>
+                    <span style={{ fontSize: 10, color: 'var(--cad-accent)' }}>({doc.format})</span>
+                    <button
+                      type="button"
+                      onClick={handleSelectNewFile}
+                      style={{
+                        background: 'rgba(0, 210, 180, 0.12)',
+                        border: '1px solid var(--cad-accent, #00d2b4)',
+                        color: 'var(--cad-accent, #00d2b4)',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                      title="Escolher outro arquivo de faca CAD"
+                    >
+                      <RefreshCw size={10} />
+                      <span>Trocar</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -1038,21 +1157,46 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
             background: 'var(--cad-bg-header, #15181f)',
           }}
         >
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--cad-border-default, #444)',
-              borderRadius: 6,
-              padding: '6px 14px',
-              color: 'var(--cad-text-secondary, #ccc)',
-              fontSize: 12,
-              cursor: 'pointer',
-            }}
-          >
-            Cancelar
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--cad-border-default, #444)',
+                borderRadius: 6,
+                padding: '6px 14px',
+                color: 'var(--cad-text-secondary, #ccc)',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+            >
+              Cancelar
+            </button>
+
+            {doc && (
+              <button
+                type="button"
+                onClick={handleSelectNewFile}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--cad-border-default, #444)',
+                  borderRadius: 6,
+                  padding: '6px 14px',
+                  color: '#fff',
+                  fontSize: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                }}
+                title="Descartar este arquivo e escolher outro arquivo de faca"
+              >
+                <FileUp size={13} color="var(--cad-accent)" />
+                <span>Escolher Outro Arquivo</span>
+              </button>
+            )}
+          </div>
 
           {doc && (
             <div style={{ display: 'flex', gap: 8 }}>
