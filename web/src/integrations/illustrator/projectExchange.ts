@@ -1,6 +1,7 @@
 import type { DielineResult, PackagingModel, CardboardProfile, Point2D } from '../../engine/types';
 import { LoopTopologyEngine } from '../../engine/importers/LoopTopologyEngine';
 import { FoldingTreeEngine } from '../../engine/importers/FoldingTreeEngine';
+import { TopologyReconstructor } from '../../engine/importers/TopologyReconstructor';
 import { buildFoldingTopology, type TopologicalPanel, type TopologicalHinge } from '../../engine/dielineTopology';
 import { generateIllustratorJsx } from './jsxGenerator';
 
@@ -249,8 +250,15 @@ export function createProjectExchangePackage(
         nominalAngleDeg: h.targetAngleDeg ?? 90,
       }));
     } else {
-      const topo = LoopTopologyEngine.extractTopology(dieline);
-      const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, dieline);
+      const recon = TopologyReconstructor.reconstructPlanarTopology(dieline, {
+        gapToleranceMm: 0.35,
+        tJunctionToleranceMm: 0.35,
+        coincidentToleranceMm: 0.08,
+      });
+      const geom = recon.geometry || dieline;
+      let topo = LoopTopologyEngine.extractTopology(geom);
+      if (topo.panels.length === 0) topo = LoopTopologyEngine.extractTopology(dieline);
+      const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, geom);
 
       panels = topo.panels.map((p) => {
         let minX = Infinity;

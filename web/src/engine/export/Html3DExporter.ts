@@ -1,6 +1,7 @@
 import type { DielineResult, PackagingModel, CardboardProfile, Point2D } from '../types';
 import { LoopTopologyEngine } from '../importers/LoopTopologyEngine';
 import { FoldingTreeEngine } from '../importers/FoldingTreeEngine';
+import { TopologyReconstructor } from '../importers/TopologyReconstructor';
 import { buildFoldingTopology, type TopologicalPanel, type TopologicalHinge } from '../dielineTopology';
 import { BRIDGE_ERROR_CODES } from '../../integrations/illustrator/projectExchange';
 
@@ -124,8 +125,15 @@ export function generateStandaloneHtml3D(
         };
       });
     } else {
-      const topo = LoopTopologyEngine.extractTopology(dieline);
-      const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, dieline);
+      const recon = TopologyReconstructor.reconstructPlanarTopology(dieline, {
+        gapToleranceMm: 0.35,
+        tJunctionToleranceMm: 0.35,
+        coincidentToleranceMm: 0.08,
+      });
+      const geom = recon.geometry || dieline;
+      let topo = LoopTopologyEngine.extractTopology(geom);
+      if (topo.panels.length === 0) topo = LoopTopologyEngine.extractTopology(dieline);
+      const foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, geom);
       rootPanelId = foldingTree.rootPanelId;
 
       if (topo.panels.length === 0) {

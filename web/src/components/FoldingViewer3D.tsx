@@ -4,6 +4,7 @@ import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls
 import type { PackagingModel, DielineResult, CardboardProfile } from '../engine/types';
 import { LoopTopologyEngine, type StructuralPanel } from '../engine/importers/LoopTopologyEngine';
 import { FoldingTreeEngine, type FoldingTreeResult } from '../engine/importers/FoldingTreeEngine';
+import { TopologyReconstructor } from '../engine/importers/TopologyReconstructor';
 import { convertDielineTopologyToStructural, buildFoldingTopology } from '../engine/dielineTopology';
 import {
   ThreeGeometryAdapter,
@@ -303,23 +304,39 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     }
 
     try {
-      // PIPELINE CANÔNICO OFICIAL DA FASE 4:
-      // Prioriza a topologia canônica da faca (customTopology || buildFoldingTopology)
-      // para garantir a presença de 100% dos painéis industriais (incluindo abas de canto / dust flaps).
       const currentDieline = dieline || model.calculate(params);
-      const customTopo = currentDieline.customTopology || buildFoldingTopology(currentDieline);
 
       let panels: StructuralPanel[];
       let foldingTree: FoldingTreeResult;
 
-      if (customTopo && customTopo.panels && customTopo.panels.length > 0) {
-        const converted = convertDielineTopologyToStructural(customTopo);
+      if (currentDieline.customTopology && currentDieline.customTopology.panels && currentDieline.customTopology.panels.length > 0) {
+        const converted = convertDielineTopologyToStructural(currentDieline.customTopology);
         panels = converted.panels;
         foldingTree = converted.foldingTree;
       } else {
-        const topo = LoopTopologyEngine.extractTopology(currentDieline);
-        foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, currentDieline);
-        panels = topo.panels;
+        // Reconstrói a topologia planar para facas importadas ou editadas
+        // Isso resolve T-junctions, une micro-gaps e conecta vértices entre cortes e vincos
+        const recon = TopologyReconstructor.reconstructPlanarTopology(currentDieline, {
+          gapToleranceMm: 0.35,
+          tJunctionToleranceMm: 0.35,
+          coincidentToleranceMm: 0.08,
+        });
+        const geom = recon.geometry || currentDieline;
+        let topo = LoopTopologyEngine.extractTopology(geom);
+
+        if (topo.panels.length === 0) {
+          topo = LoopTopologyEngine.extractTopology(currentDieline);
+        }
+
+        if (topo.panels.length > 0) {
+          foldingTree = FoldingTreeEngine.buildFoldingTree(topo.panels, geom);
+          panels = topo.panels;
+        } else {
+          const fallbackTopo = buildFoldingTopology(currentDieline);
+          const converted = convertDielineTopologyToStructural(fallbackTopo);
+          panels = converted.panels;
+          foldingTree = converted.foldingTree;
+        }
       }
 
       const outerColor = profile?.outerColor || '#FFFFFF';
