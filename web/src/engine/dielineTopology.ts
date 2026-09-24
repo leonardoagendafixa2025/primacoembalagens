@@ -60,6 +60,7 @@ interface InternalFace {
   points: Point2D[];
   edges: InternalHalfEdge[];
   area: number;
+  signedArea?: number;
   isExternal: boolean;
   centroid: Point2D;
 }
@@ -104,9 +105,164 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
+  // Helper: distância euclidiana de um ponto a um segmento
+  function distToSeg(p: Point2D, s: { p0: Point2D; p1: Point2D }): number {
+    const dx = s.p1.x - s.p0.x;
+    const dy = s.p1.y - s.p0.y;
+    const l2 = dx * dx + dy * dy;
+    if (l2 < 1e-6) return Math.hypot(p.x - s.p0.x, p.y - s.p0.y);
+    const t = Math.max(0, Math.min(1, ((p.x - s.p0.x) * dx + (p.y - s.p0.y) * dy) / l2));
+    const px = s.p0.x + t * dx;
+    const py = s.p0.y + t * dy;
+    return Math.hypot(p.x - px, p.y - py);
+  }
 
+  // 1.5 Cura universal de alívios de vinco industriais, degraus e recuos (Relief Notches & Crease Setback Healer)
+  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente são interrompidos
+  // por furos/entalhes de alívio circular (relief punch), recuados por tolerância de fabricação (setback <= 3.5mm),
+  // ou apresentam micro-defeitos de corte em junções de abas (slits) e degraus de borda (boundary steps).
 
+  // 1.5 Cura universal de alívios de vinco industriais (apenas para modelos paramétricos com tamanho moderado <= 500 segmentos)
+  const skipHeavyHeuristics = rawSegs.length > 500;
 
+  if (!skipHeavyHeuristics) {
+    // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de alívio / relief notches <= 3.5mm)
+    const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
+    const bridgeCreases: { p0: Point2D; p1: Point2D; type: string }[] = [];
+    for (let i = 0; i < creaseSegs.length; i++) {
+      const c1 = creaseSegs[i];
+      const dx1 = c1.p1.x - c1.p0.x;
+      const dy1 = c1.p1.y - c1.p0.y;
+      const l1 = Math.hypot(dx1, dy1);
+      if (l1 < 1e-4) continue;
+      const u1x = dx1 / l1, u1y = dy1 / l1;
+
+      for (let j = i + 1; j < creaseSegs.length; j++) {
+        const c2 = creaseSegs[j];
+        const dx2 = c2.p1.x - c2.p0.x;
+        const dy2 = c2.p1.y - c2.p0.y;
+        const l2 = Math.hypot(dx2, dy2);
+        if (l2 < 1e-4) continue;
+        const u2x = dx2 / l2, u2y = dy2 / l2;
+
+        const cross = Math.abs(u1x * u2y - u1y * u2x);
+        if (cross > 0.05) continue;
+
+        const v0x = c2.p0.x - c1.p0.x;
+        const v0y = c2.p0.y - c1.p0.y;
+        if (Math.abs(v0x * u1y - v0y * u1x) > 0.15) continue;
+
+        const pairs: [Point2D, Point2D][] = [
+          [c1.p0, c2.p0],
+          [c1.p0, c2.p1],
+          [c1.p1, c2.p0],
+          [c1.p1, c2.p1],
+        ];
+        for (const [pA, pB] of pairs) {
+          const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+          if (d > 0.05 && d <= 3.5) {
+            const bdx = (pB.x - pA.x) / d;
+            const bdy = (pB.y - pA.y) / d;
+            if (Math.abs(Math.abs(bdx * u1x + bdy * u1y) - 1.0) < 0.1) {
+              bridgeCreases.push({
+                p0: { x: pA.x, y: pA.y },
+                p1: { x: pB.x, y: pB.y },
+                type: 'crease',
+              });
+            }
+          }
+        }
+      }
+    }
+    rawSegs.push(...bridgeCreases);
+
+    // 1.5c: Cura de pontas soltas de vincos (Crease Setback Healer <= 3.5mm)
+    for (const s of rawSegs) {
+      if (s.type !== 'crease') continue;
+      for (const ep of ['p0', 'p1'] as const) {
+        const pt = s[ep];
+        const otherPt = ep === 'p0' ? s.p1 : s.p0;
+
+        let touchesAny = false;
+        for (const o of rawSegs) {
+          if (o === s) continue;
+          if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.15 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.15) {
+            touchesAny = true;
+            break;
+          }
+          if (distToSeg(pt, o) < 0.15) {
+            touchesAny = true;
+            break;
+          }
+        }
+        if (touchesAny) continue;
+
+        const dirx = pt.x - otherPt.x;
+        const diry = pt.y - otherPt.y;
+        const dlen = Math.hypot(dirx, diry);
+        if (dlen < 1e-4) continue;
+        const udx = dirx / dlen;
+        const udy = diry / dlen;
+
+        let bestT = 3.5;
+        let bestInter: Point2D | null = null;
+        for (const o of rawSegs) {
+          if (o === s) continue;
+          const x3 = o.p0.x, y3 = o.p0.y;
+          const x4 = o.p1.x, y4 = o.p1.y;
+          const denom = udx * (y4 - y3) - udy * (x4 - x3);
+          if (Math.abs(denom) < 1e-5) continue;
+          const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
+          const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
+          if (t > 0.02 && t <= bestT && u >= -0.01 && u <= 1.01) {
+            bestT = t;
+            bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
+          }
+        }
+        if (bestInter) {
+          pt.x = bestInter.x;
+          pt.y = bestInter.y;
+        }
+      }
+    }
+
+    // 1.5d: Fechamento de degraus no contorno externo (Boundary Step Closures <= 3.6mm)
+    const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
+    for (const s of rawSegs) {
+      if (s.type !== 'cut') continue;
+      for (const ep of ['p0', 'p1'] as const) {
+        const pt = s[ep];
+        let meets = 0;
+        for (const o of rawSegs) {
+          if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
+            meets++;
+          }
+          if (o !== s && distToSeg(pt, o) < 0.1) {
+            meets++;
+          }
+        }
+        if (meets <= 1) {
+          cutEndpoints.push({ pt, seg: s });
+        }
+      }
+    }
+    const boundaryBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
+    for (let i = 0; i < cutEndpoints.length; i++) {
+      for (let j = i + 1; j < cutEndpoints.length; j++) {
+        const pA = cutEndpoints[i].pt;
+        const pB = cutEndpoints[j].pt;
+        const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+        if (d > 0.05 && d <= 3.6) {
+          boundaryBridges.push({
+            p0: { x: pA.x, y: pA.y },
+            p1: { x: pB.x, y: pB.y },
+            type: 'cut',
+          });
+        }
+      }
+    }
+    rawSegs.push(...boundaryBridges);
+  }
 
   // 2. Unifica vértices próximos via Spatial Hash Grid O(N) (tolerância 0.15 mm)
   const EPS = 0.15;
@@ -240,7 +396,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       id: heIdCounter++,
       u: s.p1,
       v: s.p0,
-      angle: Math.atan2(s.p0.y - s.p1.y, s.p0.x - s.p0.x),
+      angle: Math.atan2(s.p0.y - s.p1.y, s.p0.x - s.p1.x),
       type: s.type,
     };
     he1.twin = he2;
@@ -292,7 +448,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       if (curr === he) break;
     }
 
-    // C├ílculo de ├írea com sinal e centroide
+    // Cálculo de área com sinal e centroide
     let area = 0;
     let cx = 0, cy = 0;
     for (let i = 0; i < cycle.length; i++) {
@@ -309,12 +465,15 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       cy = cy / (6 * area);
     }
 
+    const signedArea = area;
+    const absArea = Math.abs(area);
     const faceObj: InternalFace = {
       id: faceIdCounter++,
-      points: cycle,
+      points: signedArea < 0 ? [...cycle].reverse() : cycle,
       edges: cycleEdges,
-      area,
-      isExternal: area < 0,
+      area: absArea,
+      signedArea,
+      isExternal: false,
       centroid: { x: cx, y: cy },
     };
 
@@ -322,6 +481,19 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       e.face = faceObj;
     }
     allFaces.push(faceObj);
+  }
+
+  // A face externa é o ciclo infinito que contorna todo o perímetro externo da faca (área com sinal mais negativa)
+  let extFace: InternalFace | null = null;
+  let minSignedArea = 0;
+  for (const f of allFaces) {
+    if ((f.signedArea ?? 0) < minSignedArea) {
+      minSignedArea = f.signedArea ?? 0;
+      extFace = f;
+    }
+  }
+  for (const f of allFaces) {
+    f.isExternal = (f === extFace);
   }
 
   // 6. Separa pain├®is de furos internos (mortises, rasgos, recortes vazados)
@@ -696,13 +868,23 @@ export function convertDielineTopologyToStructural(customTopo: DielineTopology):
   const structuralPanels: StructuralPanel[] = customTopo.panels.map((p) => {
     const bSegs = p.boundary.map((pt, i) => {
       const next = p.boundary[(i + 1) % p.boundary.length];
+      const isCrease = (customTopo.hinges || []).some((h) => {
+        const dHx = h.x1 - h.x0, dHy = h.y1 - h.y0;
+        const hLen2 = dHx * dHx + dHy * dHy;
+        if (hLen2 < 1e-4) return false;
+        const midX = (pt.x + next.x) / 2, midY = (pt.y + next.y) / 2;
+        const t = ((midX - h.x0) * dHx + (midY - h.y0) * dHy) / hLen2;
+        if (t < -0.01 || t > 1.01) return false;
+        const projX = h.x0 + t * dHx, projY = h.y0 + t * dHy;
+        return Math.hypot(midX - projX, midY - projY) < 0.25;
+      });
       return {
         id: `seg_${p.id}_${i}`,
         x0: pt.x,
         y0: pt.y,
         x1: next.x,
         y1: next.y,
-        type: 'cut' as const,
+        type: (isCrease ? 'crease' : 'cut') as 'crease' | 'cut',
       };
     });
 
@@ -714,7 +896,7 @@ export function convertDielineTopologyToStructural(customTopo: DielineTopology):
       edges: bSegs.map((s, i) => ({
         type: 'segment',
         id: `edge_${p.id}_${i}`,
-        sourceType: 'cut',
+        sourceType: s.type,
         entity: s,
         p0: { x: s.x0, y: s.y0 },
         p1: { x: s.x1, y: s.y1 },
@@ -772,8 +954,8 @@ export function convertDielineTopologyToStructural(customTopo: DielineTopology):
       centroid: p.centroid,
       segments: bSegs,
       arcs: [],
-      creases: [],
-      cuts: bSegs,
+      creases: bSegs.filter((s) => s.type === 'crease'),
+      cuts: bSegs.filter((s) => s.type === 'cut'),
       manifest: `Panel ${p.id} (${p.name || 'Structural'})`,
     };
   });
