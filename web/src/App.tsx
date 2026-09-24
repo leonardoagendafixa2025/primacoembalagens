@@ -298,15 +298,26 @@ export const App: React.FC = () => {
     }
   }, [currentModel, params]);
 
-  // Exportadores
+  // Edições manuais das linhas no viewer 2D (sobrepõe a geometria parametrizada)
+  const [dielineEdits, setDielineEdits] = useState<DielineResult | null>(null);
+
+  // Reseta as edições manuais quando o modelo ou parâmetros mudam
+  useEffect(() => {
+    setDielineEdits(null);
+  }, [currentModel.id]);
+
+  // Dieline efetiva: edições manuais têm prioridade sobre o cálculo paramétrico
+  const effectiveDieline: DielineResult = dielineEdits ?? dieline;
+
+  // Exportadores (usam a dieline efetiva, incluindo edições manuais)
   const handleExportDXF = () => {
     const filename = `${currentModel.code}_${params.L}x${params.B}x${params.H}.dxf`;
-    exportToDXF(dieline, filename);
+    exportToDXF(effectiveDieline, filename);
   };
 
   const handleExportSVG = () => {
     const filename = `${currentModel.code}_${params.L}x${params.B}x${params.H}.svg`;
-    exportToSVG(dieline, filename);
+    exportToSVG(effectiveDieline, filename);
   };
 
   // Integração Oficial Adobe Illustrator
@@ -532,9 +543,10 @@ export const App: React.FC = () => {
         <main style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--cad-bg-workspace)' }}>
           {activeTab === '2d' && (
             <CadViewer2D
-              dieline={dieline}
+              dieline={effectiveDieline}
               model={currentModel}
               onViewportUpdate={handleViewportUpdate}
+              onDielineEdit={(edited) => setDielineEdits(edited)}
             />
           )}
 
