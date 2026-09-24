@@ -178,8 +178,28 @@ export function createProjectExchangePackage(
   artworkDataUri?: string,
   sessionId?: string
 ): IllustratorProjectPayload {
+  let customTopo: any = null;
+  let panels: Array<{
+    id: string;
+    name: string;
+    isRoot: boolean;
+    polygon: Array<{ x: number; y: number }>;
+    bbox: { minX: number; minY: number; maxX: number; maxY: number; width: number; height: number };
+  }> = [];
+
+  let hinges: Array<{
+    hingeId: string;
+    parentPanelId: string;
+    childPanelId: string;
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    nominalAngleDeg: number;
+  }> = [];
+
   try {
-    const customTopo = dieline.customTopology || (dieline.segments.length <= 500 ? buildFoldingTopology(dieline) : null);
+    customTopo = dieline.customTopology || (dieline.segments.length <= 500 ? buildFoldingTopology(dieline) : null);
 
     if (customTopo && customTopo.panels && customTopo.panels.length > 0) {
       const rootPanelId =
@@ -347,7 +367,7 @@ export function createProjectExchangePackage(
     type: (a.type === 'crease' ? 'crease' : 'cut') as 'cut' | 'crease',
   }));
 
-  return {
+  const payload: IllustratorProjectPayload = {
     schemaVersion: 1,
     projectRevision: geometryVersion,
     illustratorSessionId: effectiveSessionId,
