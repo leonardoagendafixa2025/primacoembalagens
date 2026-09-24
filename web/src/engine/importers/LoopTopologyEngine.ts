@@ -519,7 +519,7 @@ export class LoopTopologyEngine {
       holes: holeLoops,
       openBoundaries,
       stats: {
-        totalVertices: vertexMap.size,
+        totalVertices: vertexGrid.size,
         totalEdges: halfEdges.length / 2,
         totalLoops: allLoops.length,
         outerLoopsCount: allLoops.filter((l) => l.isExternal).length,

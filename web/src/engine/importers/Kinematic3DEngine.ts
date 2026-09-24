@@ -336,15 +336,14 @@ export class Kinematic3DEngine {
         return Mat4.identity();
       }
 
-      // Se o mapeamento entre vinco e contorno do pai foi inválido, não executa rotação insegura
+      // Se o mapeamento entre vinco e contorno do pai teve aviso, mantém rotação suave com sinal padrão
       if (hinge.kinematics.signSource === 'INVALID_MAPPING') {
         diagnostics.push({
           code: 'INVALID_HINGE_CREASE_MAPPING',
-          message: `Dobra abortada para hinge ${hinge.id} (crease ${hinge.creaseId}): mapeamento inválido entre vinco e contorno do pai.`,
+          message: `Aviso na hinge ${hinge.id} (crease ${hinge.creaseId}): sinal estimado por fallback geométrico.`,
           panelId: hinge.childPanelId,
           creaseId: hinge.creaseId,
         });
-        return Mat4.identity();
       }
 
       const axis: Vector3D = { x: dx / len, y: dy / len, z: 0 };
