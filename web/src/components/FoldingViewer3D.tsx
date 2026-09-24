@@ -1062,6 +1062,24 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
               )}
             </button>
 
+            {modifiedCount > 0 && onResetAllAngles && (
+              <button
+                type="button"
+                onClick={onResetAllAngles}
+                title="Restaurar Todos os Ângulos de Dobra para o Padrão"
+                className="cad-btn"
+                style={{
+                  padding: '3px 8px',
+                  fontSize: 10,
+                  color: '#EF4444',
+                  borderColor: 'rgba(239, 68, 68, 0.4)',
+                  background: 'rgba(239, 68, 68, 0.08)',
+                }}
+              >
+                <span>Resetar ({modifiedCount})</span>
+              </button>
+            )}
+
             {/* Vistas Rápidas de Câmera CAD */}
             <button
               type="button"
