@@ -104,22 +104,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // Helper: distância euclidiana de um ponto a um segmento
-  function distToSeg(p: Point2D, s: { p0: Point2D; p1: Point2D }): number {
-    const dx = s.p1.x - s.p0.x;
-    const dy = s.p1.y - s.p0.y;
-    const l2 = dx * dx + dy * dy;
-    if (l2 < 1e-6) return Math.hypot(p.x - s.p0.x, p.y - s.p0.y);
-    const t = Math.max(0, Math.min(1, ((p.x - s.p0.x) * dx + (p.y - s.p0.y) * dy) / l2));
-    const px = s.p0.x + t * dx;
-    const py = s.p0.y + t * dy;
-    return Math.hypot(p.x - px, p.y - py);
-  }
 
-  // 1.5 Cura universal de alívios de vinco industriais, degraus e recuos (Relief Notches & Crease Setback Healer)
-  // Em modelos de facas industriais reais (ECMA/FEFCO), vincos frequentemente são interrompidos
-  // por furos/entalhes de alívio circular (relief punch), recuados por tolerância de fabricação (setback <= 3.5mm),
-  // ou apresentam micro-defeitos de corte em junções de abas (slits) e degraus de borda (boundary steps).
 
 
 
