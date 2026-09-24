@@ -61,10 +61,28 @@ export function createPanelMesh(
     }
   }
 
+  const actualDepth = Math.max(0.05, thickness);
   const geom = new THREE.ExtrudeGeometry(shape, {
-    depth: Math.max(0.05, thickness),
+    depth: actualDepth,
     bevelEnabled: false,
   });
+
+  // Three.js ExtrudeGeometry agrupa ambas as tampas (z=0 e z=depth) no group[0] (materialIndex 0),
+  // e as laterais no group[1] (materialIndex 1).
+  // Para permitir texturas diferentes (ou frente com arte e verso com papel kraft/branco limpo):
+  // Dividimos o group[0] em duas metades:
+  // - Índices [0 .. halfLid]: Face z=0 (vira Face Externa após rotateX(-PI/2) e dobra) -> Material 0
+  // - Índices [halfLid .. lidCount]: Face z=depth (vira Face Interna após dobra) -> Material 1
+  // - Laterais [sideStart .. sideCount]: Bordas de corte da chapa -> Material 2
+  const lidCount = geom.groups[0]?.count || 0;
+  const halfLid = Math.floor(lidCount / 2);
+  const sideStart = geom.groups[1]?.start || lidCount;
+  const sideCount = geom.groups[1]?.count || 0;
+
+  geom.clearGroups();
+  geom.addGroup(0, halfLid, 0);          // Material 0: Face Externa (Art Externa)
+  geom.addGroup(halfLid, halfLid, 1);    // Material 1: Face Interna (Substrato limpo ou Art Interna)
+  geom.addGroup(sideStart, sideCount, 2);// Material 2: Borda de espessura (Substrato / Cartão)
 
   // Mapeamento normalizado 1:1 de coordenadas UV da faca 2D no painel (para renderização de arte do Illustrator)
   if (dielineBounds && dielineBounds.width > 0 && dielineBounds.height > 0) {
@@ -79,8 +97,17 @@ export function createPanelMesh(
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const y = pos.getY(i);
-      const u = (x + originX) / totalWidth;
+      const z = pos.getZ(i);
+
+      let u = (x + originX) / totalWidth;
       const v = (y + originY) / totalHeight;
+
+      // No verso (z > actualDepth * 0.5 antes do rotateX), a face interna é espelhada horizontalmente
+      // para que a arte interna coincida perfeitamente com a visão do operador no verso do papel
+      if (z > actualDepth * 0.5) {
+        u = 1.0 - u;
+      }
+
       uv.setXY(i, u, v);
     }
     uv.needsUpdate = true;
@@ -160,23 +187,37 @@ export function buildFoldable3DTree(
 
   for (const p of panels) {
     // Cada painel possui materiais individuais para permitir realce emissivo CAD independente
-    const matFace = new THREE.MeshStandardMaterial({
+    // Material 0: Face Externa (recebe a arte do Illustrator ARTWORK_EXTERNA)
+    const matOuter = new THREE.MeshStandardMaterial({
       color: artworkTexture ? '#FFFFFF' : outerColor,
       map: artworkTexture || null,
       roughness: roughness,
       metalness: 0.01,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
       emissive: new THREE.Color(0x000000),
       emissiveIntensity: 0.0,
     });
-    const matEdge = new THREE.MeshStandardMaterial({
+
+    // Material 1: Face Interna (recebe substrato limpo Kraft/Branco ou ARTWORK_INTERNA)
+    const matInner = new THREE.MeshStandardMaterial({
       color: innerArtworkTexture ? '#FFFFFF' : innerColor,
       map: innerArtworkTexture || null,
-      roughness: Math.min(1.0, roughness + 0.15),
+      roughness: Math.min(1.0, roughness + 0.1),
       metalness: 0.01,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0.0,
     });
-    const materials = [matFace, matEdge];
+
+    // Material 2: Borda de espessura de corte do papel/papelão
+    const matEdge = new THREE.MeshStandardMaterial({
+      color: innerColor,
+      roughness: Math.min(1.0, roughness + 0.2),
+      metalness: 0.01,
+      side: THREE.FrontSide,
+    });
+
+    const materials = [matOuter, matInner, matEdge];
 
     const mesh = createPanelMesh(p, thickness, materials, dieline.bounds);
     const pivotGroup = new THREE.Group();

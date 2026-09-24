@@ -31437,10 +31437,19 @@ void main() {
         shape.holes.push(holePath);
       }
     }
+    const actualDepth = Math.max(0.05, thickness);
     const geom = new ExtrudeGeometry(shape, {
-      depth: Math.max(0.05, thickness),
+      depth: actualDepth,
       bevelEnabled: false
     });
+    const lidCount = geom.groups[0]?.count || 0;
+    const halfLid = Math.floor(lidCount / 2);
+    const sideStart = geom.groups[1]?.start || lidCount;
+    const sideCount = geom.groups[1]?.count || 0;
+    geom.clearGroups();
+    geom.addGroup(0, halfLid, 0);
+    geom.addGroup(halfLid, halfLid, 1);
+    geom.addGroup(sideStart, sideCount, 2);
     if (dielineBounds && dielineBounds.width > 0 && dielineBounds.height > 0) {
       const pos = geom.attributes.position;
       const uv = geom.attributes.uv;
@@ -31452,8 +31461,12 @@ void main() {
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const y = pos.getY(i);
-        const u = (x + originX) / totalWidth;
+        const z = pos.getZ(i);
+        let u = (x + originX) / totalWidth;
         const v = (y + originY) / totalHeight;
+        if (z > actualDepth * 0.5) {
+          u = 1 - u;
+        }
         uv.setXY(i, u, v);
       }
       uv.needsUpdate = true;
@@ -31502,23 +31515,31 @@ void main() {
     const rootPanel = panels.find((p) => p.isRoot) || panels[0];
     const itemsMap = /* @__PURE__ */ new Map();
     for (const p of panels) {
-      const matFace = new MeshStandardMaterial({
+      const matOuter = new MeshStandardMaterial({
         color: artworkTexture ? "#FFFFFF" : outerColor,
         map: artworkTexture || null,
         roughness,
         metalness: 0.01,
-        side: DoubleSide,
+        side: FrontSide,
+        emissive: new Color(0),
+        emissiveIntensity: 0
+      });
+      const matInner = new MeshStandardMaterial({
+        color: innerArtworkTexture ? "#FFFFFF" : innerColor,
+        map: innerArtworkTexture || null,
+        roughness: Math.min(1, roughness + 0.1),
+        metalness: 0.01,
+        side: FrontSide,
         emissive: new Color(0),
         emissiveIntensity: 0
       });
       const matEdge = new MeshStandardMaterial({
-        color: innerArtworkTexture ? "#FFFFFF" : innerColor,
-        map: innerArtworkTexture || null,
-        roughness: Math.min(1, roughness + 0.15),
+        color: innerColor,
+        roughness: Math.min(1, roughness + 0.2),
         metalness: 0.01,
-        side: DoubleSide
+        side: FrontSide
       });
-      const materials = [matFace, matEdge];
+      const materials = [matOuter, matInner, matEdge];
       const mesh = createPanelMesh(p, thickness, materials, dieline.bounds);
       const pivotGroup = new Group();
       pivotGroup.name = `pivot_${p.id}`;
