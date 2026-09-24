@@ -26,26 +26,23 @@ if (typeof JSON !== "object") {
   };
 }
 
-function findLayerByNames(doc, names) {
-  for (var i = 0; i < names.length; i++) {
-    try {
-      var l = doc.layers.getByName(names[i]);
-      if (l) return l;
-    } catch(e) {}
+function isTechnicalLayer(layerName) {
+  if (!layerName) return false;
+  var n = layerName.toUpperCase().replace(/[\s_\-]+/g, "");
+  var techNames = ["CUT", "CORTE", "CREASE", "VINCO", "PERF", "PICOTE", "GUIDESINFO", "GUIDES", "GUIAS", "COTAS", "INFO", "DIMENSIONS", "DIMENSOES"];
+  for (var i = 0; i < techNames.length; i++) {
+    if (n === techNames[i]) return true;
   }
-  return null;
+  return false;
 }
 
-function hasLayerAnyContent(layer) {
-  if (!layer) return false;
-  try {
-    if (layer.pageItems && layer.pageItems.length > 0) return true;
-    if (layer.layers && layer.layers.length > 0) {
-      for (var s = 0; s < layer.layers.length; s++) {
-        if (hasLayerAnyContent(layer.layers[s])) return true;
-      }
-    }
-  } catch(e) {}
+function isInnerLayer(layerName) {
+  if (!layerName) return false;
+  var n = layerName.toUpperCase().replace(/[\s_\-]+/g, "");
+  var innerNames = ["ARTWORKINTERNA", "ARTEINTERNA", "ARTWORKINNER", "INNERARTWORK", "VERSO"];
+  for (var i = 0; i < innerNames.length; i++) {
+    if (n === innerNames[i]) return true;
+  }
   return false;
 }
 
@@ -55,25 +52,53 @@ function exportSingleArtworkSide(side) {
   }
 
   var doc = app.activeDocument;
-  var targetLayer = null;
   var sideName = (side || "outer").toLowerCase();
   var isInner = (sideName === "inner" || sideName === "interna" || sideName === "inside");
 
-  if (isInner) {
-    targetLayer = findLayerByNames(doc, ["ARTWORK_INTERNA", "ARTE_INTERNA", "ARTWORK_INNER", "ARTE INTERNA", "INNER_ARTWORK"]);
-    if (!targetLayer) {
-      return { success: true, empty: true, notFound: true, side: "inner", filePath: null };
-    }
-  } else {
-    targetLayer = findLayerByNames(doc, ["ARTWORK_EXTERNA", "ARTWORK", "ARTE_EXTERNA", "PLMPACKLIB_ARTE", "ARTE EXTERNA", "OUTER_ARTWORK"]);
-    if (!targetLayer) {
-      return { success: true, empty: true, notFound: true, side: "outer", filePath: null };
+  // Salva visibilidade e estado de bloqueio original de todas as camadas
+  var layersState = [];
+  var visibleItemsCount = 0;
+
+  for (var i = 0; i < doc.layers.length; i++) {
+    var l = doc.layers[i];
+    var lName = l.name || "";
+    var origVis = l.visible;
+    var origLock = l.locked;
+
+    layersState.push({ layer: l, visible: origVis, locked: origLock });
+
+    if (isInner) {
+      // Para a face interna, exibe apenas camadas identificadas como internas
+      if (isInnerLayer(lName)) {
+        l.visible = true;
+        l.locked = false;
+        try { if (l.pageItems) visibleItemsCount += l.pageItems.length; } catch(eItem) {}
+      } else {
+        l.visible = false;
+      }
+    } else {
+      // Para a face externa, oculta camadas técnicas (CUT, CREASE, etc.) e oculta a face interna
+      if (isTechnicalLayer(lName) || isInnerLayer(lName)) {
+        l.visible = false;
+      } else {
+        // Camadas de arte externa e personalizadas permanecem visíveis
+        l.visible = true;
+        l.locked = false;
+        try { if (l.pageItems) visibleItemsCount += l.pageItems.length; } catch(eItem2) {}
+      }
     }
   }
 
-  // Se a camada de arte estiver vazia (sem nenhum elemento desenhado), retorna imediatamente
-  // sem travar o Illustrator nem tentar exportar prancheta em branco
-  if (!hasLayerAnyContent(targetLayer)) {
+  // Se não houver nenhum objeto nas camadas selecionadas, retorna imediatamente
+  // evitando travar o Illustrator ou disparar erro de exportação de prancheta vazia
+  if (visibleItemsCount === 0) {
+    // Restaura o estado das camadas antes de sair
+    for (var r = 0; r < layersState.length; r++) {
+      try {
+        layersState[r].layer.visible = layersState[r].visible;
+        layersState[r].layer.locked = layersState[r].locked;
+      } catch(eR) {}
+    }
     return {
       success: true,
       empty: true,
@@ -84,24 +109,10 @@ function exportSingleArtworkSide(side) {
     };
   }
 
-  var wasLocked = targetLayer.locked;
-  targetLayer.locked = false;
-
-  // Salva visibilidade original de todas as camadas
-  var layersVisibility = [];
-  for (var i = 0; i < doc.layers.length; i++) {
-    var l = doc.layers[i];
-    layersVisibility.push({ layer: l, visible: l.visible });
-    if (l !== targetLayer) {
-      l.visible = false;
-    } else {
-      l.visible = true;
-    }
-  }
-
   var tempFolder = Folder.temp;
+  var ts = (new Date()).getTime();
   var fileSuffix = isInner ? "inner" : "outer";
-  var destFile = new File(tempFolder.fsName + "/plmpack_cep_artwork_" + fileSuffix + ".png");
+  var destFile = new File(tempFolder.fsName + "/plmpack_cep_artwork_" + fileSuffix + "_" + ts + ".png");
 
   // Exportação PNG otimizada para tempo real e alta fidelidade 3D (evita estouro de VRAM e travamentos)
   var exportOptions = new ExportOptionsPNG24();
@@ -110,7 +121,7 @@ function exportSingleArtworkSide(side) {
   exportOptions.artBoardClipping = true;
 
   // Resolução calculada: 150 DPI padrão (208.33%) — nítido e super veloz (sub-segundo)
-  // Pranchetas muito grandes têm escala ajustada para manter tamanho sob limites de GPU WebGL
+  // Pranchetas gigantes têm escala ajustada para manter tamanho sob limites de GPU WebGL
   var maxPt = Math.max(doc.width, doc.height);
   var targetDpi = 150;
   if (maxPt > 2800) {
@@ -136,12 +147,12 @@ function exportSingleArtworkSide(side) {
     exportSuccess = false;
   } finally {
     // SEMPRE restaura a visibilidade e o bloqueio originais das camadas no documento!
-    try {
-      targetLayer.locked = wasLocked;
-      for (var j = 0; j < layersVisibility.length; j++) {
-        layersVisibility[j].layer.visible = layersVisibility[j].visible;
-      }
-    } catch(eRestore) {}
+    for (var j = 0; j < layersState.length; j++) {
+      try {
+        layersState[j].layer.visible = layersState[j].visible;
+        layersState[j].layer.locked = layersState[j].locked;
+      } catch(eRestore) {}
+    }
   }
 
   if (!exportSuccess) {

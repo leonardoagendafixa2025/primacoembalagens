@@ -376,23 +376,32 @@
 
   function readDataUriFromFile(filePath) {
     if (!filePath) return null;
+
+    // 1. Tenta leitura direta pelo Node.js fs embutido no CEP
     try {
       var reqFn = (typeof require === 'function') ? require : (typeof window !== 'undefined' && typeof window.require === 'function' ? window.require : null);
       if (reqFn) {
         var fs = reqFn('fs');
         if (fs.existsSync(filePath)) {
           var buf = fs.readFileSync(filePath);
-          return 'data:image/png;base64,' + buf.toString('base64');
+          if (buf && buf.length > 0) {
+            return 'data:image/png;base64,' + buf.toString('base64');
+          }
         }
       }
     } catch(nodeErr) {
       console.warn('[CEP] Leitura Node.js fs indisponível:', nodeErr);
     }
 
+    // 2. Tenta leitura pela API CEP nativa (window.cep.fs)
     try {
       if (window.cep && window.cep.fs) {
-        var enc = (window.cep.encoding && window.cep.encoding.Base64) || (typeof cep !== 'undefined' && cep.encoding && cep.encoding.Base64) || 'Base64';
+        var enc = (window.cep.encoding && window.cep.encoding.Base64 !== undefined) ? window.cep.encoding.Base64 : 1;
         var readRes = window.cep.fs.readFile(filePath, enc);
+        if (readRes.err === 0 && readRes.data) {
+          return 'data:image/png;base64,' + readRes.data;
+        }
+        readRes = window.cep.fs.readFile(filePath, 'Base64');
         if (readRes.err === 0 && readRes.data) {
           return 'data:image/png;base64,' + readRes.data;
         }
@@ -400,6 +409,18 @@
     } catch(cepErr) {
       console.warn('[CEP] Leitura window.cep.fs indisponível:', cepErr);
     }
+
+    // 3. Fallback URL local file:/// (o Chromium do CEP com --allow-file-access carrega imagens locais diretamente)
+    try {
+      var normPath = filePath.replace(/\\/g, '/');
+      if (normPath.indexOf('/') !== 0 && normPath.indexOf(':') === 1) {
+        normPath = '/' + normPath;
+      }
+      return 'file://' + normPath + '?t=' + (new Date()).getTime();
+    } catch(urlErr) {
+      console.warn('[CEP] Fallback URL falhou:', urlErr);
+    }
+
     return null;
   }
 
