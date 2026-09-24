@@ -310,7 +310,8 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     setUndoStack((s) => s.slice(0, -1));
     setSelectedSegIndices([]);
     setSelectedArcIndices([]);
-    onDielineEdit?.({ ...dieline, segments: prev.segs, arcs: prev.arcs });
+    const { customTopology, ...baseDieline } = dieline as any;
+    onDielineEdit?.({ ...baseDieline, segments: prev.segs, arcs: prev.arcs });
   }, [undoStack, dieline, onDielineEdit]);
 
   const handleDeleteSelected = useCallback(() => {
@@ -324,7 +325,8 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     setLocalArcs(nextArcs);
     setSelectedSegIndices([]);
     setSelectedArcIndices([]);
-    onDielineEdit?.({ ...dieline, segments: nextSegs, arcs: nextArcs });
+    const { customTopology, ...baseDieline } = dieline as any;
+    onDielineEdit?.({ ...baseDieline, segments: nextSegs, arcs: nextArcs });
   }, [selectedSegIndices, selectedArcIndices, localSegs, localArcs, dieline, onDielineEdit]);
 
   const handleChangeType = useCallback((type: Segment2D['type']) => {
@@ -336,7 +338,8 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     const nextArcs = localArcs.map((a, i) => (arcSet.has(i) ? { ...a, type } : a));
     setLocalSegs(nextSegs);
     setLocalArcs(nextArcs);
-    onDielineEdit?.({ ...dieline, segments: nextSegs, arcs: nextArcs });
+    const { customTopology, ...baseDieline } = dieline as any;
+    onDielineEdit?.({ ...baseDieline, segments: nextSegs, arcs: nextArcs });
   }, [selectedSegIndices, selectedArcIndices, localSegs, localArcs, dieline, onDielineEdit]);
 
   const handleSelectAll = useCallback(() => {

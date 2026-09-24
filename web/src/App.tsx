@@ -328,7 +328,7 @@ export const App: React.FC = () => {
         currentModel,
         params,
         selectedProfile,
-        dieline
+        effectiveDieline
       );
       const client = IllustratorBridgeClient.getInstance();
       const res = await client.openInIllustrator(exchangePkg);
@@ -347,7 +347,7 @@ export const App: React.FC = () => {
       currentModel,
       params,
       selectedProfile,
-      dieline
+      effectiveDieline
     );
     const jsxCode = generateIllustratorJsx(exchangePkg);
     const blob = new Blob([jsxCode], { type: 'text/javascript;charset=utf-8' });
@@ -362,7 +362,7 @@ export const App: React.FC = () => {
   };
 
   const handleExportHtml3D = () => {
-    const res = downloadHtml3DFile(currentModel, params, selectedProfile, dieline, {
+    const res = downloadHtml3DFile(currentModel, params, selectedProfile, effectiveDieline, {
       artworkTextureUri: outerArtworkTextureUri || artworkTextureUri,
       outerArtworkTextureUri: outerArtworkTextureUri || artworkTextureUri,
       innerArtworkTextureUri: innerArtworkTextureUri,
@@ -523,8 +523,8 @@ export const App: React.FC = () => {
             selectedProfileId={selectedProfile.id}
             onParamChange={handleParamChange}
             onProfileChange={setSelectedProfile}
-            bounds={dieline.bounds}
-            dieline={dieline}
+            bounds={effectiveDieline.bounds}
+            dieline={effectiveDieline}
             activeMode={activeTab}
             hinges={hingeList}
             selectedPanelId={selectedPanelId}
@@ -553,7 +553,7 @@ export const App: React.FC = () => {
           {activeTab === '3d' && (
             <FoldingViewer3D
               model={currentModel}
-              dieline={dieline}
+              dieline={effectiveDieline}
               params={params}
               profile={selectedProfile}
               customAngles={customAngles}
@@ -576,18 +576,18 @@ export const App: React.FC = () => {
             />
           )}
 
-          {activeTab === 'imposition' && <ImpositionView dieline={dieline} />}
+          {activeTab === 'imposition' && <ImpositionView dieline={effectiveDieline} />}
         </main>
       </div>
 
       {/* 3. Status Bar Inferior Profissional */}
       <CadStatusBar
         model={currentModel}
-        bounds={dieline.bounds}
+        bounds={effectiveDieline.bounds}
         cursorMm={cursorMm}
         zoomLevel={zoomLevel}
-        segmentsCount={dieline.segments?.length || 0}
-        arcsCount={dieline.arcs?.length || 0}
+        segmentsCount={effectiveDieline.segments?.length || 0}
+        arcsCount={effectiveDieline.arcs?.length || 0}
         activeTab={activeTab}
       />
 

@@ -300,8 +300,11 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     setSelectedPanel(null);
     setSelectedCrease(null);
 
+    const currentDieline = dieline || model.calculate(params);
+    const hasCreases = Boolean(currentDieline?.segments?.some((s) => s.type === 'crease'));
+
     const isFoldable =
-      model.isFoldable !== false &&
+      (hasCreases || model.isFoldable !== false) &&
       model.status !== 'NON_FOLDABLE';
 
     if (!isFoldable) {
@@ -311,7 +314,6 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     }
 
     try {
-      const currentDieline = dieline || model.calculate(params);
 
       let panels: StructuralPanel[];
       let foldingTree: FoldingTreeResult;
