@@ -469,10 +469,15 @@ class PLMStudioViewer {
       this.boxGroup.remove(child);
       try {
         child.traverse((obj: any) => {
-          if (obj.geometry) obj.geometry.dispose();
+          if (obj.geometry && typeof obj.geometry.dispose === 'function') obj.geometry.dispose();
           if (obj.material) {
-            if (Array.isArray(obj.material)) obj.material.forEach((m: any) => m.dispose());
-            else obj.material.dispose();
+            if (Array.isArray(obj.material)) {
+              obj.material.forEach((m: any) => {
+                if (m && typeof m.dispose === 'function') m.dispose();
+              });
+            } else if (typeof obj.material.dispose === 'function') {
+              obj.material.dispose();
+            }
           }
         });
       } catch (e) {

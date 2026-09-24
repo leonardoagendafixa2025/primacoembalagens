@@ -563,24 +563,52 @@ export class ThreeGeometryAdapter {
       };
     };
 
-    // Liberação limpa de recursos WebGL
+    // Liberação limpa e estritamente protegida de recursos WebGL
     const dispose = () => {
-      panelMeshes.forEach((mesh) => {
-        mesh.geometry.dispose();
-      });
-      creasePickTubes.forEach((tube) => {
-        tube.geometry.dispose();
-      });
-      outerPanelMaterial.dispose();
-      innerPanelMaterial.dispose();
-      highlightMaterial.dispose();
-      cutLineMaterial.dispose();
-      creaseLineMaterial.dispose();
-      perfLineMaterial.dispose();
-      pickTubeMaterial.dispose();
+      try {
+        if (Array.isArray(panelMeshes)) {
+          panelMeshes.forEach((mesh) => {
+            if (mesh && mesh.geometry && typeof mesh.geometry.dispose === 'function') {
+              try { mesh.geometry.dispose(); } catch {}
+            }
+          });
+        }
+        if (Array.isArray(creasePickTubes)) {
+          creasePickTubes.forEach((tube) => {
+            if (tube && tube.geometry && typeof tube.geometry.dispose === 'function') {
+              try { tube.geometry.dispose(); } catch {}
+            }
+          });
+        }
+        if (outerPanelMaterial && typeof outerPanelMaterial.dispose === 'function') {
+          try { outerPanelMaterial.dispose(); } catch {}
+        }
+        if (innerPanelMaterial && typeof innerPanelMaterial.dispose === 'function') {
+          try { innerPanelMaterial.dispose(); } catch {}
+        }
+        if (highlightMaterial && typeof highlightMaterial.dispose === 'function') {
+          try { highlightMaterial.dispose(); } catch {}
+        }
+        if (cutLineMaterial && typeof cutLineMaterial.dispose === 'function') {
+          try { cutLineMaterial.dispose(); } catch {}
+        }
+        if (creaseLineMaterial && typeof creaseLineMaterial.dispose === 'function') {
+          try { creaseLineMaterial.dispose(); } catch {}
+        }
+        if (perfLineMaterial && typeof perfLineMaterial.dispose === 'function') {
+          try { perfLineMaterial.dispose(); } catch {}
+        }
+        if (pickTubeMaterial && typeof pickTubeMaterial.dispose === 'function') {
+          try { pickTubeMaterial.dispose(); } catch {}
+        }
 
-      while (rootGroup.children.length > 0) {
-        rootGroup.remove(rootGroup.children[0]);
+        if (rootGroup && rootGroup.children) {
+          while (rootGroup.children.length > 0) {
+            rootGroup.remove(rootGroup.children[0]);
+          }
+        }
+      } catch (err) {
+        console.warn('[ThreeGeometryAdapter] Erro seguro ao desalocar buffers WebGL:', err);
       }
     };
 

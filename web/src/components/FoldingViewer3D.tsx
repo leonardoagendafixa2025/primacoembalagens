@@ -259,17 +259,19 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     return () => {
       cancelAnimationFrame(reqId);
       resizeObserver.disconnect();
-      if (controllerRef.current) {
-        controllerRef.current.dispose();
+      if (controllerRef.current && typeof controllerRef.current.dispose === 'function') {
+        try { controllerRef.current.dispose(); } catch {}
         controllerRef.current = null;
       }
-      if (controlsRef.current) {
-        controlsRef.current.dispose();
+      if (controlsRef.current && typeof controlsRef.current.dispose === 'function') {
+        try { controlsRef.current.dispose(); } catch {}
       }
-      if (mount.contains(renderer.domElement)) {
-        mount.removeChild(renderer.domElement);
+      if (mount && renderer && mount.contains(renderer.domElement)) {
+        try { mount.removeChild(renderer.domElement); } catch {}
       }
-      renderer.dispose();
+      if (renderer && typeof renderer.dispose === 'function') {
+        try { renderer.dispose(); } catch {}
+      }
     };
   }, []);
 
@@ -279,8 +281,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
     if (!boxGroup) return;
 
     // Limpa malhas anteriores e desaloca buffers WebGL
-    if (controllerRef.current) {
-      controllerRef.current.dispose();
+    if (controllerRef.current && typeof controllerRef.current.dispose === 'function') {
+      try { controllerRef.current.dispose(); } catch {}
       controllerRef.current = null;
     }
     while (boxGroup.children.length > 0) {
