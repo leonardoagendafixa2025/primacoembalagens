@@ -24,7 +24,7 @@ export interface FoldableTreeResult {
   resetAllHingeAngles: () => void;
   getHingeInfoList: () => HingeControlInfo[];
   highlightPanel: (panelId: string | null) => void;
-  updateArtwork: (texture: THREE.Texture | null, innerTexture?: THREE.Texture | null) => void;
+  updateArtwork: (texture?: THREE.Texture | null, innerTexture?: THREE.Texture | null) => void;
 }
 
 /**
@@ -193,7 +193,7 @@ export function buildFoldable3DTree(
       map: artworkTexture || null,
       roughness: roughness,
       metalness: 0.01,
-      side: THREE.FrontSide,
+      side: THREE.DoubleSide,
       emissive: new THREE.Color(0x000000),
       emissiveIntensity: 0.0,
     });
@@ -204,7 +204,7 @@ export function buildFoldable3DTree(
       map: innerArtworkTexture || null,
       roughness: Math.min(1.0, roughness + 0.1),
       metalness: 0.01,
-      side: THREE.FrontSide,
+      side: THREE.DoubleSide,
       emissive: new THREE.Color(0x000000),
       emissiveIntensity: 0.0,
     });
@@ -214,7 +214,7 @@ export function buildFoldable3DTree(
       color: innerColor,
       roughness: Math.min(1.0, roughness + 0.2),
       metalness: 0.01,
-      side: THREE.FrontSide,
+      side: THREE.DoubleSide,
     });
 
     const materials = [matOuter, matInner, matEdge];
@@ -403,11 +403,11 @@ export function buildFoldable3DTree(
     }
   };
 
-  const updateArtwork = (texture: THREE.Texture | null, innerTexture?: THREE.Texture | null) => {
+  const updateArtwork = (texture?: THREE.Texture | null, innerTexture?: THREE.Texture | null) => {
     for (const item of itemsMap.values()) {
       const mesh = item.mesh;
       if (Array.isArray(mesh.material)) {
-        if (mesh.material[0] instanceof THREE.MeshStandardMaterial) {
+        if (texture !== undefined && mesh.material[0] instanceof THREE.MeshStandardMaterial) {
           const mat = mesh.material[0];
           mat.map = texture;
           mat.color.set(texture ? '#FFFFFF' : outerColor);

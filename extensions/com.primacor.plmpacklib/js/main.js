@@ -498,11 +498,11 @@
           var errDetail = res.error;
           if (!errDetail) {
             if (isBoth) {
-              errDetail = 'Nenhum desenho encontrado na ARTWORK_EXTERNA ou ARTWORK_INTERNA.';
+              errDetail = (res.inner && res.inner.message) || (res.outer && res.outer.message) || 'Nenhum desenho encontrado nas camadas de arte externa ou interna.';
             } else if (targetSide === 'inner') {
-              errDetail = 'A camada ARTWORK_INTERNA está vazia.';
+              errDetail = res.message || 'A camada de arte interna está vazia ou não foi identificada no Illustrator.';
             } else {
-              errDetail = 'A camada ARTWORK_EXTERNA está vazia.';
+              errDetail = res.message || 'A camada de arte externa está vazia.';
             }
           }
           setStatus(errDetail);
@@ -523,11 +523,12 @@
 
         var successMessage = '';
         if (outerUri && innerUri) {
-          successMessage = 'Artes Externa e Interna projetadas no 3D!';
+          successMessage = 'Artes Externa e Interna projetadas no 3D com sucesso!';
         } else if (outerUri) {
-          successMessage = 'Arte Externa projetada no 3D! (Interna vazia)';
+          var innerNote = (res.inner && res.inner.message) ? ' (' + res.inner.message + ')' : ' (Interna não identificada ou vazia)';
+          successMessage = 'Arte Externa projetada no 3D!' + innerNote;
         } else if (innerUri) {
-          successMessage = 'Arte Interna projetada no 3D! (Externa vazia)';
+          successMessage = 'Arte Interna projetada no 3D com sucesso! (Externa mantida)';
         } else {
           successMessage = 'Arte projetada no 3D!';
         }

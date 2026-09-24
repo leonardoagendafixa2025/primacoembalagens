@@ -31520,7 +31520,7 @@ void main() {
         map: artworkTexture || null,
         roughness,
         metalness: 0.01,
-        side: FrontSide,
+        side: DoubleSide,
         emissive: new Color(0),
         emissiveIntensity: 0
       });
@@ -31529,7 +31529,7 @@ void main() {
         map: innerArtworkTexture || null,
         roughness: Math.min(1, roughness + 0.1),
         metalness: 0.01,
-        side: FrontSide,
+        side: DoubleSide,
         emissive: new Color(0),
         emissiveIntensity: 0
       });
@@ -31537,7 +31537,7 @@ void main() {
         color: innerColor,
         roughness: Math.min(1, roughness + 0.2),
         metalness: 0.01,
-        side: FrontSide
+        side: DoubleSide
       });
       const materials = [matOuter, matInner, matEdge];
       const mesh = createPanelMesh(p, thickness, materials, dieline.bounds);
@@ -31688,7 +31688,7 @@ void main() {
       for (const item of itemsMap.values()) {
         const mesh = item.mesh;
         if (Array.isArray(mesh.material)) {
-          if (mesh.material[0] instanceof MeshStandardMaterial) {
+          if (texture !== void 0 && mesh.material[0] instanceof MeshStandardMaterial) {
             const mat = mesh.material[0];
             mat.map = texture;
             mat.color.set(texture ? "#FFFFFF" : outerColor);
@@ -31969,48 +31969,23 @@ void main() {
       this.boxGroup.position.set(0, 0, 0);
       this.boxGroup.updateMatrixWorld(true);
     }
-    updateArtwork(dataUri, side = "outer", innerDataUri) {
-      if (!dataUri && !innerDataUri) return;
-      const isKraft = this.substrateMode === "kraft";
-      const substrateColor = isKraft ? "#C89D68" : "#FFFFFF";
-      if (side === "inner" || side === "both" && innerDataUri && innerDataUri.length > 20) {
-        const targetUri = side === "inner" ? dataUri : innerDataUri;
-        if (targetUri && targetUri.length > 20) {
-          this.lastInnerArtworkDataUri = targetUri;
-          const imgIn = new Image();
-          imgIn.onload = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = imgIn.naturalWidth || imgIn.width;
-            canvas.height = imgIn.naturalHeight || imgIn.height;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return;
-            ctx.fillStyle = substrateColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(imgIn, 0, 0);
-            const texIn = new CanvasTexture(canvas);
-            texIn.colorSpace = SRGBColorSpace;
-            texIn.flipY = true;
-            texIn.needsUpdate = true;
-            this.currentInnerTexture = texIn;
-            if (this.currentTree) {
-              this.currentTree.updateArtwork(this.currentTexture, texIn);
-            }
-          };
-          imgIn.src = targetUri;
+    createTextureFromDataUri(uri, substrateColor) {
+      return new Promise((resolve) => {
+        if (!uri || uri.length < 20) {
+          resolve(null);
+          return;
         }
-      }
-      if (side === "outer" || side === "both") {
-        const targetOuterUri = dataUri;
-        if (targetOuterUri && targetOuterUri.length > 20) {
-          this.lastArtworkDataUri = targetOuterUri;
-          this.lastOuterArtworkDataUri = targetOuterUri;
-          const img = new Image();
-          img.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          try {
             const canvas = document.createElement("canvas");
             canvas.width = img.naturalWidth || img.width;
             canvas.height = img.naturalHeight || img.height;
             const ctx = canvas.getContext("2d");
-            if (!ctx) return;
+            if (!ctx) {
+              resolve(null);
+              return;
+            }
             ctx.fillStyle = substrateColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
@@ -32018,14 +31993,69 @@ void main() {
             tex.colorSpace = SRGBColorSpace;
             tex.flipY = true;
             tex.needsUpdate = true;
-            this.currentTexture = tex;
-            if (this.currentTree) {
-              this.currentTree.updateArtwork(tex, this.currentInnerTexture);
-            }
-          };
-          img.src = targetOuterUri;
-        }
+            resolve(tex);
+          } catch (e) {
+            console.error("[PLMStudio] Erro ao criar textura a partir da imagem:", e);
+            resolve(null);
+          }
+        };
+        img.onerror = () => {
+          console.warn("[PLMStudio] Falha ao carregar imagem para textura");
+          resolve(null);
+        };
+        img.src = uri;
+      });
+    }
+    updateArtwork(dataUri, side = "outer", innerDataUri) {
+      if (!dataUri && !innerDataUri) return;
+      const isKraft = this.substrateMode === "kraft";
+      const substrateColor = isKraft ? "#C89D68" : "#FFFFFF";
+      if (side === "both") {
+        const outerUri = dataUri || this.lastOuterArtworkDataUri;
+        const inUri = innerDataUri || this.lastInnerArtworkDataUri;
+        if (outerUri) this.lastOuterArtworkDataUri = outerUri;
+        if (inUri) this.lastInnerArtworkDataUri = inUri;
+        Promise.all([
+          outerUri ? this.createTextureFromDataUri(outerUri, substrateColor) : Promise.resolve(this.currentTexture),
+          inUri ? this.createTextureFromDataUri(inUri, substrateColor) : Promise.resolve(this.currentInnerTexture)
+        ]).then(([texOuter, texInner]) => {
+          if (texOuter) this.currentTexture = texOuter;
+          if (texInner) this.currentInnerTexture = texInner;
+          if (this.currentTree) {
+            this.currentTree.updateArtwork(
+              texOuter || this.currentTexture,
+              texInner || this.currentInnerTexture
+            );
+          }
+        });
+        return;
       }
+      if (side === "inner") {
+        const inUri = dataUri || innerDataUri;
+        if (!inUri) return;
+        this.lastInnerArtworkDataUri = inUri;
+        this.createTextureFromDataUri(inUri, substrateColor).then((texInner) => {
+          if (texInner) {
+            this.currentInnerTexture = texInner;
+            if (this.currentTree) {
+              this.currentTree.updateArtwork(void 0, texInner);
+            }
+          }
+        });
+        return;
+      }
+      const outUri = dataUri;
+      if (!outUri) return;
+      this.lastArtworkDataUri = outUri;
+      this.lastOuterArtworkDataUri = outUri;
+      this.createTextureFromDataUri(outUri, substrateColor).then((texOuter) => {
+        if (texOuter) {
+          this.currentTexture = texOuter;
+          if (this.currentTree) {
+            this.currentTree.updateArtwork(texOuter, void 0);
+          }
+        }
+      });
     }
     setFoldProgress(val) {
       this.foldProgress = Math.max(0, Math.min(1, val));

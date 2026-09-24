@@ -323,73 +323,102 @@ class PLMStudioViewer {
     this.boxGroup.updateMatrixWorld(true);
   }
 
-  public updateArtwork(dataUri: string, side: 'outer' | 'inner' | 'both' = 'outer', innerDataUri?: string) {
-    if (!dataUri && !innerDataUri) return;
-    const isKraft = this.substrateMode === 'kraft';
-    const substrateColor = isKraft ? '#C89D68' : '#FFFFFF';
-
-    if (side === 'inner' || (side === 'both' && innerDataUri && innerDataUri.length > 20)) {
-      const targetUri = side === 'inner' ? dataUri : innerDataUri!;
-      if (targetUri && targetUri.length > 20) {
-        this.lastInnerArtworkDataUri = targetUri;
-        const imgIn = new Image();
-        imgIn.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = imgIn.naturalWidth || imgIn.width;
-          canvas.height = imgIn.naturalHeight || imgIn.height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-          ctx.fillStyle = substrateColor;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(imgIn, 0, 0);
-
-          const texIn = new THREE.CanvasTexture(canvas);
-          texIn.colorSpace = THREE.SRGBColorSpace;
-          texIn.flipY = true;
-          texIn.needsUpdate = true;
-          this.currentInnerTexture = texIn;
-
-          if (this.currentTree) {
-            this.currentTree.updateArtwork(this.currentTexture, texIn);
-          }
-        };
-        imgIn.src = targetUri;
+  private createTextureFromDataUri(uri: string, substrateColor: string): Promise<THREE.CanvasTexture | null> {
+    return new Promise((resolve) => {
+      if (!uri || uri.length < 20) {
+        resolve(null);
+        return;
       }
-    }
-
-    if (side === 'outer' || side === 'both') {
-      const targetOuterUri = dataUri;
-      if (targetOuterUri && targetOuterUri.length > 20) {
-        this.lastArtworkDataUri = targetOuterUri;
-        this.lastOuterArtworkDataUri = targetOuterUri;
-        const img = new Image();
-        img.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
           const canvas = document.createElement('canvas');
           canvas.width = img.naturalWidth || img.width;
           canvas.height = img.naturalHeight || img.height;
           const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-
-          // 1. Pinta todo o fundo com a cor do papel/substrato (elimina o fundo preto)
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+          // Pinta todo o fundo com a cor do papel/substrato (branco ou kraft)
           ctx.fillStyle = substrateColor;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          // 2. Desenha a arte impressa com transparência preservada por cima
           ctx.drawImage(img, 0, 0);
 
           const tex = new THREE.CanvasTexture(canvas);
           tex.colorSpace = THREE.SRGBColorSpace;
           tex.flipY = true;
           tex.needsUpdate = true;
-          this.currentTexture = tex;
+          resolve(tex);
+        } catch (e) {
+          console.error('[PLMStudio] Erro ao criar textura a partir da imagem:', e);
+          resolve(null);
+        }
+      };
+      img.onerror = () => {
+        console.warn('[PLMStudio] Falha ao carregar imagem para textura');
+        resolve(null);
+      };
+      img.src = uri;
+    });
+  }
 
-          if (this.currentTree) {
-            this.currentTree.updateArtwork(tex, this.currentInnerTexture);
-          }
-        };
-        img.src = targetOuterUri;
-      }
+  public updateArtwork(dataUri: string, side: 'outer' | 'inner' | 'both' = 'outer', innerDataUri?: string) {
+    if (!dataUri && !innerDataUri) return;
+    const isKraft = this.substrateMode === 'kraft';
+    const substrateColor = isKraft ? '#C89D68' : '#FFFFFF';
+
+    if (side === 'both') {
+      const outerUri = dataUri || this.lastOuterArtworkDataUri;
+      const inUri = innerDataUri || this.lastInnerArtworkDataUri;
+
+      if (outerUri) this.lastOuterArtworkDataUri = outerUri;
+      if (inUri) this.lastInnerArtworkDataUri = inUri;
+
+      Promise.all([
+        outerUri ? this.createTextureFromDataUri(outerUri, substrateColor) : Promise.resolve(this.currentTexture),
+        inUri ? this.createTextureFromDataUri(inUri, substrateColor) : Promise.resolve(this.currentInnerTexture)
+      ]).then(([texOuter, texInner]) => {
+        if (texOuter) this.currentTexture = texOuter;
+        if (texInner) this.currentInnerTexture = texInner;
+        if (this.currentTree) {
+          this.currentTree.updateArtwork(
+            texOuter || this.currentTexture,
+            texInner || this.currentInnerTexture
+          );
+        }
+      });
+      return;
     }
+
+    if (side === 'inner') {
+      const inUri = dataUri || innerDataUri;
+      if (!inUri) return;
+      this.lastInnerArtworkDataUri = inUri;
+      this.createTextureFromDataUri(inUri, substrateColor).then((texInner) => {
+        if (texInner) {
+          this.currentInnerTexture = texInner;
+          if (this.currentTree) {
+            this.currentTree.updateArtwork(undefined, texInner);
+          }
+        }
+      });
+      return;
+    }
+
+    // side === 'outer'
+    const outUri = dataUri;
+    if (!outUri) return;
+    this.lastArtworkDataUri = outUri;
+    this.lastOuterArtworkDataUri = outUri;
+    this.createTextureFromDataUri(outUri, substrateColor).then((texOuter) => {
+      if (texOuter) {
+        this.currentTexture = texOuter;
+        if (this.currentTree) {
+          this.currentTree.updateArtwork(texOuter, undefined);
+        }
+      }
+    });
   }
 
   public setFoldProgress(val: number) {
