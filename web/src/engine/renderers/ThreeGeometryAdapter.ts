@@ -104,6 +104,7 @@ export interface ThreeModelController {
   updateArtwork: (outerTexture: THREE.Texture | null, innerTexture?: THREE.Texture | null) => void;
   highlightPanel: (panelId: string | null) => void;
   highlightCrease: (creaseId: string | null) => void;
+  setWireframe: (wireframe: boolean) => void;
   raycastPanel: (raycaster: THREE.Raycaster) => {
     panelId: string;
     mesh: THREE.Mesh;
@@ -612,6 +613,16 @@ export class ThreeGeometryAdapter {
       }
     };
 
+    // Controle de modo Aramado (Wireframe)
+    const setWireframe = (wireframe: boolean) => {
+      outerPanelMaterial.wireframe = wireframe;
+      innerPanelMaterial.wireframe = wireframe;
+      highlightMaterial.wireframe = wireframe;
+      outerPanelMaterial.needsUpdate = true;
+      innerPanelMaterial.needsUpdate = true;
+      highlightMaterial.needsUpdate = true;
+    };
+
     return {
       rootGroup,
       panelsCount: panels.length,
@@ -625,6 +636,7 @@ export class ThreeGeometryAdapter {
       updateArtwork,
       highlightPanel,
       highlightCrease,
+      setWireframe,
       raycastPanel,
       raycastCrease,
       getTriangulationStats,

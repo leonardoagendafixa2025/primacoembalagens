@@ -13,7 +13,7 @@ import {
   type PanelProvenanceData,
   type CreaseProvenanceData,
 } from '../engine/renderers/ThreeGeometryAdapter';
-import { Play, Pause, RotateCw, Box, Eye, Sliders } from 'lucide-react';
+import { Play, Pause, RotateCw, Box, Eye, Sliders, Grid } from 'lucide-react';
 
 interface FoldingViewer3DProps {
   model: PackagingModel;
@@ -58,6 +58,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   const [foldProgress, setFoldProgress] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
+  const [isWireframe, setIsWireframe] = useState(false);
 
   // Estado de seleção e metadados para inspeção forense no 3D
   const [selectedPanel, setSelectedPanel] = useState<PanelProvenanceData | null>(null);
@@ -371,6 +372,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       if (selectedPanelId) {
         controller.highlightPanel(selectedPanelId);
       }
+      if (isWireframe) {
+        controller.setWireframe(true);
+      }
 
       if (controller.panelsCount > 0) {
         // Orienta o modelo de modo que o topo fique sempre em +Y e o fundo em -Y/plano horizontal:
@@ -528,6 +532,13 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
       onHingeListUpdate?.(list);
     }
   }, [customAngles]);
+
+  // Sincroniza modo aramado (Wireframe 3D) em tempo real
+  useEffect(() => {
+    if (controllerRef.current) {
+      controllerRef.current.setWireframe(isWireframe);
+    }
+  }, [isWireframe]);
 
   // Raycasting 3D interativo para seleção de abas ou vincos via clique
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -1112,6 +1123,24 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
             >
               <Eye size={11} />
               <span>Fundo</span>
+            </button>
+
+            {/* Modo Aramado (Wireframe 3D) */}
+            <button
+              type="button"
+              onClick={() => setIsWireframe((w) => !w)}
+              title={isWireframe ? 'Alternar para Modo Sólido (Sombreamento)' : 'Alternar para Modo Aramado (Wireframe 3D)'}
+              className="cad-btn"
+              style={{
+                padding: '3px 8px',
+                fontSize: 10,
+                background: isWireframe ? 'var(--cad-accent-dim)' : 'transparent',
+                borderColor: isWireframe ? 'var(--cad-accent)' : 'var(--cad-border-default)',
+                color: isWireframe ? 'var(--cad-accent)' : 'var(--cad-text-primary)',
+              }}
+            >
+              <Grid size={11} color="var(--cad-accent)" />
+              <span>Aramado</span>
             </button>
           </div>
         </div>
