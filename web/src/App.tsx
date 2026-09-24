@@ -564,6 +564,9 @@ export const App: React.FC = () => {
                   setSidebarPanel('folds');
                 }
               }}
+              onAngleChange={handleAngleChange}
+              onResetAngle={handleResetAngle}
+              onResetAllAngles={handleResetAllAngles}
               onHingeListUpdate={setHingeList}
               onOpenFoldInspector={handleOpenFoldInspector}
               isFoldInspectorActive={sidebarPanel === 'folds'}

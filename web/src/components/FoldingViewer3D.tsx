@@ -23,6 +23,9 @@ interface FoldingViewer3DProps {
   customAngles?: Record<string, number>;
   selectedPanelId?: string | null;
   onSelectPanel?: (panelId: string | null) => void;
+  onAngleChange?: (panelId: string, angleDeg: number) => void;
+  onResetAngle?: (panelId: string) => void;
+  onResetAllAngles?: () => void;
   onHingeListUpdate?: (list: HingeControlInfo[]) => void;
   onOpenFoldInspector?: () => void;
   isFoldInspectorActive?: boolean;
@@ -39,6 +42,9 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
   customAngles = {},
   selectedPanelId = null,
   onSelectPanel,
+  onAngleChange,
+  onResetAngle,
+  onResetAllAngles,
   onHingeListUpdate,
   onOpenFoldInspector,
   isFoldInspectorActive = false,
@@ -610,100 +616,359 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
         style={{ width: '100%', height: '100%', cursor: 'grab', touchAction: 'none', userSelect: 'none' }}
       />
 
-      {/* Card de Inspeção Forense de Painel Selecionado (Fase 4 - Seção 14) */}
-      {selectedPanel && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 16,
-            left: 16,
-            background: 'rgba(15, 23, 42, 0.92)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid #38BDF8',
-            borderRadius: 8,
-            padding: '12px 16px',
-            color: '#F8FAFC',
-            fontSize: 11,
-            zIndex: 20,
-            maxWidth: 320,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase' }}>
-              Painel Estrutural: {selectedPanel.panelId}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedPanel(null);
-                controllerRef.current?.highlightPanel(null);
-              }}
-              style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}
-            >
-              ✕
-            </button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'monospace' }}>
-            <div>Área Líquida: <b>{selectedPanel.areaMm2.toFixed(2)} mm²</b></div>
-            <div>Triângulos GPU: <b>{selectedPanel.trianglesCount}</b></div>
-            <div>Furos (Holes): <b>{selectedPanel.holesCount}</b></div>
-            <div>Segmentos: <b>{selectedPanel.boundarySegmentsCount}</b> | Arcos: <b>{selectedPanel.boundaryArcsCount}</b></div>
-            <div style={{ marginTop: 4, fontSize: 10, color: '#94A3B8', wordBreak: 'break-all' }}>
-              Entidades Origem: {selectedPanel.sourceEntityIds.slice(0, 6).join(', ')}
-              {selectedPanel.sourceEntityIds.length > 6 ? ` (+${selectedPanel.sourceEntityIds.length - 6})` : ''}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Card de Controle de Ângulo e Inspeção da Aba Selecionada (Fase 4) */}
+      {selectedPanel && (() => {
+        const panelHinge = hingeList.find((h) => h.panelId === selectedPanel.panelId);
+        const currentAngle = panelHinge
+          ? (customAngles[panelHinge.panelId] ?? panelHinge.currentAngleDeg)
+          : 0;
+        const isModified = panelHinge ? customAngles[panelHinge.panelId] !== undefined : false;
 
-      {/* Card de Inspeção Forense de Vinco/Hinge Selecionado (Fase 4 - Seção 14) */}
-      {selectedCrease && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 16,
-            left: 16,
-            background: 'rgba(15, 23, 42, 0.92)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid #0284C7',
-            borderRadius: 8,
-            padding: '12px 16px',
-            color: '#F8FAFC',
-            fontSize: 11,
-            zIndex: 20,
-            maxWidth: 340,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase' }}>
-              Vinco Articulado: {selectedCrease.creaseId}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedCrease(null);
-                controllerRef.current?.highlightCrease(null);
-              }}
-              style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}
-            >
-              ✕
-            </button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'monospace' }}>
-            <div>sourceCreaseId: <b>{selectedCrease.sourceCreaseId}</b></div>
-            <div>matchedHalfEdge: <b>{selectedCrease.matchedHalfEdgeId}</b></div>
-            <div>Hierarquia: <b>{selectedCrease.parentPanelId} &rarr; {selectedCrease.childPanelId}</b></div>
-            <div>Comprimento: <b>{selectedCrease.lengthMm} mm</b></div>
-            <div>Ângulo Alvo: <b>{selectedCrease.targetAngleDeg}°</b> (Fonte: {selectedCrease.angleSource})</div>
-            <div>Sinal Topológico: <b>{selectedCrease.topologicalSign > 0 ? '+1' : '-1'}</b> (Fonte: {selectedCrease.signSource})</div>
-            <div style={{ color: selectedCrease.physicalDirection === 'NOT_DETERMINED' ? '#F59E0B' : '#10B981' }}>
-              Direção Física: <b>{selectedCrease.physicalDirection}</b>
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              background: 'rgba(15, 23, 42, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid #38BDF8',
+              borderRadius: 8,
+              padding: '14px 16px',
+              color: '#F8FAFC',
+              fontSize: 11,
+              zIndex: 20,
+              width: 320,
+              maxWidth: 'calc(100% - 32px)',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase', fontSize: 12 }}>
+                  {panelHinge?.panelName || `Painel: ${selectedPanel.panelId}`}
+                </span>
+                {isModified && (
+                  <span
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      padding: '1px 5px',
+                      borderRadius: 4,
+                      background: 'rgba(56, 189, 248, 0.2)',
+                      color: '#38BDF8',
+                      border: '1px solid #38BDF8',
+                    }}
+                  >
+                    Editado
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPanel(null);
+                  controllerRef.current?.highlightPanel(null);
+                  onSelectPanel?.(null);
+                }}
+                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 14 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Controle de Ângulo (Graus) */}
+            {panelHinge ? (
+              <div
+                style={{
+                  background: 'rgba(30, 41, 59, 0.7)',
+                  borderRadius: 6,
+                  padding: '10px 12px',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>Ângulo de Dobra:</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 800, color: '#38BDF8' }}>
+                    {Math.round(currentAngle)}°
+                  </span>
+                </div>
+
+                {/* Slider */}
+                <input
+                  type="range"
+                  min="-180"
+                  max="180"
+                  step="1"
+                  value={currentAngle}
+                  onChange={(e) => onAngleChange?.(panelHinge.panelId, parseFloat(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: '#38BDF8' }}
+                />
+
+                {/* Botões Rápidos de Graus */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+                  {[
+                    { label: '0° Plano', val: 0 },
+                    { label: '45°', val: 45 },
+                    { label: '90° Reto', val: 90 },
+                    { label: '180° Fechado', val: 180 },
+                  ].map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => onAngleChange?.(panelHinge.panelId, p.val)}
+                      style={{
+                        padding: '4px 2px',
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: Math.abs(currentAngle - p.val) < 1 ? '#38BDF8' : 'rgba(15, 23, 42, 0.6)',
+                        color: Math.abs(currentAngle - p.val) < 1 ? '#000000' : '#E2E8F0',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Ações Extras: Inverter e Restaurar */}
+                <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+                  <button
+                    type="button"
+                    onClick={() => onAngleChange?.(panelHinge.panelId, -currentAngle)}
+                    style={{
+                      flex: 1,
+                      padding: '4px 8px',
+                      fontSize: 10,
+                      fontWeight: 600,
+                      borderRadius: 4,
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      background: 'rgba(56, 189, 248, 0.1)',
+                      color: '#38BDF8',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Inverter (+ / -)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onAngleChange?.(panelHinge.panelId, (currentAngle + 90) % 360 > 180 ? (currentAngle + 90) % 360 - 360 : (currentAngle + 90) % 360)}
+                    style={{
+                      flex: 1,
+                      padding: '4px 8px',
+                      fontSize: 10,
+                      fontWeight: 600,
+                      borderRadius: 4,
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      background: 'rgba(56, 189, 248, 0.1)',
+                      color: '#38BDF8',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Virar +90°
+                  </button>
+                  {isModified && (
+                    <button
+                      type="button"
+                      onClick={() => onResetAngle?.(panelHinge.panelId)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: '#EF4444',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Padrão
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  background: 'rgba(30, 41, 59, 0.5)',
+                  borderRadius: 6,
+                  padding: '8px 10px',
+                  fontSize: 10.5,
+                  color: '#94A3B8',
+                }}
+              >
+                Painel Base Central (Origem / Fixo a 0°)
+              </div>
+            )}
+
+            {/* Informações Estruturais */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: '#94A3B8', fontFamily: 'monospace' }}>
+              <div>Área Líquida: <b>{selectedPanel.areaMm2.toFixed(1)} mm²</b></div>
+              <div>Segmentos: <b>{selectedPanel.boundarySegmentsCount}</b> | Arcos: <b>{selectedPanel.boundaryArcsCount}</b></div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* Card de Inspeção Forense de Vinco/Hinge Selecionado (Fase 4) */}
+      {selectedCrease && (() => {
+        const creaseHinge = hingeList.find((h) => h.panelId === selectedCrease.childPanelId);
+        const currentAngle = creaseHinge
+          ? (customAngles[creaseHinge.panelId] ?? creaseHinge.currentAngleDeg)
+          : selectedCrease.targetAngleDeg;
+        const isModified = creaseHinge ? customAngles[creaseHinge.panelId] !== undefined : false;
+
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              background: 'rgba(15, 23, 42, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid #0284C7',
+              borderRadius: 8,
+              padding: '14px 16px',
+              color: '#F8FAFC',
+              fontSize: 11,
+              zIndex: 20,
+              width: 320,
+              maxWidth: 'calc(100% - 32px)',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase', fontSize: 12 }}>
+                Vinco Articulado: {selectedCrease.creaseId}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCrease(null);
+                  controllerRef.current?.highlightCrease(null);
+                }}
+                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', fontSize: 14 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Controle de Ângulo Direto */}
+            {creaseHinge && (
+              <div
+                style={{
+                  background: 'rgba(30, 41, 59, 0.7)',
+                  borderRadius: 6,
+                  padding: '10px 12px',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>Ângulo da Aba:</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 800, color: '#38BDF8' }}>
+                    {Math.round(currentAngle)}°
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min="-180"
+                  max="180"
+                  step="1"
+                  value={currentAngle}
+                  onChange={(e) => onAngleChange?.(creaseHinge.panelId, parseFloat(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: '#38BDF8' }}
+                />
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+                  {[
+                    { label: '0° Plano', val: 0 },
+                    { label: '45°', val: 45 },
+                    { label: '90° Reto', val: 90 },
+                    { label: '180° Fechado', val: 180 },
+                  ].map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => onAngleChange?.(creaseHinge.panelId, p.val)}
+                      style={{
+                        padding: '4px 2px',
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: Math.abs(currentAngle - p.val) < 1 ? '#38BDF8' : 'rgba(15, 23, 42, 0.6)',
+                        color: Math.abs(currentAngle - p.val) < 1 ? '#000000' : '#E2E8F0',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    type="button"
+                    onClick={() => onAngleChange?.(creaseHinge.panelId, -currentAngle)}
+                    style={{
+                      flex: 1,
+                      padding: '4px 8px',
+                      fontSize: 10,
+                      fontWeight: 600,
+                      borderRadius: 4,
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      background: 'rgba(56, 189, 248, 0.1)',
+                      color: '#38BDF8',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Inverter (+ / -)
+                  </button>
+                  {isModified && (
+                    <button
+                      type="button"
+                      onClick={() => onResetAngle?.(creaseHinge.panelId)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: '#EF4444',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Padrão
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontFamily: 'monospace', fontSize: 10, color: '#94A3B8' }}>
+              <div>Hierarquia: <b>{selectedCrease.parentPanelId} &rarr; {selectedCrease.childPanelId}</b></div>
+              <div>Comprimento: <b>{selectedCrease.lengthMm} mm</b></div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Estação de Controle CAD de Dobra e Câmera 3D */}
       <div
