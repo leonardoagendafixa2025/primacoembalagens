@@ -114,6 +114,101 @@ function setLayerStateRecursive(layer, vis, unlk, stateList) {
   } catch(eSub) {}
 }
 
+function switchArtworkWorkMode(side) {
+  if (app.documents.length === 0) {
+    return JSON.stringify({ error: "Nenhum documento aberto no Illustrator." });
+  }
+
+  var doc = app.activeDocument;
+  var sideName = (side || "outer").toLowerCase();
+  var isInner = (sideName === "inner" || sideName === "interna" || sideName === "inside" || sideName === "interior");
+
+  var targetLayer = null;
+  var outerLayers = [];
+  var innerLayers = [];
+  var techLayers = [];
+
+  for (var i = 0; i < doc.layers.length; i++) {
+    var ly = doc.layers[i];
+    var lName = ly.name || "";
+    if (isTechnicalLayer(lName)) {
+      techLayers.push(ly);
+    } else if (isInnerLayer(lName)) {
+      innerLayers.push(ly);
+      if (!targetLayer && isInner) targetLayer = ly;
+    } else {
+      outerLayers.push(ly);
+      if (!targetLayer && !isInner) targetLayer = ly;
+    }
+  }
+
+  // Se não existir a camada do lado desejado, cria automaticamente
+  if (isInner && !targetLayer) {
+    try {
+      targetLayer = doc.layers.add();
+      targetLayer.name = "ARTWORK_INTERNA";
+      innerLayers.push(targetLayer);
+    } catch(eAddIn) {}
+  } else if (!isInner && !targetLayer) {
+    try {
+      targetLayer = doc.layers.add();
+      targetLayer.name = "ARTWORK_EXTERNA";
+      outerLayers.push(targetLayer);
+    } catch(eAddOut) {}
+  }
+
+  // Aplica visibilidade exclusiva:
+  // No modo EXTERNO: apenas arte externa e guias da faca ficam visíveis; arte interna fica 100% oculta.
+  // No modo INTERNO: apenas arte interna e guias da faca ficam visíveis; arte externa fica 100% oculta.
+  for (var o = 0; o < outerLayers.length; o++) {
+    try {
+      outerLayers[o].visible = !isInner;
+      outerLayers[o].locked = isInner;
+    } catch(eO) {}
+  }
+
+  for (var n = 0; n < innerLayers.length; n++) {
+    try {
+      innerLayers[n].visible = isInner;
+      innerLayers[n].locked = !isInner;
+    } catch(eN) {}
+  }
+
+  for (var t = 0; t < techLayers.length; t++) {
+    try {
+      techLayers[t].visible = true; // Linhas de corte e vinco sempre visíveis para o operador
+      techLayers[t].locked = true;
+    } catch(eT) {}
+  }
+
+  if (targetLayer) {
+    try { doc.activeLayer = targetLayer; } catch(eAct) {}
+  }
+
+  // Se houver 2 pranchetas, foca na prancheta do lado ativo
+  if (doc.artboards.length > 1) {
+    var targetAb = isInner ? 1 : 0;
+    for (var ab = 0; ab < doc.artboards.length; ab++) {
+      var abName = cleanLayerName(doc.artboards[ab].name || "");
+      if (isInner && (abName.indexOf("VERSO") !== -1 || abName.indexOf("INTERN") !== -1 || abName.indexOf("INTERIOR") !== -1)) {
+        targetAb = ab; break;
+      } else if (!isInner && (abName.indexOf("FRENTE") !== -1 || abName.indexOf("EXTERN") !== -1 || abName.indexOf("EXTERIOR") !== -1)) {
+        targetAb = ab; break;
+      }
+    }
+    try { doc.artboards.setActiveArtboardIndex(targetAb); } catch(eAb) {}
+  }
+
+  return JSON.stringify({
+    success: true,
+    mode: isInner ? "inner" : "outer",
+    activeLayerName: targetLayer ? targetLayer.name : (isInner ? "ARTWORK_INTERNA" : "ARTWORK_EXTERNA"),
+    message: isInner
+      ? "Modo INTERNO ativado: Você está vendo e editando apenas a ARTE INTERNA no Illustrator."
+      : "Modo EXTERNO ativado: Você está vendo e editando apenas a ARTE EXTERNA no Illustrator."
+  });
+}
+
 function exportSingleArtworkSide(side) {
   if (app.documents.length === 0) {
     return { error: "Nenhum documento aberto no Illustrator." };
@@ -123,50 +218,43 @@ function exportSingleArtworkSide(side) {
   var sideName = (side || "outer").toLowerCase();
   var isInner = (sideName === "inner" || sideName === "interna" || sideName === "inside" || sideName === "interior");
 
-  // Salva visibilidade e estado de bloqueio original de todas as camadas e sub-camadas
-  var layersState = [];
+  // Garante que o documento esteja no modo de trabalho correto antes de exportar
+  switchArtworkWorkMode(sideName);
+
+  // Oculta temporariamente camadas técnicas (CUT, CREASE, etc.) para que o PNG gerado contenha PURAMENTE a arte
+  var techLayersState = [];
   var visibleItemsCount = 0;
   var matchedLayerCount = 0;
 
   for (var i = 0; i < doc.layers.length; i++) {
     var l = doc.layers[i];
     var lName = l.name || "";
-    var origVis = l.visible;
-    var origLock = l.locked;
 
-    layersState.push({ layer: l, visible: origVis, locked: origLock });
-
-    if (isInner) {
-      // Para a face interna: exibe camadas identificadas como internas (e suas sub-camadas)
-      if (isInnerLayer(lName)) {
-        matchedLayerCount++;
-        setLayerStateRecursive(l, true, true, layersState);
-        visibleItemsCount += countItemsRecursive(l);
-      } else {
-        l.visible = false;
-      }
+    if (isTechnicalLayer(lName)) {
+      techLayersState.push({ layer: l, visible: l.visible });
+      l.visible = false;
+    } else if (isInner && isInnerLayer(lName)) {
+      matchedLayerCount++;
+      setLayerStateRecursive(l, true, true, null);
+      visibleItemsCount += countItemsRecursive(l);
+    } else if (!isInner && !isInnerLayer(lName)) {
+      matchedLayerCount++;
+      setLayerStateRecursive(l, true, true, null);
+      visibleItemsCount += countItemsRecursive(l);
     } else {
-      // Para a face externa: oculta camadas técnicas e camadas internas
-      if (isTechnicalLayer(lName) || isInnerLayer(lName)) {
-        l.visible = false;
-      } else {
-        // Camadas de arte externa e personalizadas permanecem visíveis
-        matchedLayerCount++;
-        setLayerStateRecursive(l, true, true, layersState);
-        visibleItemsCount += countItemsRecursive(l);
-      }
+      l.visible = false;
     }
   }
 
-  // Se for busca de interna e nenhuma camada interna existir ou estiver sem objetos:
+  // Se a camada interna ou externa não tiver itens desenhados:
   if (visibleItemsCount === 0) {
-    // Restaura o estado das camadas antes de sair
-    for (var r = 0; r < layersState.length; r++) {
-      try {
-        layersState[r].layer.visible = layersState[r].visible;
-        layersState[r].layer.locked = layersState[r].locked;
-      } catch(eR) {}
+    // Restaura a visualização da faca técnica
+    for (var r = 0; r < techLayersState.length; r++) {
+      try { techLayersState[r].layer.visible = techLayersState[r].visible; } catch(eR) {}
     }
+    // Restaura modo exclusivo para o operador poder desenhar
+    switchArtworkWorkMode(sideName);
+
     return {
       success: true,
       empty: true,
@@ -176,14 +264,12 @@ function exportSingleArtworkSide(side) {
       hasVector: false,
       vectorSvg: "",
       message: isInner
-        ? (matchedLayerCount === 0
-            ? "Nenhuma camada de arte interna identificada. Crie uma camada chamada 'ARTWORK_INTERNA' ou 'INTERIOR'."
-            : "Camada de arte interna encontrada, mas está vazia sem desenhos.")
-        : "Nenhuma arte externa encontrada."
+        ? "A camada ARTWORK_INTERNA está vazia. Desenhe sua arte no Illustrator e clique em ATUALIZAR ARTE INTERNA."
+        : "A camada ARTWORK_EXTERNA está vazia. Desenhe sua arte no Illustrator e clique em ATUALIZAR ARTE EXTERNA."
     };
   }
 
-  // Suporte a seleção de Prancheta (Artboard): Se houver prancheta específica para o verso
+  // Seleciona a prancheta ativa para exportar
   var origArtboardIdx = doc.artboards.getActiveArtboardIndex();
   var targetArtboardIdx = origArtboardIdx;
   if (doc.artboards.length > 1) {
@@ -201,28 +287,23 @@ function exportSingleArtworkSide(side) {
         }
       }
     }
-    // Se não tiver nome específico mas houver 2 pranchetas: 0=Frente, 1=Verso
     if (doc.artboards.length === 2 && targetArtboardIdx === origArtboardIdx) {
       targetArtboardIdx = isInner ? 1 : 0;
     }
   }
 
-  try {
-    doc.artboards.setActiveArtboardIndex(targetArtboardIdx);
-  } catch(eAb) {}
+  try { doc.artboards.setActiveArtboardIndex(targetArtboardIdx); } catch(eAb) {}
 
   var tempFolder = Folder.temp;
   var ts = (new Date()).getTime();
   var fileSuffix = isInner ? "inner" : "outer";
   var destFile = new File(tempFolder.fsName + "/plmpack_cep_artwork_" + fileSuffix + "_" + ts + ".png");
 
-  // Exportação PNG otimizada para tempo real e alta fidelidade 3D (evita estouro de VRAM e travamentos)
   var exportOptions = new ExportOptionsPNG24();
   exportOptions.antiAliasing = true;
   exportOptions.transparency = true;
   exportOptions.artBoardClipping = true;
 
-  // Resolução calculada: 150 DPI padrão (208.33%) — nítido e super veloz (sub-segundo)
   var maxPt = Math.max(doc.width, doc.height);
   var targetDpi = 150;
   if (maxPt > 2800) {
@@ -250,13 +331,13 @@ function exportSingleArtworkSide(side) {
     // Restaura a prancheta ativa original
     try { doc.artboards.setActiveArtboardIndex(origArtboardIdx); } catch(eAbR) {}
 
-    // SEMPRE restaura a visibilidade e o bloqueio originais das camadas no documento!
-    for (var j = 0; j < layersState.length; j++) {
-      try {
-        layersState[j].layer.visible = layersState[j].visible;
-        layersState[j].layer.locked = layersState[j].locked;
-      } catch(eRestore) {}
+    // Restaura as camadas técnicas e mantém o modo exclusivo ativo
+    for (var j = 0; j < techLayersState.length; j++) {
+      try { techLayersState[j].layer.visible = techLayersState[j].visible; } catch(eRestore) {}
     }
+
+    // Garante que o Illustrator permaneça exibindo APENAS a face em que o usuário está trabalhando!
+    switchArtworkWorkMode(sideName);
   }
 
   if (!exportSuccess) {

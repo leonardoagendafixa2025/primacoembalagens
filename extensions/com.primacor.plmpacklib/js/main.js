@@ -21,6 +21,8 @@
   var btnSyncArtwork = document.getElementById('btnSyncArtwork');
   var btnSyncArtworkOuter = document.getElementById('btnSyncArtworkOuter');
   var btnSyncArtworkInner = document.getElementById('btnSyncArtworkInner');
+  var btnModeOuter = document.getElementById('btnModeOuter');
+  var btnModeInner = document.getElementById('btnModeInner');
   var btnUpdateDieline = document.getElementById('btnUpdateDieline');
   var btnOpenWeb = document.getElementById('btnOpenWeb');
   var btnOpenWebEmpty = document.getElementById('btnOpenWebEmpty');
@@ -521,12 +523,32 @@
           }
         }
 
+        if (targetSide === 'inner') {
+          if (btnModeInner && btnModeOuter) {
+            btnModeInner.className = 'btn-mode active-inner';
+            btnModeOuter.className = 'btn-mode';
+          }
+          if (window.PLMStudio && innerUri) {
+            var curF = window.PLMStudio.getFoldProgress ? window.PLMStudio.getFoldProgress() : 1;
+            if (curF > 0.45) {
+              window.PLMStudio.setFoldProgress(0.35);
+              if (sliderFold) sliderFold.value = 35;
+              if (txtFoldPct) txtFoldPct.textContent = '35%';
+            }
+          }
+        } else if (targetSide === 'outer') {
+          if (btnModeInner && btnModeOuter) {
+            btnModeOuter.className = 'btn-mode active-outer';
+            btnModeInner.className = 'btn-mode';
+          }
+        }
+
         var successMessage = '';
         if (outerUri && innerUri) {
           successMessage = 'Artes Externa e Interna projetadas no 3D com sucesso!';
         } else if (outerUri) {
-          var innerNote = (res.inner && res.inner.message) ? ' (' + res.inner.message + ')' : ' (Interna não identificada ou vazia)';
-          successMessage = 'Arte Externa projetada no 3D!' + innerNote;
+          var innerNote = (res.inner && res.inner.message) ? ' (' + res.inner.message + ')' : ' (Interna mantida)';
+          successMessage = 'Arte Externa projetada no 3D com sucesso!' + innerNote;
         } else if (innerUri) {
           successMessage = 'Arte Interna projetada no 3D com sucesso! (Externa mantida)';
         } else {
@@ -660,15 +682,61 @@
     });
   }
 
-  // 7. Botões de Atualização de Arte (Ambas, Externa, Interna)
-  if (btnSyncArtwork) {
-    btnSyncArtwork.addEventListener('click', function() { syncArtwork('both'); });
+  // 6.5. Alternador de Modo de Trabalho (Visualização Externa vs Interna no Illustrator)
+  function setWorkMode(mode) {
+    var isInner = mode === 'inner';
+    if (btnModeOuter && btnModeInner) {
+      if (isInner) {
+        btnModeInner.className = 'btn-mode active-inner';
+        btnModeOuter.className = 'btn-mode';
+      } else {
+        btnModeOuter.className = 'btn-mode active-outer';
+        btnModeInner.className = 'btn-mode';
+      }
+    }
+    setStatus(isInner ? 'Ativando visão da Face Interna no Illustrator...' : 'Ativando visão da Face Externa no Illustrator...');
+    cs.evalScript("switchArtworkWorkMode('" + mode + "')", function(resStr) {
+      try {
+        var res = JSON.parse(resStr);
+        if (res.message) setStatus(res.message);
+      } catch(e) {}
+    });
+
+    if (window.PLMStudio) {
+      if (isInner) {
+        var curFold = window.PLMStudio.getFoldProgress ? window.PLMStudio.getFoldProgress() : 1;
+        if (curFold > 0.45) {
+          window.PLMStudio.setFoldProgress(0.35);
+          if (sliderFold) sliderFold.value = 35;
+          if (txtFoldPct) txtFoldPct.textContent = '35%';
+        }
+      } else {
+        var curFoldOut = window.PLMStudio.getFoldProgress ? window.PLMStudio.getFoldProgress() : 1;
+        if (curFoldOut < 0.8) {
+          window.PLMStudio.setFoldProgress(1.0);
+          if (sliderFold) sliderFold.value = 100;
+          if (txtFoldPct) txtFoldPct.textContent = '100%';
+        }
+      }
+    }
   }
+
+  if (btnModeOuter) {
+    btnModeOuter.addEventListener('click', function() { setWorkMode('outer'); });
+  }
+  if (btnModeInner) {
+    btnModeInner.addEventListener('click', function() { setWorkMode('inner'); });
+  }
+
+  // 7. Botões Separados de Atualização de Arte (Externa e Interna)
   if (btnSyncArtworkOuter) {
     btnSyncArtworkOuter.addEventListener('click', function() { syncArtwork('outer'); });
   }
   if (btnSyncArtworkInner) {
     btnSyncArtworkInner.addEventListener('click', function() { syncArtwork('inner'); });
+  }
+  if (btnSyncArtwork) {
+    btnSyncArtwork.addEventListener('click', function() { syncArtwork('both'); });
   }
 
   // 8. Botão Atualizar Faca no Documento Illustrator
