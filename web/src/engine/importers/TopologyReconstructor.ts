@@ -197,70 +197,129 @@ export class TopologyReconstructor {
         type: a.type,
       }));
 
-    // 2. PASSO 1: SNAP e cicatrização controlada de micro-gaps ANTES das T-junctions
-    // Snapping par-a-par estritamente <= config.gapToleranceMm (0.05 mm)
+    // 2. PASSO 1: SNAP e cicatrização de micro-gaps via Spatial Hash Grid O(N)
+    // Agrupa endpoints em grade espacial (célula de tamanho seguro = gapToleranceMm * 10)
+    // Reduz a complexidade de O(N^2) para O(N), evitando congelamentos na importação CAD
+    const gapCellSize = Math.max(1.0, config.gapToleranceMm * 10);
+    const snapGrid = new Map<string, Array<{ segIdx: number; endpoint: 'p0' | 'p1'; x: number; y: number }>>();
+
+    function getSpatialKey(gx: number, gy: number): string {
+      return `${gx}_${gy}`;
+    }
+
+    for (let i = 0; i < currentSegments.length; i++) {
+      const s = currentSegments[i];
+      const pts: Array<{ endpoint: 'p0' | 'p1'; x: number; y: number }> = [
+        { endpoint: 'p0', x: s.x0, y: s.y0 },
+        { endpoint: 'p1', x: s.x1, y: s.y1 },
+      ];
+      for (const p of pts) {
+        const gx = Math.floor(p.x / gapCellSize);
+        const gy = Math.floor(p.y / gapCellSize);
+        const k = getSpatialKey(gx, gy);
+        let list = snapGrid.get(k);
+        if (!list) {
+          list = [];
+          snapGrid.set(k, list);
+        }
+        list.push({ segIdx: i, endpoint: p.endpoint, x: p.x, y: p.y });
+      }
+    }
+
+    // Consulta apenas células vizinhas imediatas (dx: -1..1, dy: -1..1)
     for (let i = 0; i < currentSegments.length; i++) {
       const s1 = currentSegments[i];
-      for (let j = i + 1; j < currentSegments.length; j++) {
-        const s2 = currentSegments[j];
+      const endpointsA: ['p0' | 'p1', number, number][] = [
+        ['p0', s1.x0, s1.y0],
+        ['p1', s1.x1, s1.y1],
+      ];
 
-        const endpointsA: ['p0' | 'p1', number, number][] = [
-          ['p0', s1.x0, s1.y0],
-          ['p1', s1.x1, s1.y1],
-        ];
-        const endpointsB: ['p0' | 'p1', number, number][] = [
-          ['p0', s2.x0, s2.y0],
-          ['p1', s2.x1, s2.y1],
-        ];
+      for (const [keyA, ax, ay] of endpointsA) {
+        const gx = Math.floor(ax / gapCellSize);
+        const gy = Math.floor(ay / gapCellSize);
 
-        for (const [keyA, ax, ay] of endpointsA) {
-          for (const [keyB, bx, by] of endpointsB) {
-            const gap = Math.hypot(ax - bx, ay - by);
-            if (gap > 0.0005 && gap <= config.gapToleranceMm) {
-              const midX = (ax + bx) / 2;
-              const midY = (ay + by) / 2;
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const neighborList = snapGrid.get(getSpatialKey(gx + dx, gy + dy));
+            if (!neighborList) continue;
 
-              if (keyA === 'p0') { s1.x0 = midX; s1.y0 = midY; }
-              else { s1.x1 = midX; s1.y1 = midY; }
+            for (const cand of neighborList) {
+              if (cand.segIdx <= i) continue; // Evita pares duplicados ou self-snap
+              const s2 = currentSegments[cand.segIdx];
+              const bx = cand.endpoint === 'p0' ? s2.x0 : s2.x1;
+              const by = cand.endpoint === 'p0' ? s2.y0 : s2.y1;
 
-              if (keyB === 'p0') { s2.x0 = midX; s2.y0 = midY; }
-              else { s2.x1 = midX; s2.y1 = midY; }
+              const gap = Math.hypot(ax - bx, ay - by);
+              if (gap > 0.0005 && gap <= config.gapToleranceMm) {
+                const midX = (ax + bx) / 2;
+                const midY = (ay + by) / 2;
 
-              gapsHealed++;
-              if (gap > maxGeometricDeviationMm) {
-                maxGeometricDeviationMm = gap;
+                if (keyA === 'p0') { s1.x0 = midX; s1.y0 = midY; }
+                else { s1.x1 = midX; s1.y1 = midY; }
+
+                if (cand.endpoint === 'p0') { s2.x0 = midX; s2.y0 = midY; }
+                else { s2.x1 = midX; s2.y1 = midY; }
+
+                cand.x = midX;
+                cand.y = midY;
+
+                gapsHealed++;
+                if (gap > maxGeometricDeviationMm) {
+                  maxGeometricDeviationMm = gap;
+                }
+
+                repairs.push({
+                  action: 'SNAP_VERTICES',
+                  entityAId: String(s1.id),
+                  entityBId: String(s2.id),
+                  distanceMm: gap,
+                  toleranceMm: config.gapToleranceMm,
+                  location: { x: midX, y: midY },
+                  reason: `Micro-gap de ${gap.toFixed(4)} mm unificado no ponto médio antes das T-junctions`,
+                  before: { a: { x: ax, y: ay }, b: { x: bx, y: by } },
+                  after: { snappedPoint: { x: midX, y: midY } },
+                });
               }
-
-              repairs.push({
-                action: 'SNAP_VERTICES',
-                entityAId: String(s1.id),
-                entityBId: String(s2.id),
-                distanceMm: gap,
-                toleranceMm: config.gapToleranceMm,
-                location: { x: midX, y: midY },
-                reason: `Micro-gap de ${gap.toFixed(4)} mm unificado no ponto médio antes das T-junctions`,
-                before: { a: { x: ax, y: ay }, b: { x: bx, y: by } },
-                after: { snappedPoint: { x: midX, y: midY } },
-              });
             }
           }
         }
       }
     }
 
-    // 3. PASSO 2: Resolução Analítica de X-Intersections (Cruzamentos Internos de Segmentos)
-    // Calcula pontos de cruzamento interno entre pares de segmentos e particiona ambos
+    // 3. PASSO 2: Resolução Analítica de X-Intersections com filtragem rápida de Bounding Boxes
     const xSplitsMap = new Map<number, { pt: Point2D; t: number }[]>();
     for (let i = 0; i < currentSegments.length; i++) {
       xSplitsMap.set(i, []);
     }
 
+    // Pré-calcula Bounding Box de cada segmento para descarte instantâneo
+    const segBboxes = currentSegments.map((s) => ({
+      minX: Math.min(s.x0, s.x1) - 0.001,
+      maxX: Math.max(s.x0, s.x1) + 0.001,
+      minY: Math.min(s.y0, s.y1) - 0.001,
+      maxY: Math.max(s.y0, s.y1) + 0.001,
+    }));
+
+    // Limite de segurança de interseções para proteger o navegador em facas densas/gigantes
+    const MAX_X_INTERSECTIONS = 3000;
+    let totalIntersectionsFound = 0;
+
     for (let i = 0; i < currentSegments.length; i++) {
+      if (totalIntersectionsFound >= MAX_X_INTERSECTIONS) break;
       const s1 = currentSegments[i];
+      const bb1 = segBboxes[i];
       const p1A = { x: s1.x0, y: s1.y0 };
       const p1B = { x: s1.x1, y: s1.y1 };
 
       for (let j = i + 1; j < currentSegments.length; j++) {
+        if (totalIntersectionsFound >= MAX_X_INTERSECTIONS) break;
+        const bb2 = segBboxes[j];
+
+        // Descarte rápido em O(1) de segmentos cujas bounding boxes não se sobrepõem
+        if (bb1.maxX < bb2.minX || bb1.minX > bb2.maxX || bb1.maxY < bb2.minY || bb1.minY > bb2.maxY) {
+          continue;
+        }
+
         const s2 = currentSegments[j];
         const p2A = { x: s2.x0, y: s2.y0 };
         const p2B = { x: s2.x1, y: s2.y1 };
@@ -270,6 +329,7 @@ export class TopologyReconstructor {
           xSplitsMap.get(i)!.push({ pt: inter.point, t: inter.t1 });
           xSplitsMap.get(j)!.push({ pt: inter.point, t: inter.t2 });
           xIntersectionsSplit++;
+          totalIntersectionsFound++;
 
           repairs.push({
             action: 'SPLIT_X_INTERSECTION',
@@ -322,17 +382,38 @@ export class TopologyReconstructor {
     }
     currentSegments = afterXSegments;
 
-    // 4. PASSO 3: Resolução Analítica de T-Junctions (Vértices incidentes no meio de segmentos)
-    // Coleta todos os vértices únicos presentes
+    // 4. PASSO 3: Resolução Analítica de T-Junctions via Spatial Hash Grid O(N)
+    // Coleta vértices únicos indexados por grid para busca e registro em O(1)
+    const vCellSize = Math.max(1.0, config.tJunctionToleranceMm * 10);
+    const vertexGrid = new Map<string, Point2D[]>();
     const allVertexPoints: Point2D[] = [];
+
     function registerVertex(x: number, y: number): Point2D {
-      for (const vp of allVertexPoints) {
-        if (Math.hypot(vp.x - x, vp.y - y) < config.coincidentToleranceMm) {
-          return vp;
+      const gx = Math.floor(x / vCellSize);
+      const gy = Math.floor(y / vCellSize);
+
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          const list = vertexGrid.get(getSpatialKey(gx + dx, gy + dy));
+          if (list) {
+            for (const vp of list) {
+              if (Math.hypot(vp.x - x, vp.y - y) < config.coincidentToleranceMm) {
+                return vp;
+              }
+            }
+          }
         }
       }
+
       const newV: Point2D = { x, y };
       allVertexPoints.push(newV);
+      const key = getSpatialKey(gx, gy);
+      let cellList = vertexGrid.get(key);
+      if (!cellList) {
+        cellList = [];
+        vertexGrid.set(key, cellList);
+      }
+      cellList.push(newV);
       return newV;
     }
 
@@ -356,7 +437,28 @@ export class TopologyReconstructor {
 
       const innerSplits: { pt: Point2D; t: number; dist: number }[] = [];
 
-      for (const v of allVertexPoints) {
+      // Consulta apenas células espaciais que tocam a bounding box do segmento
+      const minX = Math.min(seg.x0, seg.x1) - config.tJunctionToleranceMm;
+      const maxX = Math.max(seg.x0, seg.x1) + config.tJunctionToleranceMm;
+      const minY = Math.min(seg.y0, seg.y1) - config.tJunctionToleranceMm;
+      const maxY = Math.max(seg.y0, seg.y1) + config.tJunctionToleranceMm;
+
+      const minGx = Math.floor(minX / vCellSize);
+      const maxGx = Math.floor(maxX / vCellSize);
+      const minGy = Math.floor(minY / vCellSize);
+      const maxGy = Math.floor(maxY / vCellSize);
+
+      const candidateVertices: Point2D[] = [];
+      for (let gx = minGx; gx <= maxGx; gx++) {
+        for (let gy = minGy; gy <= maxGy; gy++) {
+          const cList = vertexGrid.get(getSpatialKey(gx, gy));
+          if (cList) {
+            candidateVertices.push(...cList);
+          }
+        }
+      }
+
+      for (const v of candidateVertices) {
         const isEndpoint = (Math.hypot(v.x - p0.x, v.y - p0.y) < config.coincidentToleranceMm) ||
                            (Math.hypot(v.x - p1.x, v.y - p1.y) < config.coincidentToleranceMm);
         if (isEndpoint) continue;
@@ -364,7 +466,6 @@ export class TopologyReconstructor {
         const { distance, projection, t } = distancePointToSegment(v, p0, p1);
         if (distance <= config.tJunctionToleranceMm && t > 0.002 && t < 0.998) {
           innerSplits.push({ pt: projection, t, dist: distance });
-          // Atualiza as coordenadas do vértice tocante para coincidirem perfeitamente com a projeção
           v.x = projection.x;
           v.y = projection.y;
         }

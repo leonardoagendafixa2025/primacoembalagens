@@ -201,6 +201,7 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({
         success: true,
         project: activeProject,
+        jsx: activeProject.jsx || null,
         corelScript,
       }));
     } catch (e) {
@@ -208,6 +209,7 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({
         success: true,
         project: activeProject,
+        jsx: activeProject.jsx || null,
       }));
     }
     return;

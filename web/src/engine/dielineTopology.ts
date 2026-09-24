@@ -121,202 +121,186 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   // por furos/entalhes de alívio circular (relief punch), recuados por tolerância de fabricação (setback <= 3.5mm),
   // ou apresentam micro-defeitos de corte em junções de abas (slits) e degraus de borda (boundary steps).
 
-  // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de alívio / relief notches <= 3.5mm)
-  const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
-  const bridgeCreases: { p0: Point2D; p1: Point2D; type: string }[] = [];
-  for (let i = 0; i < creaseSegs.length; i++) {
-    const c1 = creaseSegs[i];
-    const dx1 = c1.p1.x - c1.p0.x;
-    const dy1 = c1.p1.y - c1.p0.y;
-    const l1 = Math.hypot(dx1, dy1);
-    if (l1 < 1e-4) continue;
-    const u1x = dx1 / l1, u1y = dy1 / l1;
+  // 1.5 Cura universal de alívios de vinco industriais (apenas para modelos paramétricos com tamanho moderado <= 500 segmentos)
+  const skipHeavyHeuristics = rawSegs.length > 500;
 
-    for (let j = i + 1; j < creaseSegs.length; j++) {
-      const c2 = creaseSegs[j];
-      const dx2 = c2.p1.x - c2.p0.x;
-      const dy2 = c2.p1.y - c2.p0.y;
-      const l2 = Math.hypot(dx2, dy2);
-      if (l2 < 1e-4) continue;
-      const u2x = dx2 / l2, u2y = dy2 / l2;
+  if (!skipHeavyHeuristics) {
+    // 1.5b: Fechamento de gaps entre vincos colineares (entalhes de alívio / relief notches <= 3.5mm)
+    const creaseSegs = rawSegs.filter((s) => s.type === 'crease');
+    const bridgeCreases: { p0: Point2D; p1: Point2D; type: string }[] = [];
+    for (let i = 0; i < creaseSegs.length; i++) {
+      const c1 = creaseSegs[i];
+      const dx1 = c1.p1.x - c1.p0.x;
+      const dy1 = c1.p1.y - c1.p0.y;
+      const l1 = Math.hypot(dx1, dy1);
+      if (l1 < 1e-4) continue;
+      const u1x = dx1 / l1, u1y = dy1 / l1;
 
-      // Devem ser paralelos (produto vetorial ~ 0)
-      const cross = Math.abs(u1x * u2y - u1y * u2x);
-      if (cross > 0.05) continue;
+      for (let j = i + 1; j < creaseSegs.length; j++) {
+        const c2 = creaseSegs[j];
+        const dx2 = c2.p1.x - c2.p0.x;
+        const dy2 = c2.p1.y - c2.p0.y;
+        const l2 = Math.hypot(dx2, dy2);
+        if (l2 < 1e-4) continue;
+        const u2x = dx2 / l2, u2y = dy2 / l2;
 
-      // Devem estar na mesma reta colinear
-      const v0x = c2.p0.x - c1.p0.x;
-      const v0y = c2.p0.y - c1.p0.y;
-      if (Math.abs(v0x * u1y - v0y * u1x) > 0.15) continue;
+        const cross = Math.abs(u1x * u2y - u1y * u2x);
+        if (cross > 0.05) continue;
 
-      // Testa os 4 pares de pontas para encontrar a ponte entre os segmentos
-      const pairs: [Point2D, Point2D][] = [
-        [c1.p0, c2.p0],
-        [c1.p0, c2.p1],
-        [c1.p1, c2.p0],
-        [c1.p1, c2.p1],
-      ];
-      for (const [pA, pB] of pairs) {
-        const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-        if (d > 0.05 && d <= 3.5) {
-          const bdx = (pB.x - pA.x) / d;
-          const bdy = (pB.y - pA.y) / d;
-          if (Math.abs(Math.abs(bdx * u1x + bdy * u1y) - 1.0) < 0.1) {
-            bridgeCreases.push({
-              p0: { x: pA.x, y: pA.y },
-              p1: { x: pB.x, y: pB.y },
-              type: 'crease',
-            });
+        const v0x = c2.p0.x - c1.p0.x;
+        const v0y = c2.p0.y - c1.p0.y;
+        if (Math.abs(v0x * u1y - v0y * u1x) > 0.15) continue;
+
+        const pairs: [Point2D, Point2D][] = [
+          [c1.p0, c2.p0],
+          [c1.p0, c2.p1],
+          [c1.p1, c2.p0],
+          [c1.p1, c2.p1],
+        ];
+        for (const [pA, pB] of pairs) {
+          const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+          if (d > 0.05 && d <= 3.5) {
+            const bdx = (pB.x - pA.x) / d;
+            const bdy = (pB.y - pA.y) / d;
+            if (Math.abs(Math.abs(bdx * u1x + bdy * u1y) - 1.0) < 0.1) {
+              bridgeCreases.push({
+                p0: { x: pA.x, y: pA.y },
+                p1: { x: pB.x, y: pB.y },
+                type: 'crease',
+              });
+            }
           }
         }
       }
     }
-  }
-  rawSegs.push(...bridgeCreases);
+    rawSegs.push(...bridgeCreases);
 
-  // 1.5c: Cura de pontas soltas de vincos (Crease Setback Healer <= 3.5mm)
-  // Em modelos industriais reais (ECMA/FEFCO), lâminas de vinco terminam a 0.5-3.5mm dos cantos para alívio de matriz.
-  // Apenas pontas genuinamente soltas de VINCO (que não tocam nenhum vértice ou aresta) são estendidas
-  // na própria direção até encontrar a linha transversal mais próxima.
-  // Cortes e detalhes finos (< 1.5mm) são estritamente preservados sem colapso.
-  for (const s of rawSegs) {
-    if (s.type !== 'crease') continue;
-    for (const ep of ['p0', 'p1'] as const) {
-      const pt = s[ep];
-      const otherPt = ep === 'p0' ? s.p1 : s.p0;
+    // 1.5c: Cura de pontas soltas de vincos (Crease Setback Healer <= 3.5mm)
+    for (const s of rawSegs) {
+      if (s.type !== 'crease') continue;
+      for (const ep of ['p0', 'p1'] as const) {
+        const pt = s[ep];
+        const otherPt = ep === 'p0' ? s.p1 : s.p0;
 
-      // Verifica se pt já toca algum vértice ou aresta
-      let touchesAny = false;
-      for (const o of rawSegs) {
-        if (o === s) continue;
-        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.15 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.15) {
-          touchesAny = true;
-          break;
+        let touchesAny = false;
+        for (const o of rawSegs) {
+          if (o === s) continue;
+          if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.15 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.15) {
+            touchesAny = true;
+            break;
+          }
+          if (distToSeg(pt, o) < 0.15) {
+            touchesAny = true;
+            break;
+          }
         }
-        if (distToSeg(pt, o) < 0.15) {
-          touchesAny = true;
-          break;
-        }
-      }
-      if (touchesAny) continue;
+        if (touchesAny) continue;
 
-      // Ponto verdadeiramente solto: estende na direção do vinco até interceptar linha transversal mais próxima (<= 3.5mm)
-      const dirx = pt.x - otherPt.x;
-      const diry = pt.y - otherPt.y;
-      const dlen = Math.hypot(dirx, diry);
-      if (dlen < 1e-4) continue;
-      const udx = dirx / dlen;
-      const udy = diry / dlen;
+        const dirx = pt.x - otherPt.x;
+        const diry = pt.y - otherPt.y;
+        const dlen = Math.hypot(dirx, diry);
+        if (dlen < 1e-4) continue;
+        const udx = dirx / dlen;
+        const udy = diry / dlen;
 
-      let bestT = 3.5;
-      let bestInter: Point2D | null = null;
-      for (const o of rawSegs) {
-        if (o === s) continue;
-        const x3 = o.p0.x, y3 = o.p0.y;
-        const x4 = o.p1.x, y4 = o.p1.y;
-        const denom = udx * (y4 - y3) - udy * (x4 - x3);
-        if (Math.abs(denom) < 1e-5) continue;
-        const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
-        const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
-        if (t > 0.02 && t <= bestT && u >= -0.01 && u <= 1.01) {
-          bestT = t;
-          bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
+        let bestT = 3.5;
+        let bestInter: Point2D | null = null;
+        for (const o of rawSegs) {
+          if (o === s) continue;
+          const x3 = o.p0.x, y3 = o.p0.y;
+          const x4 = o.p1.x, y4 = o.p1.y;
+          const denom = udx * (y4 - y3) - udy * (x4 - x3);
+          if (Math.abs(denom) < 1e-5) continue;
+          const t = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
+          const u = ((x3 - pt.x) * udy - (y3 - pt.y) * udx) / denom;
+          if (t > 0.02 && t <= bestT && u >= -0.01 && u <= 1.01) {
+            bestT = t;
+            bestInter = { x: pt.x + t * udx, y: pt.y + t * udy };
+          }
         }
-      }
-      if (bestInter) {
-        pt.x = bestInter.x;
-        pt.y = bestInter.y;
+        if (bestInter) {
+          pt.x = bestInter.x;
+          pt.y = bestInter.y;
+        }
       }
     }
+
+    // 1.5d: Fechamento de degraus no contorno externo (Boundary Step Closures <= 3.6mm)
+    const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
+    for (const s of rawSegs) {
+      if (s.type !== 'cut') continue;
+      for (const ep of ['p0', 'p1'] as const) {
+        const pt = s[ep];
+        let meets = 0;
+        for (const o of rawSegs) {
+          if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
+            meets++;
+          }
+          if (o !== s && distToSeg(pt, o) < 0.1) {
+            meets++;
+          }
+        }
+        if (meets <= 1) {
+          cutEndpoints.push({ pt, seg: s });
+        }
+      }
+    }
+    const boundaryBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
+    for (let i = 0; i < cutEndpoints.length; i++) {
+      for (let j = i + 1; j < cutEndpoints.length; j++) {
+        const pA = cutEndpoints[i].pt;
+        const pB = cutEndpoints[j].pt;
+        const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+        if (d > 0.05 && d <= 3.6) {
+          boundaryBridges.push({
+            p0: { x: pA.x, y: pA.y },
+            p1: { x: pB.x, y: pB.y },
+            type: 'cut',
+          });
+        }
+      }
+    }
+    rawSegs.push(...boundaryBridges);
   }
 
-  // 1.5d: Fechamento de degraus e descontinuidades no contorno externo (Boundary Step Closures <= 3.6mm)
-  // Se duas pontas soltas de corte estão a uma distância curta (tolerância industrial Ep <= 3.6mm), conecta com corte.
-  const cutEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
-  for (const s of rawSegs) {
-    if (s.type !== 'cut') continue;
-    for (const ep of ['p0', 'p1'] as const) {
-      const pt = s[ep];
-      let meets = 0;
-      for (const o of rawSegs) {
-        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
-          meets++;
-        }
-        if (o !== s && distToSeg(pt, o) < 0.1) {
-          meets++;
-        }
-      }
-      if (meets <= 1) {
-        cutEndpoints.push({ pt, seg: s });
-      }
-    }
-  }
-  const boundaryBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
-  for (let i = 0; i < cutEndpoints.length; i++) {
-    for (let j = i + 1; j < cutEndpoints.length; j++) {
-      const pA = cutEndpoints[i].pt;
-      const pB = cutEndpoints[j].pt;
-      const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-      if (d > 0.05 && d <= 3.6) {
-        boundaryBridges.push({
-          p0: { x: pA.x, y: pA.y },
-          p1: { x: pB.x, y: pB.y },
-          type: 'cut',
-        });
-      }
-    }
-  }
-  rawSegs.push(...boundaryBridges);
-
-  // 1.5e: Fechamento universal de degraus entre vincos (Crease Jog / Step Closures <= 3.6mm)
-  // Em embalagens dobráveis industriais (FEFCO 02xx / ECMA), vincos opostos de flaps superiores e inferiores
-  // terminam na linha divisória central com pequenos degraus de folga de dobra (setback lateral <= 3.6mm).
-  const looseCreaseEndpoints: { pt: Point2D; seg: { p0: Point2D; p1: Point2D; type: string } }[] = [];
-  for (const s of rawSegs) {
-    if (s.type !== 'crease') continue;
-    for (const ep of ['p0', 'p1'] as const) {
-      const pt = s[ep];
-      let meets = 0;
-      for (const o of rawSegs) {
-        if (Math.hypot(o.p0.x - pt.x, o.p0.y - pt.y) < 0.1 || Math.hypot(o.p1.x - pt.x, o.p1.y - pt.y) < 0.1) {
-          meets++;
-        }
-        if (o !== s && distToSeg(pt, o) < 0.1) {
-          meets++;
-        }
-      }
-      if (meets <= 1) {
-        looseCreaseEndpoints.push({ pt, seg: s });
-      }
-    }
-  }
-  const creaseJogBridges: { p0: Point2D; p1: Point2D; type: string }[] = [];
-  for (let i = 0; i < looseCreaseEndpoints.length; i++) {
-    for (let j = i + 1; j < looseCreaseEndpoints.length; j++) {
-      const pA = looseCreaseEndpoints[i].pt;
-      const pB = looseCreaseEndpoints[j].pt;
-      const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-      if (d > 0.05 && d <= 3.6) {
-        creaseJogBridges.push({
-          p0: { x: pA.x, y: pA.y },
-          p1: { x: pB.x, y: pB.y },
-          type: 'crease',
-        });
-      }
-    }
-  }
-  rawSegs.push(...creaseJogBridges);
-
-  // 2. Unifica vértices próximos (tolerância numérica padrão de CAD 0.15 mm)
+  // 2. Unifica vértices próximos via Spatial Hash Grid O(N) (tolerância 0.15 mm)
   const EPS = 0.15;
+  const pCellSize = Math.max(1.0, EPS * 5);
+  const pointGrid = new Map<string, Point2D[]>();
   const uniquePoints: Point2D[] = [];
+  const pointIndexMap = new Map<Point2D, number>();
+
+  function pGridKey(gx: number, gy: number): string {
+    return `${gx}_${gy}`;
+  }
 
   function getUniquePoint(x: number, y: number): Point2D {
-    for (const p of uniquePoints) {
-      if (Math.hypot(p.x - x, p.y - y) < EPS) return p;
+    const gx = Math.floor(x / pCellSize);
+    const gy = Math.floor(y / pCellSize);
+
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const list = pointGrid.get(pGridKey(gx + dx, gy + dy));
+        if (list) {
+          for (const p of list) {
+            if (Math.hypot(p.x - x, p.y - y) < EPS) return p;
+          }
+        }
+      }
     }
+
     const newPt: Point2D = { x, y };
+    const idx = uniquePoints.length;
     uniquePoints.push(newPt);
+    pointIndexMap.set(newPt, idx);
+
+    const k = pGridKey(gx, gy);
+    let cellList = pointGrid.get(k);
+    if (!cellList) {
+      cellList = [];
+      pointGrid.set(k, cellList);
+    }
+    cellList.push(newPt);
     return newPt;
   }
 
@@ -325,15 +309,33 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     s.p1 = getUniquePoint(s.p1.x, s.p1.y);
   }
 
-  // 3. Subdivide segmentos em T-Junctions (quando a ponta de um vinco toca o meio de outro)
+  // 3. Subdivide segmentos em T-Junctions via Spatial Grid
   const cleanSegs: { p0: Point2D; p1: Point2D; type: string }[] = [];
   for (const s of rawSegs) {
     const x0 = s.p0.x, y0 = s.p0.y, x1 = s.p1.x, y1 = s.p1.y;
     const l2 = (x1 - x0) ** 2 + (y1 - y0) ** 2;
     if (l2 < 1e-6) continue;
 
+    const minX = Math.min(x0, x1) - EPS;
+    const maxX = Math.max(x0, x1) + EPS;
+    const minY = Math.min(y0, y1) - EPS;
+    const maxY = Math.max(y0, y1) + EPS;
+
+    const minGx = Math.floor(minX / pCellSize);
+    const maxGx = Math.floor(maxX / pCellSize);
+    const minGy = Math.floor(minY / pCellSize);
+    const maxGy = Math.floor(maxY / pCellSize);
+
+    const candidatePts: Point2D[] = [];
+    for (let gx = minGx; gx <= maxGx; gx++) {
+      for (let gy = minGy; gy <= maxGy; gy++) {
+        const cList = pointGrid.get(pGridKey(gx, gy));
+        if (cList) candidatePts.push(...cList);
+      }
+    }
+
     const splitPoints: { pt: Point2D; t: number }[] = [];
-    for (const p of uniquePoints) {
+    for (const p of candidatePts) {
       if (p === s.p0 || p === s.p1) continue;
       const t = ((p.x - x0) * (x1 - x0) + (p.y - y0) * (y1 - y0)) / l2;
       if (t > 0.002 && t < 0.998) {
@@ -358,19 +360,17 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     }
   }
 
-  // 3.5 Deduplica segmentos id├¬nticos ou sobrepostos (mesmo par de v├®rtices)
-  // Evita arestas duplas no grafo DCEL que geram ciclos de ├írea zero e corrompem as faces
+  // 3.5 Deduplica segmentos idênticos com Map em O(N)
   const edgeKeyMap = new Map<string, { p0: Point2D; p1: Point2D; type: string }>();
   for (const s of cleanSegs) {
-    const idx0 = uniquePoints.indexOf(s.p0);
-    const idx1 = uniquePoints.indexOf(s.p1);
-    if (idx0 === idx1 || idx0 === -1 || idx1 === -1) continue;
+    const idx0 = pointIndexMap.get(s.p0);
+    const idx1 = pointIndexMap.get(s.p1);
+    if (idx0 === undefined || idx1 === undefined || idx0 === idx1) continue;
     const key = idx0 < idx1 ? `${idx0}_${idx1}` : `${idx1}_${idx0}`;
     const existing = edgeKeyMap.get(key);
     if (!existing) {
       edgeKeyMap.set(key, s);
     } else {
-      // Se houver conflito entre corte e vinco na mesma aresta, 'cut' tem preced├¬ncia
       if (s.type === 'cut' || existing.type === 'cut') {
         existing.type = 'cut';
       }
@@ -378,7 +378,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   }
   const finalSegs = Array.from(edgeKeyMap.values());
 
-  // 4. Constr├│i o grafo Half-Edge (DCEL)
+  // 4. Constrói o grafo Half-Edge (DCEL)
   const vertexOutgoing = new Map<Point2D, InternalHalfEdge[]>();
   const halfEdges: InternalHalfEdge[] = [];
   let heIdCounter = 0;
@@ -395,7 +395,7 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
       id: heIdCounter++,
       u: s.p1,
       v: s.p0,
-      angle: Math.atan2(s.p0.y - s.p1.y, s.p0.x - s.p1.x),
+      angle: Math.atan2(s.p0.y - s.p1.y, s.p0.x - s.p0.x),
       type: s.type,
     };
     he1.twin = he2;
@@ -408,21 +408,24 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     vertexOutgoing.get(s.p1)!.push(he2);
   }
 
-  // Ordena arestas de sa├¡da no sentido anti-hor├írio (CCW)
+  // Ordena arestas de saída no sentido anti-horário (CCW)
   for (const [, list] of vertexOutgoing.entries()) {
     list.sort((a, b) => a.angle - b.angle);
   }
 
-  // Liga os ponteiros next de cada half-edge (curva m├íxima ├á esquerda = menor face CCW)
+  // Liga os ponteiros next de cada half-edge com proteção contra nós isolados
   for (const he of halfEdges) {
     const v = he.v;
-    const outList = vertexOutgoing.get(v)!;
+    const outList = vertexOutgoing.get(v);
+    if (!outList || outList.length === 0) continue;
     const twinIdx = outList.indexOf(he.twin!);
-    const nextIdx = (twinIdx - 1 + outList.length) % outList.length;
-    he.next = outList[nextIdx];
+    if (twinIdx !== -1) {
+      const nextIdx = (twinIdx - 1 + outList.length) % outList.length;
+      he.next = outList[nextIdx];
+    }
   }
 
-  // 5. Rastreia ciclos m├¡nimos para extrair todas as faces planares
+  // 5. Rastreia ciclos mínimos com limite estrito de passos (MAX_STEPS = 1000)
   const allFaces: InternalFace[] = [];
   let faceIdCounter = 0;
 
@@ -432,8 +435,11 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     const cycle: Point2D[] = [];
     const cycleEdges: InternalHalfEdge[] = [];
     let curr: InternalHalfEdge | undefined = he;
+    let stepCount = 0;
+    const MAX_STEPS = 1000;
 
-    while (curr && !curr.visited) {
+    while (curr && !curr.visited && stepCount < MAX_STEPS) {
+      stepCount++;
       curr.visited = true;
       cycle.push(curr.u);
       cycleEdges.push(curr);

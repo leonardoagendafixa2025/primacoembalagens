@@ -297,6 +297,7 @@
               success: !!currentProject,
               project: currentProject,
               projectId: currentProject ? (currentProject.projectId || currentProject.modelCode) : null,
+              jsx: currentProject ? currentProject.jsx : null,
               latestArtworkDataUri: lastOuterArtworkUri || lastLoadedArtworkUri,
               outerArtworkDataUri: lastOuterArtworkUri,
               innerArtworkDataUri: lastInnerArtworkUri
@@ -781,16 +782,36 @@
         return;
       }
 
-      setStatus('Solicitando script de faca à Bridge...');
+      setStatus('Reconstruindo faca no Illustrator...');
+
+      // 1. Se currentProject já possui o script JSX em memória, executa imediatamente
+      var localJsx = currentProject.jsx;
+      if (localJsx) {
+        cs.evalScript(localJsx, function(resStr) {
+          try {
+            var res = JSON.parse(resStr);
+            if (res && res.error) {
+              setStatus('Aviso ExtendScript: ' + res.error);
+            } else {
+              setStatus('Faca ' + (currentProject.modelCode || '') + ' atualizada com sucesso no Illustrator!');
+            }
+          } catch(e) {
+            setStatus('Faca sincronizada no Illustrator.');
+          }
+        });
+        return;
+      }
+
+      // 2. Fallback: solicita o script à Bridge
       fetch(BRIDGE_URL + '/api/request-geometry')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (!data || !data.jsx) {
-            setStatus('Aviso: Nenhuma faca ativa.');
+          var targetJsx = (data && (data.jsx || (data.project && data.project.jsx))) || (currentProject && currentProject.jsx);
+          if (!targetJsx) {
+            setStatus('Aviso: Nenhuma faca ativa para desenhar.');
             return;
           }
-          setStatus('Reconstruindo faca no Illustrator...');
-          cs.evalScript(data.jsx, function(resStr) {
+          cs.evalScript(targetJsx, function(resStr) {
             try {
               var res = JSON.parse(resStr);
               if (res && res.error) {
@@ -799,7 +820,7 @@
                 setStatus('Faca atualizada com sucesso no Illustrator!');
               }
             } catch(e) {
-              setStatus('Faca sincronizada.');
+              setStatus('Faca sincronizada no Illustrator.');
             }
           });
         })

@@ -120,15 +120,36 @@ export const App: React.FC = () => {
       setCustomAngles({});
       setSelectedPanelId(null);
       setHingeList([]);
-      setParams({
+      const newParams = {
         L: Math.round(dielineRes.bounds.width) || 300,
         B: Math.round(dielineRes.bounds.height) || 200,
         H: 100,
         Ep: selectedProfile.thickness,
-      });
+      };
+      setParams(newParams);
       setActiveTab('2d');
+
+      // Sincroniza imediatamente com o Adobe Illustrator e o Estúdio 3D do Plugin
+      try {
+        const exchangePkg = createProjectExchangePackage(
+          model,
+          newParams,
+          selectedProfile,
+          dielineRes
+        );
+        const client = IllustratorBridgeClient.getInstance();
+        client.openInIllustrator(exchangePkg).then((res) => {
+          if (res.success) {
+            try { confetti({ particleCount: 35, spread: 50, origin: { y: 0.15 } }); } catch {}
+          }
+        }).catch((err) => {
+          console.warn('[ImportCad] Bridge offline ou em espera:', err);
+        });
+      } catch (syncErr) {
+        console.warn('[ImportCad] Aviso na sincronização com Illustrator:', syncErr);
+      }
     },
-    [selectedProfile.thickness]
+    [selectedProfile]
   );
 
   useEffect(() => {

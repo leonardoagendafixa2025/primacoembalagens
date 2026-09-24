@@ -342,7 +342,10 @@ export class LoopTopologyEngine {
       let curr: DirectedHalfEdge | undefined = he;
       let isClosed = false;
 
-      while (curr && !curr.visited) {
+      let stepCount = 0;
+      const MAX_CYCLE_STEPS = 1500;
+      while (curr && !curr.visited && stepCount < MAX_CYCLE_STEPS) {
+        stepCount++;
         curr.visited = true;
         cycleVertices.push(curr.u);
         cycleEdges.push(curr.ref);
@@ -390,9 +393,19 @@ export class LoopTopologyEngine {
       // Se for puramente corte e estiver totalmente contido dentro de outro loop interno maior, é um furo
       let isInsideAnother = false;
       for (const other of internalLoops) {
-        if (other !== loop && other.area > loop.area && pointInPolygon(loop.centroid, other.vertices)) {
-          isInsideAnother = true;
-          break;
+        if (other !== loop && other.area > loop.area) {
+          // Descarte rápido por bounding box antes de computar pointInPolygon
+          if (
+            loop.bounds.minX >= other.bounds.minX - 0.01 &&
+            loop.bounds.maxX <= other.bounds.maxX + 0.01 &&
+            loop.bounds.minY >= other.bounds.minY - 0.01 &&
+            loop.bounds.maxY <= other.bounds.maxY + 0.01
+          ) {
+            if (pointInPolygon(loop.centroid, other.vertices)) {
+              isInsideAnother = true;
+              break;
+            }
+          }
         }
       }
 
@@ -410,9 +423,16 @@ export class LoopTopologyEngine {
     }
     for (const hl of holeLoops) {
       for (const pl of candidatePanelLoops) {
-        if (pointInPolygon(hl.centroid, pl.vertices)) {
-          panelHolesMap.get(pl.id)!.push(hl);
-          break;
+        if (
+          hl.bounds.minX >= pl.bounds.minX - 0.01 &&
+          hl.bounds.maxX <= pl.bounds.maxX + 0.01 &&
+          hl.bounds.minY >= pl.bounds.minY - 0.01 &&
+          hl.bounds.maxY <= pl.bounds.maxY + 0.01
+        ) {
+          if (pointInPolygon(hl.centroid, pl.vertices)) {
+            panelHolesMap.get(pl.id)!.push(hl);
+            break;
+          }
         }
       }
     }
