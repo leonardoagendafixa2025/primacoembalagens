@@ -177,41 +177,61 @@ export class FoldingTreeEngine {
     const realCreases = geometry.segments.filter((s) => s.type === 'crease');
 
     // 2. Mapeamento de quais painéis contêm cada CREASE em suas outer boundaries
-    // Uma CREASE compartilhada conecta exatamente dois painéis adjacentes
+    // 2. Mapeamento de quais painéis contêm cada CREASE em suas outer boundaries
     const creaseToPanelsMap = new Map<string, string[]>();
     for (let idx = 0; idx < realCreases.length; idx++) {
       const cId = getCreaseId(realCreases[idx], idx + 1);
       creaseToPanelsMap.set(cId, []);
     }
 
+    const matchTol = Math.max(tolerance * 4, 0.25);
+
+    function isEdgeColinearWithCrease(edge: { p0: Point2D; p1: Point2D }, c: Segment2D): boolean {
+      const cdx = c.x1 - c.x0;
+      const cdy = c.y1 - c.y0;
+      const cLenSq = cdx * cdx + cdy * cdy;
+      if (cLenSq < 1e-6) return false;
+
+      const t0 = ((edge.p0.x - c.x0) * cdx + (edge.p0.y - c.y0) * cdy) / cLenSq;
+      const t1 = ((edge.p1.x - c.x0) * cdx + (edge.p1.y - c.y0) * cdy) / cLenSq;
+
+      if (t0 < -0.08 || t0 > 1.08 || t1 < -0.08 || t1 > 1.08) return false;
+
+      const proj0x = c.x0 + t0 * cdx;
+      const proj0y = c.y0 + t0 * cdy;
+      const proj1x = c.x0 + t1 * cdx;
+      const proj1y = c.y0 + t1 * cdy;
+
+      const d0 = Math.hypot(edge.p0.x - proj0x, edge.p0.y - proj0y);
+      const d1 = Math.hypot(edge.p1.x - proj1x, edge.p1.y - proj1y);
+
+      return d0 <= matchTol && d1 <= matchTol;
+    }
+
     for (const panel of panels) {
       for (const edge of panel.outerBoundary.edges) {
         if (edge.sourceType === 'crease' && edge.type === 'segment') {
-          // Busca a crease correspondente por ID ou por proximidade geométrica
-          let matchedCreaseId: string | null = null;
           for (let idx = 0; idx < realCreases.length; idx++) {
             const c = realCreases[idx];
             const cId = getCreaseId(c, idx + 1);
-            if (cId === String(edge.id)) {
-              matchedCreaseId = cId;
-              break;
-            }
+
             const cP0: Point2D = { x: c.x0, y: c.y0 };
             const cP1: Point2D = { x: c.x1, y: c.y1 };
-            const d1 = pointDistance(cP0, edge.p0) + pointDistance(cP1, edge.p1);
-            const d2 = pointDistance(cP0, edge.p1) + pointDistance(cP1, edge.p0);
-            if (Math.min(d1, d2) <= tolerance * 2) {
-              matchedCreaseId = cId;
-              break;
-            }
-          }
+            const dDirect = pointDistance(cP0, edge.p0) + pointDistance(cP1, edge.p1);
+            const dOpposite = pointDistance(cP0, edge.p1) + pointDistance(cP1, edge.p0);
 
-          if (matchedCreaseId) {
-            const list = creaseToPanelsMap.get(matchedCreaseId) || [];
-            if (!list.includes(panel.id)) {
-              list.push(panel.id);
+            const isMatch =
+              cId === String(edge.id) ||
+              Math.min(dDirect, dOpposite) <= matchTol * 2 ||
+              isEdgeColinearWithCrease(edge, c);
+
+            if (isMatch) {
+              const list = creaseToPanelsMap.get(cId) || [];
+              if (!list.includes(panel.id)) {
+                list.push(panel.id);
+              }
+              creaseToPanelsMap.set(cId, list);
             }
-            creaseToPanelsMap.set(matchedCreaseId, list);
           }
         }
       }
@@ -221,14 +241,15 @@ export class FoldingTreeEngine {
     const edges: FoldGraphEdge[] = [];
     const orphanCreases: Array<{ creaseId: string; crease: Segment2D; reason: string }> = [];
     let edgeCounter = 0;
+    const connectedPairSet = new Set<string>();
 
     for (let idx = 0; idx < realCreases.length; idx++) {
       const crease = realCreases[idx];
       const cId = getCreaseId(crease, idx + 1);
       const associatedPanels = creaseToPanelsMap.get(cId) || [];
 
-      if (associatedPanels.length === 2) {
-        // Conexão válida entre dois painéis
+      if (associatedPanels.length >= 2) {
+        // Conexão válida entre os dois primeiros painéis associados
         edgeCounter++;
         const p0: Point2D = { x: crease.x0, y: crease.y0 };
         const p1: Point2D = { x: crease.x1, y: crease.y1 };
@@ -236,6 +257,9 @@ export class FoldingTreeEngine {
         const dir: Point2D = len > 0.0001
           ? { x: (p1.x - p0.x) / len, y: (p1.y - p0.y) / len }
           : { x: 1, y: 0 };
+
+        const pairKey = [associatedPanels[0], associatedPanels[1]].sort().join('_');
+        connectedPairSet.add(pairKey);
 
         edges.push({
           id: `EDGE_${edgeCounter.toString().padStart(3, '0')}`,
@@ -254,18 +278,64 @@ export class FoldingTreeEngine {
           crease,
           reason: `CREASE pertence a apenas 1 painel (${associatedPanels[0]}); borda aberta/flutuante.`,
         });
-      } else if (associatedPanels.length === 0) {
+      } else {
         orphanCreases.push({
           creaseId: cId,
           crease,
           reason: `CREASE não intercepta a boundary de nenhum painel estrutural fechado.`,
         });
-      } else {
-        orphanCreases.push({
-          creaseId: cId,
-          crease,
-          reason: `CREASE associada a mais de 2 painéis (${associatedPanels.join(', ')}); não-variedade 2D.`,
-        });
+      }
+    }
+
+    // 3.5 Detecção direta de arestas de vinco compartilhadas entre pares de painéis ainda não conectados
+    for (let i = 0; i < panels.length; i++) {
+      const pA = panels[i];
+      for (let j = i + 1; j < panels.length; j++) {
+        const pB = panels[j];
+        const pairKey = [pA.id, pB.id].sort().join('_');
+        if (connectedPairSet.has(pairKey)) continue;
+
+        for (const edgeA of pA.outerBoundary.edges) {
+          if (edgeA.sourceType !== 'crease' || edgeA.type !== 'segment') continue;
+          for (const edgeB of pB.outerBoundary.edges) {
+            if (edgeB.sourceType !== 'crease' || edgeB.type !== 'segment') continue;
+
+            const dMatch = pointDistance(edgeA.p0, edgeB.p1) + pointDistance(edgeA.p1, edgeB.p0);
+            const dDirect = pointDistance(edgeA.p0, edgeB.p0) + pointDistance(edgeA.p1, edgeB.p1);
+
+            if (Math.min(dMatch, dDirect) <= matchTol * 2) {
+              edgeCounter++;
+              const p0 = edgeA.p0;
+              const p1 = edgeA.p1;
+              const len = pointDistance(p0, p1);
+              const dir: Point2D = len > 0.0001
+                ? { x: (p1.x - p0.x) / len, y: (p1.y - p0.y) / len }
+                : { x: 1, y: 0 };
+
+              connectedPairSet.add(pairKey);
+              edges.push({
+                id: `EDGE_${edgeCounter.toString().padStart(3, '0')}`,
+                creaseId: String(edgeA.id || `crease_shared_${edgeCounter}`),
+                crease: {
+                  id: edgeA.id,
+                  x0: p0.x,
+                  y0: p0.y,
+                  x1: p1.x,
+                  y1: p1.y,
+                  type: 'crease',
+                },
+                panelAId: pA.id,
+                panelBId: pB.id,
+                axisStart: p0,
+                axisEnd: p1,
+                length: Number(len.toFixed(4)),
+                direction: { x: Number(dir.x.toFixed(6)), y: Number(dir.y.toFixed(6)) },
+              });
+              break;
+            }
+          }
+          if (connectedPairSet.has(pairKey)) break;
+        }
       }
     }
 

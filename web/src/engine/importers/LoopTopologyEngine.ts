@@ -163,14 +163,37 @@ export class LoopTopologyEngine {
     const perfCount = geometry.segments.filter((s) => s.type === 'perfo').length;
     const arcsCount = geometry.arcs.length;
 
-    // 1. Coleta vértices únicos e prepara as arestas direcionadas
-    const vertexMap = new Map<string, Point2D>();
+    // 1. Coleta vértices únicos via Spatial Grid para garantir conectividade perfeita
+    const snapTolMm = 0.15;
+    const vCellSize = Math.max(1.0, snapTolMm * 10);
+    const vertexGrid = new Map<string, Point2D[]>();
+
     function getCanonicalVertex(p: Point2D): Point2D {
-      const key = `${p.x.toFixed(3)}_${p.y.toFixed(3)}`;
-      if (!vertexMap.has(key)) {
-        vertexMap.set(key, { x: Number(p.x.toFixed(4)), y: Number(p.y.toFixed(4)) });
+      const gx = Math.floor(p.x / vCellSize);
+      const gy = Math.floor(p.y / vCellSize);
+
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          const list = vertexGrid.get(`${gx + dx}_${gy + dy}`);
+          if (list) {
+            for (const vp of list) {
+              if (Math.hypot(vp.x - p.x, vp.y - p.y) < snapTolMm) {
+                return vp;
+              }
+            }
+          }
+        }
       }
-      return vertexMap.get(key)!;
+
+      const newV: Point2D = { x: Number(p.x.toFixed(4)), y: Number(p.y.toFixed(4)) };
+      const k = `${gx}_${gy}`;
+      let cellList = vertexGrid.get(k);
+      if (!cellList) {
+        cellList = [];
+        vertexGrid.set(k, cellList);
+      }
+      cellList.push(newV);
+      return newV;
     }
 
     // Apenas CUT e CREASE participam da formação topológica de painéis e boundaries.

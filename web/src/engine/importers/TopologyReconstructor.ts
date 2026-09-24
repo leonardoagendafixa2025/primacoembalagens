@@ -394,8 +394,9 @@ export class TopologyReconstructor {
     const vCellSize = Math.max(1.0, config.tJunctionToleranceMm * 10);
     const vertexGrid = new Map<string, Point2D[]>();
     const allVertexPoints: Point2D[] = [];
+    const vertexOwners = new Map<Point2D, Array<{ seg: Segment2D; endpoint: 'p0' | 'p1' }>>();
 
-    function registerVertex(x: number, y: number): Point2D {
+    function registerVertex(x: number, y: number, seg?: Segment2D, endpoint?: 'p0' | 'p1'): Point2D {
       const gx = Math.floor(x / vCellSize);
       const gy = Math.floor(y / vCellSize);
 
@@ -405,6 +406,11 @@ export class TopologyReconstructor {
           if (list) {
             for (const vp of list) {
               if (Math.hypot(vp.x - x, vp.y - y) < config.coincidentToleranceMm) {
+                if (seg && endpoint) {
+                  let owners = vertexOwners.get(vp);
+                  if (!owners) { owners = []; vertexOwners.set(vp, owners); }
+                  owners.push({ seg, endpoint });
+                }
                 return vp;
               }
             }
@@ -421,12 +427,15 @@ export class TopologyReconstructor {
         vertexGrid.set(key, cellList);
       }
       cellList.push(newV);
+      if (seg && endpoint) {
+        vertexOwners.set(newV, [{ seg, endpoint }]);
+      }
       return newV;
     }
 
     for (const s of currentSegments) {
-      registerVertex(s.x0, s.y0);
-      registerVertex(s.x1, s.y1);
+      registerVertex(s.x0, s.y0, s, 'p0');
+      registerVertex(s.x1, s.y1, s, 'p1');
     }
     for (const a of currentArcs) {
       const aStartRad = (a.startAngle * Math.PI) / 180;
@@ -475,6 +484,18 @@ export class TopologyReconstructor {
           innerSplits.push({ pt: projection, t, dist: distance });
           v.x = projection.x;
           v.y = projection.y;
+
+          // Atualiza os endpoints de todos os segmentos proprietários do vértice incidente
+          const owners = vertexOwners.get(v) || [];
+          for (const owner of owners) {
+            if (owner.endpoint === 'p0') {
+              owner.seg.x0 = projection.x;
+              owner.seg.y0 = projection.y;
+            } else {
+              owner.seg.x1 = projection.x;
+              owner.seg.y1 = projection.y;
+            }
+          }
         }
       }
 
