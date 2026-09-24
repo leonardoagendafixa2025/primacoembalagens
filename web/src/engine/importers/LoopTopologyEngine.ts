@@ -407,6 +407,8 @@ export class LoopTopologyEngine {
     const holeLoops: ClosedLoop[] = [];
     const candidatePanelLoops: ClosedLoop[] = [];
 
+    const hasCreasesInGeometry = geometry.segments.some((s) => s.type === 'crease');
+
     for (const loop of internalLoops) {
       const isPureCut = loop.edges.every((e) => e.sourceType === 'cut');
       // Se for puramente corte e estiver totalmente contido dentro de outro loop interno maior, é um furo
@@ -428,7 +430,9 @@ export class LoopTopologyEngine {
         }
       }
 
-      if (isPureCut && isInsideAnother) {
+      // Se for puramente corte e estiver dentro de outro loop, OU se o modelo for dobrável (possui vincos)
+      // e o loop for 100% corte (corte vazado entre abas/janela/alívio/apara), é um corte vazado e deve sumir no 3D
+      if (isPureCut && (isInsideAnother || hasCreasesInGeometry)) {
         holeLoops.push(loop);
       } else {
         candidatePanelLoops.push(loop);

@@ -499,10 +499,19 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
   // 6. Separa pain├®is de furos internos (mortises, rasgos, recortes vazados)
   // IMPORTANTE: threshold de 800 mm┬▓ para furos ÔÇö furos reais (dedo, mortise) s├úo pequenos;
   // abas do fundo semi-autom├ítico (snap-lock, 1-2-3 bottom) t├¬m ├írea > 800 mm┬▓ e devem ser pain├®is.
-  const holeFaces = allFaces.filter(
-    (f) => !f.isExternal && f.edges.every((e) => e.type === 'cut') && f.area > 0 && f.area < 800
-  );
-  // ├ürea m├¡nima de 10 mm┬▓ para incluir abas estreitas (aba de cola, lingueta, abas de poeira)
+  const hasCreasesInDieline = dieline.segments.some((s) => s.type === 'crease');
+
+  // Em uma faca com vincos (embalagem dobravel), qualquer face interna com 100% de arestas de corte
+  // nao possui vincos de dobra — portanto e um corte vazado / apara / furo / alivio e DEVE sumir no 3D.
+  // Caso a faca inteira nao possua nenhum vinco (ex: chapa plana / FEFCO 0900), a face e preservada.
+  const holeFaces = allFaces.filter((f) => {
+    if (f.isExternal) return false;
+    if (f.edges.some((e) => e.type !== 'cut')) return false; // Possui vinco -> painel estrutural
+    if (!hasCreasesInDieline) return false; // Faca puramente plana sem vincos -> preserva
+    return true; // 100% corte em modelo com vincos -> corte vazado / apara
+  });
+
+  // Area minima de 10 mm2 para incluir abas estreitas (aba de cola, lingueta, abas de poeira)
   const panelFaces = allFaces.filter(
     (f) => !f.isExternal && !holeFaces.includes(f) && f.area > 10
   );
