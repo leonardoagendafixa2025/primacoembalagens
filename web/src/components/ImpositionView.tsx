@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { DielineResult } from '../engine/types';
+import type { PackagingModel, DielineResult } from '../engine/types';
 import type { ImpositionParams, SheetFormat } from '../engine/imposition';
 import {
   STANDARD_SHEETS,
@@ -7,13 +7,21 @@ import {
 } from '../engine/imposition';
 import { toPackagingGeometry } from '../engine/geometry';
 import { exportImpositionToDXF } from '../engine/dxfExporter';
-import { Percent, Box, Scissors, Download, Compass, Layers } from 'lucide-react';
+import { Percent, Box, Scissors, Download, Compass, Layers, Ruler, Lock, Unlock, RotateCcw } from 'lucide-react';
 
 interface ImpositionViewProps {
   dieline: DielineResult;
+  model?: PackagingModel;
+  params?: Record<string, number>;
+  onParamChange?: (key: string, value: number, extraParams?: Record<string, number>) => void;
 }
 
-export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
+export const ImpositionView: React.FC<ImpositionViewProps> = ({
+  dieline,
+  model,
+  params,
+  onParamChange,
+}) => {
   const [selectedSheetId, setSelectedSheetId] = useState<string>('chapa_800x1200');
   const [customSheet, setCustomSheet] = useState<{ width: number; height: number }>({
     width: 1200,
@@ -52,6 +60,60 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
 
   const handleExportDxf = () => {
     exportImpositionToDXF(imposition, `imposicao_${imposition.sheetWidth}x${imposition.sheetHeight}_${imposition.totalPoses}poses.dxf`);
+  };
+
+  // Parâmetros e manipuladores de escala da faca
+  const origL = params?.origL || model?.defaultParams?.origL || model?.defaultParams?.L || dieline.bounds.width || 300;
+  const origB = params?.origB || model?.defaultParams?.origB || model?.defaultParams?.B || dieline.bounds.height || 200;
+  const currentL = params?.L ?? Math.round(dieline.bounds.width * 10) / 10;
+  const currentB = params?.B ?? Math.round(dieline.bounds.height * 10) / 10;
+  const currentScale = params?.scale ?? (origL > 0 ? Math.round((currentL / origL) * 1000) / 10 : 100);
+  const lockRatio = (params?.lockRatio ?? 1) === 1;
+
+  const handleToggleLockRatio = () => {
+    onParamChange?.('lockRatio', lockRatio ? 0 : 1);
+  };
+
+  const handleWidthChange = (newL: number) => {
+    const val = Math.max(10, Math.min(10000, Number(newL) || 10));
+    if (lockRatio && origL > 0) {
+      const ratio = origB / origL;
+      const newB = Math.round(val * ratio * 10) / 10;
+      const newScale = Math.round((val / origL) * 1000) / 10;
+      onParamChange?.('L', val, { B: newB, scale: newScale });
+    } else {
+      const newScale = origL > 0 ? Math.round((val / origL) * 1000) / 10 : 100;
+      onParamChange?.('L', val, { scale: newScale });
+    }
+  };
+
+  const handleHeightChange = (newB: number) => {
+    const val = Math.max(10, Math.min(10000, Number(newB) || 10));
+    if (lockRatio && origB > 0) {
+      const invRatio = origL / origB;
+      const newL = Math.round(val * invRatio * 10) / 10;
+      const newScale = Math.round((val / origB) * 1000) / 10;
+      onParamChange?.('B', val, { L: newL, scale: newScale });
+    } else {
+      const newScale = origB > 0 ? Math.round((val / origB) * 1000) / 10 : 100;
+      onParamChange?.('B', val, { scale: newScale });
+    }
+  };
+
+  const handleScalePercent = (targetScale: number) => {
+    const sc = Math.max(5, Math.min(1000, Number(targetScale) || 100));
+    const newL = Math.round(origL * (sc / 100) * 10) / 10;
+    const newB = Math.round(origB * (sc / 100) * 10) / 10;
+    onParamChange?.('scale', sc, { L: newL, B: newB });
+  };
+
+  const handleDeltaScale = (deltaPercent: number) => {
+    const newScale = Math.round((currentScale + deltaPercent) * 10) / 10;
+    handleScalePercent(newScale);
+  };
+
+  const handleResetToOriginal = () => {
+    onParamChange?.('scale', 100, { L: origL, B: origB });
   };
 
   return (
@@ -141,6 +203,142 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({ dieline }) => {
             </div>
           </div>
         )}
+
+        {/* Dimensões da Faca (Unitária) e Ajuste Rápido de Escala na Folha */}
+        <div
+          style={{
+            background: '#121616',
+            border: '1px solid #242c2c',
+            borderRadius: 8,
+            padding: '10px 12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#35a89e', fontSize: 12, fontWeight: 700 }}>
+              <Ruler size={13} color="#35a89e" />
+              <span>Dimensões da Faca (Pose)</span>
+            </div>
+            {onParamChange && (
+              <button
+                type="button"
+                onClick={handleToggleLockRatio}
+                style={{
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  border: lockRatio ? '1px solid #35a89e' : '1px solid #242c2c',
+                  background: lockRatio ? 'rgba(53, 168, 158, 0.2)' : 'transparent',
+                  color: lockRatio ? '#35a89e' : '#64748B',
+                  cursor: 'pointer',
+                }}
+                title={lockRatio ? 'Proporção travada (L e B escalam juntos)' : 'Proporção livre'}
+              >
+                {lockRatio ? <Lock size={10} color="#35a89e" /> : <Unlock size={10} />}
+                <span>{lockRatio ? 'Proporcional' : 'Livre'}</span>
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div>
+              <label style={{ fontSize: 10, color: '#94A3B8', display: 'block', marginBottom: 2 }}>Largura X (mm)</label>
+              <input
+                type="number"
+                value={currentL}
+                onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
+                disabled={!onParamChange}
+                style={{
+                  width: '100%',
+                  padding: '6px 8px',
+                  borderRadius: 4,
+                  background: '#0d1010',
+                  border: '1px solid #242c2c',
+                  color: '#FFF',
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 10, color: '#94A3B8', display: 'block', marginBottom: 2 }}>Altura Y (mm)</label>
+              <input
+                type="number"
+                value={currentB}
+                onChange={(e) => handleHeightChange(parseFloat(e.target.value))}
+                disabled={!onParamChange}
+                style={{
+                  width: '100%',
+                  padding: '6px 8px',
+                  borderRadius: 4,
+                  background: '#0d1010',
+                  border: '1px solid #242c2c',
+                  color: '#FFF',
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                }}
+              />
+            </div>
+          </div>
+
+          {onParamChange && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 4, borderTop: '1px solid #1c2222' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10, color: '#94A3B8' }}>
+                <span>Escala: <strong style={{ color: '#35a89e' }}>{currentScale}%</strong></span>
+                {(Math.abs(currentL - origL) > 0.5 || Math.abs(currentB - origB) > 0.5) && (
+                  <button
+                    type="button"
+                    onClick={handleResetToOriginal}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#35a89e',
+                      fontSize: 10,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 3,
+                    }}
+                    title="Restaurar tamanho original 1:1"
+                  >
+                    <RotateCcw size={10} /> Reset 1:1 ({origL} × {origB})
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+                {[-5, -2, 0, 2, 5].map((delta) => {
+                  const isZero = delta === 0;
+                  return (
+                    <button
+                      key={delta}
+                      type="button"
+                      onClick={() => (isZero ? handleResetToOriginal() : handleDeltaScale(delta))}
+                      style={{
+                        padding: '4px 0',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        borderRadius: 3,
+                        border: '1px solid #242c2c',
+                        background: '#0d1010',
+                        color: isZero ? '#35a89e' : '#94A3B8',
+                        cursor: 'pointer',
+                      }}
+                      title={isZero ? 'Redefinir para 100%' : `${delta > 0 ? '+' : ''}${delta}%`}
+                    >
+                      {isZero ? '100%' : `${delta > 0 ? '+' : ''}${delta}%`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Margens e Canaleta */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

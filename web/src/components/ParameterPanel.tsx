@@ -16,13 +16,16 @@ import {
   Ruler,
   FileUp,
   FileCode,
+  Lock,
+  Unlock,
+  RotateCcw,
 } from 'lucide-react';
 
 interface ParameterPanelProps {
   model: PackagingModel;
   params: Record<string, number>;
   selectedProfileId: string;
-  onParamChange: (key: string, value: number) => void;
+  onParamChange: (key: string, value: number, extraParams?: Record<string, number>) => void;
   onProfileChange: (profile: CardboardProfile) => void;
   bounds: BoundingBox2D;
   dieline?: DielineResult;
@@ -109,6 +112,56 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   const dimMatrix = useMemo(() => {
     return calculateDimensionMatrix({ L: lVal, B: bVal, H: hVal }, 'dieline', epVal);
   }, [lVal, bVal, hVal, epVal]);
+
+  // Propriedades e manipuladores para facas personalizadas / importadas (CAD)
+  const isImported = model.category === 'PERSONALIZADO' || model.id.startsWith('imported_');
+  const origL = params.origL || model.defaultParams?.origL || model.defaultParams?.L || 300;
+  const origB = params.origB || model.defaultParams?.origB || model.defaultParams?.B || 200;
+  const currentL = params.L ?? origL;
+  const currentB = params.B ?? origB;
+  const currentScale = params.scale ?? (origL > 0 ? Math.round((currentL / origL) * 1000) / 10 : 100);
+  const lockRatio = (params.lockRatio ?? 1) === 1;
+
+  const handleToggleLockRatio = () => {
+    onParamChange('lockRatio', lockRatio ? 0 : 1);
+  };
+
+  const handleWidthChange = (newL: number) => {
+    const val = Math.max(10, Math.min(10000, Number(newL) || 10));
+    if (lockRatio && origL > 0) {
+      const ratio = origB / origL;
+      const newB = Math.round(val * ratio * 10) / 10;
+      const newScale = Math.round((val / origL) * 1000) / 10;
+      onParamChange('L', val, { B: newB, scale: newScale });
+    } else {
+      const newScale = origL > 0 ? Math.round((val / origL) * 1000) / 10 : 100;
+      onParamChange('L', val, { scale: newScale });
+    }
+  };
+
+  const handleHeightChange = (newB: number) => {
+    const val = Math.max(10, Math.min(10000, Number(newB) || 10));
+    if (lockRatio && origB > 0) {
+      const invRatio = origL / origB;
+      const newL = Math.round(val * invRatio * 10) / 10;
+      const newScale = Math.round((val / origB) * 1000) / 10;
+      onParamChange('B', val, { L: newL, scale: newScale });
+    } else {
+      const newScale = origB > 0 ? Math.round((val / origB) * 1000) / 10 : 100;
+      onParamChange('B', val, { scale: newScale });
+    }
+  };
+
+  const handleScaleChange = (newScale: number) => {
+    const sc = Math.max(5, Math.min(1000, Number(newScale) || 100));
+    const newL = Math.round(origL * (sc / 100) * 10) / 10;
+    const newB = Math.round(origB * (sc / 100) * 10) / 10;
+    onParamChange('scale', sc, { L: newL, B: newB });
+  };
+
+  const handleResetToOriginal = () => {
+    onParamChange('scale', 100, { L: origL, B: origB });
+  };
 
   return (
     <aside
@@ -303,233 +356,331 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
               </div>
             )}
 
-            {/* Seletor de Modo de Medida (Interna / Faca / Externa) */}
-            <div
-              style={{
-                background: 'var(--cad-bg-panel-elevated)',
-                border: '1px solid var(--cad-border-subtle)',
-                borderRadius: 'var(--cad-radius-sm)',
-                padding: '10px 12px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <ArrowRightLeft size={13} color="var(--cad-accent)" />
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: 'var(--cad-text-primary)',
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    Referência de Medidas
-                  </span>
-                </div>
-                <span
+            {isImported ? (
+              /* Controles de Escala e Dimensões da Faca Importada (CAD) */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Painel de Dimensões e Escala com Cadeado de Proporção */}
+                <div
                   style={{
+                    background: 'var(--cad-bg-panel-elevated)',
+                    border: '1px solid var(--cad-border-subtle)',
+                    borderRadius: 'var(--cad-radius-sm)',
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Ruler size={14} color="var(--cad-accent)" />
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--cad-text-primary)', letterSpacing: 0.5 }}>
+                        DIMENSÕES DA FACA
+                      </span>
+                    </div>
+
+                    {/* Botão Trava de Proporção */}
+                    <button
+                      type="button"
+                      onClick={handleToggleLockRatio}
+                      className="cad-btn"
+                      style={{
+                        padding: '3px 8px',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        borderRadius: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        background: lockRatio ? 'rgba(0, 210, 180, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        border: lockRatio ? '1px solid var(--cad-accent)' : '1px solid var(--cad-border-subtle)',
+                        color: lockRatio ? 'var(--cad-accent)' : 'var(--cad-text-muted)',
+                        cursor: 'pointer',
+                      }}
+                      title={lockRatio ? 'Proporção Travada (L e B alteram juntos)' : 'Proporção Livre (L e B independentes)'}
+                    >
+                      {lockRatio ? <Lock size={11} color="var(--cad-accent)" /> : <Unlock size={11} />}
+                      <span>{lockRatio ? 'Proporcional' : 'Livre'}</span>
+                    </button>
+                  </div>
+
+                  {/* Campo Largura Total (X) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
+                        Largura Total (X)
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button
+                          type="button"
+                          onClick={() => handleWidthChange(Math.round(currentL - (lockRatio ? 5 : 1)))}
+                          className="cad-tool-btn"
+                          style={{ width: 22, height: 26, borderRadius: 3 }}
+                          title="Diminuir largura"
+                        >
+                          <Minus size={11} />
+                        </button>
+                        <div className="cad-input-group" style={{ width: 84 }}>
+                          <input
+                            type="number"
+                            className="cad-input-number"
+                            min={10}
+                            max={10000}
+                            step={1}
+                            value={currentL}
+                            onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              background: 'transparent',
+                              border: 'none',
+                              outline: 'none',
+                              color: 'var(--cad-text-primary)',
+                              fontFamily: 'var(--cad-font-mono)',
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              padding: '0 0 0 6px',
+                            }}
+                          />
+                          <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', paddingRight: 4 }}>mm</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleWidthChange(Math.round(currentL + (lockRatio ? 5 : 1)))}
+                          className="cad-tool-btn"
+                          style={{ width: 22, height: 26, borderRadius: 3 }}
+                          title="Aumentar largura"
+                        >
+                          <Plus size={11} />
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      className="cad-slider"
+                      min={Math.max(10, Math.round(origL * 0.2))}
+                      max={Math.round(origL * 2.5)}
+                      step={1}
+                      value={currentL}
+                      onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
+                    />
+                  </div>
+
+                  {/* Campo Altura Total (Y) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
+                        Altura Total (Y)
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button
+                          type="button"
+                          onClick={() => handleHeightChange(Math.round(currentB - (lockRatio ? 5 : 1)))}
+                          className="cad-tool-btn"
+                          style={{ width: 22, height: 26, borderRadius: 3 }}
+                          title="Diminuir altura"
+                        >
+                          <Minus size={11} />
+                        </button>
+                        <div className="cad-input-group" style={{ width: 84 }}>
+                          <input
+                            type="number"
+                            className="cad-input-number"
+                            min={10}
+                            max={10000}
+                            step={1}
+                            value={currentB}
+                            onChange={(e) => handleHeightChange(parseFloat(e.target.value))}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              background: 'transparent',
+                              border: 'none',
+                              outline: 'none',
+                              color: 'var(--cad-text-primary)',
+                              fontFamily: 'var(--cad-font-mono)',
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              padding: '0 0 0 6px',
+                            }}
+                          />
+                          <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', paddingRight: 4 }}>mm</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleHeightChange(Math.round(currentB + (lockRatio ? 5 : 1)))}
+                          className="cad-tool-btn"
+                          style={{ width: 22, height: 26, borderRadius: 3 }}
+                          title="Aumentar altura"
+                        >
+                          <Plus size={11} />
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      className="cad-slider"
+                      min={Math.max(10, Math.round(origB * 0.2))}
+                      max={Math.round(origB * 2.5)}
+                      step={1}
+                      value={currentB}
+                      onChange={(e) => handleHeightChange(parseFloat(e.target.value))}
+                    />
+                  </div>
+
+                  {/* Campo Escala Proporcional (%) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 6, borderTop: '1px solid var(--cad-border-subtle)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
+                        Escala Geral
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button
+                          type="button"
+                          onClick={() => handleScaleChange(Math.round(currentScale - 5))}
+                          className="cad-tool-btn"
+                          style={{ width: 22, height: 26, borderRadius: 3 }}
+                          title="Diminuir escala 5%"
+                        >
+                          <Minus size={11} />
+                        </button>
+                        <div className="cad-input-group" style={{ width: 78 }}>
+                          <input
+                            type="number"
+                            className="cad-input-number"
+                            min={10}
+                            max={500}
+                            step={1}
+                            value={currentScale}
+                            onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              background: 'transparent',
+                              border: 'none',
+                              outline: 'none',
+                              color: 'var(--cad-text-primary)',
+                              fontFamily: 'var(--cad-font-mono)',
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              padding: '0 0 0 6px',
+                            }}
+                          />
+                          <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', paddingRight: 4 }}>%</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleScaleChange(Math.round(currentScale + 5))}
+                          className="cad-tool-btn"
+                          style={{ width: 22, height: 26, borderRadius: 3 }}
+                          title="Aumentar escala 5%"
+                        >
+                          <Plus size={11} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <input
+                      type="range"
+                      className="cad-slider"
+                      min={20}
+                      max={250}
+                      step={1}
+                      value={currentScale}
+                      onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
+                    />
+
+                    {/* Presets Rápidos de Escala */}
+                    <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+                      {[50, 75, 100, 125, 150].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => handleScaleChange(preset)}
+                          style={{
+                            flex: 1,
+                            padding: '4px 0',
+                            fontSize: 10,
+                            fontWeight: 600,
+                            borderRadius: 3,
+                            border: Math.abs(currentScale - preset) < 0.5 ? '1px solid var(--cad-accent)' : '1px solid var(--cad-border-subtle)',
+                            background: Math.abs(currentScale - preset) < 0.5 ? 'rgba(0, 210, 180, 0.15)' : 'var(--cad-bg-input)',
+                            color: Math.abs(currentScale - preset) < 0.5 ? 'var(--cad-accent)' : 'var(--cad-text-secondary)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {preset}%
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Botão Restaurar Tamanho Original 1:1 */}
+                  {(Math.abs(currentL - origL) > 0.5 || Math.abs(currentB - origB) > 0.5) && (
+                    <button
+                      type="button"
+                      onClick={handleResetToOriginal}
+                      className="cad-btn"
+                      style={{
+                        padding: '6px 10px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid var(--cad-border-subtle)',
+                        color: 'var(--cad-text-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        cursor: 'pointer',
+                        marginTop: 4,
+                      }}
+                      title="Voltar às medidas exatas do arquivo CAD original"
+                    >
+                      <RotateCcw size={12} color="var(--cad-accent)" />
+                      <span>Restaurar Medidas Originais ({origL} × {origB} mm)</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Resumo da Geometria da Faca Importada */}
+                <div
+                  style={{
+                    background: 'var(--cad-bg-input)',
+                    border: '1px solid var(--cad-border-subtle)',
+                    borderRadius: 'var(--cad-radius-xs)',
+                    padding: '8px 10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
                     fontSize: 10,
-                    color: 'var(--cad-text-muted)',
                     fontFamily: 'monospace',
                   }}
                 >
-                  e = {dimMatrix.caliper} mm
-                </span>
-              </div>
-
-              {/* Segmented Control 3 Modos */}
-              <div
-                style={{
-                  display: 'flex',
-                  background: 'var(--cad-bg-app)',
-                  padding: 3,
-                  borderRadius: 'var(--cad-radius-xs)',
-                  gap: 3,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setDimMode('internal')}
-                  style={{
-                    flex: 1,
-                    padding: '6px 4px',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    borderRadius: 3,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: dimMode === 'internal' ? 'var(--cad-accent)' : 'transparent',
-                    color: dimMode === 'internal' ? '#000000' : 'var(--cad-text-secondary)',
-                    transition: 'all 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 4,
-                  }}
-                  title="Medida do espaço interior livre (tamanho do produto)"
-                >
-                  <Box size={11} />
-                  <span>Interna</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDimMode('dieline')}
-                  style={{
-                    flex: 1,
-                    padding: '6px 4px',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    borderRadius: 3,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: dimMode === 'dieline' ? 'var(--cad-accent)' : 'transparent',
-                    color: dimMode === 'dieline' ? '#000000' : 'var(--cad-text-secondary)',
-                    transition: 'all 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 4,
-                  }}
-                  title="Medida centro-a-centro dos vincos de aço da faca"
-                >
-                  <Ruler size={11} />
-                  <span>Faca</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDimMode('external')}
-                  style={{
-                    flex: 1,
-                    padding: '6px 4px',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    borderRadius: 3,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: dimMode === 'external' ? 'var(--cad-accent)' : 'transparent',
-                    color: dimMode === 'external' ? '#000000' : 'var(--cad-text-secondary)',
-                    transition: 'all 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 4,
-                  }}
-                  title="Medida externa total da caixa fechada (logística / paletização)"
-                >
-                  <Truck size={11} />
-                  <span>Externa</span>
-                </button>
-              </div>
-
-              {/* Matriz Comparativa em Tempo Real */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                  background: 'var(--cad-bg-input)',
-                  padding: '7px 9px',
-                  borderRadius: 'var(--cad-radius-xs)',
-                  fontSize: 10,
-                  fontFamily: 'monospace',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    color: dimMode === 'internal' ? 'var(--cad-accent)' : 'var(--cad-text-dim)',
-                  }}
-                >
-                  <span>📦 Interna:</span>
-                  <span style={{ fontWeight: dimMode === 'internal' ? 700 : 500 }}>
-                    {dimMatrix.internal.L} × {dimMatrix.internal.B} × {dimMatrix.internal.H} mm
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    color: dimMode === 'dieline' ? 'var(--cad-accent)' : 'var(--cad-text-dim)',
-                  }}
-                >
-                  <span>📏 Faca (Vinco):</span>
-                  <span style={{ fontWeight: dimMode === 'dieline' ? 700 : 500 }}>
-                    {dimMatrix.dieline.L} × {dimMatrix.dieline.B} × {dimMatrix.dieline.H} mm
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    color: dimMode === 'external' ? 'var(--cad-accent)' : 'var(--cad-text-dim)',
-                  }}
-                >
-                  <span>🚚 Externa:</span>
-                  <span style={{ fontWeight: dimMode === 'external' ? 700 : 500 }}>
-                    {dimMatrix.external.L} × {dimMatrix.external.B} × {dimMatrix.external.H} mm
-                  </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-text-muted)' }}>
+                    <span>📐 Formato Original:</span>
+                    <strong style={{ color: 'var(--cad-text-secondary)' }}>{origL} × {origB} mm</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-accent)' }}>
+                    <span>📏 Formato Atual:</span>
+                    <strong>{currentL} × {currentB} mm</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-text-muted)' }}>
+                    <span>✂️ Linhas de Corte:</span>
+                    <span>{_dieline?.segments.filter((s) => s.type === 'cut').length || 0}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-text-muted)' }}>
+                    <span>⚡ Linhas de Vinco:</span>
+                    <span>{_dieline?.segments.filter((s) => s.type === 'crease').length || 0}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {model.paramDefs.map((def) => {
-              const isEp = def.key === 'Ep';
-              const isDim = def.key === 'L' || def.key === 'B' || def.key === 'W' || def.key === 'H';
-              const rawVal = params[def.key] ?? model.defaultParams[def.key] ?? 0;
-              const minVal = isEp ? 0.1 : def.min;
-              const stepVal = isEp ? 0.05 : def.step;
-
-              // Calcula valor aparente baseado no modo ativo
-              let displayVal = rawVal;
-              if (isDim) {
-                if (dimMode === 'internal') {
-                  if (def.key === 'L') displayVal = dimMatrix.internal.L;
-                  else if (def.key === 'B' || def.key === 'W') displayVal = dimMatrix.internal.B;
-                  else if (def.key === 'H') displayVal = dimMatrix.internal.H;
-                } else if (dimMode === 'external') {
-                  if (def.key === 'L') displayVal = dimMatrix.external.L;
-                  else if (def.key === 'B' || def.key === 'W') displayVal = dimMatrix.external.B;
-                  else if (def.key === 'H') displayVal = dimMatrix.external.H;
-                }
-              }
-
-              const updateParamValue = (inputVal: number) => {
-                if (!isDim || dimMode === 'dieline') {
-                  onParamChange(def.key, inputVal);
-                  return;
-                }
-                let targetFaca = inputVal;
-                if (dimMode === 'internal') {
-                  if (def.key === 'L' || def.key === 'B' || def.key === 'W') {
-                    targetFaca = inputVal + epVal;
-                  } else if (def.key === 'H') {
-                    targetFaca = inputVal + 2 * epVal;
-                  }
-                } else if (dimMode === 'external') {
-                  if (def.key === 'L' || def.key === 'B' || def.key === 'W') {
-                    targetFaca = Math.max(5, inputVal - epVal);
-                  } else if (def.key === 'H') {
-                    targetFaca = Math.max(5, inputVal - 2 * epVal);
-                  }
-                }
-                onParamChange(def.key, Math.round(targetFaca * 10) / 10);
-              };
-
-              const handleStep = (direction: 1 | -1) => {
-                const nextVal = Math.max(minVal, Math.min(def.max, displayVal + direction * stepVal));
-                updateParamValue(Math.round(nextVal * 100) / 100);
-              };
-
-              return (
+            ) : (
+              /* Parâmetros Dimensionais com Conversão de Medidas para Modelos Paramétricos Padrão */
+              <>
+                {/* Seletor de Modo de Medida (Interna / Faca / Externa) */}
                 <div
-                  key={def.key}
                   style={{
                     background: 'var(--cad-bg-panel-elevated)',
                     border: '1px solid var(--cad-border-subtle)',
@@ -540,122 +691,345 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                     gap: 8,
                   }}
                 >
-                  {/* Linha Superior: Label & Input de Precisão */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
-                          {def.label}
-                        </span>
-                        {isDim && dimMode !== 'dieline' && (
-                          <span
-                            style={{
-                              fontSize: 9,
-                              fontWeight: 700,
-                              padding: '1px 4px',
-                              borderRadius: 2,
-                              background: 'rgba(0, 210, 180, 0.15)',
-                              color: 'var(--cad-accent)',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {dimMode === 'internal' ? 'Int' : 'Ext'}
-                          </span>
-                        )}
-                      </div>
-                      {def.description && (
-                        <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', marginTop: 1 }}>
-                          {def.description}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Stepper Numérico CAD */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                      <button
-                        type="button"
-                        onClick={() => handleStep(-1)}
-                        className="cad-tool-btn"
-                        style={{ width: 24, height: 28, borderRadius: 3 }}
-                        title="Diminuir"
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <ArrowRightLeft size={13} color="var(--cad-accent)" />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: 'var(--cad-text-primary)',
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                        }}
                       >
-                        <Minus size={11} />
-                      </button>
+                        Referência de Medidas
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        color: 'var(--cad-text-muted)',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      e = {dimMatrix.caliper} mm
+                    </span>
+                  </div>
 
-                      <div className="cad-input-group">
+                  {/* Segmented Control 3 Modos */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      background: 'var(--cad-bg-app)',
+                      padding: 3,
+                      borderRadius: 'var(--cad-radius-xs)',
+                      gap: 3,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setDimMode('internal')}
+                      style={{
+                        flex: 1,
+                        padding: '6px 4px',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        borderRadius: 3,
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: dimMode === 'internal' ? 'var(--cad-accent)' : 'transparent',
+                        color: dimMode === 'internal' ? '#000000' : 'var(--cad-text-secondary)',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                      }}
+                      title="Medida do espaço interior livre (tamanho do produto)"
+                    >
+                      <Box size={11} />
+                      <span>Interna</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDimMode('dieline')}
+                      style={{
+                        flex: 1,
+                        padding: '6px 4px',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        borderRadius: 3,
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: dimMode === 'dieline' ? 'var(--cad-accent)' : 'transparent',
+                        color: dimMode === 'dieline' ? '#000000' : 'var(--cad-text-secondary)',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                      }}
+                      title="Medida centro-a-centro dos vincos de aço da faca"
+                    >
+                      <Ruler size={11} />
+                      <span>Faca</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDimMode('external')}
+                      style={{
+                        flex: 1,
+                        padding: '6px 4px',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        borderRadius: 3,
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: dimMode === 'external' ? 'var(--cad-accent)' : 'transparent',
+                        color: dimMode === 'external' ? '#000000' : 'var(--cad-text-secondary)',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                      }}
+                      title="Medida externa total da caixa fechada (logística / paletização)"
+                    >
+                      <Truck size={11} />
+                      <span>Externa</span>
+                    </button>
+                  </div>
+
+                  {/* Matriz Comparativa em Tempo Real */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      background: 'var(--cad-bg-input)',
+                      padding: '7px 9px',
+                      borderRadius: 'var(--cad-radius-xs)',
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        color: dimMode === 'internal' ? 'var(--cad-accent)' : 'var(--cad-text-dim)',
+                      }}
+                    >
+                      <span>📦 Interna:</span>
+                      <span style={{ fontWeight: dimMode === 'internal' ? 700 : 500 }}>
+                        {dimMatrix.internal.L} × {dimMatrix.internal.B} × {dimMatrix.internal.H} mm
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        color: dimMode === 'dieline' ? 'var(--cad-accent)' : 'var(--cad-text-dim)',
+                      }}
+                    >
+                      <span>📏 Faca (Vinco):</span>
+                      <span style={{ fontWeight: dimMode === 'dieline' ? 700 : 500 }}>
+                        {dimMatrix.dieline.L} × {dimMatrix.dieline.B} × {dimMatrix.dieline.H} mm
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        color: dimMode === 'external' ? 'var(--cad-accent)' : 'var(--cad-text-dim)',
+                      }}
+                    >
+                      <span>🚚 Externa:</span>
+                      <span style={{ fontWeight: dimMode === 'external' ? 700 : 500 }}>
+                        {dimMatrix.external.L} × {dimMatrix.external.B} × {dimMatrix.external.H} mm
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {model.paramDefs.map((def) => {
+                  const isEp = def.key === 'Ep';
+                  const isDim = def.key === 'L' || def.key === 'B' || def.key === 'W' || def.key === 'H';
+                  const rawVal = params[def.key] ?? model.defaultParams[def.key] ?? 0;
+                  const minVal = isEp ? 0.1 : def.min;
+                  const stepVal = isEp ? 0.05 : def.step;
+
+                  let displayVal = rawVal;
+                  if (isDim) {
+                    if (dimMode === 'internal') {
+                      if (def.key === 'L') displayVal = dimMatrix.internal.L;
+                      else if (def.key === 'B' || def.key === 'W') displayVal = dimMatrix.internal.B;
+                      else if (def.key === 'H') displayVal = dimMatrix.internal.H;
+                    } else if (dimMode === 'external') {
+                      if (def.key === 'L') displayVal = dimMatrix.external.L;
+                      else if (def.key === 'B' || def.key === 'W') displayVal = dimMatrix.external.B;
+                      else if (def.key === 'H') displayVal = dimMatrix.external.H;
+                    }
+                  }
+
+                  const updateParamValue = (inputVal: number) => {
+                    if (!isDim || dimMode === 'dieline') {
+                      onParamChange(def.key, inputVal);
+                      return;
+                    }
+                    let targetFaca = inputVal;
+                    if (dimMode === 'internal') {
+                      if (def.key === 'L' || def.key === 'B' || def.key === 'W') {
+                        targetFaca = inputVal + epVal;
+                      } else if (def.key === 'H') {
+                        targetFaca = inputVal + 2 * epVal;
+                      }
+                    } else if (dimMode === 'external') {
+                      if (def.key === 'L' || def.key === 'B' || def.key === 'W') {
+                        targetFaca = Math.max(5, inputVal - epVal);
+                      } else if (def.key === 'H') {
+                        targetFaca = Math.max(5, inputVal - 2 * epVal);
+                      }
+                    }
+                    onParamChange(def.key, Math.round(targetFaca * 10) / 10);
+                  };
+
+                  const handleStep = (direction: 1 | -1) => {
+                    const nextVal = Math.max(minVal, Math.min(def.max, displayVal + direction * stepVal));
+                    updateParamValue(Math.round(nextVal * 100) / 100);
+                  };
+
+                  return (
+                    <div
+                      key={def.key}
+                      style={{
+                        background: 'var(--cad-bg-panel-elevated)',
+                        border: '1px solid var(--cad-border-subtle)',
+                        borderRadius: 'var(--cad-radius-sm)',
+                        padding: '10px 12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
+                              {def.label}
+                            </span>
+                            {isDim && dimMode !== 'dieline' && (
+                              <span
+                                style={{
+                                  fontSize: 9,
+                                  fontWeight: 700,
+                                  padding: '1px 4px',
+                                  borderRadius: 2,
+                                  background: 'rgba(0, 210, 180, 0.15)',
+                                  color: 'var(--cad-accent)',
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                {dimMode === 'internal' ? 'Int' : 'Ext'}
+                              </span>
+                            )}
+                          </div>
+                          {def.description && (
+                            <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', marginTop: 1 }}>
+                              {def.description}
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            onClick={() => handleStep(-1)}
+                            className="cad-tool-btn"
+                            style={{ width: 24, height: 28, borderRadius: 3 }}
+                            title="Diminuir"
+                          >
+                            <Minus size={11} />
+                          </button>
+
+                          <div className="cad-input-group">
+                            <input
+                              type="number"
+                              className="cad-input-number"
+                              min={minVal}
+                              max={def.max}
+                              step={stepVal}
+                              value={displayVal}
+                              onChange={(e) => {
+                                const parsed = parseFloat(e.target.value);
+                                updateParamValue(isNaN(parsed) ? 0 : parsed);
+                              }}
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                                background: 'transparent',
+                                border: 'none',
+                                outline: 'none',
+                                color: 'var(--cad-text-primary)',
+                                fontFamily: 'var(--cad-font-mono)',
+                                fontSize: 11.5,
+                                fontWeight: 600,
+                                textAlign: 'left',
+                                padding: '0 0 0 6px',
+                                margin: 0,
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                color: 'var(--cad-text-muted)',
+                                marginLeft: 'auto',
+                                paddingRight: 4,
+                                userSelect: 'none',
+                                pointerEvents: 'none',
+                              }}
+                            >
+                              {def.unit}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStep(1)}
+                            className="cad-tool-btn"
+                            style={{ width: 24, height: 28, borderRadius: 3 }}
+                            title="Aumentar"
+                          >
+                            <Plus size={11} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="cad-mono" style={{ fontSize: 10, color: 'var(--cad-text-dim)' }}>
+                          {minVal}
+                        </span>
                         <input
-                          type="number"
-                          className="cad-input-number"
+                          type="range"
+                          className="cad-slider"
                           min={minVal}
                           max={def.max}
                           step={stepVal}
                           value={displayVal}
-                          onChange={(e) => {
-                            const parsed = parseFloat(e.target.value);
-                            updateParamValue(isNaN(parsed) ? 0 : parsed);
-                          }}
-                          style={{
-                            flex: 1,
-                            minWidth: 0,
-                            background: 'transparent',
-                            border: 'none',
-                            outline: 'none',
-                            color: 'var(--cad-text-primary)',
-                            fontFamily: 'var(--cad-font-mono)',
-                            fontSize: 11.5,
-                            fontWeight: 600,
-                            textAlign: 'left',
-                            padding: '0 0 0 6px',
-                            margin: 0,
-                          }}
+                          onChange={(e) => updateParamValue(parseFloat(e.target.value))}
                         />
-                        <span
-                          style={{
-                            fontSize: 10,
-                            color: 'var(--cad-text-muted)',
-                            marginLeft: 'auto',
-                            paddingRight: 4,
-                            userSelect: 'none',
-                            pointerEvents: 'none',
-                          }}
-                        >
-                          {def.unit}
+                        <span className="cad-mono" style={{ fontSize: 10, color: 'var(--cad-text-dim)' }}>
+                          {def.max}
                         </span>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleStep(1)}
-                        className="cad-tool-btn"
-                        style={{ width: 24, height: 28, borderRadius: 3 }}
-                        title="Aumentar"
-                      >
-                        <Plus size={11} />
-                      </button>
                     </div>
-                  </div>
-
-                  {/* Slider Contínuo */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="cad-mono" style={{ fontSize: 10, color: 'var(--cad-text-dim)' }}>
-                      {minVal}
-                    </span>
-                    <input
-                      type="range"
-                      className="cad-slider"
-                      min={minVal}
-                      max={def.max}
-                      step={stepVal}
-                      value={displayVal}
-                      onChange={(e) => updateParamValue(parseFloat(e.target.value))}
-                    />
-                    <span className="cad-mono" style={{ fontSize: 10, color: 'var(--cad-text-dim)' }}>
-                      {def.max}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </>
+            )}
           </div>
         ) : (
           /* Material & Espessura */

@@ -11,7 +11,7 @@ import { ecmaA1075 } from './ecmaA1075';
 import { ecmaB1001 } from './ecmaB1001';
 import { ecmaB1506_53 } from './ecmaB1506_53';
 
-export { CATALOG, getModelById, generateAuditMatrix } from '../registry';
+export { CATALOG, getModelById, registerCustomModel, generateAuditMatrix } from '../registry';
 export type { CatalogItem, AuditRow } from '../registry';
 
 export const MODELS: PackagingModel[] = [

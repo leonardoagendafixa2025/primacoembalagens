@@ -119,6 +119,13 @@ function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number,
 const MODEL_CACHE = new Map<string, PackagingModel>();
 
 /**
+ * Registra um modelo personalizado ou importado no cache global
+ */
+export function registerCustomModel(model: PackagingModel): void {
+  MODEL_CACHE.set(model.id, model);
+}
+
+/**
  * Resolve o PackagingModel para qualquer um dos 472 IDs com ZERO FALLBACK SILENCIOSO.
  */
 export function getModelById(id: string): PackagingModel {

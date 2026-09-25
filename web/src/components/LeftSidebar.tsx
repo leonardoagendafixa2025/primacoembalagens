@@ -9,7 +9,7 @@ interface LeftSidebarProps {
   model: PackagingModel;
   params: Record<string, number>;
   selectedProfileId: string;
-  onParamChange: (key: string, value: number) => void;
+  onParamChange: (key: string, value: number, extraParams?: Record<string, number>) => void;
   onProfileChange: (profile: CardboardProfile) => void;
   bounds: BoundingBox2D;
   dieline?: DielineResult;

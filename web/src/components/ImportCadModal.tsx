@@ -21,6 +21,7 @@ import {
   saveProfile,
   DEFAULT_PROFILES,
 } from '../engine/importers/ClassificationEngine';
+import { registerCustomModel } from '../engine/models';
 import type {
   ImportedCadDocument,
   CadClassificationTarget,
@@ -253,7 +254,77 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
       userScaleFactor: selectedUnit === 'cm' ? 10.0 : selectedUnit === 'inch' ? 25.4 : selectedUnit === 'pt' ? 25.4 / 72.0 : 1.0,
     });
 
-    // Cria modelo de embalagem integrado ao motor PRIMACOR EMBALAGENS
+    const baseWidth = Math.round((geometry.bounds.width > 0 ? geometry.bounds.width : 300) * 10) / 10;
+    const baseHeight = Math.round((geometry.bounds.height > 0 ? geometry.bounds.height : 200) * 10) / 10;
+    const baseDieline = dieline;
+    const baseMinX = dieline.bounds.minX || 0;
+    const baseMinY = dieline.bounds.minY || 0;
+
+    const importedCalculate = (params: Record<string, number>): DielineResult => {
+      let targetL = typeof params.L === 'number' && params.L > 0 ? params.L : baseWidth;
+      let targetB = typeof params.B === 'number' && params.B > 0 ? params.B : baseHeight;
+
+      // Se passou escala percentual explícita e L/B não foram alterados:
+      if (
+        typeof params.scale === 'number' &&
+        params.scale > 0 &&
+        (!params.L || Math.abs(params.L - baseWidth) < 0.1) &&
+        (!params.B || Math.abs(params.B - baseHeight) < 0.1)
+      ) {
+        targetL = Number((baseWidth * (params.scale / 100)).toFixed(2));
+        targetB = Number((baseHeight * (params.scale / 100)).toFixed(2));
+      }
+
+      const scaleX = baseWidth > 0 ? targetL / baseWidth : 1;
+      const scaleY = baseHeight > 0 ? targetB / baseHeight : 1;
+
+      if (Math.abs(scaleX - 1) < 1e-4 && Math.abs(scaleY - 1) < 1e-4) {
+        return baseDieline;
+      }
+
+      const scaledSegments = baseDieline.segments.map((s) => ({
+        ...s,
+        x0: Number((baseMinX + (s.x0 - baseMinX) * scaleX).toFixed(3)),
+        y0: Number((baseMinY + (s.y0 - baseMinY) * scaleY).toFixed(3)),
+        x1: Number((baseMinX + (s.x1 - baseMinX) * scaleX).toFixed(3)),
+        y1: Number((baseMinY + (s.y1 - baseMinY) * scaleY).toFixed(3)),
+      }));
+
+      const scaledArcs = baseDieline.arcs.map((a) => ({
+        ...a,
+        cx: Number((baseMinX + (a.cx - baseMinX) * scaleX).toFixed(3)),
+        cy: Number((baseMinY + (a.cy - baseMinY) * scaleY).toFixed(3)),
+        r: Number((a.r * Math.sqrt(scaleX * scaleY)).toFixed(3)),
+      }));
+
+      const newWidth = Number((baseWidth * scaleX).toFixed(3));
+      const newHeight = Number((baseHeight * scaleY).toFixed(3));
+
+      const scaledDimensions = (baseDieline.dimensions || []).map((d) => ({
+        ...d,
+        x0: Number((baseMinX + (d.x0 - baseMinX) * scaleX).toFixed(3)),
+        y0: Number((baseMinY + (d.y0 - baseMinY) * scaleY).toFixed(3)),
+        x1: Number((baseMinX + (d.x1 - baseMinX) * scaleX).toFixed(3)),
+        y1: Number((baseMinY + (d.y1 - baseMinY) * scaleY).toFixed(3)),
+      }));
+
+      return {
+        ...baseDieline,
+        segments: scaledSegments,
+        arcs: scaledArcs,
+        dimensions: scaledDimensions,
+        bounds: {
+          minX: baseMinX,
+          minY: baseMinY,
+          maxX: Number((baseMinX + newWidth).toFixed(3)),
+          maxY: Number((baseMinY + newHeight).toFixed(3)),
+          width: newWidth,
+          height: newHeight,
+        },
+      };
+    };
+
+    // Cria modelo de embalagem integrado ao motor PRIMACOR EMBALAGENS com cálculo paramétrico real
     const importedModel: PackagingModel = {
       id: `imported_${Date.now()}`,
       code: file ? file.name.replace(/\.[^/.]+$/, '').toUpperCase().slice(0, 14) : 'DIE_IMPORT',
@@ -261,20 +332,28 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
       category: 'PERSONALIZADO',
       description: `Faca CAD importada em formato ${doc.format} (${Math.round(geometry.bounds.width)}x${Math.round(geometry.bounds.height)} mm).`,
       defaultParams: {
-        L: Math.round(geometry.bounds.width) || 300,
-        B: Math.round(geometry.bounds.height) || 200,
+        L: baseWidth,
+        B: baseHeight,
+        scale: 100,
+        origL: baseWidth,
+        origB: baseHeight,
+        lockRatio: 1,
         H: 100,
+        Ep: 0.4,
       },
       paramDefs: [
-        { key: 'L', label: 'Largura Total', min: 10, max: 5000, step: 1, unit: 'mm' },
-        { key: 'B', label: 'Altura Total', min: 10, max: 5000, step: 1, unit: 'mm' },
+        { key: 'L', label: 'Largura Total (X)', min: 10, max: 5000, step: 1, unit: 'mm', description: 'Largura total da faca na folha' },
+        { key: 'B', label: 'Altura Total (Y)', min: 10, max: 5000, step: 1, unit: 'mm', description: 'Altura total da faca na folha' },
+        { key: 'scale', label: 'Escala Proporcional (%)', min: 10, max: 500, step: 1, unit: '%', description: 'Fator de escala da faca' },
       ],
-      calculate: () => dieline,
+      calculate: importedCalculate,
       isFoldable: dieline.segments.some((s) => s.type === 'crease'),
       status: 'PASS',
       originalSource: 'NONE',
       implementationType: 'NATIVE_TS',
     };
+
+    registerCustomModel(importedModel);
 
     confetti({ particleCount: 40, spread: 60, origin: { y: 0.15 } });
     onImportSuccess(importedModel, dieline, geometry);

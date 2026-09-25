@@ -120,9 +120,15 @@ export const App: React.FC = () => {
       setCustomAngles({});
       setSelectedPanelId(null);
       setHingeList([]);
+      const baseW = Math.round((dielineRes.bounds.width || 300) * 10) / 10;
+      const baseH = Math.round((dielineRes.bounds.height || 200) * 10) / 10;
       const newParams = {
-        L: Math.round(dielineRes.bounds.width) || 300,
-        B: Math.round(dielineRes.bounds.height) || 200,
+        L: baseW,
+        B: baseH,
+        scale: 100,
+        origL: baseW,
+        origB: baseH,
+        lockRatio: 1,
         H: 100,
         Ep: selectedProfile.thickness,
       };
@@ -275,11 +281,13 @@ export const App: React.FC = () => {
     (window as any).__PRIMACOR_SET_TAB__ = (tab: ActiveTab) => setActiveTab(tab);
   }, [handleSelectModel]);
 
-  // Atualização em tempo real de um parâmetro dimensional
-  const handleParamChange = (key: string, value: number) => {
+  // Atualização em tempo real de um parâmetro dimensional (com suporte a parâmetros compostos/escala)
+  const handleParamChange = (key: string, value: number, extraParams?: Record<string, number>) => {
+    setDielineEdits(null);
     setParams((prev) => ({
       ...prev,
       [key]: value,
+      ...(extraParams || {}),
     }));
   };
 
@@ -576,7 +584,14 @@ export const App: React.FC = () => {
             />
           )}
 
-          {activeTab === 'imposition' && <ImpositionView dieline={effectiveDieline} />}
+          {activeTab === 'imposition' && (
+            <ImpositionView
+              dieline={effectiveDieline}
+              model={currentModel}
+              params={params}
+              onParamChange={handleParamChange}
+            />
+          )}
         </main>
       </div>
 
