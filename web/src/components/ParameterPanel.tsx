@@ -19,6 +19,7 @@ import {
   Lock,
   Unlock,
   RotateCcw,
+  Move,
 } from 'lucide-react';
 
 interface ParameterPanelProps {
@@ -674,6 +675,32 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                     <span>⚡ Linhas de Vinco:</span>
                     <span>{_dieline?.segments.filter((s) => s.type === 'crease').length || 0}</span>
                   </div>
+                </div>
+
+                {/* Dica Pro: Como alterar abas individuais na faca importada */}
+                <div
+                  style={{
+                    background: 'rgba(251, 191, 36, 0.08)',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                    borderRadius: 'var(--cad-radius-sm)',
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fbbf24', fontSize: 11, fontWeight: 700 }}>
+                    <Move size={13} color="#fbbf24" />
+                    <span>ALTERAR ABAS INDIVIDUAIS (2D)</span>
+                  </div>
+                  <p style={{ fontSize: 10.5, color: '#cbd5e1', margin: 0, lineHeight: 1.45 }}>
+                    Para alterar medidas de uma <strong>aba lateral</strong>, <strong>aba de cola</strong> ou <strong>tampa</strong> separadamente:
+                  </p>
+                  <ol style={{ fontSize: 10, color: '#94a3b8', margin: 0, paddingLeft: 16, lineHeight: 1.5 }}>
+                    <li>Ative o <strong>Modo Edição 2D</strong> (botão do lápis no visualizador).</li>
+                    <li>Selecione as linhas da aba com a caixa de seleção.</li>
+                    <li>Use a ferramenta <strong>Esticar / Deslocar (Stretch)</strong> para aumentar ou diminuir os milímetros exatos daquela aba!</li>
+                  </ol>
                 </div>
               </div>
             ) : (
