@@ -146,6 +146,10 @@ function computeLoopSignedAreaAndCentroid(
   };
 }
 
+export interface LoopTopologyOptions {
+  snapToleranceMm?: number;
+}
+
 /**
  * Motor de Extração de Loops, Boundaries e Painéis Estruturais Reais (Fase 2B)
  */
@@ -154,13 +158,16 @@ export class LoopTopologyEngine {
    * Constrói o grafo planar a partir da PackagingGeometry, rastreia loops fechados,
    * separa contornos externos de furos e compõe os painéis estruturais reais.
    */
-  public static extractTopology(geometry: PackagingGeometry): StructuralTopologyResult {
+  public static extractTopology(
+    geometry: PackagingGeometry,
+    options?: LoopTopologyOptions
+  ): StructuralTopologyResult {
     const openBoundaries: OpenBoundaryDiagnostic[] = [];
     const perfCount = geometry.segments.filter((s) => s.type === 'perfo').length;
     const arcsCount = geometry.arcs.length;
 
     // 1. Coleta vértices únicos via Spatial Grid para garantir conectividade perfeita
-    const snapTolMm = 0.15;
+    const snapTolMm = options?.snapToleranceMm ?? 0.35;
     const vCellSize = Math.max(1.0, snapTolMm * 10);
     const vertexGrid = new Map<string, Point2D[]>();
 
@@ -378,7 +385,6 @@ export class LoopTopologyEngine {
       if (!isClosed || cycleVertices.length < 3) continue;
 
       const { signedArea, area, centroid } = computeLoopSignedAreaAndCentroid(cycleVertices, cycleEdges);
-      const isExternal = signedArea < 0; // Por convenção de Shoelace CCW, face externa infinita tem área com sinal negativo
 
       loopIdCounter++;
       const loopObj: ClosedLoop = {
@@ -387,7 +393,7 @@ export class LoopTopologyEngine {
         edges: cycleEdges,
         area,
         signedArea,
-        isExternal,
+        isExternal: false, // Avaliado na etapa global abaixo
         orientation: signedArea >= 0 ? 'CCW' : 'CW',
         bounds: computeBoundingBox({
           segments: cycleEdges.filter((e) => e.type === 'segment').map((e) => e.entity as Segment2D),
@@ -397,6 +403,45 @@ export class LoopTopologyEngine {
       };
 
       allLoops.push(loopObj);
+    }
+
+    // 4.5 Classificação forense de Faces Externas vs. Painéis Estruturais:
+    // Em embalagens, a face externa infinita é o contorno envolvente global que circunda a peça.
+    // - Qualquer ciclo que possua arestas de vinco (CREASE) é comprovadamente um painel estrutural interno (NUNCA externo).
+    // - O verdadeiro contorno externo (mundo exterior) é puramente composto por arestas de corte/borda e tem a área com sinal mais negativa.
+    let minSignedArea = 0;
+    let globalOuterLoop: ClosedLoop | null = null;
+    for (const loop of allLoops) {
+      const hasCreases = loop.edges.some((e) => e.sourceType === 'crease');
+      if (!hasCreases && loop.signedArea < minSignedArea) {
+        minSignedArea = loop.signedArea;
+        globalOuterLoop = loop;
+      }
+    }
+
+    for (const loop of allLoops) {
+      const hasCreases = loop.edges.some((e) => e.sourceType === 'crease');
+      if (hasCreases) {
+        loop.isExternal = false;
+        // Se percorrido no sentido horário (CW), normaliza para CCW invertendo os vértices
+        if (loop.signedArea < 0) {
+          loop.vertices.reverse();
+          loop.signedArea = Math.abs(loop.signedArea);
+          loop.orientation = 'CCW';
+        }
+      } else if (loop === globalOuterLoop) {
+        loop.isExternal = true;
+      } else if (loop.signedArea < 0 && loop.area > (globalOuterLoop ? globalOuterLoop.area * 0.8 : 5000)) {
+        // Proteção para componentes desconectados no mesmo arquivo
+        loop.isExternal = true;
+      } else {
+        loop.isExternal = false;
+        if (loop.signedArea < 0) {
+          loop.vertices.reverse();
+          loop.signedArea = Math.abs(loop.signedArea);
+          loop.orientation = 'CCW';
+        }
+      }
     }
 
     // 5. Separa Contornos Externos, Painéis e Furos Internos (Holes)

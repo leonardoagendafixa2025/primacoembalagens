@@ -342,9 +342,10 @@ export function normalizeAndBuildGeometry(
   };
 
   const topoResult = TopologyReconstructor.reconstructConnectivity(initialGeometry, {
-    gapToleranceMm: gapTol,
-    coincidentToleranceMm: 0.001,
-    tJunctionToleranceMm: 0.05,
+    gapToleranceMm: Math.max(gapTol, 0.40),
+    coincidentToleranceMm: 0.05,
+    tJunctionToleranceMm: 0.40,
+    overshootToleranceMm: 0.45,
   });
 
   const uniqueSegments = topoResult.geometry.segments;
