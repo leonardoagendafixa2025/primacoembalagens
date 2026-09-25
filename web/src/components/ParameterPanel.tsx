@@ -357,355 +357,64 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
               </div>
             )}
 
-            {isImported ? (
-              /* Controles de Escala e Dimensões da Faca Importada (CAD) */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* Painel de Dimensões e Escala com Cadeado de Proporção */}
-                <div
-                  style={{
-                    background: 'var(--cad-bg-panel-elevated)',
-                    border: '1px solid var(--cad-border-subtle)',
-                    borderRadius: 'var(--cad-radius-sm)',
-                    padding: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Ruler size={14} color="var(--cad-accent)" />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--cad-text-primary)', letterSpacing: 0.5 }}>
-                        DIMENSÕES DA FACA
-                      </span>
-                    </div>
-
-                    {/* Botão Trava de Proporção */}
-                    <button
-                      type="button"
-                      onClick={handleToggleLockRatio}
-                      className="cad-btn"
-                      style={{
-                        padding: '3px 8px',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        borderRadius: 4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        background: lockRatio ? 'rgba(0, 210, 180, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                        border: lockRatio ? '1px solid var(--cad-accent)' : '1px solid var(--cad-border-subtle)',
-                        color: lockRatio ? 'var(--cad-accent)' : 'var(--cad-text-muted)',
-                        cursor: 'pointer',
-                      }}
-                      title={lockRatio ? 'Proporção Travada (L e B alteram juntos)' : 'Proporção Livre (L e B independentes)'}
-                    >
-                      {lockRatio ? <Lock size={11} color="var(--cad-accent)" /> : <Unlock size={11} />}
-                      <span>{lockRatio ? 'Proporcional' : 'Livre'}</span>
-                    </button>
+            {isImported && (
+              /* Resumo e Informações da Faca Importada */
+              <div
+                style={{
+                  background: 'var(--cad-bg-panel-elevated)',
+                  border: '1px solid var(--cad-border-subtle)',
+                  borderRadius: 'var(--cad-radius-sm)',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Ruler size={13} color="var(--cad-accent)" />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--cad-text-primary)', letterSpacing: 0.5 }}>
+                      FORMATO TOTAL DA FACA
+                    </span>
                   </div>
-
-                  {/* Campo Largura Total (X) */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
-                        Largura Total (X)
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <button
-                          type="button"
-                          onClick={() => handleWidthChange(Math.round(currentL - (lockRatio ? 5 : 1)))}
-                          className="cad-tool-btn"
-                          style={{ width: 22, height: 26, borderRadius: 3 }}
-                          title="Diminuir largura"
-                        >
-                          <Minus size={11} />
-                        </button>
-                        <div className="cad-input-group" style={{ width: 84 }}>
-                          <input
-                            type="number"
-                            className="cad-input-number"
-                            min={10}
-                            max={10000}
-                            step={1}
-                            value={currentL}
-                            onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              background: 'transparent',
-                              border: 'none',
-                              outline: 'none',
-                              color: 'var(--cad-text-primary)',
-                              fontFamily: 'var(--cad-font-mono)',
-                              fontSize: 11.5,
-                              fontWeight: 600,
-                              padding: '0 0 0 6px',
-                            }}
-                          />
-                          <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', paddingRight: 4 }}>mm</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleWidthChange(Math.round(currentL + (lockRatio ? 5 : 1)))}
-                          className="cad-tool-btn"
-                          style={{ width: 22, height: 26, borderRadius: 3 }}
-                          title="Aumentar largura"
-                        >
-                          <Plus size={11} />
-                        </button>
-                      </div>
-                    </div>
-                    <input
-                      type="range"
-                      className="cad-slider"
-                      min={Math.max(10, Math.round(origL * 0.2))}
-                      max={Math.round(origL * 2.5)}
-                      step={1}
-                      value={currentL}
-                      onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
-                    />
-                  </div>
-
-                  {/* Campo Altura Total (Y) */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
-                        Altura Total (Y)
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <button
-                          type="button"
-                          onClick={() => handleHeightChange(Math.round(currentB - (lockRatio ? 5 : 1)))}
-                          className="cad-tool-btn"
-                          style={{ width: 22, height: 26, borderRadius: 3 }}
-                          title="Diminuir altura"
-                        >
-                          <Minus size={11} />
-                        </button>
-                        <div className="cad-input-group" style={{ width: 84 }}>
-                          <input
-                            type="number"
-                            className="cad-input-number"
-                            min={10}
-                            max={10000}
-                            step={1}
-                            value={currentB}
-                            onChange={(e) => handleHeightChange(parseFloat(e.target.value))}
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              background: 'transparent',
-                              border: 'none',
-                              outline: 'none',
-                              color: 'var(--cad-text-primary)',
-                              fontFamily: 'var(--cad-font-mono)',
-                              fontSize: 11.5,
-                              fontWeight: 600,
-                              padding: '0 0 0 6px',
-                            }}
-                          />
-                          <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', paddingRight: 4 }}>mm</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleHeightChange(Math.round(currentB + (lockRatio ? 5 : 1)))}
-                          className="cad-tool-btn"
-                          style={{ width: 22, height: 26, borderRadius: 3 }}
-                          title="Aumentar altura"
-                        >
-                          <Plus size={11} />
-                        </button>
-                      </div>
-                    </div>
-                    <input
-                      type="range"
-                      className="cad-slider"
-                      min={Math.max(10, Math.round(origB * 0.2))}
-                      max={Math.round(origB * 2.5)}
-                      step={1}
-                      value={currentB}
-                      onChange={(e) => handleHeightChange(parseFloat(e.target.value))}
-                    />
-                  </div>
-
-                  {/* Campo Escala Proporcional (%) */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 6, borderTop: '1px solid var(--cad-border-subtle)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
-                        Escala Geral
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <button
-                          type="button"
-                          onClick={() => handleScaleChange(Math.round(currentScale - 5))}
-                          className="cad-tool-btn"
-                          style={{ width: 22, height: 26, borderRadius: 3 }}
-                          title="Diminuir escala 5%"
-                        >
-                          <Minus size={11} />
-                        </button>
-                        <div className="cad-input-group" style={{ width: 78 }}>
-                          <input
-                            type="number"
-                            className="cad-input-number"
-                            min={10}
-                            max={500}
-                            step={1}
-                            value={currentScale}
-                            onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              background: 'transparent',
-                              border: 'none',
-                              outline: 'none',
-                              color: 'var(--cad-text-primary)',
-                              fontFamily: 'var(--cad-font-mono)',
-                              fontSize: 11.5,
-                              fontWeight: 600,
-                              padding: '0 0 0 6px',
-                            }}
-                          />
-                          <span style={{ fontSize: 10, color: 'var(--cad-text-muted)', paddingRight: 4 }}>%</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleScaleChange(Math.round(currentScale + 5))}
-                          className="cad-tool-btn"
-                          style={{ width: 22, height: 26, borderRadius: 3 }}
-                          title="Aumentar escala 5%"
-                        >
-                          <Plus size={11} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <input
-                      type="range"
-                      className="cad-slider"
-                      min={20}
-                      max={250}
-                      step={1}
-                      value={currentScale}
-                      onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
-                    />
-
-                    {/* Presets Rápidos de Escala */}
-                    <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
-                      {[50, 75, 100, 125, 150].map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => handleScaleChange(preset)}
-                          style={{
-                            flex: 1,
-                            padding: '4px 0',
-                            fontSize: 10,
-                            fontWeight: 600,
-                            borderRadius: 3,
-                            border: Math.abs(currentScale - preset) < 0.5 ? '1px solid var(--cad-accent)' : '1px solid var(--cad-border-subtle)',
-                            background: Math.abs(currentScale - preset) < 0.5 ? 'rgba(0, 210, 180, 0.15)' : 'var(--cad-bg-input)',
-                            color: Math.abs(currentScale - preset) < 0.5 ? 'var(--cad-accent)' : 'var(--cad-text-secondary)',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {preset}%
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Botão Restaurar Tamanho Original 1:1 */}
-                  {(Math.abs(currentL - origL) > 0.5 || Math.abs(currentB - origB) > 0.5) && (
-                    <button
-                      type="button"
-                      onClick={handleResetToOriginal}
-                      className="cad-btn"
-                      style={{
-                        padding: '6px 10px',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        borderRadius: 4,
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid var(--cad-border-subtle)',
-                        color: 'var(--cad-text-primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6,
-                        cursor: 'pointer',
-                        marginTop: 4,
-                      }}
-                      title="Voltar às medidas exatas do arquivo CAD original"
-                    >
-                      <RotateCcw size={12} color="var(--cad-accent)" />
-                      <span>Restaurar Medidas Originais ({origL} × {origB} mm)</span>
-                    </button>
-                  )}
+                  <strong style={{ color: 'var(--cad-accent)', fontFamily: 'monospace', fontSize: 11 }}>
+                    {_dieline?.bounds ? `${Math.round(_dieline.bounds.width)} × ${Math.round(_dieline.bounds.height)} mm` : `${currentL} × ${currentB} mm`}
+                  </strong>
                 </div>
 
-                {/* Resumo da Geometria da Faca Importada */}
-                <div
-                  style={{
-                    background: 'var(--cad-bg-input)',
-                    border: '1px solid var(--cad-border-subtle)',
-                    borderRadius: 'var(--cad-radius-xs)',
-                    padding: '8px 10px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 4,
-                    fontSize: 10,
-                    fontFamily: 'monospace',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-text-muted)' }}>
-                    <span>📐 Formato Original:</span>
-                    <strong style={{ color: 'var(--cad-text-secondary)' }}>{origL} × {origB} mm</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-accent)' }}>
-                    <span>📏 Formato Atual:</span>
-                    <strong>{currentL} × {currentB} mm</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-text-muted)' }}>
-                    <span>✂️ Linhas de Corte:</span>
-                    <span>{_dieline?.segments.filter((s) => s.type === 'cut').length || 0}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-text-muted)' }}>
-                    <span>⚡ Linhas de Vinco:</span>
-                    <span>{_dieline?.segments.filter((s) => s.type === 'crease').length || 0}</span>
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--cad-text-muted)', fontSize: 10 }}>
+                  <span>✂️ Corte: {_dieline?.segments.filter((s) => s.type === 'cut').length || 0}</span>
+                  <span>⚡ Vinco: {_dieline?.segments.filter((s) => s.type === 'crease').length || 0}</span>
                 </div>
 
-                {/* Dica Pro: Como alterar abas individuais na faca importada */}
-                <div
-                  style={{
-                    background: 'rgba(251, 191, 36, 0.08)',
-                    border: '1px solid rgba(251, 191, 36, 0.3)',
-                    borderRadius: 'var(--cad-radius-sm)',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fbbf24', fontSize: 11, fontWeight: 700 }}>
-                    <Move size={13} color="#fbbf24" />
-                    <span>ALTERAR ABAS INDIVIDUAIS (2D)</span>
-                  </div>
-                  <p style={{ fontSize: 10.5, color: '#cbd5e1', margin: 0, lineHeight: 1.45 }}>
-                    Para alterar medidas de uma <strong>aba lateral</strong>, <strong>aba de cola</strong> ou <strong>tampa</strong> separadamente:
-                  </p>
-                  <ol style={{ fontSize: 10, color: '#94a3b8', margin: 0, paddingLeft: 16, lineHeight: 1.5 }}>
-                    <li>Ative o <strong>Modo Edição 2D</strong> (botão do lápis no visualizador).</li>
-                    <li>Selecione as linhas da aba com a caixa de seleção.</li>
-                    <li>Use a ferramenta <strong>Esticar / Deslocar (Stretch)</strong> para aumentar ou diminuir os milímetros exatos daquela aba!</li>
-                  </ol>
-                </div>
+                {/* Botão Restaurar Medidas Originais 1:1 */}
+                {(Math.abs(currentL - origL) > 0.5 || Math.abs(currentB - origB) > 0.5) && (
+                  <button
+                    type="button"
+                    onClick={handleResetToOriginal}
+                    className="cad-btn"
+                    style={{
+                      padding: '5px 8px',
+                      fontSize: 10,
+                      fontWeight: 600,
+                      borderRadius: 4,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid var(--cad-border-subtle)',
+                      color: 'var(--cad-text-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 5,
+                      cursor: 'pointer',
+                    }}
+                    title="Voltar às medidas exatas do arquivo CAD original"
+                  >
+                    <RotateCcw size={11} color="var(--cad-accent)" />
+                    <span>Restaurar Medidas Originais</span>
+                  </button>
+                )}
               </div>
-            ) : (
-              /* Parâmetros Dimensionais com Conversão de Medidas para Modelos Paramétricos Padrão */
-              <>
+            )}
                 {/* Seletor de Modo de Medida (Interna / Faca / Externa) */}
                 <div
                   style={{
@@ -1055,8 +764,6 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                     </div>
                   );
                 })}
-              </>
-            )}
           </div>
         ) : (
           /* Material & Espessura */

@@ -22,6 +22,10 @@ import {
   DEFAULT_PROFILES,
 } from '../engine/importers/ClassificationEngine';
 import { registerCustomModel } from '../engine/models';
+import {
+  analyzeImportedDieline,
+  createParametricDielineCalculator,
+} from '../engine/importers/ParametricDielineDeformer';
 import type {
   ImportedCadDocument,
   CadClassificationTarget,
@@ -257,96 +261,37 @@ export const ImportCadModal: React.FC<ImportCadModalProps> = ({
     const baseWidth = Math.round((geometry.bounds.width > 0 ? geometry.bounds.width : 300) * 10) / 10;
     const baseHeight = Math.round((geometry.bounds.height > 0 ? geometry.bounds.height : 200) * 10) / 10;
     const baseDieline = dieline;
-    const baseMinX = dieline.bounds.minX || 0;
-    const baseMinY = dieline.bounds.minY || 0;
 
-    const importedCalculate = (params: Record<string, number>): DielineResult => {
-      let targetL = typeof params.L === 'number' && params.L > 0 ? params.L : baseWidth;
-      let targetB = typeof params.B === 'number' && params.B > 0 ? params.B : baseHeight;
+    // Analisa a faca importada para extrair L, B, H, Abas Laterais, Aba da Tampa e Aba de Cola
+    const analysis = analyzeImportedDieline(baseDieline);
+    const init = analysis.initialParams;
+    const parametricCalculate = createParametricDielineCalculator(baseDieline, analysis);
 
-      // Se passou escala percentual explícita e L/B não foram alterados:
-      if (
-        typeof params.scale === 'number' &&
-        params.scale > 0 &&
-        (!params.L || Math.abs(params.L - baseWidth) < 0.1) &&
-        (!params.B || Math.abs(params.B - baseHeight) < 0.1)
-      ) {
-        targetL = Number((baseWidth * (params.scale / 100)).toFixed(2));
-        targetB = Number((baseHeight * (params.scale / 100)).toFixed(2));
-      }
-
-      const scaleX = baseWidth > 0 ? targetL / baseWidth : 1;
-      const scaleY = baseHeight > 0 ? targetB / baseHeight : 1;
-
-      if (Math.abs(scaleX - 1) < 1e-4 && Math.abs(scaleY - 1) < 1e-4) {
-        return baseDieline;
-      }
-
-      const scaledSegments = baseDieline.segments.map((s) => ({
-        ...s,
-        x0: Number((baseMinX + (s.x0 - baseMinX) * scaleX).toFixed(3)),
-        y0: Number((baseMinY + (s.y0 - baseMinY) * scaleY).toFixed(3)),
-        x1: Number((baseMinX + (s.x1 - baseMinX) * scaleX).toFixed(3)),
-        y1: Number((baseMinY + (s.y1 - baseMinY) * scaleY).toFixed(3)),
-      }));
-
-      const scaledArcs = baseDieline.arcs.map((a) => ({
-        ...a,
-        cx: Number((baseMinX + (a.cx - baseMinX) * scaleX).toFixed(3)),
-        cy: Number((baseMinY + (a.cy - baseMinY) * scaleY).toFixed(3)),
-        r: Number((a.r * Math.sqrt(scaleX * scaleY)).toFixed(3)),
-      }));
-
-      const newWidth = Number((baseWidth * scaleX).toFixed(3));
-      const newHeight = Number((baseHeight * scaleY).toFixed(3));
-
-      const scaledDimensions = (baseDieline.dimensions || []).map((d) => ({
-        ...d,
-        x0: Number((baseMinX + (d.x0 - baseMinX) * scaleX).toFixed(3)),
-        y0: Number((baseMinY + (d.y0 - baseMinY) * scaleY).toFixed(3)),
-        x1: Number((baseMinX + (d.x1 - baseMinX) * scaleX).toFixed(3)),
-        y1: Number((baseMinY + (d.y1 - baseMinY) * scaleY).toFixed(3)),
-      }));
-
-      return {
-        ...baseDieline,
-        segments: scaledSegments,
-        arcs: scaledArcs,
-        dimensions: scaledDimensions,
-        bounds: {
-          minX: baseMinX,
-          minY: baseMinY,
-          maxX: Number((baseMinX + newWidth).toFixed(3)),
-          maxY: Number((baseMinY + newHeight).toFixed(3)),
-          width: newWidth,
-          height: newHeight,
-        },
-      };
-    };
-
-    // Cria modelo de embalagem integrado ao motor PRIMACOR EMBALAGENS com cálculo paramétrico real
+    // Cria modelo de embalagem integrado com parâmetros de caixa IDÊNTICOS À BIBLIOTECA
     const importedModel: PackagingModel = {
       id: `imported_${Date.now()}`,
       code: file ? file.name.replace(/\.[^/.]+$/, '').toUpperCase().slice(0, 14) : 'DIE_IMPORT',
       name: file ? file.name : 'Faca Importada',
       category: 'PERSONALIZADO',
-      description: `Faca CAD importada em formato ${doc.format} (${Math.round(geometry.bounds.width)}x${Math.round(geometry.bounds.height)} mm).`,
+      description: `Faca CAD importada em formato ${doc.format} (${baseWidth}x${baseHeight} mm) com parametrização completa de abas e corpo.`,
       defaultParams: {
-        L: baseWidth,
-        B: baseHeight,
+        ...init,
+        origL: init.L,
+        origB: init.B,
         scale: 100,
-        origL: baseWidth,
-        origB: baseHeight,
-        lockRatio: 1,
-        H: 100,
-        Ep: 0.4,
+        lockRatio: 0,
       },
       paramDefs: [
-        { key: 'L', label: 'Largura Total (X)', min: 10, max: 5000, step: 1, unit: 'mm', description: 'Largura total da faca na folha' },
-        { key: 'B', label: 'Altura Total (Y)', min: 10, max: 5000, step: 1, unit: 'mm', description: 'Altura total da faca na folha' },
-        { key: 'scale', label: 'Escala Proporcional (%)', min: 10, max: 500, step: 1, unit: '%', description: 'Fator de escala da faca' },
+        { key: 'L', label: 'Comprimento / Frente (L)', min: Math.max(10, Math.round(init.L * 0.2)), max: Math.round(init.L * 3.5), step: 1, unit: 'mm', description: 'Comprimento da base / frente da embalagem' },
+        { key: 'B', label: 'Largura / Profundidade (B)', min: Math.max(10, Math.round(init.B * 0.2)), max: Math.round(init.B * 3.5), step: 1, unit: 'mm', description: 'Largura ou profundidade da caixa' },
+        { key: 'H', label: 'Altura (H)', min: Math.max(5, Math.round(init.H * 0.2)), max: Math.round(init.H * 3.5), step: 1, unit: 'mm', description: 'Altura das paredes da embalagem' },
+        { key: 'AbaLat', label: 'Aba Lateral - Largura', min: Math.max(5, Math.round(init.AbaLat * 0.2)), max: Math.round(init.AbaLat * 3.5), step: 1, unit: 'mm', description: 'Largura das abas laterais' },
+        { key: 'AbaLatH', label: 'Aba Lateral - Altura', min: Math.max(5, Math.round(init.AbaLatH * 0.2)), max: Math.round(init.AbaLatH * 3.5), step: 1, unit: 'mm', description: 'Altura ou profundidade das abas laterais' },
+        { key: 'AbaTampa', label: 'Aba da Tampa (Fechamento)', min: Math.max(5, Math.round(init.AbaTampa * 0.2)), max: Math.round(init.AbaTampa * 3.5), step: 1, unit: 'mm', description: 'Aba de fechamento / encaixe da tampa' },
+        { key: 'AbaCola', label: 'Aba de Colagem (M)', min: Math.max(5, Math.round(init.AbaCola * 0.2)), max: Math.round(init.AbaCola * 3.5), step: 1, unit: 'mm', description: 'Largura da aba de cola' },
+        { key: 'Ep', label: 'Espessura do Material (Ep)', min: 0.1, max: 10.0, step: 0.05, unit: 'mm', description: 'Caliper / espessura do papelão ou cartão' },
       ],
-      calculate: importedCalculate,
+      calculate: parametricCalculate,
       isFoldable: dieline.segments.some((s) => s.type === 'crease'),
       status: 'PASS',
       originalSource: 'NONE',
