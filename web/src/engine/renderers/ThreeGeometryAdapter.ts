@@ -8,6 +8,7 @@ import {
   type Kinematic3DResult,
   type Kinematic3DOptions,
 } from '../importers/Kinematic3DEngine';
+import { buildSubstrateMaterials, type SubstrateKind } from '../packaging/substrate-textures';
 
 /**
  * Opções de configuração para o ThreeGeometryAdapter
@@ -25,6 +26,8 @@ export interface ThreeGeometryAdapterOptions extends Kinematic3DOptions {
   artworkTexture?: THREE.Texture | null;
   outerArtworkTexture?: THREE.Texture | null;
   innerArtworkTexture?: THREE.Texture | null;
+  substrate?: SubstrateKind;
+  thickness?: number;
 }
 
 /**
@@ -117,6 +120,7 @@ export interface ThreeModelController {
     provenance: CreaseProvenanceData;
   } | null;
   getTriangulationStats: () => TriangulationStats;
+  setSubstrate: (substrate: SubstrateKind) => void;
   dispose: () => void;
 }
 
@@ -157,27 +161,37 @@ export class ThreeGeometryAdapter {
     const metalness = options.metalness ?? 0.05;
     const arcSamples = options.arcSegments ?? 32;
 
+    const substrate = options.substrate || 'duplex';
+    let activeSubMats = buildSubstrateMaterials(substrate);
+    const thickness = Math.max(0, options.thickness ?? 0);
+    const halfThick = thickness / 2;
+
     const initialOuterTex = options.outerArtworkTexture || options.artworkTexture || null;
     const initialInnerTex = options.innerArtworkTexture || null;
 
+    const defaultOuterTex = initialOuterTex || (substrate === 'kraft' || substrate === 'microondulado' ? activeSubMats.back.map : null);
+    const defaultInnerTex = initialInnerTex || activeSubMats.back.map;
+    const defaultOuterColor = initialOuterTex ? 0xffffff : (substrate === 'kraft' || substrate === 'microondulado' ? 0xffffff : outerColor);
+    const defaultInnerColor = initialInnerTex ? 0xffffff : activeSubMats.back.color;
+
     // Material da Face Externa (Frente)
     const outerPanelMaterial = new THREE.MeshStandardMaterial({
-      color: initialOuterTex ? 0xffffff : outerColor,
-      roughness,
+      color: defaultOuterColor,
+      roughness: activeSubMats.back.roughness,
       metalness,
       side: THREE.FrontSide,
       shadowSide: THREE.FrontSide,
-      map: initialOuterTex,
+      map: defaultOuterTex,
     });
 
     // Material da Face Interna (Verso)
     const innerPanelMaterial = new THREE.MeshStandardMaterial({
-      color: initialInnerTex ? 0xffffff : innerColor,
-      roughness: Math.min(1.0, roughness + 0.1),
+      color: defaultInnerColor,
+      roughness: Math.min(1.0, activeSubMats.back.roughness + 0.05),
       metalness,
       side: THREE.BackSide,
       shadowSide: THREE.BackSide,
-      map: initialInnerTex,
+      map: defaultInnerTex,
     });
 
     // Material de destaque quando selecionado
@@ -269,13 +283,64 @@ export class ThreeGeometryAdapter {
       outerMesh.castShadow = true;
       outerMesh.receiveShadow = true;
       outerMesh.name = `OuterFace_${panel.id}`;
+      if (halfThick > 0.001) {
+        outerMesh.position.z = halfThick;
+      }
       panelContainer.add(outerMesh);
 
       const innerMesh = new THREE.Mesh(innerGeometry, innerPanelMaterial);
       innerMesh.castShadow = true;
       innerMesh.receiveShadow = true;
       innerMesh.name = `InnerFace_${panel.id}`;
+      if (halfThick > 0.001) {
+        innerMesh.position.z = -halfThick;
+      }
       panelContainer.add(innerMesh);
+
+      // Constrói espessura lateral 3D (para microondulado exibe o perfil de ondas da canelura)
+      if (thickness > 0.05) {
+        const shapePoints = shape.extractPoints(arcSamples);
+        const contour = shapePoints.shape;
+        if (contour && contour.length >= 3) {
+          const sideVerts: number[] = [];
+          const sideUvs: number[] = [];
+          let accumDist = 0;
+          for (let i = 0; i < contour.length; i++) {
+            const p0 = contour[i];
+            const p1 = contour[(i + 1) % contour.length];
+            const segLen = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+            const u0 = accumDist / 40.0;
+            const u1 = (accumDist + segLen) / 40.0;
+            accumDist += segLen;
+
+            sideVerts.push(
+              p0.x, p0.y, halfThick,
+              p1.x, p1.y, halfThick,
+              p1.x, p1.y, -halfThick
+            );
+            sideUvs.push(u0, 1, u1, 1, u1, 0);
+
+            sideVerts.push(
+              p0.x, p0.y, halfThick,
+              p1.x, p1.y, -halfThick,
+              p0.x, p0.y, -halfThick
+            );
+            sideUvs.push(u0, 1, u1, 0, u0, 0);
+          }
+
+          const sideGeo = new THREE.BufferGeometry();
+          sideGeo.setAttribute('position', new THREE.Float32BufferAttribute(sideVerts, 3));
+          sideGeo.setAttribute('uv', new THREE.Float32BufferAttribute(sideUvs, 2));
+          sideGeo.computeVertexNormals();
+
+          const sideMesh = new THREE.Mesh(sideGeo, activeSubMats.side);
+          sideMesh.castShadow = true;
+          sideMesh.receiveShadow = true;
+          sideMesh.name = `SideEdge_${panel.id}`;
+          panelContainer.add(sideMesh);
+          panelContainer.userData = { ...panelContainer.userData, sideMesh };
+        }
+      }
 
       panelContainer.userData = {
         sourcePanelId: panel.id,
@@ -602,6 +667,9 @@ export class ThreeGeometryAdapter {
         if (pickTubeMaterial && typeof pickTubeMaterial.dispose === 'function') {
           try { pickTubeMaterial.dispose(); } catch {}
         }
+        if (activeSubMats && typeof activeSubMats.dispose === 'function') {
+          try { activeSubMats.dispose(); } catch {}
+        }
 
         if (rootGroup && rootGroup.children) {
           while (rootGroup.children.length > 0) {
@@ -611,6 +679,29 @@ export class ThreeGeometryAdapter {
       } catch (err) {
         console.warn('[ThreeGeometryAdapter] Erro seguro ao desalocar buffers WebGL:', err);
       }
+    };
+
+    // Altera o substrato procedural dinamicamente (Duplex, Kraft, Microondulado, Cartão Branco)
+    const setSubstrate = (newSub: SubstrateKind) => {
+      activeSubMats.dispose();
+      activeSubMats = buildSubstrateMaterials(newSub);
+      if (!initialOuterTex) {
+        outerPanelMaterial.map = (newSub === 'kraft' || newSub === 'microondulado' || newSub === 'cartao_branco') ? activeSubMats.back.map : null;
+        outerPanelMaterial.color.set(newSub === 'kraft' || newSub === 'microondulado' ? 0xffffff : outerColor);
+        outerPanelMaterial.roughness = activeSubMats.back.roughness;
+        outerPanelMaterial.needsUpdate = true;
+      }
+      if (!initialInnerTex) {
+        innerPanelMaterial.map = activeSubMats.back.map;
+        innerPanelMaterial.color.copy(activeSubMats.back.color);
+        innerPanelMaterial.roughness = activeSubMats.back.roughness;
+        innerPanelMaterial.needsUpdate = true;
+      }
+      panelMeshes.forEach((container) => {
+        if (container.userData?.sideMesh) {
+          container.userData.sideMesh.material = activeSubMats.side;
+        }
+      });
     };
 
     // Controle de modo Aramado (CAD Wireframe fiel ao 2D)
@@ -654,6 +745,7 @@ export class ThreeGeometryAdapter {
       raycastPanel,
       raycastCrease,
       getTriangulationStats,
+      setSubstrate,
       dispose,
     };
   }

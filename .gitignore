@@ -250,3 +250,8 @@ web/.env.local
 bridge/temp/*
 !bridge/temp/.gitkeep
 
+# Reference folders
+lovable_full/
+lovable_reference/
+
+

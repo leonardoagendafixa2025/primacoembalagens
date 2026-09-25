@@ -13,7 +13,9 @@ import {
   type PanelProvenanceData,
   type CreaseProvenanceData,
 } from '../engine/renderers/ThreeGeometryAdapter';
-import { Play, Pause, RotateCw, Box, Eye, Sliders, Grid } from 'lucide-react';
+import { downloadStandaloneHtml } from '../engine/packaging/export-html';
+import type { SubstrateKind } from '../engine/packaging/substrate-textures';
+import { Play, Pause, RotateCw, Box, Eye, Sliders, Grid, Share2, Layers } from 'lucide-react';
 
 interface FoldingViewer3DProps {
   model: PackagingModel;
@@ -66,6 +68,21 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
 
   // Lista interna de vincos para contagem e status
   const [hingeList, setHingeList] = useState<HingeControlInfo[]>([]);
+
+  // Substrato procedural (Duplex, Kraft, Microondulado, Cartão Branco)
+  const initialSubstrate: SubstrateKind = useMemo(() => {
+    const code = (profile?.code || profile?.id || '').toLowerCase();
+    if (code.includes('kraft')) return 'kraft';
+    if (code.includes('micro') || code.includes('ondulado')) return 'microondulado';
+    if (code.includes('branco') || code.includes('sbs')) return 'cartao_branco';
+    return 'duplex';
+  }, [profile]);
+  const [activeSubstrate, setActiveSubstrate] = useState<SubstrateKind>(initialSubstrate);
+
+  const handleSubstrateChange = (sub: SubstrateKind) => {
+    setActiveSubstrate(sub);
+    controllerRef.current?.setSubstrate(sub);
+  };
 
   // Texturas de Arte vinda do Adobe Illustrator (Externa + Interna)
   const effectiveOuterUri = outerArtworkTextureUri || artworkTextureUri;
@@ -364,6 +381,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           outerArtworkTexture: outerTexRef.current || outerArtworkTexture,
           innerArtworkTexture: innerTexRef.current || innerArtworkTexture,
           dielineBounds: currentDieline.bounds,
+          substrate: activeSubstrate,
+          thickness: profile?.thickness ?? 0.45,
         }
       );
       controllerRef.current = controller;
@@ -1004,8 +1023,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           userSelect: 'none',
         }}
       >
-        {/* Linha Superior: Presets de Ângulo de Dobra, Inspetor de Abas e Câmera */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+        {/* Linha Superior: Presets de Dobra Global, Seletor de Substrato, Inspetor de Abas, Câmeras e Exportar HTML */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
           {/* Presets de Dobra Global */}
           <div style={{ display: 'flex', gap: 4 }}>
             {[
@@ -1026,8 +1045,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
                   }}
                   className="cad-btn"
                   style={{
-                    padding: '3px 9px',
-                    fontSize: 10,
+                    padding: '3px 8px',
+                    fontSize: 9.5,
                     fontWeight: 600,
                     background: isActive ? 'var(--cad-accent-dim)' : 'transparent',
                     borderColor: isActive ? 'var(--cad-accent)' : 'var(--cad-border-subtle)',
@@ -1040,32 +1059,67 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
             })}
           </div>
 
-          {/* Botão de Abrir Inspetor de Ângulos de Abas (ArtiosCAD / Prinect) e Câmera */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Seletor Rápido de Substrato (Duplex, Kraft, Microondulado, Cartão Branco) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(255,255,255,0.03)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--cad-border-subtle)' }}>
+            <span style={{ fontSize: 9, color: 'var(--cad-text-muted)', display: 'flex', alignItems: 'center', gap: 3, marginRight: 2 }}>
+              <Layers size={10} color="var(--cad-accent)" />
+              <b>Papel:</b>
+            </span>
+            {(['duplex', 'kraft', 'microondulado', 'cartao_branco'] as SubstrateKind[]).map((sub) => {
+              const isAct = activeSubstrate === sub;
+              const labels: Record<SubstrateKind, string> = {
+                duplex: 'Duplex',
+                kraft: 'Kraft',
+                microondulado: 'Microond.',
+                cartao_branco: 'Branco',
+              };
+              return (
+                <button
+                  key={sub}
+                  type="button"
+                  onClick={() => handleSubstrateChange(sub)}
+                  className="cad-btn"
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: 9,
+                    fontWeight: isAct ? 700 : 500,
+                    background: isAct ? 'var(--cad-accent-dim)' : 'transparent',
+                    borderColor: isAct ? 'var(--cad-accent)' : 'transparent',
+                    color: isAct ? 'var(--cad-accent)' : 'var(--cad-text-muted)',
+                  }}
+                >
+                  {labels[sub]}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Botão de Abrir Inspetor de Ângulos de Abas (ArtiosCAD / Prinect), Câmera e Exportar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={onOpenFoldInspector}
               title="Editar Ângulos das Abas no Painel Esquerdo (ArtiosCAD / Prinect)"
               className="cad-btn"
               style={{
-                padding: '3px 9px',
-                fontSize: 10,
-                gap: 5,
+                padding: '3px 8px',
+                fontSize: 9.5,
+                gap: 4,
                 background: isFoldInspectorActive ? 'var(--cad-accent-dim)' : 'transparent',
                 borderColor: isFoldInspectorActive ? 'var(--cad-accent)' : 'var(--cad-border-default)',
                 color: isFoldInspectorActive ? 'var(--cad-accent)' : 'var(--cad-text-primary)',
               }}
             >
               <Sliders size={11} color="var(--cad-accent)" />
-              <span>Ângulos das Abas</span>
+              <span>Abas</span>
               {modifiedCount > 0 && (
                 <span
                   className="cad-mono"
                   style={{
-                    fontSize: 9,
+                    fontSize: 8.5,
                     fontWeight: 800,
-                    padding: '1px 5px',
-                    borderRadius: 8,
+                    padding: '0 4px',
+                    borderRadius: 6,
                     background: 'var(--cad-accent)',
                     color: '#000000',
                   }}
@@ -1082,14 +1136,14 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
                 title="Restaurar Todos os Ângulos de Dobra para o Padrão"
                 className="cad-btn"
                 style={{
-                  padding: '3px 8px',
-                  fontSize: 10,
+                  padding: '3px 6px',
+                  fontSize: 9.5,
                   color: '#EF4444',
                   borderColor: 'rgba(239, 68, 68, 0.4)',
                   background: 'rgba(239, 68, 68, 0.08)',
                 }}
               >
-                <span>Resetar ({modifiedCount})</span>
+                <span>Resetar</span>
               </button>
             )}
 
@@ -1099,7 +1153,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
               onClick={snapToPerspective}
               title="Câmera Isométrica 3D"
               className="cad-btn"
-              style={{ padding: '3px 8px', fontSize: 10 }}
+              style={{ padding: '3px 7px', fontSize: 9.5 }}
             >
               <Box size={11} color="var(--cad-accent)" />
               <span>3D</span>
@@ -1110,7 +1164,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
               onClick={snapToTopView}
               title="Vista Superior (Planta/Topo)"
               className="cad-btn"
-              style={{ padding: '3px 8px', fontSize: 10 }}
+              style={{ padding: '3px 7px', fontSize: 9.5 }}
             >
               <Eye size={11} />
               <span>Topo</span>
@@ -1121,7 +1175,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
               onClick={snapToBottomView}
               title="Vista Inferior (Inspeção de Fundo)"
               className="cad-btn"
-              style={{ padding: '3px 8px', fontSize: 10 }}
+              style={{ padding: '3px 7px', fontSize: 9.5 }}
             >
               <Eye size={11} />
               <span>Fundo</span>
@@ -1134,8 +1188,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
               title={isWireframe ? 'Alternar para Modo Sólido (Sombreamento)' : 'Alternar para Modo Aramado (Wireframe 3D)'}
               className="cad-btn"
               style={{
-                padding: '3px 8px',
-                fontSize: 10,
+                padding: '3px 7px',
+                fontSize: 9.5,
                 background: isWireframe ? 'var(--cad-accent-dim)' : 'transparent',
                 borderColor: isWireframe ? 'var(--cad-accent)' : 'var(--cad-border-default)',
                 color: isWireframe ? 'var(--cad-accent)' : 'var(--cad-text-primary)',
@@ -1143,6 +1197,34 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
             >
               <Grid size={11} color="var(--cad-accent)" />
               <span>Aramado</span>
+            </button>
+
+            {/* Exportar HTML 3D para Envio a Clientes */}
+            <button
+              type="button"
+              onClick={() => {
+                const currentDieline = dieline || model.calculate(params);
+                if (!currentDieline) return;
+                downloadStandaloneHtml(
+                  currentDieline,
+                  model.name || model.code || 'Embalagem-3D',
+                  profile?.thickness ?? 0.45
+                );
+              }}
+              title="Exportar Visualizador 3D Standalone (HTML autocontido para envio a clientes)"
+              className="cad-btn"
+              style={{
+                padding: '3px 9px',
+                fontSize: 9.5,
+                gap: 5,
+                borderColor: 'rgba(56, 189, 248, 0.5)',
+                color: '#38BDF8',
+                background: 'rgba(56, 189, 248, 0.1)',
+                fontWeight: 600,
+              }}
+            >
+              <Share2 size={11} color="#38BDF8" />
+              <span>Exportar HTML 3D</span>
             </button>
           </div>
         </div>
