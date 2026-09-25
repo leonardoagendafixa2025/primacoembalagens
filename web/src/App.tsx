@@ -120,16 +120,8 @@ export const App: React.FC = () => {
       setCustomAngles({});
       setSelectedPanelId(null);
       setHingeList([]);
-      const baseW = Math.round((dielineRes.bounds.width || 300) * 10) / 10;
-      const baseH = Math.round((dielineRes.bounds.height || 200) * 10) / 10;
       const newParams = {
-        L: baseW,
-        B: baseH,
-        scale: 100,
-        origL: baseW,
-        origB: baseH,
-        lockRatio: 1,
-        H: 100,
+        ...model.defaultParams,
         Ep: selectedProfile.thickness,
       };
       setParams(newParams);
