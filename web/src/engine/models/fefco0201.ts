@@ -31,12 +31,16 @@ export const fefco0201: PackagingModel = {
     B: 200, // Largura interior (mm)
     H: 150, // Altura interior (mm)
     Ep: 3.0, // Espessura do papelão (mm)
+    G: 30,  // Aba de colagem (mm)
+    FL: 101, // Altura das abas externas (mm, padrão B/2)
   },
   paramDefs: [
     { key: 'L', label: 'Comprimento (L)', min: 100, max: 1500, step: 5, unit: 'mm', description: 'Comprimento interno da caixa' },
     { key: 'B', label: 'Largura (B)', min: 80, max: 1000, step: 5, unit: 'mm', description: 'Largura interna da caixa' },
     { key: 'H', label: 'Altura (H)', min: 60, max: 1000, step: 5, unit: 'mm', description: 'Altura interna da caixa' },
     { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 12, step: 0.05, unit: 'mm', description: 'Espessura do material (a partir de 0,1mm)' },
+    { key: 'G', label: 'Aba de Cola (G)', min: 15, max: 80, step: 1, unit: 'mm', description: 'Largura da aba de colagem da junta' },
+    { key: 'FL', label: 'Altura das Abas (FL)', min: 30, max: 600, step: 1, unit: 'mm', description: 'Altura das abas superiores/inferiores (fechamento)' },
   ],
   calculate(params: Record<string, number>): DielineResult {
     const L = params.L || 300;
@@ -58,7 +62,7 @@ export const fefco0201: PackagingModel = {
     const v = Ec / 2; // 3
 
     // Aba de cola padrão (Half_Glue_Flap_Fefco)
-    const G = 30;
+    const G = params.G ?? 30;
     const aG = 15;
     const G1 = 0;
     const G2 = 0;
@@ -77,8 +81,8 @@ export const fefco0201: PackagingModel = {
     }
     const H1_full = H + 2 * e;
     const H1 = H1_full / 2;
-    const FL = Math.floor((B + e) / 2);
-    const FB = Math.floor((B + e) / 2);
+    const FL = params.FL ?? Math.floor((B + e) / 2);
+    const FB = FL;
 
     function generateHalf(reflectY: boolean): Segment2D[] {
       const segs: Segment2D[] = [];

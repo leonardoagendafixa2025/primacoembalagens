@@ -17,13 +17,17 @@ export const ecmaB10: PackagingModel = {
     H: 140,  // Altura (mm)
     Ep: 0.5, // Espessura do cartão (mm)
     M: 15,   // Aba de colagem (mm)
+    T: 18,   // Aba de encaixe / Tuck-in (mm)
+    P: 28,   // Abas de poeira laterais (mm)
   },
   paramDefs: [
     { key: 'L', label: 'Comprimento / Frente (L)', min: 30, max: 400, step: 1, unit: 'mm', description: 'Comprimento frontal' },
     { key: 'B', label: 'Largura / Lateral (B)', min: 20, max: 300, step: 1, unit: 'mm', description: 'Profundidade da lateral' },
     { key: 'H', label: 'Altura (H)', min: 40, max: 500, step: 1, unit: 'mm', description: 'Altura total da embalagem' },
     { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 2.0, step: 0.05, unit: 'mm', description: 'Caliper do cartão (a partir de 0,1mm)' },
-    { key: 'M', label: 'Aba de Cola (M)', min: 10, max: 25, step: 1, unit: 'mm', description: 'Aba lateral colada' },
+    { key: 'M', label: 'Aba de Cola (M)', min: 10, max: 40, step: 1, unit: 'mm', description: 'Aba lateral colada' },
+    { key: 'T', label: 'Aba de Encaixe / Tuck (T)', min: 8, max: 60, step: 1, unit: 'mm', description: 'Aba de fechamento superior/inferior' },
+    { key: 'P', label: 'Abas de Poeira / Laterais (P)', min: 10, max: 80, step: 1, unit: 'mm', description: 'Abas laterais (Dust Flaps)' },
   ],
   calculate(params: Record<string, number>): DielineResult {
     const L = params.L || 80;
@@ -31,9 +35,9 @@ export const ecmaB10: PackagingModel = {
     const H = params.H || 140;
     const M = params.M || 15;
 
-    // Aba tuck-in (encaixe da tampa)
-    const tuck = Math.max(15, Math.min(B * 0.4, 25));
-    const dustFlapH = B * 0.55;
+    // Aba tuck-in (encaixe da tampa) e abas de poeira laterais
+    const tuck = params.T ?? Math.max(15, Math.min(B * 0.4, 25));
+    const dustFlapH = params.P ?? (B * 0.55);
 
     const segments: Segment2D[] = [];
 

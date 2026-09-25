@@ -175,12 +175,14 @@ export const fefco0427: PackagingModel = {
     B: 200, // Largura interior (mm)
     H: 150, // Altura interior (mm)
     Ep: 3.0, // Espessura do papelão (mm)
+    H7: 50, // Aba da tampa frontal (mm)
   },
   paramDefs: [
     { key: 'L', label: 'Comprimento (L)', min: 100, max: 1200, step: 5, unit: 'mm', description: 'Comprimento interno da caixa' },
     { key: 'B', label: 'Largura (B)', min: 80, max: 800, step: 5, unit: 'mm', description: 'Largura interna da caixa' },
     { key: 'H', label: 'Altura (H)', min: 30, max: 400, step: 5, unit: 'mm', description: 'Altura interna da caixa' },
     { key: 'Ep', label: 'Espessura (Ep)', min: 0.1, max: 8.0, step: 0.05, unit: 'mm', description: 'Espessura do material (a partir de 0,1mm)' },
+    { key: 'H7', label: 'Aba da Tampa (H7)', min: 15, max: 200, step: 1, unit: 'mm', description: 'Altura da aba de encaixe frontal da tampa' },
   ],
   calculate(params: Record<string, number>): DielineResult {
     const L = params.L || 300;
@@ -240,8 +242,8 @@ export const fefco0427: PackagingModel = {
     const v6 = v5 + mtl / 2.0 - tml / 2.0;
 
     // Constantes do top_cover_427
-    let H7 = 50.0;
-    if (H7 > H) H7 = H;
+    let H7 = params.H7 ?? 50.0;
+    if (H7 > H * 1.5) H7 = H * 1.5;
     let Ra = 20.0;
     let A = 20.0;
     const cw = m14 / 2.0;

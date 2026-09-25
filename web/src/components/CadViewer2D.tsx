@@ -14,6 +14,12 @@ import {
   Trash2,
   CheckSquare,
   X,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Move,
+  Link2,
 } from 'lucide-react';
 import { generateCadAnnotations } from '../engine/cadMarks';
 
@@ -196,6 +202,12 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     shiftHeld?: boolean;
   } | null>(null);
 
+  // Stretch / Deslocamento de abas e linhas (Padrão ArtiosCAD)
+  const [stretchStepMm, setStretchStepMm] = useState<number>(5);
+  const [customDx, setCustomDx] = useState<string>('0');
+  const [customDy, setCustomDy] = useState<string>('10');
+  const [stretchConnected, setStretchConnected] = useState<boolean>(true);
+
   // Sync localSegs and localArcs whenever the dieline changes from outside
   useEffect(() => {
     setLocalSegs(dieline.segments.map((s, i) => ({ ...s, id: s.id ?? i })));
@@ -351,6 +363,76 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
     setSelectedSegIndices([]);
     setSelectedArcIndices([]);
   }, []);
+
+  // Ferramenta Stretch / Deslocar Linhas e Abas (Padrão ArtiosCAD)
+  const handleStretch = useCallback(
+    (dx: number, dy: number, keepConnected = stretchConnected) => {
+      if ((dx === 0 && dy === 0) || (selectedSegIndices.length === 0 && selectedArcIndices.length === 0)) return;
+      pushUndo(localSegs, localArcs);
+
+      const selectedSegSet = new Set(selectedSegIndices);
+      const selectedArcSet = new Set(selectedArcIndices);
+
+      // Colecionar todos os pontos iniciais originais que estão sendo movidos
+      const movedEndpoints: Array<{ x: number; y: number }> = [];
+      for (const idx of selectedSegIndices) {
+        const s = localSegs[idx];
+        if (s) {
+          movedEndpoints.push({ x: s.x0, y: s.y0 });
+          movedEndpoints.push({ x: s.x1, y: s.y1 });
+        }
+      }
+
+      const isPointMoved = (x: number, y: number) => {
+        return movedEndpoints.some((p) => Math.hypot(p.x - x, p.y - y) < 0.2);
+      };
+
+      const nextSegs = localSegs.map((s, idx) => {
+        if (selectedSegSet.has(idx)) {
+          // Mover linha selecionada inteira
+          return {
+            ...s,
+            x0: Math.round((s.x0 + dx) * 100) / 100,
+            y0: Math.round((s.y0 + dy) * 100) / 100,
+            x1: Math.round((s.x1 + dx) * 100) / 100,
+            y1: Math.round((s.y1 + dy) * 100) / 100,
+          };
+        }
+        if (keepConnected) {
+          // Se uma linha não selecionada se conectava ao ponto movido, estica seu ponto
+          const move0 = isPointMoved(s.x0, s.y0);
+          const move1 = isPointMoved(s.x1, s.y1);
+          if (move0 || move1) {
+            return {
+              ...s,
+              x0: move0 ? Math.round((s.x0 + dx) * 100) / 100 : s.x0,
+              y0: move0 ? Math.round((s.y0 + dy) * 100) / 100 : s.y0,
+              x1: move1 ? Math.round((s.x1 + dx) * 100) / 100 : s.x1,
+              y1: move1 ? Math.round((s.y1 + dy) * 100) / 100 : s.y1,
+            };
+          }
+        }
+        return s;
+      });
+
+      const nextArcs = localArcs.map((a, idx) => {
+        if (selectedArcSet.has(idx)) {
+          return {
+            ...a,
+            cx: Math.round((a.cx + dx) * 100) / 100,
+            cy: Math.round((a.cy + dy) * 100) / 100,
+          };
+        }
+        return a;
+      });
+
+      setLocalSegs(nextSegs);
+      setLocalArcs(nextArcs);
+      const { customTopology, ...baseDieline } = dieline as any;
+      onDielineEdit?.({ ...baseDieline, segments: nextSegs, arcs: nextArcs });
+    },
+    [localSegs, localArcs, selectedSegIndices, selectedArcIndices, stretchConnected, dieline, onDielineEdit]
+  );
 
   // Keyboard Shortcuts (Delete, Ctrl+A, Ctrl+Z, Escape)
   useEffect(() => {
@@ -1026,7 +1108,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
       {editMode && selectedSegIndices.length > 0 && floatingPanelPos && (() => {
         const isSingle = selectedSegIndices.length === 1;
         const singleSeg = isSingle ? localSegs[selectedSegIndices[0]] : null;
-        const panelW = isSingle ? 260 : 300;
+        const panelW = isSingle ? 280 : 320;
         const rawLeft = floatingPanelPos.x - panelW / 2;
         const left = Math.max(8, Math.min(rawLeft, containerW - panelW - 8));
         const top = Math.max(40, floatingPanelPos.y - 150);
@@ -1158,6 +1240,216 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
               {isSingle
                 ? '💡 Arraste os círculos amarelos para mover os pontos'
                 : '💡 Shift+Clique ou arraste caixa para adicionar/remover'}
+            </div>
+
+            {/* Stretch / Deslocar Linhas e Abas (Padrão ArtiosCAD) */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 6,
+                padding: '8px 10px',
+                background: 'rgba(0, 0, 0, 0.28)',
+                borderRadius: 6,
+                border: '1px solid rgba(251, 191, 36, 0.35)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Move size={11} color="#fbbf24" />
+                  Esticar / Deslocar Aba (Stretch)
+                </span>
+                {/* Toggle Esticar Conexões */}
+                <button
+                  type="button"
+                  onClick={() => setStretchConnected((v) => !v)}
+                  style={{
+                    background: stretchConnected ? 'rgba(0, 210, 180, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                    border: stretchConnected ? '1px solid #00d2b4' : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: stretchConnected ? '#00d2b4' : '#888',
+                    fontSize: 9,
+                    fontWeight: 600,
+                    padding: '2px 5px',
+                    borderRadius: 3,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                  }}
+                  title={stretchConnected ? 'Mantém linhas conectadas (Estica chanfros sem rasgar a faca)' : 'Move apenas as linhas selecionadas'}
+                >
+                  <Link2 size={9} />
+                  <span>{stretchConnected ? 'Conectar ON' : 'Livre'}</span>
+                </button>
+              </div>
+
+              {/* Passo Rápido em mm */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 9, color: '#94a3b8' }}>Passo:</span>
+                {[1, 5, 10, 20].map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => setStretchStepMm(step)}
+                    style={{
+                      flex: 1,
+                      padding: '3px 0',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      borderRadius: 3,
+                      border: stretchStepMm === step ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.1)',
+                      background: stretchStepMm === step ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)',
+                      color: stretchStepMm === step ? '#fbbf24' : '#bbb',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {step}mm
+                  </button>
+                ))}
+              </div>
+
+              {/* Botões Direcionais Rápidos (D-Pad em mm) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => handleStretch(0, stretchStepMm)}
+                  style={{
+                    padding: '5px 2px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    borderRadius: 4,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: '#e2e8f0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 2,
+                  }}
+                  title={`Esticar aba ${stretchStepMm}mm para Cima (+Y)`}
+                >
+                  <ArrowUp size={11} color="#fbbf24" />
+                  <span>+{stretchStepMm}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStretch(0, -stretchStepMm)}
+                  style={{
+                    padding: '5px 2px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    borderRadius: 4,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: '#e2e8f0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 2,
+                  }}
+                  title={`Esticar aba ${stretchStepMm}mm para Baixo (-Y)`}
+                >
+                  <ArrowDown size={11} color="#fbbf24" />
+                  <span>-{stretchStepMm}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStretch(-stretchStepMm, 0)}
+                  style={{
+                    padding: '5px 2px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    borderRadius: 4,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: '#e2e8f0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 2,
+                  }}
+                  title={`Esticar aba ${stretchStepMm}mm para a Esquerda (-X)`}
+                >
+                  <ArrowLeft size={11} color="#fbbf24" />
+                  <span>-{stretchStepMm}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStretch(stretchStepMm, 0)}
+                  style={{
+                    padding: '5px 2px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    borderRadius: 4,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: '#e2e8f0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 2,
+                  }}
+                  title={`Esticar aba ${stretchStepMm}mm para a Direita (+X)`}
+                >
+                  <ArrowRight size={11} color="#fbbf24" />
+                  <span>+{stretchStepMm}</span>
+                </button>
+              </div>
+
+              {/* Digitação manual de deslocamento exato */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, background: 'rgba(0,0,0,0.3)', padding: '2px 4px', borderRadius: 3, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <span style={{ fontSize: 9, color: '#94a3b8' }}>ΔX:</span>
+                  <input
+                    type="number"
+                    value={customDx}
+                    onChange={(e) => setCustomDx(e.target.value)}
+                    style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: 10, fontFamily: 'monospace' }}
+                    placeholder="0"
+                  />
+                  <span style={{ fontSize: 8, color: '#666' }}>mm</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, background: 'rgba(0,0,0,0.3)', padding: '2px 4px', borderRadius: 3, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <span style={{ fontSize: 9, color: '#94a3b8' }}>ΔY:</span>
+                  <input
+                    type="number"
+                    value={customDy}
+                    onChange={(e) => setCustomDy(e.target.value)}
+                    style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: 10, fontFamily: 'monospace' }}
+                    placeholder="0"
+                  />
+                  <span style={{ fontSize: 8, color: '#666' }}>mm</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dx = parseFloat(customDx) || 0;
+                    const dy = parseFloat(customDy) || 0;
+                    handleStretch(dx, dy);
+                  }}
+                  style={{
+                    padding: '3px 7px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    background: 'var(--cad-accent, #00d2b4)',
+                    color: '#000',
+                    borderRadius: 3,
+                    border: 'none',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title="Aplicar deslocamento nos eixos X e Y"
+                >
+                  Mover
+                </button>
+              </div>
             </div>
 
             {/* Actions */}
