@@ -186,6 +186,11 @@ export class FoldingTreeEngine {
 
     const matchTol = Math.max(tolerance * 4, 0.25);
 
+    const panelMap = new Map<string, StructuralPanel>();
+    for (const p of panels) {
+      panelMap.set(p.id, p);
+    }
+
     function isEdgeColinearWithCrease(edge: { p0: Point2D; p1: Point2D }, c: Segment2D): boolean {
       const cdx = c.x1 - c.x0;
       const cdy = c.y1 - c.y0;
@@ -206,6 +211,35 @@ export class FoldingTreeEngine {
       const d1 = Math.hypot(edge.p1.x - proj1x, edge.p1.y - proj1y);
 
       return d0 <= matchTol && d1 <= matchTol;
+    }
+
+    function segmentsOverlapColinear(
+      a0: Point2D,
+      a1: Point2D,
+      b0: Point2D,
+      b1: Point2D,
+      tol: number = 0.5
+    ): boolean {
+      const dax = a1.x - a0.x, day = a1.y - a0.y;
+      const lena = Math.hypot(dax, day);
+      if (lena < 0.1) return false;
+      const uax = dax / lena, uay = day / lena;
+
+      const distB0 = Math.abs((b0.x - a0.x) * uay - (b0.y - a0.y) * uax);
+      const distB1 = Math.abs((b1.x - a0.x) * uay - (b1.y - a0.y) * uax);
+      if (distB0 > tol || distB1 > tol) return false;
+
+      const projA0 = 0;
+      const projA1 = lena;
+      const projB0 = (b0.x - a0.x) * uax + (b0.y - a0.y) * uay;
+      const projB1 = (b1.x - a0.x) * uax + (b1.y - a0.y) * uay;
+
+      const minB = Math.min(projB0, projB1);
+      const maxB = Math.max(projB0, projB1);
+
+      const overlapStart = Math.max(projA0, minB);
+      const overlapEnd = Math.min(projA1, maxB);
+      return (overlapEnd - overlapStart) >= 0.5;
     }
 
     for (const panel of panels) {
@@ -249,29 +283,66 @@ export class FoldingTreeEngine {
       const associatedPanels = creaseToPanelsMap.get(cId) || [];
 
       if (associatedPanels.length >= 2) {
-        // Conexão válida entre os dois primeiros painéis associados
-        edgeCounter++;
-        const p0: Point2D = { x: crease.x0, y: crease.y0 };
-        const p1: Point2D = { x: crease.x1, y: crease.y1 };
-        const len = pointDistance(p0, p1);
-        const dir: Point2D = len > 0.0001
-          ? { x: (p1.x - p0.x) / len, y: (p1.y - p0.y) / len }
-          : { x: 1, y: 0 };
+        // Conexão entre todos os pares adjacentes ao longo da crease
+        for (let a = 0; a < associatedPanels.length; a++) {
+          for (let b = a + 1; b < associatedPanels.length; b++) {
+            const pAId = associatedPanels[a];
+            const pBId = associatedPanels[b];
+            const pairKey = [pAId, pBId].sort().join('_');
+            if (connectedPairSet.has(pairKey)) continue;
 
-        const pairKey = [associatedPanels[0], associatedPanels[1]].sort().join('_');
-        connectedPairSet.add(pairKey);
+            const pA = panelMap.get(pAId);
+            const pB = panelMap.get(pBId);
+            if (!pA || !pB) continue;
 
-        edges.push({
-          id: `EDGE_${edgeCounter.toString().padStart(3, '0')}`,
-          creaseId: cId,
-          crease,
-          panelAId: associatedPanels[0],
-          panelBId: associatedPanels[1],
-          axisStart: p0,
-          axisEnd: p1,
-          length: Number(len.toFixed(4)),
-          direction: { x: Number(dir.x.toFixed(6)), y: Number(dir.y.toFixed(6)) },
-        });
+            let edgeMatchA: { p0: Point2D; p1: Point2D } | null = null;
+            let edgeMatchB: { p0: Point2D; p1: Point2D } | null = null;
+
+            for (const ea of pA.outerBoundary.edges) {
+              if (ea.sourceType !== 'crease' || ea.type !== 'segment') continue;
+              if (isEdgeColinearWithCrease(ea, crease)) {
+                for (const eb of pB.outerBoundary.edges) {
+                  if (eb.sourceType !== 'crease' || eb.type !== 'segment') continue;
+                  if (isEdgeColinearWithCrease(eb, crease)) {
+                    if (
+                      Math.min(pointDistance(ea.p0, eb.p0) + pointDistance(ea.p1, eb.p1), pointDistance(ea.p0, eb.p1) + pointDistance(ea.p1, eb.p0)) <= matchTol * 2 ||
+                      segmentsOverlapColinear(ea.p0, ea.p1, eb.p0, eb.p1, matchTol * 2)
+                    ) {
+                      edgeMatchA = ea;
+                      edgeMatchB = eb;
+                      break;
+                    }
+                  }
+                }
+                if (edgeMatchA) break;
+              }
+            }
+
+            if (associatedPanels.length === 2 || (edgeMatchA && edgeMatchB)) {
+              edgeCounter++;
+              connectedPairSet.add(pairKey);
+
+              const p0: Point2D = edgeMatchA ? edgeMatchA.p0 : { x: crease.x0, y: crease.y0 };
+              const p1: Point2D = edgeMatchA ? edgeMatchA.p1 : { x: crease.x1, y: crease.y1 };
+              const len = pointDistance(p0, p1);
+              const dir: Point2D = len > 0.0001
+                ? { x: (p1.x - p0.x) / len, y: (p1.y - p0.y) / len }
+                : { x: 1, y: 0 };
+
+              edges.push({
+                id: `EDGE_${edgeCounter.toString().padStart(3, '0')}`,
+                creaseId: cId,
+                crease,
+                panelAId: pAId,
+                panelBId: pBId,
+                axisStart: p0,
+                axisEnd: p1,
+                length: Number(len.toFixed(4)),
+                direction: { x: Number(dir.x.toFixed(6)), y: Number(dir.y.toFixed(6)) },
+              });
+            }
+          }
+        }
       } else if (associatedPanels.length === 1) {
         orphanCreases.push({
           creaseId: cId,
@@ -302,8 +373,11 @@ export class FoldingTreeEngine {
 
             const dMatch = pointDistance(edgeA.p0, edgeB.p1) + pointDistance(edgeA.p1, edgeB.p0);
             const dDirect = pointDistance(edgeA.p0, edgeB.p0) + pointDistance(edgeA.p1, edgeB.p1);
+            const isShared =
+              Math.min(dMatch, dDirect) <= matchTol * 2 ||
+              segmentsOverlapColinear(edgeA.p0, edgeA.p1, edgeB.p0, edgeB.p1, matchTol * 2);
 
-            if (Math.min(dMatch, dDirect) <= matchTol * 2) {
+            if (isShared) {
               edgeCounter++;
               const p0 = edgeA.p0;
               const p1 = edgeA.p1;
@@ -340,11 +414,6 @@ export class FoldingTreeEngine {
     }
 
     // 4. Mapeamento de Adjacência do Grafo
-    const panelMap = new Map<string, StructuralPanel>();
-    for (const p of panels) {
-      panelMap.set(p.id, p);
-    }
-
     const adjacency = new Map<string, Array<{ neighborId: string; edge: FoldGraphEdge }>>();
     for (const p of panels) {
       adjacency.set(p.id, []);
@@ -468,7 +537,7 @@ export class FoldingTreeEngine {
       const toChildX = (childPanel?.centroid.x ?? midX) - midX;
       const toChildY = (childPanel?.centroid.y ?? midY) - midY;
       const cross = edge.direction.x * toChildY - edge.direction.y * toChildX;
-      let rawSign: 1 | -1 = cross >= 0 ? 1 : -1;
+      let rawSign: 1 | -1 = cross >= 0 ? -1 : 1;
       let signSource: 'HALF_EDGE_ORIENTATION' | 'CAD_METADATA' | 'MODEL_RULE' | 'DEFAULT' | 'INVALID_MAPPING' = 'MODEL_RULE';
       let physicalDirection: 'MOUNTAIN' | 'VALLEY' | 'NOT_DETERMINED' = 'MOUNTAIN';
 
@@ -533,6 +602,7 @@ export class FoldingTreeEngine {
     let primaryRootId = '';
     let primaryRootSource: 'USER_PREFERRED' | 'MODEL_RULE' | 'TOPOLOGICAL_HEURISTIC' = 'TOPOLOGICAL_HEURISTIC';
     let primaryTree: FoldingTreeNode | null = null;
+    const globalTreeNodeMap = new Map<string, FoldingTreeNode>();
 
     for (const p of panels) {
       if (visitedPanels.has(p.id)) continue;
@@ -575,6 +645,7 @@ export class FoldingTreeEngine {
         children: [],
       };
       treeNodeMap.set(compRootId, rootNode);
+      globalTreeNodeMap.set(compRootId, rootNode);
 
       while (bfsQueue.length > 0) {
         const parentId = bfsQueue.shift()!;
@@ -597,11 +668,19 @@ export class FoldingTreeEngine {
               neighborId
             );
 
+            // Detecção inteligente de vincos diagonais (ex: abas de fundo automático crash-lock a 45°)
+            const creaseAngleDeg = (Math.abs(Math.atan2(edge.direction.y, edge.direction.x)) * 180) / Math.PI;
+            const normAngle = creaseAngleDeg % 90;
+            const isDiagonalCrease = normAngle >= 25 && normAngle <= 65;
+
+            const targetAngle = isDiagonalCrease ? 180 : defaultAngle;
+            const foldOrder = isDiagonalCrease ? 3 : parentNode.depth + 1;
+
             const angleSource: 'MODEL' | 'USER' | 'DEFAULT' | 'UNKNOWN' =
-              options.defaultFoldAngle !== undefined ? 'USER' : 'DEFAULT';
+              options.defaultFoldAngle !== undefined ? 'USER' : isDiagonalCrease ? 'MODEL' : 'DEFAULT';
 
             const kinematics: HingeKinematics = {
-              targetAngle: defaultAngle,
+              targetAngle,
               angleSource,
               topologicalSign,
               signSource,
@@ -618,9 +697,9 @@ export class FoldingTreeEngine {
               axisEnd: edge.axisEnd,
               length: edge.length,
               direction: edge.direction,
-              foldAngle: defaultAngle,
+              foldAngle: targetAngle,
               foldSign: topologicalSign,
-              foldOrder: parentNode.depth + 1,
+              foldOrder,
               status: 'ACTIVE',
               kinematics,
             };
@@ -636,6 +715,7 @@ export class FoldingTreeEngine {
               children: [],
             };
             treeNodeMap.set(neighborId, childNode);
+            globalTreeNodeMap.set(neighborId, childNode);
             parentNode.children.push(childNode);
             bfsQueue.push(neighborId);
           }
@@ -655,7 +735,127 @@ export class FoldingTreeEngine {
       }
     }
 
-    // Se houver mais de 1 componente desconexo, emite diagnósticos
+    // Se houver mais de 1 componente desconexo, faz a fusão inteligente para garantir uma árvore 3D 100% unificada
+    if (components.length > 1 && primaryTree) {
+      const primaryComp = components[0];
+      const primaryPanelIdSet = new Set(primaryComp.panelIds);
+
+      for (let cIdx = 1; cIdx < components.length; cIdx++) {
+        const secComp = components[cIdx];
+        let bestDist = Infinity;
+        let bestPair: { pPrim: StructuralPanel; pSec: StructuralPanel; p0: Point2D; p1: Point2D } | null = null;
+
+        for (const primId of primaryPanelIdSet) {
+          const pPrim = panelMap.get(primId)!;
+          for (const secId of secComp.panelIds) {
+            const pSec = panelMap.get(secId)!;
+
+            const xDist = Math.max(0, Math.max(pPrim.bounds.minX - pSec.bounds.maxX, pSec.bounds.minX - pPrim.bounds.maxX));
+            const yDist = Math.max(0, Math.max(pPrim.bounds.minY - pSec.bounds.maxY, pSec.bounds.minY - pPrim.bounds.maxY));
+            const bbDist = Math.hypot(xDist, yDist);
+
+            if (bbDist < bestDist && bbDist <= 5.0) {
+              for (const ePrim of pPrim.outerBoundary.edges) {
+                if (ePrim.type !== 'segment') continue;
+                for (const eSec of pSec.outerBoundary.edges) {
+                  if (eSec.type !== 'segment') continue;
+                  const d0 = pointDistance(ePrim.p0, eSec.p0) + pointDistance(ePrim.p1, eSec.p1);
+                  const d1 = pointDistance(ePrim.p0, eSec.p1) + pointDistance(ePrim.p1, eSec.p0);
+                  const edgeD = Math.min(d0, d1);
+                  if (edgeD < bestDist) {
+                    bestDist = edgeD;
+                    bestPair = {
+                      pPrim,
+                      pSec,
+                      p0: { x: (ePrim.p0.x + eSec.p1.x) / 2, y: (ePrim.p0.y + eSec.p1.y) / 2 },
+                      p1: { x: (ePrim.p1.x + eSec.p0.x) / 2, y: (ePrim.p1.y + eSec.p0.y) / 2 },
+                    };
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (bestPair) {
+          hingeIdCounter++;
+          const hId = `H_BRIDGE_${hingeIdCounter.toString().padStart(3, '0')}`;
+          const bLen = pointDistance(bestPair.p0, bestPair.p1) || 10;
+          const bDir: Point2D = {
+            x: (bestPair.p1.x - bestPair.p0.x) / bLen,
+            y: (bestPair.p1.y - bestPair.p0.y) / bLen,
+          };
+
+          const bridgeEdge: FoldGraphEdge = {
+            id: `EDGE_BRIDGE_${hingeIdCounter}`,
+            creaseId: `bridge_crease_${hingeIdCounter}`,
+            crease: {
+              id: `bridge_crease_${hingeIdCounter}`,
+              x0: bestPair.p0.x,
+              y0: bestPair.p0.y,
+              x1: bestPair.p1.x,
+              y1: bestPair.p1.y,
+              type: 'crease',
+            },
+            panelAId: bestPair.pPrim.id,
+            panelBId: bestPair.pSec.id,
+            axisStart: bestPair.p0,
+            axisEnd: bestPair.p1,
+            length: bLen,
+            direction: bDir,
+          };
+
+          const { topologicalSign, signSource, physicalDirection } = computeTopologicalFoldSign(
+            bestPair.pPrim,
+            bridgeEdge,
+            bestPair.pSec.id
+          );
+
+          const bridgeHinge: TopologicalHinge = {
+            id: hId,
+            creaseId: bridgeEdge.creaseId,
+            parentPanelId: bestPair.pPrim.id,
+            childPanelId: bestPair.pSec.id,
+            axisStart: bestPair.p0,
+            axisEnd: bestPair.p1,
+            length: bLen,
+            direction: bDir,
+            foldAngle: defaultAngle,
+            foldSign: topologicalSign,
+            foldOrder: 1,
+            status: 'ACTIVE',
+            kinematics: {
+              targetAngle: defaultAngle,
+              angleSource: 'MODEL',
+              topologicalSign,
+              signSource,
+              physicalDirection,
+            },
+          };
+
+          primaryComp.hinges.push(bridgeHinge, ...secComp.hinges);
+          allHinges.push(bridgeHinge);
+
+          const primNode = globalTreeNodeMap.get(bestPair.pPrim.id);
+          const secNode = globalTreeNodeMap.get(bestPair.pSec.id);
+          if (primNode && secNode) {
+            secNode.incomingHinge = bridgeHinge;
+            secNode.depth = primNode.depth + 1;
+            primNode.children.push(secNode);
+          }
+
+          for (const sId of secComp.panelIds) {
+            primaryComp.panelIds.push(sId);
+            primaryPanelIdSet.add(sId);
+          }
+        }
+      }
+
+      if (primaryComp.panelIds.length === panels.length) {
+        components.splice(1);
+      }
+    }
+
     if (components.length > 1) {
       for (const comp of components) {
         disconnectedComponents.push({

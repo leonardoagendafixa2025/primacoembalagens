@@ -10,11 +10,11 @@ export interface TopologyToleranceConfig {
 }
 
 export const DEFAULT_TOPOLOGY_TOLERANCES: TopologyToleranceConfig = {
-  coincidentToleranceMm: 0.05,
-  gapToleranceMm: 0.40,
-  tJunctionToleranceMm: 0.40,
+  coincidentToleranceMm: 0.08,
+  gapToleranceMm: 0.80,
+  tJunctionToleranceMm: 0.80,
   colinearToleranceRad: 0.005,
-  overshootToleranceMm: 0.50,
+  overshootToleranceMm: 0.60,
 };
 
 export interface TopologyRepairEvent {
@@ -257,6 +257,188 @@ export class TopologyReconstructor {
         endAngle: Number(a.endAngle.toFixed(4)),
         type: a.type,
       }));
+
+    // =========================================================================
+    // PASSO 0: CURA INDUSTRIAL DE ALÍVIOS, RECUOS E DEGRAUS (Setback & Relief Healer)
+    // Em arquivos CAD (Artios, AutoCAD, Illustrator), vincos frequentemente possuem
+    // recuos técnicos de 0.8mm a 2.5mm antes dos cortes e entalhes de alívio circular.
+    // =========================================================================
+    // 0a: Fechamento de gaps entre vincos colineares (relief notches <= 3.5mm)
+    const creaseSegs = segments.filter((s) => s.type === 'crease');
+    const bridgeCreases: Segment2D[] = [];
+    for (let i = 0; i < creaseSegs.length; i++) {
+      const c1 = creaseSegs[i];
+      const dx1 = c1.x1 - c1.x0;
+      const dy1 = c1.y1 - c1.y0;
+      const l1 = Math.hypot(dx1, dy1);
+      if (l1 < 1e-4) continue;
+      const u1x = dx1 / l1, u1y = dy1 / l1;
+
+      for (let j = i + 1; j < creaseSegs.length; j++) {
+        const c2 = creaseSegs[j];
+        const dx2 = c2.x1 - c2.x0;
+        const dy2 = c2.y1 - c2.y0;
+        const l2 = Math.hypot(dx2, dy2);
+        if (l2 < 1e-4) continue;
+        const u2x = dx2 / l2, u2y = dy2 / l2;
+
+        const cross = Math.abs(u1x * u2y - u1y * u2x);
+        if (cross > 0.06) continue;
+
+        const v0x = c2.x0 - c1.x0;
+        const v0y = c2.y0 - c1.y0;
+        if (Math.abs(v0x * u1y - v0y * u1x) > 0.3) continue;
+
+        const pairs: [{ x: number; y: number }, { x: number; y: number }][] = [
+          [{ x: c1.x0, y: c1.y0 }, { x: c2.x0, y: c2.y0 }],
+          [{ x: c1.x0, y: c1.y0 }, { x: c2.x1, y: c2.y1 }],
+          [{ x: c1.x1, y: c1.y1 }, { x: c2.x0, y: c2.y0 }],
+          [{ x: c1.x1, y: c1.y1 }, { x: c2.x1, y: c2.y1 }],
+        ];
+        for (const [pA, pB] of pairs) {
+          const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+          if (d > 0.05 && d <= 3.5) {
+            const bdx = (pB.x - pA.x) / d;
+            const bdy = (pB.y - pA.y) / d;
+            if (Math.abs(Math.abs(bdx * u1x + bdy * u1y) - 1.0) < 0.15) {
+              bridgeCreases.push({
+                id: generateDeterministicSegmentId('crease', pA.x, pA.y, pB.x, pB.y),
+                x0: pA.x,
+                y0: pA.y,
+                x1: pB.x,
+                y1: pB.y,
+                type: 'crease',
+              });
+              gapsHealed++;
+              repairs.push({
+                action: 'SNAP_VERTICES',
+                distanceMm: d,
+                toleranceMm: 3.5,
+                location: { x: (pA.x + pB.x) / 2, y: (pA.y + pB.y) / 2 },
+                reason: `Ponte de vinco colinear criada para fechar alívio de ${d.toFixed(3)}mm`,
+              });
+            }
+          }
+        }
+      }
+    }
+    segments.push(...bridgeCreases);
+
+    // 0b: Cura de pontas soltas de vincos (Crease Setback Healer <= 3.5mm)
+    for (const s of segments) {
+      if (s.type !== 'crease') continue;
+      for (const ep of ['p0', 'p1'] as const) {
+        const ptX = ep === 'p0' ? s.x0 : s.x1;
+        const ptY = ep === 'p0' ? s.y0 : s.y1;
+        const otherX = ep === 'p0' ? s.x1 : s.x0;
+        const otherY = ep === 'p0' ? s.y1 : s.y0;
+
+        let touchesAny = false;
+        for (const o of segments) {
+          if (o === s) continue;
+          if (Math.hypot(o.x0 - ptX, o.y0 - ptY) < 0.25 || Math.hypot(o.x1 - ptX, o.y1 - ptY) < 0.25) {
+            touchesAny = true;
+            break;
+          }
+          const { distance } = distancePointToSegment({ x: ptX, y: ptY }, { x: o.x0, y: o.y0 }, { x: o.x1, y: o.y1 });
+          if (distance < 0.25) {
+            touchesAny = true;
+            break;
+          }
+        }
+        if (touchesAny) continue;
+
+        const dirx = ptX - otherX;
+        const diry = ptY - otherY;
+        const dlen = Math.hypot(dirx, diry);
+        if (dlen < 1e-4) continue;
+        const udx = dirx / dlen;
+        const udy = diry / dlen;
+
+        let bestT = 3.5;
+        let bestInter: Point2D | null = null;
+        for (const o of segments) {
+          if (o === s) continue;
+          const x3 = o.x0, y3 = o.y0;
+          const x4 = o.x1, y4 = o.y1;
+          const denom = udx * (y4 - y3) - udy * (x4 - x3);
+          if (Math.abs(denom) < 1e-5) continue;
+          const t = ((x3 - ptX) * (y4 - y3) - (y3 - ptY) * (x4 - x3)) / denom;
+          const u = ((x3 - ptX) * udy - (y3 - ptY) * udx) / denom;
+          if (t > 0.02 && t <= bestT && u >= -0.02 && u <= 1.02) {
+            bestT = t;
+            bestInter = { x: Number((ptX + t * udx).toFixed(4)), y: Number((ptY + t * udy).toFixed(4)) };
+          }
+        }
+        if (bestInter) {
+          if (ep === 'p0') {
+            s.x0 = bestInter.x;
+            s.y0 = bestInter.y;
+          } else {
+            s.x1 = bestInter.x;
+            s.y1 = bestInter.y;
+          }
+          gapsHealed++;
+          repairs.push({
+            action: 'SNAP_VERTICES',
+            entityAId: String(s.id),
+            distanceMm: bestT,
+            toleranceMm: 3.5,
+            location: bestInter,
+            reason: `Extensão de recuo de vinco (setback ${bestT.toFixed(3)}mm) conectada à linha adjacente`,
+          });
+        }
+      }
+    }
+
+    // 0c: Fechamento de degraus no contorno de corte (Boundary Step Closures <= 3.6mm)
+    const cutEndpoints: { pt: Point2D; seg: Segment2D }[] = [];
+    for (const s of segments) {
+      if (s.type !== 'cut') continue;
+      for (const ep of ['p0', 'p1'] as const) {
+        const ptX = ep === 'p0' ? s.x0 : s.x1;
+        const ptY = ep === 'p0' ? s.y0 : s.y1;
+        let meets = 0;
+        for (const o of segments) {
+          if (Math.hypot(o.x0 - ptX, o.y0 - ptY) < 0.2 || Math.hypot(o.x1 - ptX, o.y1 - ptY) < 0.2) {
+            meets++;
+          } else if (o !== s) {
+            const { distance } = distancePointToSegment({ x: ptX, y: ptY }, { x: o.x0, y: o.y0 }, { x: o.x1, y: o.y1 });
+            if (distance < 0.2) meets++;
+          }
+        }
+        if (meets <= 1) {
+          cutEndpoints.push({ pt: { x: ptX, y: ptY }, seg: s });
+        }
+      }
+    }
+    const boundaryBridges: Segment2D[] = [];
+    for (let i = 0; i < cutEndpoints.length; i++) {
+      for (let j = i + 1; j < cutEndpoints.length; j++) {
+        const pA = cutEndpoints[i].pt;
+        const pB = cutEndpoints[j].pt;
+        const d = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+        if (d > 0.05 && d <= 3.6) {
+          boundaryBridges.push({
+            id: generateDeterministicSegmentId('cut', pA.x, pA.y, pB.x, pB.y),
+            x0: pA.x,
+            y0: pA.y,
+            x1: pB.x,
+            y1: pB.y,
+            type: 'cut',
+          });
+          gapsHealed++;
+          repairs.push({
+            action: 'SNAP_VERTICES',
+            distanceMm: d,
+            toleranceMm: 3.6,
+            location: { x: (pA.x + pB.x) / 2, y: (pA.y + pB.y) / 2 },
+            reason: `Fechamento de degrau de corte de ${d.toFixed(3)}mm`,
+          });
+        }
+      }
+    }
+    segments.push(...boundaryBridges);
 
     // =========================================================================
     // PASSO 1: SNAP DE MICRO-GAPS INICIAIS (Spatial Hash Grid O(N))

@@ -789,13 +789,16 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
         az = -az;
       }
 
-      // TODAS as dobras de caixas industriais s├úo de 90┬░ relativas para o interior da embalagem!
-      // Dobras de parede dupla alcan├ºam 180┬░ pela composi├º├úo de duas dobras consecutivas de 90┬░ (Parede->Topo a 90┬░ + Topo->Retorno a 90┬░ = 180┬░).
-      // A tampa alcan├ºa 180┬░ em rela├º├úo ├á base pela composi├º├úo (Base->Parede a 90┬░ + Parede->Tampa a 90┬░ = 180┬░ horizontal).
-      const targetAngle = 90;
+      // Dobras diagonais de abas de fundo automático fecham a 180°
+      let targetAngle = 90;
+      const hAngleDeg = (Math.abs(Math.atan2(h.y1 - h.y0, h.x1 - h.x0)) * 180) / Math.PI;
+      const normHAngle = hAngleDeg % 90;
+      if (normHAngle >= 25 && normHAngle <= 65) {
+        targetAngle = 180;
+      }
 
-      // Ordem f├¡sica sequencial de montagem:
-      let foldOrder = 1;
+      // Ordem física sequencial de montagem:
+      let foldOrder = targetAngle === 180 ? 3 : 1;
       if (parentInfo.depth === 1) {
         foldOrder = 1;
       } else if (parentInfo.depth === 2) {
@@ -983,7 +986,7 @@ export function convertDielineTopologyToStructural(customTopo: DielineTopology):
     const dx = h.x1 - h.x0;
     const dy = h.y1 - h.y0;
     const cross = dx * toCy - dy * toCx;
-    const topologicalSign: 1 | -1 = cross >= 0 ? 1 : -1;
+    const topologicalSign: 1 | -1 = cross >= 0 ? -1 : 1;
     const len = Math.hypot(dx, dy);
 
     return {

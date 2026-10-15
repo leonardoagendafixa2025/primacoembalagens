@@ -431,8 +431,8 @@ export class LoopTopologyEngine {
         }
       } else if (loop === globalOuterLoop) {
         loop.isExternal = true;
-      } else if (loop.signedArea < 0 && loop.area > (globalOuterLoop ? globalOuterLoop.area * 0.8 : 5000)) {
-        // Proteção para componentes desconectados no mesmo arquivo
+      } else if (!hasCreases && globalOuterLoop && loop.signedArea < 0 && loop.area > globalOuterLoop.area * 0.95) {
+        // Proteção exclusiva para contornos globais alternativos que cobrem quase 100% do blank
         loop.isExternal = true;
       } else {
         loop.isExternal = false;

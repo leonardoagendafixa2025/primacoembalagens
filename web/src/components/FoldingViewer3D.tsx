@@ -343,8 +343,8 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
         // Reconstrói a topologia planar para facas importadas ou editadas
         // Isso resolve T-junctions, une micro-gaps e conecta vértices entre cortes e vincos
         const recon = TopologyReconstructor.reconstructConnectivity(currentDieline, {
-          gapToleranceMm: 0.35,
-          tJunctionToleranceMm: 0.35,
+          gapToleranceMm: 0.80,
+          tJunctionToleranceMm: 0.80,
           coincidentToleranceMm: 0.08,
         });
         const geom = recon.geometry || currentDieline;
