@@ -612,36 +612,55 @@ export class TopologyReconstructor {
     segments = segmentsAfterX;
 
     // =========================================================================
+    // =========================================================================
     // PASSO 3: RESOLUÇÃO COMPLETA DE T-JUNCTIONS (Vértices que Encontram Linhas Contínuas)
     // =========================================================================
-    // Coleta todos os vértices únicos dos segmentos e arcos
-    const vTol = Math.max(config.coincidentToleranceMm, 0.02);
-    const uniqueVertices: Point2D[] = [];
+    interface VertexCluster {
+      id: number;
+      x: number;
+      y: number;
+      members: Array<{ seg: Segment2D; ep: 'p0' | 'p1' }>;
+      arcMembers: Array<{ arc: Arc2D; ep: 'start' | 'end' }>;
+    }
 
-    function addUniqueVertex(x: number, y: number): Point2D {
-      for (const uv of uniqueVertices) {
-        if (Math.hypot(uv.x - x, uv.y - y) <= vTol) {
-          return uv;
+    const vTol = Math.max(config.coincidentToleranceMm, 0.04);
+    const clusters: VertexCluster[] = [];
+
+    function findOrCreateCluster(x: number, y: number): VertexCluster {
+      for (const cl of clusters) {
+        if (Math.hypot(cl.x - x, cl.y - y) <= vTol) {
+          return cl;
         }
       }
-      const newV: Point2D = { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) };
-      uniqueVertices.push(newV);
-      return newV;
+      const newCl: VertexCluster = {
+        id: clusters.length,
+        x: Number(x.toFixed(4)),
+        y: Number(y.toFixed(4)),
+        members: [],
+        arcMembers: [],
+      };
+      clusters.push(newCl);
+      return newCl;
     }
 
     for (const s of segments) {
-      addUniqueVertex(s.x0, s.y0);
-      addUniqueVertex(s.x1, s.y1);
+      const c0 = findOrCreateCluster(s.x0, s.y0);
+      c0.members.push({ seg: s, ep: 'p0' });
+      const c1 = findOrCreateCluster(s.x1, s.y1);
+      c1.members.push({ seg: s, ep: 'p1' });
     }
+
     for (const a of arcs) {
       const aStartRad = (a.startAngle * Math.PI) / 180;
       const aEndRad = (a.endAngle * Math.PI) / 180;
-      addUniqueVertex(a.cx + a.r * Math.cos(aStartRad), a.cy + a.r * Math.sin(aStartRad));
-      addUniqueVertex(a.cx + a.r * Math.cos(aEndRad), a.cy + a.r * Math.sin(aEndRad));
+      const cStart = findOrCreateCluster(a.cx + a.r * Math.cos(aStartRad), a.cy + a.r * Math.sin(aStartRad));
+      cStart.arcMembers.push({ arc: a, ep: 'start' });
+      const cEnd = findOrCreateCluster(a.cx + a.r * Math.cos(aEndRad), a.cy + a.r * Math.sin(aEndRad));
+      cEnd.arcMembers.push({ arc: a, ep: 'end' });
     }
 
-    // Mapeia todas as divisões em T por segmento
-    const segmentsAfterT: Segment2D[] = [];
+    // Identifica divisões em T por segmento e muta os membros do cluster para o ponto projetado
+    const segSplitsMap = new Map<Segment2D, { pt: Point2D; t: number; dist: number }[]>();
 
     for (const seg of segments) {
       const p0 = { x: seg.x0, y: seg.y0 };
@@ -651,13 +670,11 @@ export class TopologyReconstructor {
 
       const tSplits: { pt: Point2D; t: number; dist: number }[] = [];
 
-      for (const v of uniqueVertices) {
-        // Ignora endpoints deste mesmo segmento
-        if (Math.hypot(v.x - p0.x, v.y - p0.y) < vTol || Math.hypot(v.x - p1.x, v.y - p1.y) < vTol) {
-          continue;
-        }
+      for (const cl of clusters) {
+        // Se este cluster já contém um endpoint deste mesmo segmento, pula
+        if (cl.members.some((m) => m.seg === seg)) continue;
 
-        const { distance, projection, t } = distancePointToSegment(v, p0, p1);
+        const { distance, projection, t } = distancePointToSegment({ x: cl.x, y: cl.y }, p0, p1);
         if (distance <= config.tJunctionToleranceMm && t > 0.001 && t < 0.999) {
           const projPt: Point2D = {
             x: Number(projection.x.toFixed(4)),
@@ -665,9 +682,18 @@ export class TopologyReconstructor {
           };
           tSplits.push({ pt: projPt, t, dist: distance });
 
-          // Snap do vértice para o ponto exato da projeção na reta
-          v.x = projPt.x;
-          v.y = projPt.y;
+          // CRITICAL: Atualiza as coordenadas reais de TODOS os segmentos que terminam neste cluster!
+          for (const m of cl.members) {
+            if (m.ep === 'p0') {
+              m.seg.x0 = projPt.x;
+              m.seg.y0 = projPt.y;
+            } else {
+              m.seg.x1 = projPt.x;
+              m.seg.y1 = projPt.y;
+            }
+          }
+          cl.x = projPt.x;
+          cl.y = projPt.y;
 
           if (distance > maxGeometricDeviationMm) maxGeometricDeviationMm = distance;
           tJunctionsSplit++;
@@ -678,17 +704,26 @@ export class TopologyReconstructor {
             distanceMm: distance,
             toleranceMm: config.tJunctionToleranceMm,
             location: projPt,
-            reason: `T-Junction resolvida: segmento subdividido no encontro do vértice em t=${t.toFixed(4)}`,
+            reason: `T-Junction resolvida: segmento subdividido e vinco/corte conectado com precisão em t=${t.toFixed(4)}`,
           });
         }
       }
 
-      if (tSplits.length === 0) {
+      if (tSplits.length > 0) {
+        segSplitsMap.set(seg, tSplits);
+      }
+    }
+
+    // Subdivide os segmentos contínuos nas divisões em T
+    const segmentsAfterT: Segment2D[] = [];
+    for (const seg of segments) {
+      const splits = segSplitsMap.get(seg);
+      if (!splits || splits.length === 0) {
         segmentsAfterT.push(seg);
       } else {
-        tSplits.sort((a, b) => a.t - b.t);
-        let curr = p0;
-        for (const sp of tSplits) {
+        splits.sort((a, b) => a.t - b.t);
+        let curr = { x: seg.x0, y: seg.y0 };
+        for (const sp of splits) {
           if (Math.hypot(sp.pt.x - curr.x, sp.pt.y - curr.y) > 0.001) {
             segmentsAfterT.push({
               id: generateDeterministicSegmentId(seg.type, curr.x, curr.y, sp.pt.x, sp.pt.y),
@@ -701,19 +736,238 @@ export class TopologyReconstructor {
             curr = sp.pt;
           }
         }
-        if (Math.hypot(p1.x - curr.x, p1.y - curr.y) > 0.001) {
+        if (Math.hypot(seg.x1 - curr.x, seg.y1 - curr.y) > 0.001) {
           segmentsAfterT.push({
-            id: generateDeterministicSegmentId(seg.type, curr.x, curr.y, p1.x, p1.y),
+            id: generateDeterministicSegmentId(seg.type, curr.x, curr.y, seg.x1, seg.y1),
             x0: curr.x,
             y0: curr.y,
-            x1: p1.x,
-            y1: p1.y,
+            x1: seg.x1,
+            y1: seg.y1,
             type: seg.type,
           });
         }
       }
     }
     segments = segmentsAfterT;
+
+    // =========================================================================
+    // PASSO 3.5: EXTENSÃO E CONEXÃO DE VINCOS SOLTOS (Dangling Crease Extender)
+    // Em embalagens, todo vinco DEVE conectar as duas extremidades a cortes ou outros vincos.
+    // Vinco com grau 1 impede a partição de faces e impossibilita o fechamento 3D.
+    // =========================================================================
+    for (let round = 0; round < 2; round++) {
+      const segmentsToAdd: Segment2D[] = [];
+      const segmentsToRemove = new Set<Segment2D>();
+
+      for (const s of segments) {
+        if (s.type !== 'crease') continue;
+        if (segmentsToRemove.has(s)) continue;
+
+        for (const ep of ['p0', 'p1'] as const) {
+          const pt = ep === 'p0' ? { x: s.x0, y: s.y0 } : { x: s.x1, y: s.y1 };
+          const otherPt = ep === 'p0' ? { x: s.x1, y: s.y1 } : { x: s.x0, y: s.y0 };
+
+          // Conta conectividade desta ponta
+          let meets = 0;
+          for (const o of segments) {
+            if (o === s || segmentsToRemove.has(o)) continue;
+            if (Math.hypot(o.x0 - pt.x, o.y0 - pt.y) <= 0.15 || Math.hypot(o.x1 - pt.x, o.y1 - pt.y) <= 0.15) {
+              meets++;
+              break;
+            }
+            const { distance, t } = distancePointToSegment(pt, { x: o.x0, y: o.y0 }, { x: o.x1, y: o.y1 });
+            if (distance <= 0.08 && t > 0.01 && t < 0.99) {
+              meets++;
+              break;
+            }
+          }
+
+          if (meets > 0) continue; // Conectado com sucesso
+
+          // 1. Tenta snap a endpoint próximo (até 1.5mm)
+          let closestEndPt: Point2D | null = null;
+          let minEndDist = 1.5;
+          for (const o of segments) {
+            if (o === s || segmentsToRemove.has(o)) continue;
+            const d0 = Math.hypot(o.x0 - pt.x, o.y0 - pt.y);
+            const d1 = Math.hypot(o.x1 - pt.x, o.y1 - pt.y);
+            if (d0 < minEndDist) { minEndDist = d0; closestEndPt = { x: o.x0, y: o.y0 }; }
+            if (d1 < minEndDist) { minEndDist = d1; closestEndPt = { x: o.x1, y: o.y1 }; }
+          }
+          if (closestEndPt && minEndDist <= 1.5) {
+            if (ep === 'p0') { s.x0 = closestEndPt.x; s.y0 = closestEndPt.y; }
+            else { s.x1 = closestEndPt.x; s.y1 = closestEndPt.y; }
+            continue;
+          }
+
+          // 2. Projeta raio na direção do vinco para interceptar cortes/vincos (até 4.0mm)
+          const dirX = pt.x - otherPt.x;
+          const dirY = pt.y - otherPt.y;
+          const len = Math.hypot(dirX, dirY);
+          if (len < 1e-4) continue;
+          const ux = dirX / len;
+          const uy = dirY / len;
+
+          let bestHit: { pt: Point2D; dist: number; seg: Segment2D; t: number } | null = null;
+          const maxReach = 4.0;
+
+          for (const o of segments) {
+            if (o === s || segmentsToRemove.has(o)) continue;
+            const x3 = o.x0, y3 = o.y0, x4 = o.x1, y4 = o.y1;
+            const denom = ux * (y4 - y3) - uy * (x4 - x3);
+            if (Math.abs(denom) < 1e-5) continue;
+            const rayT = ((x3 - pt.x) * (y4 - y3) - (y3 - pt.y) * (x4 - x3)) / denom;
+            const segU = ((x3 - pt.x) * uy - (y3 - pt.y) * ux) / denom;
+            if (rayT > 0.02 && rayT <= maxReach && segU >= -0.01 && segU <= 1.01) {
+              if (!bestHit || rayT < bestHit.dist) {
+                const clampedU = Math.max(0, Math.min(1, segU));
+                bestHit = {
+                  pt: {
+                    x: Number((x3 + clampedU * (x4 - x3)).toFixed(4)),
+                    y: Number((y3 + clampedU * (y4 - y3)).toFixed(4)),
+                  },
+                  dist: rayT,
+                  seg: o,
+                  t: clampedU,
+                };
+              }
+            }
+          }
+
+          if (bestHit) {
+            // Estende o vinco até o ponto de impacto
+            if (ep === 'p0') { s.x0 = bestHit.pt.x; s.y0 = bestHit.pt.y; }
+            else { s.x1 = bestHit.pt.x; s.y1 = bestHit.pt.y; }
+
+            // Subdivide o segmento atingido se o impacto foi interno
+            if (bestHit.t > 0.01 && bestHit.t < 0.99) {
+              segmentsToRemove.add(bestHit.seg);
+              segmentsToAdd.push({
+                id: generateDeterministicSegmentId(bestHit.seg.type, bestHit.seg.x0, bestHit.seg.y0, bestHit.pt.x, bestHit.pt.y),
+                x0: bestHit.seg.x0,
+                y0: bestHit.seg.y0,
+                x1: bestHit.pt.x,
+                y1: bestHit.pt.y,
+                type: bestHit.seg.type,
+              });
+              segmentsToAdd.push({
+                id: generateDeterministicSegmentId(bestHit.seg.type, bestHit.pt.x, bestHit.pt.y, bestHit.seg.x1, bestHit.seg.y1),
+                x0: bestHit.pt.x,
+                y0: bestHit.pt.y,
+                x1: bestHit.seg.x1,
+                y1: bestHit.seg.y1,
+                type: bestHit.seg.type,
+              });
+            }
+            continue;
+          }
+
+          // 3. Projeção perpendicular mais próxima (até 1.5mm)
+          let bestProj: { pt: Point2D; dist: number; seg: Segment2D; t: number } | null = null;
+          for (const o of segments) {
+            if (o === s || segmentsToRemove.has(o)) continue;
+            const { distance, projection, t } = distancePointToSegment(pt, { x: o.x0, y: o.y0 }, { x: o.x1, y: o.y1 });
+            if (distance <= 1.5 && t >= -0.01 && t <= 1.01) {
+              if (!bestProj || distance < bestProj.dist) {
+                bestProj = {
+                  pt: { x: Number(projection.x.toFixed(4)), y: Number(projection.y.toFixed(4)) },
+                  dist: distance,
+                  seg: o,
+                  t: Math.max(0, Math.min(1, t)),
+                };
+              }
+            }
+          }
+
+          if (bestProj) {
+            if (ep === 'p0') { s.x0 = bestProj.pt.x; s.y0 = bestProj.pt.y; }
+            else { s.x1 = bestProj.pt.x; s.y1 = bestProj.pt.y; }
+
+            if (bestProj.t > 0.01 && bestProj.t < 0.99) {
+              segmentsToRemove.add(bestProj.seg);
+              segmentsToAdd.push({
+                id: generateDeterministicSegmentId(bestProj.seg.type, bestProj.seg.x0, bestProj.seg.y0, bestProj.pt.x, bestProj.pt.y),
+                x0: bestProj.seg.x0,
+                y0: bestProj.seg.y0,
+                x1: bestProj.pt.x,
+                y1: bestProj.pt.y,
+                type: bestProj.seg.type,
+              });
+              segmentsToAdd.push({
+                id: generateDeterministicSegmentId(bestProj.seg.type, bestProj.pt.x, bestProj.pt.y, bestProj.seg.x1, bestProj.seg.y1),
+                x0: bestProj.pt.x,
+                y0: bestProj.pt.y,
+                x1: bestProj.seg.x1,
+                y1: bestProj.seg.y1,
+                type: bestProj.seg.type,
+              });
+            }
+          }
+        }
+      }
+
+      if (segmentsToRemove.size > 0 || segmentsToAdd.length > 0) {
+        segments = segments.filter((s) => !segmentsToRemove.has(s)).concat(segmentsToAdd);
+      }
+    }
+
+    // =========================================================================
+    // PASSO 3.8: SNAP GLOBAL COALESCENTE DE VÉRTICES (0.20mm)
+    // Garante identidade exata de float em todos os nós compartilhados
+    // =========================================================================
+    const finalPtGrid = new Map<string, Array<{ seg: Segment2D; ep: 'p0' | 'p1'; x: number; y: number }>>();
+    const ptSnapTol = 0.20;
+    const ptCell = 1.0;
+
+    for (const s of segments) {
+      for (const ep of ['p0', 'p1'] as const) {
+        const x = ep === 'p0' ? s.x0 : s.x1;
+        const y = ep === 'p0' ? s.y0 : s.y1;
+        const gx = Math.floor(x / ptCell);
+        const gy = Math.floor(y / ptCell);
+        const k = `${gx}_${gy}`;
+        let list = finalPtGrid.get(k);
+        if (!list) { list = []; finalPtGrid.set(k, list); }
+        list.push({ seg: s, ep, x, y });
+      }
+    }
+
+    const processedPts = new Set<string>();
+    for (const [, list] of finalPtGrid) {
+      for (const item of list) {
+        const key = `${item.x.toFixed(3)}_${item.y.toFixed(3)}`;
+        if (processedPts.has(key)) continue;
+        processedPts.add(key);
+
+        const gx = Math.floor(item.x / ptCell);
+        const gy = Math.floor(item.y / ptCell);
+        const clusterItems: Array<{ seg: Segment2D; ep: 'p0' | 'p1' }> = [];
+        let sumX = 0, sumY = 0;
+
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const neighborList = finalPtGrid.get(`${gx + dx}_${gy + dy}`);
+            if (!neighborList) continue;
+            for (const cand of neighborList) {
+              if (Math.hypot(cand.x - item.x, cand.y - item.y) <= ptSnapTol) {
+                clusterItems.push({ seg: cand.seg, ep: cand.ep });
+                sumX += cand.x;
+                sumY += cand.y;
+              }
+            }
+          }
+        }
+
+        if (clusterItems.length > 1) {
+          const avgX = Number((sumX / clusterItems.length).toFixed(4));
+          const avgY = Number((sumY / clusterItems.length).toFixed(4));
+          for (const ci of clusterItems) {
+            if (ci.ep === 'p0') { ci.seg.x0 = avgX; ci.seg.y0 = avgY; }
+            else { ci.seg.x1 = avgX; ci.seg.y1 = avgY; }
+          }
+        }
+      }
+    }
 
     // =========================================================================
     // PASSO 4: APARO DE MICRO-REBARBAS / DEAD-END STUBS (Overshoots <= 0.40mm)
@@ -746,8 +1000,8 @@ export class TopologyReconstructor {
       const d0 = vertexDeg.get(getPtKey(s.x0, s.y0)) || 0;
       const d1 = vertexDeg.get(getPtKey(s.x1, s.y1)) || 0;
 
-      const isStub0 = d0 === 1 && d1 >= 3 && len <= maxStubLen;
-      const isStub1 = d1 === 1 && d0 >= 3 && len <= maxStubLen;
+      const isStub0 = s.type !== 'crease' && d0 === 1 && d1 >= 3 && len <= maxStubLen;
+      const isStub1 = s.type !== 'crease' && d1 === 1 && d0 >= 3 && len <= maxStubLen;
 
       if (isStub0 || isStub1) {
         repairs.push({

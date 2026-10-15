@@ -348,10 +348,10 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
           coincidentToleranceMm: 0.08,
         });
         const geom = recon.geometry || currentDieline;
-        let topo = LoopTopologyEngine.extractTopology(geom);
+        let topo = LoopTopologyEngine.extractTopology(geom, { snapToleranceMm: 0.80 });
 
         if (topo.panels.length === 0) {
-          topo = LoopTopologyEngine.extractTopology(currentDieline);
+          topo = LoopTopologyEngine.extractTopology(currentDieline, { snapToleranceMm: 0.80 });
         }
 
         if (topo.panels.length > 0) {

@@ -264,8 +264,8 @@ export function buildFoldingTopology(dieline: DielineResult): DielineTopology {
     rawSegs.push(...boundaryBridges);
   }
 
-  // 2. Unifica vértices próximos via Spatial Hash Grid O(N) (tolerância 0.15 mm)
-  const EPS = 0.15;
+  // 2. Unifica vértices próximos via Spatial Hash Grid O(N) (tolerância 0.40 mm)
+  const EPS = 0.40;
   const pCellSize = Math.max(1.0, EPS * 5);
   const pointGrid = new Map<string, Point2D[]>();
   const uniquePoints: Point2D[] = [];

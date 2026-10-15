@@ -167,7 +167,7 @@ export class LoopTopologyEngine {
     const arcsCount = geometry.arcs.length;
 
     // 1. Coleta vértices únicos via Spatial Grid para garantir conectividade perfeita
-    const snapTolMm = options?.snapToleranceMm ?? 0.35;
+    const snapTolMm = options?.snapToleranceMm ?? 0.80;
     const vCellSize = Math.max(1.0, snapTolMm * 10);
     const vertexGrid = new Map<string, Point2D[]>();
 
@@ -207,6 +207,37 @@ export class LoopTopologyEngine {
     const validArcs = geometry.arcs.filter(
       (a) => a.type === 'cut' || a.type === 'crease'
     );
+
+    // Snap defensivo de vincos soltos (Degree-1 Crease Bridging)
+    for (const seg of validSegments) {
+      if (seg.type !== 'crease') continue;
+      for (const ep of ['p0', 'p1'] as const) {
+        const pt = ep === 'p0' ? { x: seg.x0, y: seg.y0 } : { x: seg.x1, y: seg.y1 };
+        let count = 0;
+        for (const o of validSegments) {
+          if (o === seg) continue;
+          if (Math.hypot(o.x0 - pt.x, o.y0 - pt.y) < snapTolMm || Math.hypot(o.x1 - pt.x, o.y1 - pt.y) < snapTolMm) {
+            count++;
+            break;
+          }
+        }
+        if (count === 0) {
+          let bestD = 1.5;
+          let bestPt: Point2D | null = null;
+          for (const o of validSegments) {
+            if (o === seg) continue;
+            const d0 = Math.hypot(o.x0 - pt.x, o.y0 - pt.y);
+            const d1 = Math.hypot(o.x1 - pt.x, o.y1 - pt.y);
+            if (d0 < bestD) { bestD = d0; bestPt = { x: o.x0, y: o.y0 }; }
+            if (d1 < bestD) { bestD = d1; bestPt = { x: o.x1, y: o.y1 }; }
+          }
+          if (bestPt) {
+            if (ep === 'p0') { seg.x0 = bestPt.x; seg.y0 = bestPt.y; }
+            else { seg.x1 = bestPt.x; seg.y1 = bestPt.y; }
+          }
+        }
+      }
+    }
 
     const halfEdges: DirectedHalfEdge[] = [];
     const vertexOutgoing = new Map<Point2D, DirectedHalfEdge[]>();
