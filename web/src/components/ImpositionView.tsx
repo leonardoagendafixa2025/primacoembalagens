@@ -1,13 +1,27 @@
 import React, { useState, useMemo } from 'react';
 import type { PackagingModel, DielineResult } from '../engine/types';
-import type { ImpositionParams, SheetFormat } from '../engine/imposition';
+import type { ImpositionParams, SheetFormat, ImpositionLayoutPattern, StaggerMode } from '../engine/imposition';
 import {
   STANDARD_SHEETS,
   calculateImpositionCAD,
 } from '../engine/imposition';
 import { toPackagingGeometry } from '../engine/geometry';
 import { exportImpositionToDXF } from '../engine/dxfExporter';
-import { Percent, Box, Scissors, Download, Compass, Layers, Ruler, Lock, Unlock, RotateCcw } from 'lucide-react';
+import {
+  Percent,
+  Scissors,
+  Download,
+  Compass,
+  Layers,
+  Ruler,
+  Lock,
+  Unlock,
+  RotateCcw,
+  Sparkles,
+  Grid,
+  ArrowLeftRight,
+  TrendingUp,
+} from 'lucide-react';
 
 interface ImpositionViewProps {
   dieline: DielineResult;
@@ -30,6 +44,9 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
   const [marginMargin, setMarginMargin] = useState<number>(15);
   const [gutter, setGutter] = useState<number>(5);
   const [orientationMode, setOrientationMode] = useState<'auto' | '0' | '90'>('auto');
+  const [layoutPattern, setLayoutPattern] = useState<ImpositionLayoutPattern>('nested_auto');
+  const [staggerMode, setStaggerMode] = useState<StaggerMode>('auto');
+  const [customStaggerMm, setCustomStaggerMm] = useState<number>(0);
 
   // Determina dimensões da folha
   const sheetDimensions = useMemo(() => {
@@ -45,21 +62,41 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
     return toPackagingGeometry(dieline);
   }, [dieline]);
 
-  // Executa o cálculo rigoroso de CAD para a imposição
+  // Executa o cálculo rigoroso de CAD para a imposição com Encaixe Inteligente
   const imposition = useMemo(() => {
-    const params: ImpositionParams = {
+    const impParams: ImpositionParams = {
       sheetWidth: sheetDimensions.width,
       sheetHeight: sheetDimensions.height,
       marginMargin,
       gutter,
       allowRotation: orientationMode !== '0',
       forceOrientation: orientationMode,
+      layoutPattern,
+      staggerMode,
+      customStaggerMm,
     };
-    return calculateImpositionCAD(packagingGeom, params);
+    return calculateImpositionCAD(packagingGeom, impParams);
+  }, [packagingGeom, sheetDimensions, marginMargin, gutter, orientationMode, layoutPattern, staggerMode, customStaggerMm]);
+
+  // Calcula solução em grade simples como linha de base para cálculo do ganho
+  const baselineGrid = useMemo(() => {
+    const impParams: ImpositionParams = {
+      sheetWidth: sheetDimensions.width,
+      sheetHeight: sheetDimensions.height,
+      marginMargin,
+      gutter,
+      allowRotation: orientationMode !== '0',
+      forceOrientation: orientationMode,
+      layoutPattern: 'grid',
+    };
+    return calculateImpositionCAD(packagingGeom, impParams);
   }, [packagingGeom, sheetDimensions, marginMargin, gutter, orientationMode]);
 
+  const posesGained = Math.max(0, imposition.totalPoses - baselineGrid.totalPoses);
+  const percentPosesGain = baselineGrid.totalPoses > 0 ? Math.round((posesGained / baselineGrid.totalPoses) * 100) : 0;
+
   const handleExportDxf = () => {
-    exportImpositionToDXF(imposition, `imposicao_${imposition.sheetWidth}x${imposition.sheetHeight}_${imposition.totalPoses}poses.dxf`);
+    exportImpositionToDXF(imposition, `imposicao_${imposition.sheetWidth}x${imposition.sheetHeight}_${imposition.totalPoses}poses_${layoutPattern}.dxf`);
   };
 
   // Parâmetros e manipuladores de escala da faca
@@ -116,6 +153,17 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
     onParamChange?.('scale', 100, { L: origL, B: origB });
   };
 
+  // Coordenadas para cotas de bloco
+  const poses = imposition.bestSolution.poses;
+  const blockMinX = poses.length > 0 ? Math.min(...poses.map((p) => p.x)) : 0;
+  const blockMaxX = poses.length > 0 ? Math.max(...poses.map((p) => p.x + p.width)) : 0;
+  const blockMinY = poses.length > 0 ? Math.min(...poses.map((p) => p.y)) : 0;
+  const blockMaxY = poses.length > 0 ? Math.max(...poses.map((p) => p.y + p.height)) : 0;
+  const blockW = Math.round((blockMaxX - blockMinX) * 10) / 10;
+  const blockH = Math.round((blockMaxY - blockMinY) * 10) / 10;
+
+  const toSvgY = (cadY: number) => imposition.sheetHeight - cadY;
+
   return (
     <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', background: 'var(--cad-bg-app)' }}>
       {/* 1. Painel Esquerdo de Configuração de Imposição */}
@@ -139,9 +187,148 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
             Imposição Técnica na Chapa
           </h3>
           <p style={{ fontSize: 11, color: 'var(--cad-text-muted)', marginTop: 4, lineHeight: 1.4 }}>
-            Distribuição e aproveitamento de facas na folha gráfica com rotação e encaixe ótimo.
+            Distribuição profissional de facas na folha gráfica com encaixe inteligente tipo Heidelberg e ArtiosCAD.
           </p>
         </div>
+
+        {/* PADRÃO DE ENCAIXE CAD (Heidelberg & ArtiosCAD) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--cad-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkles size={14} color="#35a89e" />
+            Padrão de Encaixe CAD
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => setLayoutPattern('nested_auto')}
+              style={{
+                padding: '8px 10px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                border: layoutPattern === 'nested_auto' ? '1.5px solid #35a89e' : '1px solid #242c2c',
+                background: layoutPattern === 'nested_auto' ? 'rgba(53, 168, 158, 0.18)' : '#121616',
+                color: layoutPattern === 'nested_auto' ? '#35a89e' : '#94A3B8',
+              }}
+            >
+              <span>🌟 Encaixe Inteligente (ArtiosCAD / Heidelberg)</span>
+              {layoutPattern === 'nested_auto' && <span style={{ fontSize: 10, background: '#35a89e', color: '#000', padding: '1px 5px', borderRadius: 3, fontWeight: 700 }}>AUTO</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLayoutPattern('head_to_foot_rows')}
+              style={{
+                padding: '8px 10px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                border: layoutPattern === 'head_to_foot_rows' ? '1.5px solid #35a89e' : '1px solid #242c2c',
+                background: layoutPattern === 'head_to_foot_rows' ? 'rgba(53, 168, 158, 0.18)' : '#121616',
+                color: layoutPattern === 'head_to_foot_rows' ? '#35a89e' : '#94A3B8',
+              }}
+            >
+              <span>🔄 Cabeça com Pé - Linhas (180° alternado)</span>
+              {layoutPattern === 'head_to_foot_rows' && <span style={{ fontSize: 10, background: '#35a89e', color: '#000', padding: '1px 5px', borderRadius: 3, fontWeight: 700 }}>ATIVO</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLayoutPattern('grid')}
+              style={{
+                padding: '8px 10px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                border: layoutPattern === 'grid' ? '1.5px solid #35a89e' : '1px solid #242c2c',
+                background: layoutPattern === 'grid' ? 'rgba(53, 168, 158, 0.18)' : '#121616',
+                color: layoutPattern === 'grid' ? '#35a89e' : '#94A3B8',
+              }}
+            >
+              <span>⏹️ Grade Simples Alinhada</span>
+              {layoutPattern === 'grid' && <span style={{ fontSize: 10, background: '#35a89e', color: '#000', padding: '1px 5px', borderRadius: 3, fontWeight: 700 }}>ATIVO</span>}
+            </button>
+          </div>
+        </div>
+
+        {/* DEFASAGEM HORIZONTAL (STAGGER) */}
+        {layoutPattern !== 'grid' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, background: '#121616', border: '1px solid #242c2c', borderRadius: 8, padding: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: '#35a89e', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <ArrowLeftRight size={13} /> Defasagem do Encaixe (Stagger)
+              </label>
+              <span style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'monospace' }}>
+                {imposition.bestSolution.staggerMm} mm
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => setStaggerMode('auto')}
+                style={{
+                  padding: '5px 6px',
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  border: staggerMode === 'auto' ? '1px solid #35a89e' : '1px solid #242c2c',
+                  background: staggerMode === 'auto' ? 'rgba(53, 168, 158, 0.2)' : '#0d1010',
+                  color: staggerMode === 'auto' ? '#35a89e' : '#94A3B8',
+                  cursor: 'pointer',
+                }}
+              >
+                Auto (Máx)
+              </button>
+              <button
+                type="button"
+                onClick={() => setStaggerMode('half')}
+                style={{
+                  padding: '5px 6px',
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  border: staggerMode === 'half' ? '1px solid #35a89e' : '1px solid #242c2c',
+                  background: staggerMode === 'half' ? 'rgba(53, 168, 158, 0.2)' : '#0d1010',
+                  color: staggerMode === 'half' ? '#35a89e' : '#94A3B8',
+                  cursor: 'pointer',
+                }}
+              >
+                Meio Passo (50%)
+              </button>
+              <button
+                type="button"
+                onClick={() => setStaggerMode('none')}
+                style={{
+                  padding: '5px 6px',
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  border: staggerMode === 'none' ? '1px solid #35a89e' : '1px solid #242c2c',
+                  background: staggerMode === 'none' ? 'rgba(53, 168, 158, 0.2)' : '#0d1010',
+                  color: staggerMode === 'none' ? '#35a89e' : '#94A3B8',
+                  cursor: 'pointer',
+                }}
+              >
+                Alinhado (0%)
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Seletor de Formato de Chapa */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -362,13 +549,29 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
             />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#94A3B8' }}>Canaleta (mm)</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: 12, color: '#94A3B8' }}>Canaleta (mm)</label>
+              <button
+                type="button"
+                onClick={() => setGutter(gutter === 0 ? 5 : 0)}
+                style={{
+                  fontSize: 10,
+                  color: gutter === 0 ? '#35a89e' : '#64748B',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                {gutter === 0 ? 'Faca Unificada' : 'Faca Compartilhada?'}
+              </button>
+            </div>
             <input
               type="number"
               value={gutter}
               min={0}
               max={50}
-              onChange={(e) => setGutter(Number(e.target.value))}
+              onChange={(e) => setGutter(Math.max(0, Number(e.target.value)))}
               style={{
                 width: '100%',
                 padding: '8px 10px',
@@ -382,10 +585,10 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
           </div>
         </div>
 
-        {/* Opção de Orientação e Comparação PLMPackLib */}
+        {/* Opção de Orientação da Folha */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <label style={{ fontSize: 12, color: '#94A3B8', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Compass size={14} color="#35a89e" /> Orientação das Poses
+            <Compass size={14} color="#35a89e" /> Orientação da Chapa
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
             <button
@@ -402,7 +605,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                 color: orientationMode === 'auto' ? '#35a89e' : '#94A3B8',
               }}
             >
-              Auto (PLM)
+              Auto (Melhor)
             </button>
             <button
               type="button"
@@ -418,7 +621,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                 color: orientationMode === '0' ? '#35a89e' : '#94A3B8',
               }}
             >
-              Forçar 0°
+              Padrão 0°
             </button>
             <button
               type="button"
@@ -434,74 +637,88 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                 color: orientationMode === '90' ? '#35a89e' : '#94A3B8',
               }}
             >
-              Forçar 90°
+              Rotacionada 90°
             </button>
           </div>
         </div>
 
-        {/* Comparativo de Soluções (0° vs 90°) */}
+        {/* Resumo de Rendimento e Ganho de Produção */}
         <div
           style={{
             background: '#121616',
             border: '1px solid #242c2c',
             borderRadius: 8,
-            padding: 10,
-            fontSize: 12,
+            padding: 12,
             display: 'flex',
             flexDirection: 'column',
-            gap: 6,
+            gap: 10,
           }}
         >
-          <div style={{ color: '#94A3B8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Layers size={13} color="#35a89e" /> Análise Comparativa
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#E2E8F0' }}>
-            <span>Solução 0°:</span>
-            <strong>{imposition.solution0.totalPoses} poses ({imposition.solution0.utilizationPercentage}%)</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#E2E8F0' }}>
-            <span>Solução 90°:</span>
-            <strong>{imposition.solution90.totalPoses} poses ({imposition.solution90.utilizationPercentage}%)</strong>
-          </div>
-        </div>
-
-        {/* Cards de Métricas */}
-        <div style={{ borderTop: '1px solid #334155', paddingTop: 14 }}>
-          <h4 style={{ fontSize: 13, color: '#94A3B8', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            Rendimento da Produção
-          </h4>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div style={{ background: '#121616', padding: 12, borderRadius: 8, border: '1px solid #242c2c' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#35a89e', fontSize: 12 }}>
-                <Box size={14} /> Poses na Chapa
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 700, color: '#FFF', marginTop: 4 }}>
-                {imposition.totalPoses}
-              </div>
-              <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
-                Grade: {imposition.posesX} X × {imposition.posesY} Y
-              </div>
-            </div>
-
-            <div style={{ background: '#121616', padding: 12, borderRadius: 8, border: '1px solid #242c2c' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#35a89e', fontSize: 12 }}>
-                <Percent size={14} /> Aproveitamento
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 700, color: '#35a89e', marginTop: 4 }}>
-                {imposition.utilizationPercentage}%
-              </div>
-              <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
-                Apara: {imposition.wastePercentage}%
-              </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF' }}>Total de Poses</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 24, fontWeight: 800, color: '#35a89e' }}>{imposition.totalPoses}</span>
+              <span style={{ fontSize: 11, color: '#94A3B8' }}>({imposition.posesX} col × {imposition.posesY} lin)</span>
             </div>
           </div>
 
-          <div style={{ marginTop: 12, fontSize: 12, color: '#94A3B8', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div>Área Total da Chapa: <strong>{imposition.sheetAreaM2} m²</strong></div>
-            <div>Área das Embalagens: <strong>{imposition.usedAreaM2} m²</strong></div>
-            <div>Tamanho Unitário Faca: <strong>{Math.round(imposition.itemWidth)} × {Math.round(imposition.itemHeight)} mm</strong></div>
-            <div>Orientação Escolhida: <strong>{imposition.selectedOrientation === '90' ? 'Rotacionada 90°' : 'Padrão 0°'}</strong></div>
+          {posesGained > 0 && (
+            <div
+              style={{
+                background: 'rgba(53, 168, 158, 0.12)',
+                border: '1px solid rgba(53, 168, 158, 0.35)',
+                borderRadius: 6,
+                padding: '6px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 11,
+                color: '#35a89e',
+                fontWeight: 600,
+              }}
+            >
+              <TrendingUp size={14} color="#35a89e" />
+              <span>+{posesGained} poses adicionais (+{percentPosesGain}%) via encaixe!</span>
+            </div>
+          )}
+
+          {imposition.bestSolution.interlockGainMm > 0 && (
+            <div style={{ fontSize: 11, color: '#94A3B8', display: 'flex', justifyContent: 'space-between' }}>
+              <span>Ganho de Penetração:</span>
+              <strong style={{ color: '#10B981' }}>{imposition.bestSolution.interlockGainMm} mm / par</strong>
+            </div>
+          )}
+
+          {/* Barra de Aproveitamento da Chapa */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4, color: '#94A3B8' }}>
+              <span>Aproveitamento da Chapa</span>
+              <strong style={{ color: '#FFFFFF' }}>{imposition.utilizationPercentage}%</strong>
+            </div>
+            <div style={{ width: '100%', height: 6, background: '#242c2c', borderRadius: 3, overflow: 'hidden' }}>
+              <div
+                style={{
+                  width: `${imposition.utilizationPercentage}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #35a89e 0%, #10B981 100%)',
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ fontSize: 11, color: '#94A3B8', display: 'flex', flexDirection: 'column', gap: 3, borderTop: '1px solid #1c2222', paddingTop: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Área da Chapa:</span>
+              <strong style={{ color: '#FFFFFF' }}>{imposition.sheetAreaM2} m²</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Área das Caixas:</span>
+              <strong style={{ color: '#FFFFFF' }}>{imposition.usedAreaM2} m²</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Dimensões do Bloco:</span>
+              <strong style={{ color: '#FFFFFF' }}>{blockW} × {blockH} mm</strong>
+            </div>
           </div>
         </div>
 
@@ -559,13 +776,13 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
               maxHeight: '92%',
               filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.7))',
             }}
-            viewBox={`-20 -20 ${imposition.sheetWidth + 40} ${imposition.sheetHeight + 40}`}
+            viewBox={`-50 -50 ${imposition.sheetWidth + 100} ${imposition.sheetHeight + 100}`}
           >
-            {/* Definições de Estilos */}
+            {/* Definições de Marcadores de Cotas */}
             <defs>
-              <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-                <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#F1F5F9" strokeWidth="0.5" />
-              </pattern>
+              <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#a855f7" />
+              </marker>
             </defs>
 
             {/* Folha Base / Prancha Gráfica */}
@@ -595,8 +812,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
             {/* Cada Pose Individual com a GEOMETRIA REAL da Faca CAD */}
             {imposition.bestSolution.poses.map((pose) => {
               const geom = pose.geometry;
-              // Para converter coordenadas de CAD (Y para cima) para SVG (Y para baixo) dentro da chapa:
-              const toSvgY = (cadY: number) => imposition.sheetHeight - cadY;
+              const isRotated180 = pose.rotationAngle === 180 || pose.rotationAngle === 270;
 
               return (
                 <g key={`pose-${pose.index}`} id={`pose-${pose.index}`}>
@@ -606,8 +822,8 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                     y={toSvgY(pose.y + pose.height)}
                     width={pose.width}
                     height={pose.height}
-                    fill="rgba(53, 168, 158, 0.04)"
-                    stroke="rgba(53, 168, 158, 0.25)"
+                    fill={isRotated180 ? 'rgba(168, 85, 247, 0.03)' : 'rgba(53, 168, 158, 0.03)'}
+                    stroke={isRotated180 ? 'rgba(168, 85, 247, 0.18)' : 'rgba(53, 168, 158, 0.18)'}
                     strokeWidth="0.5"
                   />
 
@@ -615,7 +831,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                   {geom.segments.map((seg, sIdx) => {
                     const isCrease = seg.type === 'crease';
                     const isPerfo = seg.type === 'perfo';
-                    const strokeColor = isCrease ? '#35a89e' : isPerfo ? '#10B981' : '#c53236';
+                    const strokeColor = isCrease ? '#10b981' : isPerfo ? '#06b6d4' : '#ef4444';
                     const strokeDash = isCrease ? '4,3' : isPerfo ? '2,2' : undefined;
 
                     return (
@@ -626,7 +842,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                         x2={seg.x1}
                         y2={toSvgY(seg.y1)}
                         stroke={strokeColor}
-                        strokeWidth="1"
+                        strokeWidth="1.2"
                         strokeDasharray={strokeDash}
                       />
                     );
@@ -636,13 +852,12 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                   {geom.arcs && geom.arcs.map((arc, aIdx) => {
                     const isCrease = arc.type === 'crease';
                     const isPerfo = arc.type === 'perfo';
-                    const strokeColor = isCrease ? '#35a89e' : isPerfo ? '#10B981' : '#c53236';
+                    const strokeColor = isCrease ? '#10b981' : isPerfo ? '#06b6d4' : '#ef4444';
 
                     let delta = arc.endAngle - arc.startAngle;
                     while (delta < 0) delta += 360;
                     while (delta > 360) delta -= 360;
 
-                    // C?rculo completo (360?)
                     if (Math.abs(delta - 360) < 1e-3 || delta === 0) {
                       return (
                         <circle
@@ -652,7 +867,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                           r={arc.r}
                           fill="none"
                           stroke={strokeColor}
-                          strokeWidth="1"
+                          strokeWidth="1.2"
                         />
                       );
                     }
@@ -665,34 +880,70 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                     const y2 = toSvgY(arc.cy + arc.r * Math.sin(radEnd));
                     const largeArc = delta > 180 ? 1 : 0;
 
-                    // sweep-flag = 0 porque toSvgY inverte o eixo vertical Y
                     return (
                       <path
                         key={`arc-${aIdx}`}
                         d={`M ${x1} ${y1} A ${arc.r} ${arc.r} 0 ${largeArc} 0 ${x2} ${y2}`}
                         fill="none"
                         stroke={strokeColor}
-                        strokeWidth="1"
+                        strokeWidth="1.2"
                       />
                     );
                   })}
 
-                  {/* Etiqueta Discreta com Número da Pose */}
+                  {/* Etiqueta com Número da Pose e Indicador de Rotação */}
                   <text
                     x={pose.x + pose.width / 2}
                     y={toSvgY(pose.y + pose.height / 2) + 4}
-                    fontSize={Math.max(10, Math.min(20, pose.width * 0.05))}
-                    fontWeight="700"
-                    fill="#475569"
+                    fontSize={Math.max(10, Math.min(18, pose.width * 0.045))}
+                    fontWeight="800"
+                    fill={isRotated180 ? '#9333ea' : '#334155'}
                     textAnchor="middle"
-                    opacity="0.6"
+                    opacity="0.45"
                     pointerEvents="none"
                   >
-                    #{pose.index}
+                    #{pose.index} {isRotated180 ? '🔄 180°' : ''}
                   </text>
                 </g>
               );
             })}
+
+            {/* Linhas de Cota Padrão Heidelberg / ArtiosCAD */}
+            {poses.length > 0 && (
+              <g id="imposition-dimensions" opacity="0.85">
+                {/* Cota Superior de Largura Total do Bloco */}
+                {(() => {
+                  const dimY = Math.max(10, toSvgY(blockMaxY) - 16);
+                  return (
+                    <g>
+                      <line x1={blockMinX} y1={dimY} x2={blockMaxX} y2={dimY} stroke="#a855f7" strokeWidth="1" markerStart="url(#arrow)" markerEnd="url(#arrow)" />
+                      <line x1={blockMinX} y1={dimY - 6} x2={blockMinX} y2={toSvgY(blockMaxY)} stroke="#a855f7" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1={blockMaxX} y1={dimY - 6} x2={blockMaxX} y2={toSvgY(blockMaxY)} stroke="#a855f7" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <text x={(blockMinX + blockMaxX) / 2} y={dimY - 4} fill="#a855f7" fontSize="11" fontWeight="700" textAnchor="middle">
+                        {blockW} mm
+                      </text>
+                    </g>
+                  );
+                })()}
+
+                {/* Cota Direita de Altura Total do Bloco */}
+                {(() => {
+                  const dimX = Math.min(imposition.sheetWidth - 6, blockMaxX + 16);
+                  const yTop = toSvgY(blockMaxY);
+                  const yBottom = toSvgY(blockMinY);
+                  return (
+                    <g>
+                      <line x1={dimX} y1={yTop} x2={dimX} y2={yBottom} stroke="#a855f7" strokeWidth="1" markerStart="url(#arrow)" markerEnd="url(#arrow)" />
+                      <line x1={blockMaxX} y1={yTop} x2={dimX + 6} y2={yTop} stroke="#a855f7" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1={blockMaxX} y1={yBottom} x2={dimX + 6} y2={yBottom} stroke="#a855f7" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <text x={dimX + 8} y={(yTop + yBottom) / 2} fill="#a855f7" fontSize="11" fontWeight="700" dominantBaseline="middle">
+                        {blockH} mm
+                      </text>
+                    </g>
+                  );
+                })()}
+              </g>
+            )}
           </svg>
         </div>
       </div>
