@@ -1099,7 +1099,7 @@ export const FoldingViewer3D: React.FC<FoldingViewer3DProps> = ({
             <button
               type="button"
               onClick={onOpenFoldInspector}
-              title="Editar Ângulos das Abas no Painel Esquerdo (ArtiosCAD / Prinect)"
+              title="Editar Ângulos das Abas no Painel Esquerdo"
               className="cad-btn"
               style={{
                 padding: '3px 8px',

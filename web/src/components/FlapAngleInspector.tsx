@@ -118,7 +118,7 @@ export const FlapAngleInspector: React.FC<FlapAngleInspectorProps> = ({
               ÂNGULOS DE DOBRA (GRAUS)
             </div>
             <div style={{ fontSize: 9.5, color: 'var(--cad-text-muted)' }}>
-              ArtiosCAD / Prinect Package Design
+              Controle Cinemático de Painéis
             </div>
           </div>
         </div>

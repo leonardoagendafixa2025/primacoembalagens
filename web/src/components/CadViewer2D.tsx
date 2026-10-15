@@ -1242,7 +1242,7 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
                 : '💡 Shift+Clique ou arraste caixa para adicionar/remover'}
             </div>
 
-            {/* Stretch / Deslocar Linhas e Abas (Padrão ArtiosCAD) */}
+            {/* Stretch / Deslocar Linhas e Abas */}
             <div
               style={{
                 display: 'flex',

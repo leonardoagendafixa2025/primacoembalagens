@@ -11,8 +11,8 @@ import type {
  */
 export const DEFAULT_PROFILES: ClassificationProfile[] = [
   {
-    id: 'artioscad_standard',
-    name: 'Padrão ArtiosCAD / Esko',
+    id: 'industrial_standard_a',
+    name: 'Padrão Técnico Industrial (Layers CUT/CREASE)',
     format: 'ALL',
     toleranceMm: 0.05,
     createdAt: '2026-01-01T00:00:00.000Z',
@@ -26,8 +26,8 @@ export const DEFAULT_PROFILES: ClassificationProfile[] = [
     ],
   },
   {
-    id: 'prinect_standard',
-    name: 'Padrão Prinect Package Designer / Heidelberg',
+    id: 'industrial_standard_b',
+    name: 'Padrão Técnico de Pré-Impressão Offset',
     format: 'ALL',
     toleranceMm: 0.05,
     createdAt: '2026-01-01T00:00:00.000Z',

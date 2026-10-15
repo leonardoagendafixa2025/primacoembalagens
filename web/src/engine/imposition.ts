@@ -26,7 +26,7 @@ export const STANDARD_SHEETS: SheetFormat[] = [
 ];
 
 export type ImpositionLayoutPattern =
-  | 'nested_auto'          // Encaixe inteligente automático (Heidelberg / ArtiosCAD padrão)
+  | 'nested_auto'          // Encaixe inteligente automático (Nesting de Alta Eficiência)
   | 'head_to_foot_rows'    // Cabeça com Pé em Linhas (Linhas alternadas 180° com encaixe)
   | 'head_to_foot_cols'    // Cabeça com Pé em Colunas (Colunas alternadas 180° com encaixe)
   | 'grid';                // Grade Simples Alinhada (0°)
@@ -318,7 +318,7 @@ function calculateGridSolution(
 
 /**
  * Calcula uma solução de imposição com ENCAIXE INTELIGENTE EM LINHAS (Tête-Bêche / Head-to-Foot)
- * Padrão ArtiosCAD & Heidelberg Prinect:
+ * Padrão Técnico de Alta Eficiência:
  * Linhas alternadas 180° com encaixe automático dos fundos e tampas.
  */
 function calculateInterlockedRowsSolution(

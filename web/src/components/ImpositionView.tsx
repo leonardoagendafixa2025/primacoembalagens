@@ -187,11 +187,11 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
             Imposição Técnica na Chapa
           </h3>
           <p style={{ fontSize: 11, color: 'var(--cad-text-muted)', marginTop: 4, lineHeight: 1.4 }}>
-            Distribuição profissional de facas na folha gráfica com encaixe inteligente tipo Heidelberg e ArtiosCAD.
+            Distribuição profissional de facas na folha gráfica com encaixe inteligente de alta eficiência.
           </p>
         </div>
 
-        {/* PADRÃO DE ENCAIXE CAD (Heidelberg & ArtiosCAD) */}
+        {/* PADRÃO DE ENCAIXE CAD INDUSTRIAL */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--cad-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Sparkles size={14} color="#35a89e" />
@@ -216,7 +216,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
                 color: layoutPattern === 'nested_auto' ? '#35a89e' : '#94A3B8',
               }}
             >
-              <span>🌟 Encaixe Inteligente (ArtiosCAD / Heidelberg)</span>
+              <span>🌟 Encaixe Inteligente Automático (Nesting)</span>
               {layoutPattern === 'nested_auto' && <span style={{ fontSize: 10, background: '#35a89e', color: '#000', padding: '1px 5px', borderRadius: 3, fontWeight: 700 }}>AUTO</span>}
             </button>
 
@@ -908,7 +908,7 @@ export const ImpositionView: React.FC<ImpositionViewProps> = ({
               );
             })}
 
-            {/* Linhas de Cota Padrão Heidelberg / ArtiosCAD */}
+            {/* Linhas de Cota Técnica Industrial */}
             {poses.length > 0 && (
               <g id="imposition-dimensions" opacity="0.85">
                 {/* Cota Superior de Largura Total do Bloco */}
