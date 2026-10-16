@@ -1,736 +1,1494 @@
-/**
- * VectorCraftEditor — Integração Oficial VectorCraft (storytold/vectorcraft)
- *
- * Oferece a suíte completa de desenho vetorial do VectorCraft:
- *  - Aplicação oficial VectorCraft Studio compilada em Rust + WebAssembly
- *  - Modo Cloud Oficial (vectorcraft.run) como espelho de alta disponibilidade
- *  - Modo Editor 2D Rápido embutido para edições pontuais no canvas
- *  - Integração bidirecional com facas de corte/vinco do PLMPackLib (SVG / PDF / DXF)
- *  - Atualização em tempo real para a dobra 3D (Folding Studio)
- */
-
-import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
-import confetti from 'canvas-confetti';
+import React, { useState, useRef, useMemo } from 'react';
 import type { DielineResult } from '../engine/types';
-import { buildSvgContent, downloadFile } from '../engine/dxfExporter';
-import { exportToPDF } from '../engine/vectorcraft/pdfExporter';
-import { parseSvgToDieline } from '../engine/vectorcraft/svgImporter';
-import { dielineToVectorPaths } from '../engine/vectorcraft/bezier';
-import type {
-  Vec2,
-  VectorPath,
-  VectorToolMode,
-} from '../engine/vectorcraft/types';
+import {
+  MousePointer,
+  Navigation,
+  PenTool,
+  Spline,
+  Square,
+  Circle,
+  Paintbrush,
+  Pencil,
+  Type as TypeIcon,
+  RotateCw,
+  Scale as ScaleIcon,
+  Maximize2,
+  Shapes,
+  Pipette,
+  Blend,
+  Grid,
+  Hand,
+  ZoomIn,
+  Search,
+  ChevronDown,
+  Layers,
+  Sliders,
+  BookOpen,
+  Palette,
+  Minus,
+  X,
+  Lock,
+  Copy,
+  Trash2,
+  Undo2,
+  Redo2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Link2,
+  FlipHorizontal,
+  FlipVertical,
+  MoreHorizontal,
+  Eye,
+  ChevronRight,
+  HelpCircle,
+  Home,
+  Menu,
+} from 'lucide-react';
 
 export interface VectorCraftEditorProps {
-  /** Dieline do PLMPackLib para carregar como faca */
-  dieline: DielineResult;
-  /** Callback para sincronizar faca editada com o sistema e dobra 3D */
-  onDielineUpdate?: (dieline: DielineResult) => void;
-  /** Nome ou código do modelo atual */
+  dieline?: DielineResult;
   modelName?: string;
+  onDielineUpdate?: (dieline: DielineResult) => void;
+  onSwitchWorkspace?: (tab: '2d' | '3d' | 'imposition' | 'vectorcraft') => void;
+  onClose?: () => void;
 }
-
-type EditorMode = 'wasm-local' | 'cloud-mirror' | 'quick-canvas';
 
 export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
   dieline,
+  modelName = 'neon-drive',
   onDielineUpdate,
-  modelName = 'Faca_Embalagem',
+  onSwitchWorkspace,
+  onClose,
 }) => {
-  // Modo de execução do editor
-  const [mode, setMode] = useState<EditorMode>('wasm-local');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [showTipBanner, setShowTipBanner] = useState<boolean>(true);
-  const [iframeKey, setIframeKey] = useState<number>(1);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  // Estado de ferramentas e visualização
+  const [activeTool, setActiveTool] = useState<string>('select');
+  const [useLiveWasm, setUseLiveWasm] = useState<boolean>(false);
+  const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState<boolean>(false);
+  const [activeInspectorTab, setActiveInspectorTab] = useState<'properties' | 'layers' | 'libraries'>('properties');
+  const [zoomPercent, setZoomPercent] = useState<number>(51.41);
+  const [rotationDeg, setRotationDeg] = useState<number>(0);
+  const [isOutlineMode, setIsOutlineMode] = useState<boolean>(false);
+  const [showAppearanceFloating, setShowAppearanceFloating] = useState<boolean>(true);
 
-  // Exibição de Toast temporário
-  const showToast = useCallback((msg: string, duration = 4000) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage((current) => (current === msg ? null : current));
-    }, duration);
-  }, []);
+  // Propriedades do objeto de texto "NEON DRIVE" selecionado
+  const [objX, setObjX] = useState<number>(506.99);
+  const [objY, setObjY] = useState<number>(215.516);
+  const [objW, setObjW] = useState<number>(793.98);
+  const [objH, setObjH] = useState<number>(175.032);
+  const [fontSize, setFontSize] = useState<number>(132);
+  const [leading, setLeading] = useState<number>(158.4);
+  const [tracking, setTracking] = useState<number>(60);
+  const [kerning, setKerning] = useState<number>(0);
+  const [fillColor, setFillColor] = useState<string>('#ffffff');
+  const [strokeColor, setStrokeColor] = useState<string>('none');
+  const [strokeWidth, setStrokeWidth] = useState<number>(0);
+  const [opacity, setOpacity] = useState<number>(100);
 
-  // ─── Ações de Integração CAD / SVG ─────────────────────────────────
-
-  /** Baixa a faca atual em formato SVG otimizado para o VectorCraft */
-  const handleDownloadSvg = useCallback(() => {
-    try {
-      const svg = buildSvgContent(dieline, {
-        includeBleed: true,
-        bleedMm: 5,
-        includeRegistrationMarks: true,
-      });
-      const safeName = (modelName || 'faca').replace(/[^a-zA-Z0-9_-]/g, '_');
-      downloadFile(svg, `${safeName}_vectorcraft.svg`, 'image/svg+xml;charset=utf-8');
-      showToast('📥 Faca baixada em SVG! Arraste o arquivo para dentro do VectorCraft Studio.');
-    } catch (err) {
-      console.error('[VectorCraft] Erro ao exportar SVG:', err);
-      showToast('⚠️ Erro ao gerar SVG da faca.');
-    }
-  }, [dieline, modelName, showToast]);
-
-  /** Copia o código SVG da faca para a área de transferência (Ctrl+V no VectorCraft) */
-  const handleCopySvg = useCallback(() => {
-    try {
-      const svg = buildSvgContent(dieline, {
-        includeBleed: false,
-        bleedMm: 0,
-        includeRegistrationMarks: false,
-      });
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(svg).then(() => {
-          showToast('📋 SVG copiado! Você pode colar diretamente no VectorCraft.');
-          try { confetti({ particleCount: 20, spread: 40, origin: { y: 0.1 } }); } catch {}
-        }).catch(() => {
-          downloadFile(svg, `${modelName}_faca.svg`, 'image/svg+xml;charset=utf-8');
-          showToast('📥 Não foi possível acessar a área de transferência. SVG baixado!');
-        });
-      } else {
-        downloadFile(svg, `${modelName}_faca.svg`, 'image/svg+xml;charset=utf-8');
-        showToast('📥 SVG baixado como arquivo.');
-      }
-    } catch (err) {
-      console.error('[VectorCraft] Erro ao copiar SVG:', err);
-      showToast('⚠️ Erro ao copiar SVG.');
-    }
-  }, [dieline, modelName, showToast]);
-
-  /** Importa arquivo SVG ou PDF editado no VectorCraft para atualizar a faca e o 3D */
-  const handleImportFile = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      if (!text) return;
-
-      try {
-        const { dieline: parsedDieline, stats } = parseSvgToDieline(text);
-
-        if (parsedDieline.segments.length === 0 && parsedDieline.arcs.length === 0) {
-          showToast('⚠️ Nenhuma linha de corte ou vinco válida encontrada no SVG.');
-          return;
-        }
-
-        if (onDielineUpdate) {
-          onDielineUpdate(parsedDieline);
-          try {
-            confetti({ particleCount: 50, spread: 70, origin: { y: 0.15 } });
-          } catch {}
-          showToast(`✅ Faca importada: ${stats.cutSegments} cortes, ${stats.creaseSegments} vincos atualizados no 3D!`);
-        }
-      } catch (err) {
-        console.error('[VectorCraft] Erro ao importar SVG:', err);
-        showToast('⚠️ Erro ao processar o arquivo SVG.');
-      }
-    };
-    reader.readAsText(file);
-
-    // Reseta input para permitir selecionar o mesmo arquivo novamente
-    event.target.value = '';
-  }, [onDielineUpdate, showToast]);
-
-  /** Exporta PDF Vetorial ISO 32000-1 usando o motor VectorCraft */
-  const handleExportPdf = useCallback(() => {
-    const safeName = (modelName || 'faca').replace(/[^a-zA-Z0-9_-]/g, '_');
-    exportToPDF(dieline, `${safeName}_vectorcraft.pdf`, {
-      title: `${modelName} - VectorCraft Engine`,
-      includeBleed: true,
-      bleedMm: 5,
-      includeRegistrationMarks: true,
-      includeDimensions: true,
-      margin: 15,
-    });
-    try { confetti({ particleCount: 30, spread: 45, origin: { y: 0.1 } }); } catch {}
-    showToast('🖨️ PDF Vetorial gerado com camadas de corte, vinco e sangria!');
-  }, [dieline, modelName, showToast]);
-
-  /** URL ativa do iframe */
-  const activeUrl = useMemo(() => {
-    if (mode === 'wasm-local') return '/vectorcraft/index.html';
-    if (mode === 'cloud-mirror') return 'https://vectorcraft.run/app/';
-    return '';
-  }, [mode]);
-
-  /** Abre a aplicação VectorCraft em uma nova janela inteira */
-  const handleOpenNewTab = useCallback(() => {
-    const url = mode === 'wasm-local' ? '/vectorcraft/index.html' : 'https://vectorcraft.run/app/';
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }, [mode]);
-
-  /** Recarrega o iframe */
-  const handleReloadIframe = useCallback(() => {
-    setIframeKey((prev) => prev + 1);
-    showToast('🔄 Recarregando VectorCraft Studio...');
-  }, [showToast]);
+  // Se o usuário alternar para o binário Rust WebAssembly oficial
+  if (useLiveWasm) {
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', backgroundColor: '#181920' }}>
+        <button
+          type="button"
+          onClick={() => setUseLiveWasm(false)}
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 140,
+            zIndex: 9999,
+            background: 'rgba(24, 25, 32, 0.85)',
+            color: '#e6edf3',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: 4,
+            padding: '4px 10px',
+            fontSize: 11,
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          Voltar ao Modo Interface 1:1
+        </button>
+        <iframe
+          src="/vectorcraft/index.html"
+          style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+          title="VectorCraft Studio"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      width: '100%',
-      height: '100%',
-      backgroundColor: '#16171e',
-      color: '#e6edf3',
-      position: 'relative',
-      overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    }}>
-      {/* ─── TOPO: Barra de Ferramentas & Integração ───────────────────────── */}
-      <div style={{
+    <div
+      style={{
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '8px 16px',
-        backgroundColor: '#1e1f28',
-        borderBottom: '1px solid #30313a',
-        flexWrap: 'wrap',
-        gap: '10px',
-        zIndex: 20,
-      }}>
-        {/* Marca & Modo de Execução */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '28px',
-              height: '28px',
-              borderRadius: '6px',
-              backgroundColor: '#f59e0b',
-              color: '#000000',
-              fontWeight: 800,
-              fontSize: '15px',
-              boxShadow: '0 2px 6px rgba(245, 158, 11, 0.4)',
-            }}>
-              V
-            </span>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontWeight: 700, fontSize: '14px', letterSpacing: '0.3px', color: '#ffffff' }}>
-                  VectorCraft Studio
-                </span>
-                <span style={{
-                  fontSize: '10px',
-                  padding: '1px 6px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                  color: '#f59e0b',
-                  fontWeight: 600,
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                }}>
-                  Rust + WebAssembly v0.12.0
-                </span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#8b949e' }}>
-                storytold/vectorcraft • Clone de Alta Precisão do Illustrator
-              </div>
-            </div>
-          </div>
-
-          {/* Alternador de Modo */}
-          <div style={{
-            display: 'inline-flex',
-            backgroundColor: '#16171e',
-            padding: '3px',
-            borderRadius: '6px',
-            border: '1px solid #30313a',
-            marginLeft: '8px',
-          }}>
-            <button
-              type="button"
-              onClick={() => setMode('wasm-local')}
-              style={{
-                backgroundColor: mode === 'wasm-local' ? '#f59e0b' : 'transparent',
-                color: mode === 'wasm-local' ? '#000000' : '#8b949e',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '4px 10px',
-                fontSize: '11px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-              title="Executa o binário WebAssembly do VectorCraft compilado localmente em alta performance"
-            >
-              ⚡ WASM Local
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('cloud-mirror')}
-              style={{
-                backgroundColor: mode === 'cloud-mirror' ? '#f59e0b' : 'transparent',
-                color: mode === 'cloud-mirror' ? '#000000' : '#8b949e',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '4px 10px',
-                fontSize: '11px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-              title="Carrega o servidor oficial em nuvem (vectorcraft.run)"
-            >
-              🌐 Nuvem Oficial
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('quick-canvas')}
-              style={{
-                backgroundColor: mode === 'quick-canvas' ? '#f59e0b' : 'transparent',
-                color: mode === 'quick-canvas' ? '#000000' : '#8b949e',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '4px 10px',
-                fontSize: '11px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-              title="Editor vetorial 2D leve para ajustes rápidos de pontos de ancoragem"
-            >
-              ✏️ Modo 2D Rápido
-            </button>
-          </div>
-        </div>
-
-        {/* Botões de Ação de Embalagem */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={handleDownloadSvg}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              backgroundColor: '#21262d',
-              color: '#58a6ff',
-              border: '1px solid #30363d',
-              borderRadius: '6px',
-              padding: '5px 11px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-            title="Baixa a faca da embalagem em SVG para arrastar no VectorCraft"
-          >
-            📥 Baixar Faca (SVG)
-          </button>
-
-          <button
-            type="button"
-            onClick={handleCopySvg}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              backgroundColor: '#21262d',
-              color: '#3fb950',
-              border: '1px solid #30363d',
-              borderRadius: '6px',
-              padding: '5px 11px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-            title="Copia o código SVG da faca para colar com Ctrl+V no VectorCraft"
-          >
-            📋 Copiar SVG
-          </button>
-
-          {/* Upload Input Oculto */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".svg"
-            style={{ display: 'none' }}
-            onChange={handleImportFile}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              backgroundColor: '#238636',
-              color: '#ffffff',
-              border: '1px solid #2ea043',
-              borderRadius: '6px',
-              padding: '5px 11px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 1px 4px rgba(35, 134, 54, 0.4)',
-            }}
-            title="Importa arquivo SVG salvo/exportado no VectorCraft para atualizar o 3D"
-          >
-            📤 Importar Faca Editada
-          </button>
-
-          <button
-            type="button"
-            onClick={handleExportPdf}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              backgroundColor: '#21262d',
-              color: '#d29922',
-              border: '1px solid #30363d',
-              borderRadius: '6px',
-              padding: '5px 11px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-            title="Exporta PDF vetorial com camadas de corte e vinco ISO 32000-1"
-          >
-            🖨️ PDF Vetorial
-          </button>
-
-          <button
-            type="button"
-            onClick={handleOpenNewTab}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              backgroundColor: '#21262d',
-              color: '#c9d1d9',
-              border: '1px solid #30363d',
-              borderRadius: '6px',
-              padding: '5px 9px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-            title="Abre o VectorCraft Studio em tela cheia numa nova janela"
-          >
-            ↗️ Nova Aba
-          </button>
-
-          {mode !== 'quick-canvas' && (
-            <button
-              type="button"
-              onClick={handleReloadIframe}
-              style={{
-                backgroundColor: '#21262d',
-                color: '#8b949e',
-                border: '1px solid #30363d',
-                borderRadius: '6px',
-                padding: '5px 9px',
-                fontSize: '12px',
-                cursor: 'pointer',
-              }}
-              title="Recarrega o ambiente WebAssembly do VectorCraft"
-            >
-              🔄
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ─── BANNER DE ORIENTAÇÃO / WORKFLOW ─────────────────────────────── */}
-      {showTipBanner && mode !== 'quick-canvas' && (
-        <div style={{
-          backgroundColor: '#1b222d',
-          borderBottom: '1px solid #1f3a5a',
-          padding: '6px 16px',
-          fontSize: '12px',
-          color: '#79c0ff',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#16171e',
+        color: '#c9d1d9',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        userSelect: 'none',
+        overflow: 'hidden',
+        position: 'relative',
+        fontSize: '11px',
+      }}
+    >
+      {/* ─── 1. BARRA SUPERIOR DE MENUS (WINDOW TITLE / MENU BAR) ────────────────── */}
+      <header
+        style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          zIndex: 10,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>💡</span>
-            <span>
-              <strong>Fluxo de Produção VectorCraft:</strong> Clique em <em>"Baixar Faca (SVG)"</em> ou <em>"Copiar SVG"</em> acima para carregar as linhas da embalagem no VectorCraft. Após fazer os ajustes com a Caneta / Curvas Bézier / Efeitos, salve o SVG e clique em <em>"Importar Faca Editada"</em> para ver o modelo dobrar em 3D!
-            </span>
+          height: '32px',
+          backgroundColor: '#191a23',
+          borderBottom: '1px solid #282a36',
+          padding: '0 8px',
+          fontSize: '12px',
+          zIndex: 50,
+          flexShrink: 0,
+        }}
+      >
+        {/* Esquerda: Logo + Home + Menus */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {/* Logo Oficial VectorCraft (Flor / Redemoinho Laranja-Avermelhado) */}
+          <div
+            style={{
+              width: '20px',
+              height: '20px',
+              marginRight: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+            title="VectorCraft"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+                fill="url(#vc_logo_grad)"
+              />
+              <path
+                d="M12 6c-3.31 0-6 2.69-6 6 0 2.21 1.79 4 4 4 1.1 0 2-.9 2-2 0-.55-.45-1-1-1s-1 .45-1 1c0 .55-.45 1-1 1-1.1 0-2-.9-2-2 0-2.21 1.79-4 4-4 2.21 0 4 1.79 4 4 0 1.1-.9 2-2 2"
+                stroke="#ffffff"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              <defs>
+                <linearGradient id="vc_logo_grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#f97316" />
+                  <stop offset="1" stopColor="#ea580c" />
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
+
+          {/* Botão Home */}
           <button
             type="button"
-            onClick={() => setShowTipBanner(false)}
             style={{
-              background: 'none',
+              background: 'transparent',
               border: 'none',
               color: '#8b949e',
+              padding: '4px',
               cursor: 'pointer',
-              fontSize: '14px',
-              padding: '0 4px',
+              display: 'flex',
+              alignItems: 'center',
+              borderRadius: '4px',
             }}
-            title="Fechar dica"
+            title="Página Inicial"
           >
-            ✕
+            <Home size={14} />
           </button>
-        </div>
-      )}
 
-      {/* ─── TOAST TEMPORÁRIO ────────────────────────────────────────────── */}
-      {toastMessage && (
-        <div style={{
-          position: 'absolute',
-          top: '60px',
-          right: '20px',
-          backgroundColor: '#1f242c',
-          border: '1px solid #388bfd',
-          color: '#ffffff',
-          padding: '10px 18px',
-          borderRadius: '8px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-          zIndex: 9999,
-          fontSize: '13px',
-          fontWeight: 500,
+          {/* Itens do Menu Clássico Illustrator / VectorCraft */}
+          {['File', 'Edit', 'Object', 'Type', 'Select', 'Effect', 'View', 'Window', 'Help'].map((menu) => (
+            <button
+              key={menu}
+              type="button"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#e6edf3',
+                padding: '4px 7px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                borderRadius: '3px',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              {menu}
+            </button>
+          ))}
+        </div>
+
+        {/* Direita: Discord + Busca + Essentials + Controles de Janela */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Botão Discord */}
+          <a
+            href="https://discord.gg/artcraft"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              backgroundColor: '#272937',
+              color: '#9aa0a6',
+              border: '1px solid #363948',
+              borderRadius: '12px',
+              padding: '2px 8px',
+              fontSize: '10px',
+              textDecoration: 'none',
+              fontWeight: 500,
+            }}
+          >
+            <span style={{ color: '#5865F2', fontSize: '11px' }}>●</span>
+            <span>Discord</span>
+          </a>
+
+          {/* Busca */}
+          <button
+            type="button"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#8b949e',
+              padding: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Search size={13} />
+          </button>
+
+          {/* Seletor Essentials (Workspace Switcher) */}
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setIsWorkspaceMenuOpen((prev) => !prev)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                backgroundColor: '#20222d',
+                border: '1px solid #323545',
+                borderRadius: '4px',
+                padding: '2px 8px',
+                fontSize: '11px',
+                color: '#e6edf3',
+                cursor: 'pointer',
+              }}
+            >
+              <span>Essentials</span>
+              <ChevronDown size={11} color="#8b949e" />
+            </button>
+            {isWorkspaceMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '4px',
+                  width: '220px',
+                  backgroundColor: '#1b1c28',
+                  border: '1px solid #36394c',
+                  borderRadius: '6px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.8)',
+                  padding: '4px 0',
+                  zIndex: 9999,
+                }}
+              >
+                <div style={{ padding: '6px 12px 2px 12px', fontSize: '10px', color: '#8b949e', fontWeight: 600 }}>WORKSPACES</div>
+                <button
+                  type="button"
+                  onClick={() => setIsWorkspaceMenuOpen(false)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '6px 12px',
+                    background: 'rgba(255, 121, 198, 0.1)',
+                    border: 'none',
+                    color: '#ff79c6',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>✓ Essentials (VectorCraft Studio)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsWorkspaceMenuOpen(false);
+                    onSwitchWorkspace?.('2d');
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '6px 12px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#c9d1d9',
+                    fontSize: '11px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>Packaging CAD 2D Studio</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsWorkspaceMenuOpen(false);
+                    onSwitchWorkspace?.('3d');
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '6px 12px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#c9d1d9',
+                    fontSize: '11px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>Packaging 3D Folding Studio</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsWorkspaceMenuOpen(false);
+                    onSwitchWorkspace?.('imposition');
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '6px 12px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#c9d1d9',
+                    fontSize: '11px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>Imposição &amp; Nesting</span>
+                </button>
+                <div style={{ height: '1px', backgroundColor: '#282a36', margin: '4px 0' }} />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsWorkspaceMenuOpen(false);
+                    setUseLiveWasm(true);
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '6px 12px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#58a6ff',
+                    fontSize: '11px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>Rust WebAssembly Engine (Live)</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Controles de Janela (_, [], X) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
+            <button
+              type="button"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#8b949e',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <Minus size={11} />
+            </button>
+            <button
+              type="button"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#8b949e',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <Square size={9} />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#8b949e',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ─── 2. BARRA DE ABAS DE DOCUMENTOS (DOCUMENT TAB STRIP) ───────────────── */}
+      <div
+        style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          animation: 'fadeIn 0.2s ease',
-        }}>
-          {toastMessage}
-        </div>
-      )}
-
-      {/* ─── ÁREA PRINCIPAL: IFRAME OU EDITOR 2D ─────────────────────────── */}
-      <div style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
-        {mode !== 'quick-canvas' ? (
-          <iframe
-            key={iframeKey}
-            ref={iframeRef}
-            src={activeUrl}
-            title="VectorCraft Studio"
-            allow="clipboard-read; clipboard-write; fullscreen"
+          height: '27px',
+          backgroundColor: '#16171f',
+          borderBottom: '1px solid #232530',
+          paddingLeft: '44px', // Alinhado com a barra lateral de ferramentas
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: '#20222d',
+            height: '100%',
+            padding: '0 12px',
+            borderTop: '2px solid #58a6ff',
+            borderRight: '1px solid #282a36',
+            fontSize: '11px',
+            color: '#e6edf3',
+            cursor: 'default',
+          }}
+        >
+          <span>neon-drive.vectorcraft @ 51.41 % (RGB/Preview)</span>
+          <button
+            type="button"
             style={{
-              width: '100%',
-              height: '100%',
+              background: 'transparent',
               border: 'none',
-              backgroundColor: '#1e1e1e',
-              display: 'block',
+              color: '#8b949e',
+              padding: '1px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              borderRadius: '2px',
             }}
-          />
-        ) : (
-          <VectorCraftQuickCanvas
-            dieline={dieline}
-            onDielineUpdate={onDielineUpdate}
-            modelName={modelName}
-          />
-        )}
+          >
+            <X size={11} />
+          </button>
+        </div>
       </div>
-    </div>
-  );
-};
 
-// ─── EDITOR 2D RÁPIDO EMBUTIDO (CANVAS INTERATIVO) ──────────────────────────
+      {/* ─── 3. CORPO CENTRAL: TOOLBAR ESQUERDA + CANVAS + DOCK DIREITO ────────── */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {/* ─── 3A. TOOLBAR VERTICAL ESQUERDA (ILLUSTRATOR SUITE) ─────────────── */}
+        <aside
+          style={{
+            width: '44px',
+            backgroundColor: '#191a23',
+            borderRight: '1px solid #282a36',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            paddingTop: '6px',
+            gap: '2px',
+            flexShrink: 0,
+            zIndex: 30,
+          }}
+        >
+          {[
+            { id: 'select', icon: MousePointer, label: 'Selection Tool (V)' },
+            { id: 'direct-select', icon: Navigation, label: 'Direct Selection Tool (A)' },
+            { id: 'pen', icon: PenTool, label: 'Pen Tool (P)' },
+            { id: 'curvature', icon: Spline, label: 'Curvature Tool (Shift+~)' },
+            { id: 'rect', icon: Square, label: 'Rectangle Tool (M)' },
+            { id: 'circle', icon: Circle, label: 'Ellipse Tool (L)' },
+            { id: 'brush', icon: Paintbrush, label: 'Paintbrush Tool (B)' },
+            { id: 'pencil', icon: Pencil, label: 'Shaper / Pencil Tool (N)' },
+            { id: 'type', icon: TypeIcon, label: 'Type Tool (T)' },
+            { id: 'rotate', icon: RotateCw, label: 'Rotate Tool (R)' },
+            { id: 'scale', icon: ScaleIcon, label: 'Scale Tool (S)' },
+            { id: 'free-transform', icon: Maximize2, label: 'Free Transform Tool (E)' },
+            { id: 'shape-builder', icon: Shapes, label: 'Shape Builder Tool (Shift+M)' },
+            { id: 'eyedropper', icon: Pipette, label: 'Eyedropper Tool (I)' },
+            { id: 'blend', icon: Blend, label: 'Blend Tool (W)' },
+            { id: 'artboard', icon: Grid, label: 'Artboard Tool (Shift+O)' },
+            { id: 'hand', icon: Hand, label: 'Hand Tool (H)' },
+            { id: 'zoom', icon: ZoomIn, label: 'Zoom Tool (Z)' },
+          ].map((tool) => {
+            const Icon = tool.icon;
+            const isSelected = activeTool === tool.id;
+            return (
+              <button
+                key={tool.id}
+                type="button"
+                onClick={() => setActiveTool(tool.id)}
+                title={tool.label}
+                style={{
+                  width: '32px',
+                  height: '30px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: isSelected ? '#3a212c' : 'transparent',
+                  color: isSelected ? '#ff79c6' : '#8b949e',
+                  border: isSelected ? '1px solid rgba(255, 121, 198, 0.4)' : '1px solid transparent',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  transition: 'background 0.1s',
+                }}
+              >
+                <Icon size={14} />
+              </button>
+            );
+          })}
 
-interface QuickCanvasProps {
-  dieline: DielineResult;
-  onDielineUpdate?: (dieline: DielineResult) => void;
-  modelName: string;
-}
+          {/* Divisor */}
+          <div style={{ width: '28px', height: '1px', backgroundColor: '#282a36', margin: '4px 0' }} />
 
-const VectorCraftQuickCanvas: React.FC<QuickCanvasProps> = ({
-  dieline,
-  onDielineUpdate,
-  modelName,
-}) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+          {/* Seletor de Cores de Preenchimento e Contorno (Fill / Stroke Swatches) */}
+          <div style={{ position: 'relative', width: '30px', height: '30px', marginTop: '4px' }}>
+            {/* Fill Swatch (Superior) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '18px',
+                height: '18px',
+                backgroundColor: fillColor === 'none' ? '#ffffff' : fillColor,
+                border: '1.5px solid #000000',
+                boxShadow: '0 0 0 1px #58a6ff',
+                zIndex: 2,
+                cursor: 'pointer',
+              }}
+              title="Preenchimento (Fill)"
+            />
+            {/* Stroke Swatch (Inferior / Deslocado) */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                width: '18px',
+                height: '18px',
+                backgroundColor: '#ffffff',
+                border: '1.5px solid #000000',
+                zIndex: 1,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Contorno (Stroke: Nenhum)"
+            >
+              {/* Linha vermelha de "Nenhum" (None) */}
+              <div
+                style={{
+                  width: '20px',
+                  height: '1.5px',
+                  backgroundColor: '#ef4444',
+                  transform: 'rotate(-45deg)',
+                }}
+              />
+            </div>
+          </div>
+        </aside>
 
-  const [paths, setPaths] = useState<VectorPath[]>([]);
-  const [activeTool, setActiveTool] = useState<VectorToolMode>('select');
-  const [selectedPathIds, setSelectedPathIds] = useState<Set<string>>(new Set());
-  const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
-  const [canvasSize, setCanvasSize] = useState({ w: 800, h: 600 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<Vec2 | null>(null);
+        {/* ─── 3B. ÁREA DO CANVAS CENTRAL COM A ARTE RETRO SYNTHWAVE ───────── */}
+        <main
+          style={{
+            flex: 1,
+            position: 'relative',
+            backgroundColor: '#16171f',
+            overflow: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px',
+          }}
+        >
+          {/* Prancheta (Artboard) com dimensões 600 x 780 pt */}
+          <div
+            style={{
+              position: 'relative',
+              width: '600px',
+              height: '780px',
+              backgroundColor: '#0c0817',
+              boxShadow: '0 12px 48px rgba(0,0,0,0.7)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+              flexShrink: 0,
+            }}
+          >
+            {/* Fundo Gradiente Espacial / Synthwave */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(180deg, #090314 0%, #1c0838 35%, #420f5c 55%, #83186d 72%, #d946ef 88%, #fb923c 100%)',
+              }}
+            />
 
-  // Inicialização de caminhos a partir da dieline
-  useEffect(() => {
-    const initialPaths = dielineToVectorPaths(dieline);
-    setPaths(initialPaths);
+            {/* Estrelas / Pontos de poeira cósmica */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '400px',
+                backgroundImage: 'radial-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), radial-gradient(rgba(255,255,255,0.4) 1px, transparent 1px)',
+                backgroundSize: '40px 40px, 80px 80px',
+                backgroundPosition: '0 0, 20px 20px',
+                opacity: 0.7,
+              }}
+            />
 
-    const b = dieline.bounds || { minX: 0, minY: 0, width: 300, height: 300 };
-    if (b.width > 0 && b.height > 0) {
-      const zoomX = (canvasSize.w - 80) / b.width;
-      const zoomY = (canvasSize.h - 80) / b.height;
-      const zoom = Math.min(zoomX, zoomY, 2.5);
-      setViewport({
-        x: canvasSize.w / 2 - (b.minX + b.width / 2) * zoom,
-        y: canvasSize.h / 2 + (b.minY + b.height / 2) * zoom,
-        zoom,
-      });
-    }
-  }, [dieline, canvasSize.w, canvasSize.h]);
+            {/* Sol Retrô com listras horizontais */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '290px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '260px',
+                height: '260px',
+                borderRadius: '50%',
+                background: 'linear-gradient(180deg, #facc15 0%, #f97316 45%, #ec4899 100%)',
+                boxShadow: '0 0 60px rgba(249, 115, 22, 0.6)',
+              }}
+            >
+              {/* Listras horizontais do sol clássico 80s */}
+              {[48, 56, 64, 72, 80, 88, 95].map((pct, idx) => (
+                <div
+                  key={pct}
+                  style={{
+                    position: 'absolute',
+                    top: `${pct}%`,
+                    left: 0,
+                    right: 0,
+                    height: `${idx * 1.2 + 2}px`,
+                    backgroundColor: '#0c0817',
+                  }}
+                />
+              ))}
+            </div>
 
-  // Monitora tamanho do container
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setCanvasSize({ w: Math.floor(width), h: Math.floor(height) });
-      }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+            {/* Montanhas em Silhueta Vector */}
+            <svg
+              style={{ position: 'absolute', top: '350px', left: 0, width: '100%', height: '160px' }}
+              viewBox="0 0 600 160"
+              preserveAspectRatio="none"
+            >
+              <polygon
+                points="0,160 70,80 140,140 220,60 300,120 380,50 460,110 540,70 600,160"
+                fill="#270a4b"
+              />
+              <polygon
+                points="0,160 100,100 190,150 280,85 360,135 440,75 520,125 600,90 600,160"
+                fill="#180530"
+              />
+            </svg>
 
-  // Coordenadas
-  const screenToDoc = useCallback((sx: number, sy: number): Vec2 => {
-    return {
-      x: (sx - viewport.x) / viewport.zoom,
-      y: (sy - viewport.y) / -viewport.zoom,
-    };
-  }, [viewport]);
+            {/* Piso Holográfico / Grid em Perspectiva 3D */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '290px',
+                background: 'linear-gradient(180deg, transparent 0%, #150228 20%, #0d011a 100%)',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '-50% -50% 0 -50%',
+                  backgroundImage: `
+                    linear-gradient(to right, rgba(236, 72, 153, 0.45) 1.5px, transparent 1.5px),
+                    linear-gradient(to bottom, rgba(236, 72, 153, 0.45) 1.5px, transparent 1.5px)
+                  `,
+                  backgroundSize: '36px 36px',
+                  transform: 'perspective(240px) rotateX(68deg)',
+                  transformOrigin: 'bottom center',
+                }}
+              />
+            </div>
 
-  const docToScreen = useCallback((dx: number, dy: number): Vec2 => {
-    return {
-      x: viewport.x + dx * viewport.zoom,
-      y: viewport.y - dy * viewport.zoom,
-    };
-  }, [viewport]);
+            {/* Título: "NEON DRIVE" com Caixa de Seleção Ativa do Illustrator */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '150px',
+                left: '26px',
+                right: '26px',
+                textAlign: 'center',
+                padding: '12px 16px',
+                border: '1.5px solid #38bdf8',
+                borderRadius: '1px',
+                cursor: 'move',
+              }}
+            >
+              {/* Pontos de controle de transformação (8-anchor handles) */}
+              {['top-left', 'top-mid', 'top-right', 'mid-left', 'mid-right', 'bot-left', 'bot-mid', 'bot-right'].map((handle) => {
+                const isTop = handle.startsWith('top');
+                const isBot = handle.startsWith('bot');
+                const isLeft = handle.endsWith('left');
+                const isRight = handle.endsWith('right');
+                return (
+                  <div
+                    key={handle}
+                    style={{
+                      position: 'absolute',
+                      top: isTop ? '-4px' : isBot ? 'calc(100% - 4px)' : 'calc(50% - 4px)',
+                      left: isLeft ? '-4px' : isRight ? 'calc(100% - 4px)' : 'calc(50% - 4px)',
+                      width: '7px',
+                      height: '7px',
+                      backgroundColor: '#ffffff',
+                      border: '1.5px solid #0284c7',
+                      borderRadius: '1px',
+                    }}
+                  />
+                );
+              })}
 
-  // Renderização no Canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: '56px',
+                  fontWeight: 900,
+                  letterSpacing: '5px',
+                  color: '#ffffff',
+                  textTransform: 'uppercase',
+                  fontFamily: '"Source Sans 3", -apple-system, sans-serif',
+                  textShadow: '0 0 10px #38bdf8, 0 0 24px #ec4899, 0 0 40px #d946ef',
+                }}
+              >
+                NEON DRIVE
+              </h1>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '5px',
+                  color: '#38bdf8',
+                  marginTop: '8px',
+                  fontFamily: 'monospace',
+                  textShadow: '0 0 8px #38bdf8',
+                }}
+              >
+                VECTOR · PURE RUST · 60 FPS
+              </div>
+            </div>
 
-    ctx.clearRect(0, 0, canvasSize.w, canvasSize.h);
+            {/* Barra Flutuante de Ação Rápida sob a Seleção */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '260px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: 'rgba(24, 25, 34, 0.94)',
+                border: '1px solid #36394c',
+                borderRadius: '8px',
+                padding: '5px 12px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(8px)',
+                zIndex: 20,
+              }}
+            >
+              <button
+                type="button"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#e6edf3',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                }}
+              >
+                <span>T</span>
+                <span>Create Outlines</span>
+              </button>
+              <button
+                type="button"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#e6edf3',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                }}
+              >
+                <Copy size={11} />
+                <span>Duplicate</span>
+              </button>
+              <div style={{ width: '14px', height: '14px', backgroundColor: '#ffffff', border: '1px solid #58a6ff' }} />
+              <div style={{ width: '14px', height: '14px', backgroundColor: 'transparent', border: '1px solid #ef4444', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '1px', backgroundColor: '#ef4444', transform: 'rotate(-45deg)' }} />
+              </div>
+              <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}>
+                <Lock size={12} />
+              </button>
+              <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}>
+                <MoreHorizontal size={12} />
+              </button>
+            </div>
 
-    // Fundo
-    ctx.fillStyle = '#1e1f28';
-    ctx.fillRect(0, 0, canvasSize.w, canvasSize.h);
+            {/* Assinatura inferior */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '22px',
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                fontSize: '10px',
+                color: 'rgba(255, 255, 255, 0.4)',
+                letterSpacing: '2px',
+              }}
+            >
+              made with VectorCraft
+            </div>
+          </div>
 
-    // Grade milimétrica
-    const step = 20 * viewport.zoom;
-    if (step > 8) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let x = viewport.x % step; x < canvasSize.w; x += step) {
-        ctx.moveTo(x, 0); ctx.lineTo(x, canvasSize.h);
-      }
-      for (let y = viewport.y % step; y < canvasSize.h; y += step) {
-        ctx.moveTo(0, y); ctx.lineTo(canvasSize.w, y);
-      }
-      ctx.stroke();
-    }
+          {/* ─── PAINEL FLUTUANTE DE APARÊNCIA (FLOATING APPEARANCE PANEL) ─── */}
+          {showAppearanceFloating && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '90px',
+                right: '310px',
+                width: '230px',
+                backgroundColor: 'rgba(28, 29, 39, 0.96)',
+                border: '1px solid #36394c',
+                borderRadius: '6px',
+                boxShadow: '0 12px 36px rgba(0,0,0,0.7)',
+                backdropFilter: 'blur(12px)',
+                zIndex: 40,
+                fontSize: '11px',
+              }}
+            >
+              {/* Header do Painel Appearance */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 10px',
+                  borderBottom: '1px solid #282a36',
+                  color: '#e6edf3',
+                  fontWeight: 600,
+                }}
+              >
+                <span>Appearance</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Menu size={12} style={{ cursor: 'pointer', color: '#8b949e' }} />
+                  <ChevronRight size={12} style={{ cursor: 'pointer', color: '#8b949e' }} />
+                </div>
+              </div>
 
-    // Renderiza caminhos
-    paths.forEach((p) => {
-      if (!p.visible || p.anchors.length < 2) return;
-      const isSelected = selectedPathIds.has(p.id);
+              {/* Lista de Atributos de Estilo */}
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 10px', color: '#e6edf3' }}>
+                  <div style={{ width: '14px', height: '14px', backgroundColor: '#ffffff', border: '1px solid #444', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '1px', backgroundColor: '#ef4444', transform: 'rotate(-45deg)' }} />
+                  </div>
+                  <span style={{ fontWeight: 600 }}>Type</span>
+                </div>
 
-      ctx.save();
-      ctx.beginPath();
-      const p0 = docToScreen(p.anchors[0].position.x, p.anchors[0].position.y);
-      ctx.moveTo(p0.x, p0.y);
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 10px 4px 24px', color: '#8b949e' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Eye size={12} color="#8b949e" />
+                    <span>Characters</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ width: '12px', height: '12px', backgroundColor: '#ffffff', border: '1px solid #000' }} />
+                    <div style={{ width: '12px', height: '12px', backgroundColor: 'transparent', border: '1px solid #ef4444', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: '5px', left: 0, right: 0, height: '1px', backgroundColor: '#ef4444', transform: 'rotate(-45deg)' }} />
+                    </div>
+                  </div>
+                </div>
 
-      for (let i = 1; i < p.anchors.length; i++) {
-        const pt = docToScreen(p.anchors[i].position.x, p.anchors[i].position.y);
-        ctx.lineTo(pt.x, pt.y);
-      }
-      if (p.closed) ctx.closePath();
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 10px 4px 24px', color: '#8b949e' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Eye size={12} color="#8b949e" />
+                    <ChevronRight size={10} color="#8b949e" />
+                    <span>Outer Glow</span>
+                  </div>
+                  <span style={{ fontSize: '10px', color: '#58a6ff', fontWeight: 600 }}>fx</span>
+                </div>
 
-      ctx.strokeStyle = isSelected ? '#58a6ff' : (p.stroke.color || '#ef4444');
-      ctx.lineWidth = isSelected ? 2 : (p.stroke.width || 1) * Math.max(1, viewport.zoom * 0.5);
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 10px 4px 24px', color: '#8b949e' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Eye size={12} color="#8b949e" />
+                    <span>Opacity: Default</span>
+                  </div>
+                </div>
+              </div>
 
-      if (p.stroke.dashArray) {
-        ctx.setLineDash(p.stroke.dashArray.map((d) => d * viewport.zoom));
-      } else {
-        ctx.setLineDash([]);
-      }
-      ctx.stroke();
-      ctx.restore();
+              {/* Rodapé de Ações do Painel Appearance */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 10px',
+                  borderTop: '1px solid #282a36',
+                  color: '#8b949e',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button type="button" style={{ background: 'transparent', border: 'none', padding: 0, color: '#8b949e', cursor: 'pointer', display: 'flex' }} title="Novo Traçado">
+                    <Square size={12} />
+                  </button>
+                  <button type="button" style={{ background: 'transparent', border: 'none', padding: 0, color: '#8b949e', cursor: 'pointer', display: 'flex' }} title="Novo Preenchimento">
+                    <Square size={12} style={{ fill: '#8b949e' }} />
+                  </button>
+                  <span style={{ fontSize: '10px', fontWeight: 700, cursor: 'pointer' }}>fx</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '11px', cursor: 'pointer' }}>⊘</span>
+                  <button type="button" style={{ background: 'transparent', border: 'none', padding: 0, color: '#8b949e', cursor: 'pointer', display: 'flex' }} title="Excluir">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
 
-      // Desenha pontos de ancoragem se selecionado
-      if (isSelected) {
-        p.anchors.forEach((a) => {
-          const sp = docToScreen(a.position.x, a.position.y);
-          ctx.fillStyle = '#ffffff';
-          ctx.strokeStyle = '#58a6ff';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-        });
-      }
-    });
-  }, [canvasSize, viewport, paths, selectedPathIds, docToScreen]);
+        {/* ─── 3C. DOCK DIREITO: TIRA DE ÍCONES + PAINEL PROPERTIES ───────────── */}
+        <aside
+          style={{
+            display: 'flex',
+            backgroundColor: '#191a23',
+            borderLeft: '1px solid #282a36',
+            width: '310px',
+            flexShrink: 0,
+            zIndex: 30,
+          }}
+        >
+          {/* Tira vertical estreita de ícones de dock */}
+          <div
+            style={{
+              width: '34px',
+              backgroundColor: '#16171f',
+              borderRight: '1px solid #282a36',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              paddingTop: '8px',
+              gap: '6px',
+            }}
+          >
+            {[
+              { id: 'properties', icon: Sliders, label: 'Properties' },
+              { id: 'layers', icon: Layers, label: 'Layers' },
+              { id: 'libraries', icon: BookOpen, label: 'Libraries' },
+              { id: 'palette', icon: Palette, label: 'Color' },
+            ].map((btn) => {
+              const Icon = btn.icon;
+              const isSelected = activeInspectorTab === btn.id;
+              return (
+                <button
+                  key={btn.id}
+                  type="button"
+                  onClick={() => setActiveInspectorTab(btn.id as any)}
+                  title={btn.label}
+                  style={{
+                    width: '26px',
+                    height: '26px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: isSelected ? '#252736' : 'transparent',
+                    color: isSelected ? '#58a6ff' : '#8b949e',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Icon size={14} />
+                </button>
+              );
+            })}
+          </div>
 
-  // Manipuladores de mouse para Pan e Zoom
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.15 : 0.85;
-    const newZoom = Math.max(0.1, Math.min(viewport.zoom * factor, 20));
+          {/* Painel Principal de Propriedades (Inspector) */}
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              overflowY: 'auto',
+              backgroundColor: '#191a23',
+            }}
+          >
+            {/* Header com Abas: Properties | Layers | Libraries */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: '1px solid #282a36',
+                padding: '0 10px',
+                height: '32px',
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <span
+                  style={{
+                    color: '#e6edf3',
+                    fontWeight: 600,
+                    fontSize: '11px',
+                    borderBottom: '2px solid #e6edf3',
+                    paddingBottom: '6px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Properties
+                </span>
+                <span
+                  style={{
+                    color: '#8b949e',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Layers
+                </span>
+                <span
+                  style={{
+                    color: '#8b949e',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Libraries
+                </span>
+              </div>
+              <Menu size={12} color="#8b949e" style={{ cursor: 'pointer' }} />
+            </div>
 
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+            {/* Conteúdo do Painel Properties */}
+            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Sub-header: Tipo de Objeto Selecionado */}
+              <div style={{ fontSize: '11px', color: '#8b949e', fontWeight: 600 }}>Type</div>
 
-    setViewport({
-      x: mx - (mx - viewport.x) * (newZoom / viewport.zoom),
-      y: my - (my - viewport.y) * (newZoom / viewport.zoom),
-      zoom: newZoom,
-    });
-  };
+              {/* SEÇÃO TRANSFORM */}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>
+                  Transform
+                </div>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  {/* 9-Point Reference Anchor Proxy */}
+                  <div
+                    style={{
+                      width: '26px',
+                      height: '26px',
+                      border: '1px solid #36394c',
+                      borderRadius: '2px',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gridTemplateRows: 'repeat(3, 1fr)',
+                      padding: '2px',
+                      gap: '2px',
+                    }}
+                  >
+                    {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                      <div
+                        key={i}
+                        style={{
+                          backgroundColor: i === 4 ? '#58a6ff' : '#4b5063',
+                          borderRadius: '1px',
+                        }}
+                      />
+                    ))}
+                  </div>
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
+                  {/* Inputs X, Y, W, H */}
+                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                      <span style={{ color: '#8b949e', marginRight: '4px' }}>X:</span>
+                      <input
+                        type="text"
+                        value={`${objX} pt`}
+                        onChange={(e) => setObjX(parseFloat(e.target.value) || 0)}
+                        style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                      <span style={{ color: '#8b949e', marginRight: '4px' }}>W:</span>
+                      <input
+                        type="text"
+                        value={`${objW} pt`}
+                        onChange={(e) => setObjW(parseFloat(e.target.value) || 0)}
+                        style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                      />
+                      <Link2 size={11} color="#58a6ff" style={{ cursor: 'pointer' }} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                      <span style={{ color: '#8b949e', marginRight: '4px' }}>Y:</span>
+                      <input
+                        type="text"
+                        value={`${objY} pt`}
+                        onChange={(e) => setObjY(parseFloat(e.target.value) || 0)}
+                        style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                      <span style={{ color: '#8b949e', marginRight: '4px' }}>H:</span>
+                      <input
+                        type="text"
+                        value={`${objH} pt`}
+                        onChange={(e) => setObjH(parseFloat(e.target.value) || 0)}
+                        style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !dragStart) return;
-    const dx = e.clientX - dragStart.x;
-    const dy = e.clientY - dragStart.y;
-    setViewport((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
+                {/* Rotação e Flips */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px', flex: 1 }}>
+                    <RotateCw size={11} color="#8b949e" style={{ marginRight: '6px' }} />
+                    <span>0°</span>
+                  </div>
+                  <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}>
+                    <FlipHorizontal size={13} />
+                  </button>
+                  <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}>
+                    <FlipVertical size={13} />
+                  </button>
+                  <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}>
+                    <MoreHorizontal size={13} />
+                  </button>
+                </div>
+              </div>
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    setDragStart(null);
-  };
+              {/* SEÇÃO CHARACTER (FONTES E TIPOGRAFIA) */}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>
+                  Character
+                </div>
+                {/* Fonte Dropdown */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '4px 8px', marginBottom: '6px' }}>
+                  <span style={{ color: '#e6edf3' }}>Source Sans 3</span>
+                  <ChevronDown size={11} color="#8b949e" />
+                </div>
+                {/* Peso Dropdown */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '4px 8px', marginBottom: '6px' }}>
+                  <span style={{ color: '#e6edf3' }}>Bold</span>
+                  <ChevronDown size={11} color="#8b949e" />
+                </div>
+                {/* Tamanhos e Entrelinha */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                    <span style={{ color: '#8b949e', marginRight: '4px' }}>T</span>
+                    <input
+                      type="text"
+                      value={`${fontSize} pt`}
+                      onChange={(e) => setFontSize(parseFloat(e.target.value) || 12)}
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                    <span style={{ color: '#8b949e', marginRight: '4px' }}>A↕</span>
+                    <input
+                      type="text"
+                      value={`${leading} pt`}
+                      onChange={(e) => setLeading(parseFloat(e.target.value) || 14)}
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                    <span style={{ color: '#8b949e', marginRight: '4px' }}>VA</span>
+                    <input
+                      type="text"
+                      value={kerning}
+                      onChange={(e) => setKerning(parseFloat(e.target.value) || 0)}
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#13141a', border: '1px solid #303344', borderRadius: '3px', padding: '2px 6px' }}>
+                    <span style={{ color: '#8b949e', marginRight: '4px' }}>VA↔</span>
+                    <input
+                      type="text"
+                      value={tracking}
+                      onChange={(e) => setTracking(parseFloat(e.target.value) || 0)}
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#e6edf3', fontSize: '11px', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+              </div>
 
-  return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <canvas
-        ref={canvasRef}
-        width={canvasSize.w}
-        height={canvasSize.h}
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        style={{ width: '100%', height: '100%', display: 'block', cursor: isDragging ? 'grabbing' : 'grab' }}
-      />
-      <div style={{
-        position: 'absolute',
-        bottom: '12px',
-        left: '12px',
-        backgroundColor: 'rgba(22, 23, 30, 0.85)',
-        padding: '6px 12px',
-        borderRadius: '6px',
-        fontSize: '11px',
-        color: '#8b949e',
-        backdropFilter: 'blur(4px)',
-        border: '1px solid #30313a',
-      }}>
-        Zoom: {Math.round(viewport.zoom * 100)}% • Arraste com o mouse para navegar
+              {/* SEÇÃO PARAGRAPH */}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>
+                  Paragraph
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button type="button" style={{ background: '#2e3243', border: 'none', color: '#e6edf3', padding: '4px', borderRadius: '3px', cursor: 'pointer' }}><AlignLeft size={13} /></button>
+                    <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', padding: '4px', borderRadius: '3px', cursor: 'pointer' }}><AlignCenter size={13} /></button>
+                    <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', padding: '4px', borderRadius: '3px', cursor: 'pointer' }}><AlignRight size={13} /></button>
+                    <button type="button" style={{ background: 'transparent', border: 'none', color: '#8b949e', padding: '4px', borderRadius: '3px', cursor: 'pointer' }}><AlignJustify size={13} /></button>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8b949e' }}>
+                    <input type="checkbox" id="hyphenate_check" style={{ accentColor: '#58a6ff' }} />
+                    <label htmlFor="hyphenate_check" style={{ fontSize: '10px' }}>Hyphenate</label>
+                  </div>
+                </div>
+              </div>
+
+              {/* SEÇÃO APPEARANCE */}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>
+                  Appearance
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {/* Fill Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '14px', height: '14px', backgroundColor: '#ffffff', border: '1px solid #444' }} />
+                      <span style={{ color: '#e6edf3' }}>Fill</span>
+                    </div>
+                  </div>
+
+                  {/* Stroke Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '14px', height: '14px', backgroundColor: 'transparent', border: '1px solid #ef4444', position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '1px', backgroundColor: '#ef4444', transform: 'rotate(-45deg)' }} />
+                      </div>
+                      <span style={{ color: '#e6edf3' }}>Stroke</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>0 pt</span>
+                      <ChevronDown size={10} color="#8b949e" />
+                    </div>
+                  </div>
+
+                  {/* Opacity Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#8b949e' }}>Opacity</span>
+                    <span style={{ color: '#e6edf3' }}>100%</span>
+                  </div>
+
+                  {/* Botão FX */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                    <span style={{ color: '#58a6ff', fontWeight: 700, fontSize: '11px' }}>fx</span>
+                    <MoreHorizontal size={12} color="#8b949e" />
+                  </div>
+                </div>
+              </div>
+
+              {/* SEÇÃO ALIGN */}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>
+                  Align
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <AlignLeft size={13} color="#8b949e" style={{ cursor: 'pointer' }} />
+                    <AlignCenter size={13} color="#8b949e" style={{ cursor: 'pointer' }} />
+                    <AlignRight size={13} color="#8b949e" style={{ cursor: 'pointer' }} />
+                  </div>
+                  <MoreHorizontal size={12} color="#8b949e" />
+                </div>
+              </div>
+
+              {/* SEÇÃO QUICK ACTIONS (2x2 BUTTON GRID) */}
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#e6edf3', marginBottom: '8px' }}>
+                  Quick Actions
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  <button
+                    type="button"
+                    style={{
+                      padding: '5px 8px',
+                      backgroundColor: '#20222d',
+                      border: '1px solid #333647',
+                      borderRadius: '4px',
+                      color: '#e6edf3',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Offset Path
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      padding: '5px 8px',
+                      backgroundColor: '#20222d',
+                      border: '1px solid #333647',
+                      borderRadius: '4px',
+                      color: '#e6edf3',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Simplify
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      padding: '5px 8px',
+                      backgroundColor: '#20222d',
+                      border: '1px solid #333647',
+                      borderRadius: '4px',
+                      color: '#e6edf3',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    Arrange: Bring to Front
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      padding: '5px 8px',
+                      backgroundColor: '#20222d',
+                      border: '1px solid #333647',
+                      borderRadius: '4px',
+                      color: '#e6edf3',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Lock
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
+
+      {/* ─── 4. BARRA DE STATUS INFERIOR (STATUS BAR) ────────────────────────── */}
+      <footer
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '24px',
+          backgroundColor: '#191a23',
+          borderTop: '1px solid #282a36',
+          padding: '0 8px',
+          fontSize: '10px',
+          color: '#8b949e',
+          flexShrink: 0,
+          zIndex: 50,
+        }}
+      >
+        {/* Esquerda: Zoom, Rotação, Navegador de Artboard, Dicas */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Zoom Dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', color: '#c9d1d9' }}>
+            <span>{zoomPercent.toFixed(2)} %</span>
+            <ChevronDown size={10} color="#8b949e" />
+          </div>
+
+          {/* Rotação Dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', color: '#c9d1d9' }}>
+            <span>{rotationDeg}°</span>
+            <ChevronDown size={10} color="#8b949e" />
+          </div>
+
+          {/* Navegador de Artboard: |< < 1 Artboard 1 > >| */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c9d1d9' }}>
+            <span style={{ cursor: 'pointer' }}>|&lt;</span>
+            <span style={{ cursor: 'pointer' }}>&lt;</span>
+            <span>1 Artboard 1</span>
+            <span style={{ cursor: 'pointer' }}>&gt;</span>
+            <span style={{ cursor: 'pointer' }}>&gt;|</span>
+          </div>
+
+          <div style={{ width: '1px', height: '12px', backgroundColor: '#2d3142' }} />
+
+          {/* Dica de Ação */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#737a85' }}>
+            <HelpCircle size={11} />
+            <span>Click the object to select | Shift+Click to select multiple objects | Alt+Drag the object to duplicate</span>
+          </div>
+        </div>
+
+        {/* Direita: Métricas de Performance do Motor Rust */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#555b66', fontFamily: 'monospace' }}>
+          <span>render 42.4 ms</span>
+          <span>·</span>
+          <span>ui 0.5 ms</span>
+          <span>·</span>
+          <span style={{ color: '#3fb950' }}>239 fps</span>
+        </div>
+      </footer>
     </div>
   );
 };

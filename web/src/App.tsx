@@ -44,7 +44,15 @@ export const App: React.FC = () => {
     ...MODELS[0].defaultParams,
     Ep: STANDARD_PROFILES[0].thickness,
   }));
-  const [activeTab, setActiveTab] = useState<ActiveTab>('2d');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('tab');
+      if (p === '2d' || p === '3d' || p === 'imposition' || p === 'vectorcraft') {
+        return p as ActiveTab;
+      }
+    }
+    return 'vectorcraft';
+  });
 
   // Estados da Integração Oficial Adobe Illustrator 2025
   const [artworkTextureUri, setArtworkTextureUri] = useState<string | null>(null);
@@ -464,6 +472,19 @@ export const App: React.FC = () => {
     setSavedProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
+  // 4. Renderização em tela cheia do VectorCraft Studio (1:1 com a interface nativa)
+  if (activeTab === 'vectorcraft') {
+    return (
+      <VectorCraftEditor
+        dieline={effectiveDieline}
+        modelName={`${currentModel.code} - ${currentModel.name}`}
+        onDielineUpdate={(edited) => setDielineEdits(edited)}
+        onSwitchWorkspace={(tab) => setActiveTab(tab)}
+        onClose={() => setActiveTab('2d')}
+      />
+    );
+  }
+
   return (
     <div
       style={{
@@ -600,14 +621,6 @@ export const App: React.FC = () => {
               model={currentModel}
               params={params}
               onParamChange={handleParamChange}
-            />
-          )}
-
-          {activeTab === 'vectorcraft' && (
-            <VectorCraftEditor
-              dieline={effectiveDieline}
-              modelName={`${currentModel.code} - ${currentModel.name}`}
-              onDielineUpdate={(edited) => setDielineEdits(edited)}
             />
           )}
         </main>
