@@ -59,3 +59,9 @@ export {
   buildPdfContent,
   exportToPDF,
 } from './pdfExporter';
+
+// SVG Importer
+export {
+  parseSvgToDieline,
+} from './svgImporter';
+
