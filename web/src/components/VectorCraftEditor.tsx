@@ -143,11 +143,11 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
         <header
           style={{
             height: '38px',
-            backgroundColor: '#16171f',
-            borderBottom: '1px solid #282a36',
+            backgroundColor: '#303236',
+            borderBottom: '1px solid #40434a',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-end',
             padding: '0 10px',
             fontSize: '11px',
             color: '#c9d1d9',
@@ -156,37 +156,6 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
             userSelect: 'none',
           }}
         >
-          {/* Lado Esquerdo: Identidade VectorCraft Oficial */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Logo VectorCraft */}
-            <div
-              style={{
-                width: '20px',
-                height: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              title="VectorCraft Studio"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" fill="url(#vc_top_grad)" />
-                <path
-                  d="M12 6c-3.31 0-6 2.69-6 6 0 2.21 1.79 4 4 4 1.1 0 2-.9 2-2 0-.55-.45-1-1-1s-1 .45-1 1c0 .55-.45 1-1 1-1.1 0-2-.9-2-2 0-2.21 1.79-4 4-4 2.21 0 4 1.79 4 4 0 1.1-.9 2-2 2"
-                  stroke="#ffffff"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient id="vc_top_grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#f97316" />
-                    <stop offset="1" stopColor="#ea580c" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-          </div>
-
           {/* Lado Direito: Ações de Integração CAD e Navegação */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {/* Copiar Faca em SVG */}
@@ -197,9 +166,9 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                backgroundColor: '#20222d',
+                backgroundColor: '#3a3d45',
                 color: '#e6edf3',
-                border: '1px solid #333647',
+                border: '1px solid #4d515c',
                 borderRadius: '4px',
                 padding: '4px 8px',
                 fontSize: '11px',
@@ -219,9 +188,9 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                backgroundColor: '#20222d',
+                backgroundColor: '#3a3d45',
                 color: '#e6edf3',
-                border: '1px solid #333647',
+                border: '1px solid #4d515c',
                 borderRadius: '4px',
                 padding: '4px 8px',
                 fontSize: '11px',
@@ -241,9 +210,9 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                backgroundColor: '#20222d',
+                backgroundColor: '#3a3d45',
                 color: '#e6edf3',
-                border: '1px solid #333647',
+                border: '1px solid #4d515c',
                 borderRadius: '4px',
                 padding: '4px 8px',
                 fontSize: '11px',
@@ -262,7 +231,7 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
               onChange={handleImportFile}
             />
 
-            <div style={{ width: '1px', height: '16px', backgroundColor: '#282a36', margin: '0 4px' }} />
+            <div style={{ width: '1px', height: '16px', backgroundColor: '#4d515c', margin: '0 4px' }} />
 
             {/* Voltar para o Packaging CAD (2D / 3D) */}
             <button
@@ -275,9 +244,9 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
-                backgroundColor: '#1f2430',
-                color: '#58a6ff',
-                border: '1px solid #2b3548',
+                backgroundColor: '#3a4454',
+                color: '#79c0ff',
+                border: '1px solid #4a5970',
                 borderRadius: '4px',
                 padding: '4px 9px',
                 fontSize: '11px',

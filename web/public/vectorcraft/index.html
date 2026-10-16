@@ -52,16 +52,65 @@
     #discord_mask {
       position: absolute;
       top: 0;
-      right: 180px;
-      width: 92px;
-      height: 32px;
-      background: #191a24;
+      right: 216px;
+      width: 82px;
+      height: 36px;
+      background: #383838;
+      z-index: 50;
+      pointer-events: auto;
+    }
+    #logo_mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 40px;
+      height: 36px;
+      background: #383838;
       z-index: 50;
       pointer-events: auto;
     }
   </style>
 
   <script type="module">
+    // Captura WebGL context para harmonizar cor das máscaras com a barra cinza
+    let _gl = null;
+    const _origGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(type, attributes) {
+      if (type === 'webgl2' || type === 'webgl') {
+        attributes = Object.assign({}, attributes, { preserveDrawingBuffer: true });
+      }
+      const ctx = _origGetContext.call(this, type, attributes);
+      if (type === 'webgl2' || type === 'webgl') {
+        _gl = ctx;
+      }
+      return ctx;
+    };
+
+    function syncMaskColor() {
+      if (!_gl) return;
+      try {
+        const pixel = new Uint8Array(4);
+        const y = Math.max(0, _gl.drawingBufferHeight - 15);
+        const x = Math.min(180, Math.floor(_gl.drawingBufferWidth / 2));
+        _gl.readPixels(x, y, 1, 1, _gl.RGBA, _gl.UNSIGNED_BYTE, pixel);
+        if (pixel[3] > 0 && !(pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0)) {
+          const color = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+          const dMask = document.getElementById('discord_mask');
+          const lMask = document.getElementById('logo_mask');
+          if (dMask) dMask.style.backgroundColor = color;
+          if (lMask) lMask.style.backgroundColor = color;
+        }
+      } catch (e) {
+        // Fallback para background cinza definido no CSS
+      }
+    }
+    let _colorChecks = 0;
+    const _colorTimer = setInterval(() => {
+      syncMaskColor();
+      _colorChecks++;
+      if (_colorChecks > 30) clearInterval(_colorTimer);
+    }, 300);
+
     // Bloqueia qualquer abertura externa para o Discord
     const _origOpen = window.open;
     window.open = function(url, ...args) {
@@ -107,7 +156,8 @@
 </head>
 <body>
   <canvas id="vectorcraft_canvas" tabindex="1"></canvas>
-  <div id="discord_mask"></div>
+  <div id="logo_mask" title=""></div>
+  <div id="discord_mask" title=""></div>
   <div id="vectorcraft_loading">
     <div class="spinner"></div>
     <div>Iniciando VectorCraft Studio (Rust + WebAssembly)...</div>
