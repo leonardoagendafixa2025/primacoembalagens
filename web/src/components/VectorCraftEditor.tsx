@@ -11,28 +11,16 @@
 
 import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import type { DielineResult, BoundingBox2D } from '../engine/types';
+import type { DielineResult } from '../engine/types';
 import { buildSvgContent, downloadFile } from '../engine/dxfExporter';
 import { exportToPDF } from '../engine/vectorcraft/pdfExporter';
 import { parseSvgToDieline } from '../engine/vectorcraft/svgImporter';
-import {
-  dielineToVectorPaths,
-  vectorPathsToDieline,
-  vec2, add, sub, scale, dist,
-  anchorsToSvgPath,
-  offsetPath,
-} from '../engine/vectorcraft/bezier';
-import { pathfinderOp } from '../engine/vectorcraft/pathops';
+import { dielineToVectorPaths } from '../engine/vectorcraft/bezier';
 import type {
   Vec2,
-  AnchorPoint,
   VectorPath,
-  VectorLayer,
   VectorToolMode,
-  PathfinderOp,
-  UndoEntry,
 } from '../engine/vectorcraft/types';
-import { DEFAULT_PACKAGING_LAYERS } from '../engine/vectorcraft/types';
 
 export interface VectorCraftEditorProps {
   /** Dieline do PLMPackLib para carregar como faca */

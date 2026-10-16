@@ -110,7 +110,7 @@ export function buildDxfContent(
 /**
  * Dispara o download de um arquivo no navegador
  */
-function downloadFile(content: string, filename: string, mimeType: string): void {
+export function downloadFile(content: string, filename: string, mimeType: string): void {
   if (typeof document === 'undefined' || typeof window === 'undefined') {
     return;
   }
