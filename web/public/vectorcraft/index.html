@@ -49,9 +49,29 @@
     @keyframes vc-spin {
       to { transform: rotate(360deg); }
     }
+    #discord_mask {
+      position: absolute;
+      top: 0;
+      right: 180px;
+      width: 92px;
+      height: 32px;
+      background: #191a24;
+      z-index: 50;
+      pointer-events: auto;
+    }
   </style>
 
   <script type="module">
+    // Bloqueia qualquer abertura externa para o Discord
+    const _origOpen = window.open;
+    window.open = function(url, ...args) {
+      if (typeof url === 'string' && url.includes('discord')) {
+        console.log('[VectorCraft] Botão do Discord desativado.');
+        return null;
+      }
+      return _origOpen ? _origOpen.apply(this, [url, ...args]) : null;
+    };
+
     import init, * as bindings from './vectorcraft-web-6a8c4481c5b10cda.js';
 
     try {
@@ -87,6 +107,7 @@
 </head>
 <body>
   <canvas id="vectorcraft_canvas" tabindex="1"></canvas>
+  <div id="discord_mask"></div>
   <div id="vectorcraft_loading">
     <div class="spinner"></div>
     <div>Iniciando VectorCraft Studio (Rust + WebAssembly)...</div>

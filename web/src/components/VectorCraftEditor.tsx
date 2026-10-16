@@ -167,7 +167,7 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
-              title="VectorCraft Studio (storytold/vectorcraft)"
+              title="VectorCraft Studio"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" fill="url(#vc_top_grad)" />
@@ -185,78 +185,9 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
                 </defs>
               </svg>
             </div>
-
-            <span style={{ fontWeight: 600, color: '#ffffff', letterSpacing: '0.3px' }}>
-              VectorCraft Studio
-            </span>
-            <span
-              style={{
-                fontSize: '9px',
-                padding: '1px 5px',
-                backgroundColor: 'rgba(249, 115, 22, 0.2)',
-                color: '#f97316',
-                borderRadius: '3px',
-                fontWeight: 700,
-              }}
-            >
-              RUST + WASM
-            </span>
-
-            {/* Alternador de Motor (Wasm Local / Nuvem Oficial) */}
-            <div
-              style={{
-                display: 'flex',
-                backgroundColor: '#20222d',
-                borderRadius: '4px',
-                padding: '2px',
-                marginLeft: '6px',
-                border: '1px solid #2e3142',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setEngineSource('local');
-                  setIframeKey((k) => k + 1);
-                }}
-                style={{
-                  background: engineSource === 'local' ? '#35394d' : 'transparent',
-                  color: engineSource === 'local' ? '#ffffff' : '#8b949e',
-                  border: 'none',
-                  borderRadius: '3px',
-                  padding: '2px 7px',
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-                title="Executar binário WebAssembly local (65MB)"
-              >
-                Local WASM
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEngineSource('cloud');
-                  setIframeKey((k) => k + 1);
-                }}
-                style={{
-                  background: engineSource === 'cloud' ? '#35394d' : 'transparent',
-                  color: engineSource === 'cloud' ? '#ffffff' : '#8b949e',
-                  border: 'none',
-                  borderRadius: '3px',
-                  padding: '2px 7px',
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-                title="Executar no servidor oficial de alta performance (vectorcraft.run)"
-              >
-                Cloud Mirror
-              </button>
-            </div>
           </div>
 
-          {/* Lado Central/Direito: Ações de Integração CAD e Navegação */}
+          {/* Lado Direito: Ações de Integração CAD e Navegação */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {/* Copiar Faca em SVG */}
             <button
