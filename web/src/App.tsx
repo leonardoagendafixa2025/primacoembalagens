@@ -51,7 +51,7 @@ export const App: React.FC = () => {
         return p as ActiveTab;
       }
     }
-    return 'vectorcraft';
+    return '2d';
   });
 
   // Estados da Integração Oficial Adobe Illustrator 2025
