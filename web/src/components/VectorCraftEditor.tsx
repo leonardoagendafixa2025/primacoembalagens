@@ -389,7 +389,7 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
     const sy = e.clientY - rect.top;
     const docPt = screenToDoc(sx, sy);
 
-    if (e.button === 1 || (e.button === 0 && e.spaceKey) || activeTool === 'hand') {
+    if (e.button === 1 || activeTool === 'hand') {
       setDragMode('pan');
       setDragStart({ x: sx, y: sy });
       setIsDragging(true);
@@ -425,7 +425,7 @@ export const VectorCraftEditor: React.FC<VectorCraftEditorProps> = ({
           setSelectedPathIds(new Set([hit.pathId]));
           setSelectedAnchorIndices(prev => {
             const next = new Map(prev);
-            const indices = new Set(e.shiftKey ? (prev.get(hit.pathId!) || new Set()) : []);
+            const indices = new Set<number>(e.shiftKey ? (prev.get(hit.pathId!) || new Set<number>()) : []);
             if (indices.has(hit.anchorIndex!)) indices.delete(hit.anchorIndex!);
             else indices.add(hit.anchorIndex!);
             next.set(hit.pathId!, indices);

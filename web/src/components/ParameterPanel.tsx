@@ -3,6 +3,7 @@ import type { PackagingModel, CardboardProfile, BoundingBox2D, DielineResult } f
 import { STANDARD_PROFILES } from '../engine/types';
 import { calculateDimensionMatrix } from '../engine/dimensionConverter';
 import type { DimensionMode } from '../engine/dimensionConverter';
+import type { ActiveTab } from './Header';
 import {
   Sliders,
   Layers,
@@ -32,7 +33,7 @@ interface ParameterPanelProps {
   dieline?: DielineResult;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
-  activeMode?: '2d' | '3d' | 'imposition';
+  activeMode?: ActiveTab;
   activeSubTab?: 'dims' | 'mat';
   onSubTabChange?: (tab: 'dims' | 'mat') => void;
   onOpenImportModal?: () => void;

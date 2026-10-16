@@ -379,7 +379,7 @@ export function dielineToVectorPaths(dieline: DielineResult): VectorPath[] {
         dashArray: seg.type === 'crease' ? [4, 3] : seg.type === 'perfo' ? [2, 2] : undefined,
       },
       fill: { color: 'none', opacity: 0, type: 'none' },
-      semanticType: seg.type === 'dimension' ? 'annotation' : seg.type,
+      semanticType: seg.type,
       visible: true,
       locked: false,
     });
