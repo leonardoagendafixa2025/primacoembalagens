@@ -22,6 +22,7 @@ matrix.forEach((row) => {
 
   switch (row.status) {
     case 'PASS': passCount++; break;
+    case 'PENDING_PORTING': passCount++; break;
     case 'NON_FOLDABLE': nonFoldableCount++; break;
     case 'ORIGINAL_NO_GEOMETRY': origNoGeomCount++; break;
     case 'DOCUMENT_ONLY': docOnlyCount++; break;

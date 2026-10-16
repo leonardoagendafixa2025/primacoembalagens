@@ -1,5 +1,5 @@
 import { CATALOG, getModelById } from '../src/engine/registry';
-import { extractPanelsFromModel, buildFoldable3DTree } from '../src/engine/foldingEngine';
+import { buildFoldable3DTree } from '../src/engine/foldingEngine';
 
 console.log('============================================================');
 console.log('TESTE CINEMÁTICO 3D (0% -> 100% -> 0% ROUNDTRIP)');
@@ -21,14 +21,25 @@ CATALOG.forEach((item, idx) => {
   try {
     const params = model.defaultParams || { L: 300, B: 200, H: 150, Ep: 3.0 };
     const dieline = model.calculate(params);
-    const panels = extractPanelsFromModel(model.code || model.id, dieline, params);
 
-    if (!panels || panels.length === 0) {
+    if (!dieline || !dieline.segments || dieline.segments.length === 0) {
+      fail3d++;
+      console.log(`[3D FAIL] #${modelIndex} ${model.code}: Empty geometry`);
+      return;
+    }
+
+    const creases = dieline.segments.filter((s) => s.type === 'crease');
+    if (creases.length === 0) {
       notApplicable++;
       return;
     }
 
-    const tree = buildFoldable3DTree(panels, params.Ep || 3.0);
+    const tree = buildFoldable3DTree(dieline, params.Ep || 3.0);
+
+    if (tree.panelsCount === 0) {
+      notApplicable++;
+      return;
+    }
 
     // Teste 1: 0% (faca plana)
     tree.updateProgress(0.0);

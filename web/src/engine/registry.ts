@@ -266,7 +266,7 @@ export function getModelById(id: string): PackagingModel {
       generator: `svg_${catalogItem.id}`,
       isFoldable: true,
       calculate: (params: Record<string, number>): DielineResult => {
-        const cached = getLoadedSvgDieline(catalogItem.id);
+        const cached = getLoadedSvgDieline(catalogItem.id, catalogItemWithSvg.svgDieline);
         if (cached && cached.segments.length > 0) {
           return cached;
         }

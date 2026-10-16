@@ -17,8 +17,57 @@ export async function fetchAndParseSvgDieline(svgUrl: string, modelId: string): 
   return dieline;
 }
 
-export function getLoadedSvgDieline(modelId: string): DielineResult | null {
-  return svgDielineCache.get(modelId) || null;
+function loadSvgInNode(svgRelPath: string): string | null {
+  try {
+    if (typeof window !== 'undefined') return null;
+    const proc = (globalThis as any).process;
+    if (!proc?.versions?.node) return null;
+
+    let fs: any = proc.getBuiltinModule ? proc.getBuiltinModule('fs') : null;
+    let path: any = proc.getBuiltinModule ? proc.getBuiltinModule('path') : null;
+
+    if (!fs || !path) {
+      try {
+        const req = (Function('return typeof require !== "undefined" ? require : null')());
+        if (req) {
+          fs = fs || req('fs');
+          path = path || req('path');
+        }
+      } catch {}
+    }
+
+    if (!fs || !path) return null;
+
+    const cleanRel = svgRelPath.startsWith('/') ? svgRelPath.slice(1) : svgRelPath;
+    const candidates = [
+      path.resolve(proc.cwd(), 'public', cleanRel),
+      path.resolve(proc.cwd(), 'web', 'public', cleanRel),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return fs.readFileSync(p, 'utf8');
+      }
+    }
+  } catch {
+    // Silently ignore in browser / sandboxed environments
+  }
+  return null;
+}
+
+export function getLoadedSvgDieline(modelId: string, svgUrlOrPath?: string): DielineResult | null {
+  const cached = svgDielineCache.get(modelId);
+  if (cached) return cached;
+
+  if (svgUrlOrPath) {
+    const rawSvg = loadSvgInNode(svgUrlOrPath);
+    if (rawSvg) {
+      const dieline = parseEngViewSvg(rawSvg);
+      svgDielineCache.set(modelId, dieline);
+      return dieline;
+    }
+  }
+
+  return null;
 }
 
 export function setLoadedSvgDieline(modelId: string, dieline: DielineResult) {
