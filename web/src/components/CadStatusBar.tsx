@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PackagingModel, BoundingBox2D } from '../engine/types';
+import type { ActiveTab } from './Header';
 import { Cpu, Maximize2, Compass, Layers } from 'lucide-react';
 
 interface CadStatusBarProps {
@@ -9,7 +10,7 @@ interface CadStatusBarProps {
   zoomLevel?: number;
   segmentsCount?: number;
   arcsCount?: number;
-  activeTab: '2d' | '3d' | 'imposition';
+  activeTab: ActiveTab;
 }
 
 export const CadStatusBar: React.FC<CadStatusBarProps> = ({
@@ -75,7 +76,7 @@ export const CadStatusBar: React.FC<CadStatusBarProps> = ({
           <span style={{ color: 'var(--cad-text-dim)' }}>({areaM2} m²)</span>
         </div>
 
-        {activeTab === '2d' && (
+        {(activeTab === '2d' || activeTab === 'vectorcraft') && (
           <>
             <span style={{ color: 'var(--cad-border-default)' }}>|</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

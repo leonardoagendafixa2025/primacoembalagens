@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { PackagingModel, CardboardProfile, BoundingBox2D, DielineResult } from '../engine/types';
 import type { HingeControlInfo } from '../engine/foldingEngine';
+import type { ActiveTab } from './Header';
 import { ParameterPanel } from './ParameterPanel';
 import { FlapAngleInspector } from './FlapAngleInspector';
 import { ChevronRight, ChevronLeft, Sliders } from 'lucide-react';
@@ -13,7 +14,7 @@ interface LeftSidebarProps {
   onProfileChange: (profile: CardboardProfile) => void;
   bounds: BoundingBox2D;
   dieline?: DielineResult;
-  activeMode: '2d' | '3d' | 'imposition';
+  activeMode: ActiveTab;
   hinges?: HingeControlInfo[];
   selectedPanelId?: string | null;
   onSelectPanel?: (panelId: string | null) => void;

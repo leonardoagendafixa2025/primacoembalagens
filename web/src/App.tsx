@@ -26,6 +26,8 @@ import { CatalogModal } from './components/CatalogModal';
 import { IllustratorPluginModal } from './components/IllustratorPluginModal';
 import { ImportCadModal } from './components/ImportCadModal';
 import { CadStatusBar } from './components/CadStatusBar';
+import { VectorCraftEditor } from './components/VectorCraftEditor';
+import { exportToPDF } from './engine/vectorcraft/pdfExporter';
 import {
   IllustratorBridgeClient,
   type BridgeStatus,
@@ -320,6 +322,21 @@ export const App: React.FC = () => {
     exportToSVG(effectiveDieline, filename);
   };
 
+  const handleExportPDF = () => {
+    const filename = `${currentModel.code}_${params.L}x${params.B}x${params.H}.pdf`;
+    exportToPDF(effectiveDieline, filename, {
+      title: `${currentModel.name} - ${currentModel.code}`,
+      includeBleed: true,
+      bleedMm: 5,
+      includeRegistrationMarks: true,
+      includeDimensions: true,
+      margin: 15,
+    });
+    try {
+      confetti({ particleCount: 30, spread: 45, origin: { y: 0.1 } });
+    } catch {}
+  };
+
   // Integração Oficial Adobe Illustrator
   const handleOpenInIllustrator = async () => {
     setIsOpeningIllustrator(true);
@@ -467,6 +484,7 @@ export const App: React.FC = () => {
         onSelectTab={setActiveTab}
         onExportDXF={handleExportDXF}
         onExportSVG={handleExportSVG}
+        onExportPDF={handleExportPDF}
         onExportIllustratorJsx={handleExportIllustratorJsx}
         onExportHtml3D={handleExportHtml3D}
         onSaveProject={handleSaveProject}
@@ -582,6 +600,14 @@ export const App: React.FC = () => {
               model={currentModel}
               params={params}
               onParamChange={handleParamChange}
+            />
+          )}
+
+          {activeTab === 'vectorcraft' && (
+            <VectorCraftEditor
+              dieline={effectiveDieline}
+              modelName={`${currentModel.code} - ${currentModel.name}`}
+              onDielineUpdate={(edited) => setDielineEdits(edited)}
             />
           )}
         </main>
