@@ -20,7 +20,7 @@ export interface VectorCraftEditorProps {
   dieline?: DielineResult;
   modelName?: string;
   onDielineUpdate?: (dieline: DielineResult) => void;
-  onSwitchWorkspace?: (tab: '2d' | '3d' | 'imposition' | 'vectorcraft') => void;
+  onSwitchWorkspace?: (tab: '2d' | '3d' | 'imposition') => void;
   onClose?: () => void;
 }
 

@@ -26,7 +26,6 @@ import { CatalogModal } from './components/CatalogModal';
 import { IllustratorPluginModal } from './components/IllustratorPluginModal';
 import { ImportCadModal } from './components/ImportCadModal';
 import { CadStatusBar } from './components/CadStatusBar';
-import { VectorCraftEditor } from './components/VectorCraftEditor';
 import { exportToPDF } from './engine/vectorcraft/pdfExporter';
 import {
   IllustratorBridgeClient,
@@ -47,7 +46,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search).get('tab');
-      if (p === '2d' || p === '3d' || p === 'imposition' || p === 'vectorcraft') {
+      if (p === '2d' || p === '3d' || p === 'imposition') {
         return p as ActiveTab;
       }
     }
@@ -471,19 +470,6 @@ export const App: React.FC = () => {
     await deleteProject(id);
     setSavedProjects((prev) => prev.filter((p) => p.id !== id));
   };
-
-  // 4. Renderização em tela cheia do VectorCraft Studio (1:1 com a interface nativa)
-  if (activeTab === 'vectorcraft') {
-    return (
-      <VectorCraftEditor
-        dieline={effectiveDieline}
-        modelName={`${currentModel.code} - ${currentModel.name}`}
-        onDielineUpdate={(edited) => setDielineEdits(edited)}
-        onSwitchWorkspace={(tab) => setActiveTab(tab)}
-        onClose={() => setActiveTab('2d')}
-      />
-    );
-  }
 
   return (
     <div

@@ -76,7 +76,7 @@ export const CadStatusBar: React.FC<CadStatusBarProps> = ({
           <span style={{ color: 'var(--cad-text-dim)' }}>({areaM2} m²)</span>
         </div>
 
-        {(activeTab === '2d' || activeTab === 'vectorcraft') && (
+        {activeTab === '2d' && (
           <>
             <span style={{ color: 'var(--cad-border-default)' }}>|</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

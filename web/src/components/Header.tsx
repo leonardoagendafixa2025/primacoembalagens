@@ -16,7 +16,6 @@ import {
   FileUp,
   RefreshCw,
   Puzzle,
-  PenTool,
   FileText,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -25,7 +24,7 @@ import type { BridgeStatus } from '../integrations/illustrator/IllustratorBridge
 
 const CATALOG_COUNT = modelsCatalog.length;
 
-export type ActiveTab = '2d' | '3d' | 'imposition' | 'vectorcraft';
+export type ActiveTab = '2d' | '3d' | 'imposition';
 
 interface HeaderProps {
   currentModel: PackagingModel;
@@ -360,46 +359,6 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hide-on-mobile">Imposição</span>
           <span style={{ display: 'none' }} className="keep-badge">Imp.</span>
         </button>
-
-        <button
-          type="button"
-          onClick={() => onSelectTab('vectorcraft')}
-          className="compact-on-mobile"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '5px 11px',
-            borderRadius: 'var(--cad-radius-sm)',
-            fontSize: 12,
-            fontWeight: activeTab === 'vectorcraft' ? 600 : 500,
-            color: activeTab === 'vectorcraft' ? '#ffffff' : 'var(--cad-text-secondary)',
-            background: activeTab === 'vectorcraft'
-              ? 'linear-gradient(135deg, #f59e0b, #ef4444)'
-              : 'transparent',
-            boxShadow: activeTab === 'vectorcraft' ? '0 1px 6px rgba(245, 158, 11, 0.4)' : 'none',
-            transition: 'all 0.12s ease',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-          title="VectorCraft — Editor Vetorial (Pen Tool, Curvas Bézier, Pathfinder, Sangrias)"
-        >
-          <PenTool size={13} />
-          <span>VectorCraft</span>
-          <span
-            style={{
-              fontSize: 9,
-              fontWeight: 800,
-              background: activeTab === 'vectorcraft' ? 'rgba(0,0,0,0.3)' : 'rgba(245, 158, 11, 0.2)',
-              color: activeTab === 'vectorcraft' ? '#ffffff' : '#f59e0b',
-              padding: '1px 4px',
-              borderRadius: 3,
-              letterSpacing: 0.5,
-            }}
-          >
-            PRO
-          </span>
-        </button>
       </div>
 
       {/* 3. Ações Técnicas: Projetos, Salvar, Illustrator, Plugin, App Windows e Exportação */}
@@ -689,7 +648,7 @@ export const Header: React.FC<HeaderProps> = ({
                     padding: '6px 8px',
                     margin: '2px 0',
                   }}
-                  title="Exportar PDF Vetorial com camadas semânticas ISO 32000-1 (VectorCraft Engine)"
+                  title="Exportar PDF Vetorial com camadas semânticas ISO 32000-1"
                 >
                   <FileText size={14} color="#f87171" />
                   <span style={{ fontWeight: 600 }}>PDF Vetorial (Camadas ISO)</span>

@@ -1,4 +1,4 @@
-﻿{
-  "typecheckCommand": "npm --prefix web run build",
-  "testCommand": "npm --prefix web run test:models:2d"
+{
+  "typecheckCommand": "npm.cmd --prefix web run build",
+  "testCommand": "npm.cmd --prefix web run test:models:2d"
 }
