@@ -11,7 +11,9 @@
     "audit:models": "tsx scripts/audit_models.ts",
     "test:models:2d": "tsx scripts/test_models_2d.ts",
     "test:models:3d": "tsx scripts/test_models_3d.ts",
+    "test:precision": "tsx scripts/test_packaging_precision.ts",
     "audit:library": "tsx scripts/audit_library.ts",
+
     "build:cep": "esbuild src/integrations/illustrator/cepStudioEntry.ts --bundle --format=iife --target=es2020 --platform=browser --outfile=../extensions/com.primacor.plmpacklib/js/studio.bundle.js",
     "desktop:build": "powershell -NoProfile -ExecutionPolicy Bypass -File ../desktop/build_exe.ps1",
     "desktop:installer": "powershell -NoProfile -ExecutionPolicy Bypass -File ../desktop/installer/build_installer.ps1",

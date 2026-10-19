@@ -21,6 +21,7 @@ import {
   Unlock,
   RotateCcw,
   Move,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface ParameterPanelProps {
@@ -47,7 +48,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   onParamChange,
   onProfileChange,
   bounds: _bounds,
-  dieline: _dieline,
+  dieline,
   isCollapsed = false,
   onToggleCollapse,
   activeSubTab,
@@ -435,6 +436,31 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {dieline?.error && (
+                  <div
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1px solid rgba(239, 68, 68, 0.45)',
+                      borderRadius: 'var(--cad-radius-sm)',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 8,
+                      fontSize: 11,
+                      color: '#f87171',
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1, color: '#ef4444' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <strong style={{ fontSize: 11, color: '#ef4444', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                        Medida Inválida para a Faca
+                      </strong>
+                      <span>{dieline.error}</span>
+                    </div>
+                  </div>
+                )}
 
                 {model.paramDefs.map((def) => {
                   const isEp = def.key === 'Ep';

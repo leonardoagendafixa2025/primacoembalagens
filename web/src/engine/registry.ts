@@ -6,6 +6,7 @@ import rawCSharpData from './csharpModelsData.json';
 import { fefco0429 } from './models/fefco0429';
 import { fefco0427 } from './models/fefco0427';
 import { fefco0426 } from './models/fefco0426';
+import { fefco0420 } from './models/fefco0420';
 import { fefco0201 } from './models/fefco0201';
 import { fefco0200 } from './models/fefco0200';
 import { fefco0202 } from './models/fefco0202';
@@ -14,6 +15,7 @@ import { fefco0205 } from './models/fefco0205';
 import { fefco0215 } from './models/fefco0215';
 import { ecmaB10 } from './models/ecmaCarton';
 import { ecmaA20 } from './models/ecmaA20';
+import { ecmaA6020 } from './models/ecmaA6020';
 import { ecmaA1075 } from './models/ecmaA1075';
 import { ecmaB1001 } from './models/ecmaB1001';
 import { ecmaB1506_53 } from './models/ecmaB1506_53';
@@ -21,6 +23,8 @@ import { ecmaA0115 } from './models/ecmaA0115';
 import { ecmaX85 } from './models/ecmaX85';
 import { computeParametricDieline } from './parametricMorph';
 import { getLoadedSvgDieline } from './svgDielineParser';
+import { validatePackagingFeasibility } from './packaging/feasibilityValidator';
+
 
 export interface CatalogItem {
   id: string;
@@ -52,6 +56,8 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   fefco_f427: fefco0427,
   fefco_0426: fefco0426, // Provado: 68 segs, 6-8 arcs contra DLL fe13c849
   fefco_f426: fefco0426,
+  fefco_0420: fefco0420,
+  fefco_f420: fefco0420,
   fefco_0201: fefco0201, // Provado: 64 segs, erro = 0.000000 mm contra DLL 9bb37db8
   fefco_f201: fefco0201,
   fefco_0200: fefco0200, // Provado: 64 segs, 2 arcs contra DLL 56747cac
@@ -67,6 +73,7 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
   ecma_b10: ecmaB10,
   ecma_b1001: ecmaB1001,
   ecma_a20: ecmaA20,
+  ecma_a6020: ecmaA6020,
   ecma_a1075: ecmaA1075,
   ecma_a0175: ecmaA1075,
   ecma_b1506_53: ecmaB1506_53,
@@ -82,6 +89,16 @@ const NATIVE_TS_MODELS: Record<string, PackagingModel> = {
  */
 function createDesCalculator(rawItem: any, defaultL: number, defaultB: number, defaultH: number = 150) {
   return (params: Record<string, number>): DielineResult => {
+    const v = validatePackagingFeasibility(params, { id: rawItem.modelId, code: rawItem.modelId });
+    if (!v.isValid) {
+      return {
+        segments: [],
+        arcs: [],
+        dimensions: [],
+        bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100, width: 100, height: 100 },
+        error: v.error,
+      };
+    }
     const geom = rawItem.geometry;
     if (!geom) {
       throw new Error(`Geometria DES não encontrada para ${rawItem.modelId}`);
@@ -101,6 +118,16 @@ function createDesCalculator(rawItem: any, defaultL: number, defaultB: number, d
  */
 function createCSharpCalculator(csItem: any, defaultL: number, defaultB: number, defaultH: number = 150) {
   return (params: Record<string, number>): DielineResult => {
+    const v = validatePackagingFeasibility(params, { id: csItem.modelId, code: csItem.modelId });
+    if (!v.isValid) {
+      return {
+        segments: [],
+        arcs: [],
+        dimensions: [],
+        bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100, width: 100, height: 100 },
+        error: v.error,
+      };
+    }
     const geom = csItem.geometry;
     if (!geom) {
       throw new Error(`Geometria C# não encontrada para ${csItem.modelId}`);
@@ -133,19 +160,96 @@ export function getModelById(id: string): PackagingModel {
     return MODEL_CACHE.get(id)!;
   }
 
-  // 1. Modelos Nativos TS (FEFCO 0429, 0427, 0201, 0200, ECMA B1001, etc.)
+  // 1. Modelos Nativos TS por ID direto
   if (NATIVE_TS_MODELS[id]) {
-    const m = { ...NATIVE_TS_MODELS[id] };
-    m.status = 'PASS';
-    m.originalSource = 'C#_PARAMETRIC_DLL';
-    m.implementationType = 'NATIVE_TS';
-    m.generator = m.id;
-    m.isFoldable = true;
+    const native = NATIVE_TS_MODELS[id];
+    const m: PackagingModel = {
+      ...native,
+      status: 'PASS',
+      originalSource: 'C#_PARAMETRIC_DLL',
+      implementationType: 'NATIVE_TS',
+      generator: native.id,
+      isFoldable: true,
+      calculate: (params: Record<string, number>): DielineResult => {
+        const v = validatePackagingFeasibility(params, { code: native.code, id: native.id, category: native.category });
+        if (!v.isValid) {
+          return {
+            segments: [],
+            arcs: [],
+            dimensions: [],
+            bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100, width: 100, height: 100 },
+            error: v.error,
+          };
+        }
+        return native.calculate(params);
+      },
+    };
     MODEL_CACHE.set(id, m);
     return m;
   }
 
   const catalogItem = CATALOG.find((c) => c.id === id);
+
+  // 1b. Resolução Inteligente por Código Padrão Oficial (FEFCO / ECMA)
+  // Se o catálogo possui um item cujo código ou nome corresponde a um modelo auditado nativo,
+  // utilizamos o gerador analítico com fórmulas 1:1 ao invés de morphing elástico.
+  if (catalogItem) {
+    const rawCode = (catalogItem.code || '').toUpperCase().trim();
+    const rawId = (catalogItem.id || '').toLowerCase().trim();
+
+    let matchedNative: PackagingModel | undefined;
+
+    if (rawCode.includes('0429') || rawId.includes('0429') || rawId.includes('f429')) matchedNative = fefco0429;
+    else if (rawCode.includes('0427') || rawId.includes('0427') || rawId.includes('f427')) matchedNative = fefco0427;
+    else if (rawCode.includes('0426') || rawId.includes('0426') || rawId.includes('f426')) matchedNative = fefco0426;
+    else if (rawCode.includes('0420') || rawId.includes('0420') || rawId.includes('f420')) matchedNative = fefco0420;
+    else if (rawCode.includes('0201') || rawId.includes('0201') || rawId.includes('f201')) matchedNative = fefco0201;
+    else if (rawCode.includes('0200') || rawId.includes('0200') || rawId.includes('f200')) matchedNative = fefco0200;
+    else if (rawCode.includes('0202') || rawId.includes('0202') || rawId.includes('f202')) matchedNative = fefco0202;
+    else if (rawCode.includes('0203') || rawId.includes('0203') || rawId.includes('f203')) matchedNative = fefco0203;
+    else if (rawCode.includes('0205') || rawId.includes('0205') || rawId.includes('f205')) matchedNative = fefco0205;
+    else if (rawCode.includes('0215') || rawId.includes('0215') || rawId.includes('f215')) matchedNative = fefco0215;
+    else if (rawCode.includes('A6020') || rawCode.includes('A60.20') || rawId.includes('a6020')) matchedNative = ecmaA6020;
+    else if (rawCode.includes('B1001') || rawCode.includes('B10.01') || rawId.includes('b1001')) matchedNative = ecmaB1001;
+    else if (rawCode.includes('B1506') || rawCode.includes('B15.06') || rawId.includes('b1506')) matchedNative = ecmaB1506_53;
+    else if (rawCode.includes('A1075') || rawCode.includes('A10.75') || rawId.includes('a1075')) matchedNative = ecmaA1075;
+    else if (rawCode.includes('A0115') || rawCode.includes('A01.15') || rawId.includes('a0115')) matchedNative = ecmaA0115;
+    else if (rawCode.includes('X85') || rawId.includes('x85')) matchedNative = ecmaX85;
+    else if ((rawCode.includes('B10') || rawCode.includes('B.10') || rawId.includes('ecma_b10')) && !rawCode.includes('B1001') && !rawCode.includes('B10.01')) matchedNative = ecmaB10;
+    else if (rawCode === 'ECMA A20' || rawCode === 'A20' || rawId === 'ecma_a20') matchedNative = ecmaA20;
+
+    if (matchedNative) {
+      const wrappedModel: PackagingModel = {
+        ...matchedNative,
+        id: catalogItem.id,
+        code: catalogItem.code || matchedNative.code,
+        name: catalogItem.name || matchedNative.name,
+        category: (catalogItem.category as any) || matchedNative.category,
+        description: catalogItem.description || matchedNative.description,
+        defaultParams: { ...matchedNative.defaultParams, ...(catalogItem.defaultParams || {}) },
+        status: 'PASS',
+        originalSource: 'C#_PARAMETRIC_DLL',
+        implementationType: 'NATIVE_TS',
+        generator: matchedNative.id,
+        isFoldable: true,
+        calculate: (p: Record<string, number>): DielineResult => {
+          const v = validatePackagingFeasibility(p, { code: catalogItem.code, id: catalogItem.id, category: catalogItem.category });
+          if (!v.isValid) {
+            return {
+              segments: [],
+              arcs: [],
+              dimensions: [],
+              bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100, width: 100, height: 100 },
+              error: v.error,
+            };
+          }
+          return matchedNative!.calculate(p);
+        },
+      };
+      MODEL_CACHE.set(id, wrappedModel);
+      return wrappedModel;
+    }
+  }
   if (!catalogItem) {
     const errorModel: PackagingModel = {
       id,

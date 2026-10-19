@@ -20,8 +20,10 @@ import {
   ArrowRight,
   Move,
   Link2,
+  AlertTriangle,
 } from 'lucide-react';
 import { generateCadAnnotations } from '../engine/cadMarks';
+
 
 // Distance from point to segment (screen space)
 function distPointToSeg(
@@ -1103,6 +1105,90 @@ export const CadViewer2D: React.FC<CadViewer2DProps> = ({
           touchAction: 'none',
         }}
       />
+
+      {/* ── Industrial Constraint Violation Overlay ("SE A MEDIDA NÃO EXISTE ELE NÃO CRIA") ── */}
+      {dieline.error && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(10, 14, 23, 0.88)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+            zIndex: 35,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 540,
+              width: '100%',
+              background: 'var(--cad-bg-panel, #151821)',
+              border: '1.5px solid #ef4444',
+              borderRadius: 'var(--cad-radius-md, 8px)',
+              padding: '24px 28px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(239, 68, 68, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1.5px solid #ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ef4444',
+                  flexShrink: 0,
+                }}
+              >
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#f87171', letterSpacing: 0.3 }}>
+                  GEOMETRIA NÃO CRIADA: MEDIDA INVÁLIDA
+                </h3>
+                <span style={{ fontSize: 11, color: 'var(--cad-text-muted)', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                  Padrão Heidelberg Prinect Package Designer / Normas ECMA & FEFCO
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(0, 0, 0, 0.35)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 'var(--cad-radius-sm, 6px)',
+                padding: '12px 14px',
+                fontSize: 13,
+                color: '#f3f4f6',
+                lineHeight: 1.5,
+                fontFamily: 'monospace',
+              }}
+            >
+              {dieline.error}
+            </div>
+
+            <div style={{ fontSize: 12, color: 'var(--cad-text-secondary)', lineHeight: 1.5 }}>
+              <p style={{ margin: 0, marginBottom: 6, fontWeight: 600, color: 'var(--cad-text-primary)' }}>
+                Regra Técnica de Engenharia de Embalagens:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--cad-text-muted)' }}>
+                <li>A faca não pode ser gerada com dimensões que causariam corte de abas colidentes ou falha de montagem mecânica.</li>
+                <li>Ajuste os controles deslizantes ou campos de medidas na barra lateral para parâmetros fisicamente exeqüíveis.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Floating Edit Panel ── */}
       {editMode && selectedSegIndices.length > 0 && floatingPanelPos && (() => {

@@ -1,4 +1,5 @@
 import type { Segment2D, Arc2D, DimensionLine, BoundingBox2D, DielineResult } from './types';
+import { validatePackagingFeasibility } from './packaging/feasibilityValidator';
 
 export interface ParametricInputGeom {
   segments: Array<{ type: string; x0: number; y0: number; x1: number; y1: number }>;
@@ -11,7 +12,9 @@ export interface MorphParams {
   H?: number;
   Ep?: number;
   M?: number;
+  [key: string]: number | undefined;
 }
+
 
 interface IntervalMapping {
   x0Orig: number;
@@ -48,6 +51,18 @@ export function computeParametricDieline(
   userParams: MorphParams,
   prefix: string = 'par'
 ): DielineResult {
+  // Validação estrita de viabilidade física: "SE A MEDIDA NÃO EXISTE, ELE NÃO CRIA"
+  const validation = validatePackagingFeasibility(userParams);
+  if (!validation.isValid) {
+    return {
+      segments: [],
+      arcs: [],
+      dimensions: [],
+      bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100, width: 100, height: 100 },
+      error: validation.error,
+    };
+  }
+
   const origSegs = rawGeom.segments || [];
   const origArcs = (rawGeom.arcs || []).map((a) => {
     if (!a.r || a.r <= 0) return a;
@@ -267,7 +282,9 @@ export function computeParametricDieline(
     }
   }
 
-  // 5. Mapeamento de Zonas Verticais Y
+  // 5. Mapeamento de Zonas Verticais Y com Preservação Rígida de Abas (Norma Heidelberg / DIN 55437)
+  // Regra fundamental: A altura H expande exclusivamente o vão tubular do corpo entre os vincos principais.
+  // Abas de fechamento (tampa, tuck tab, fundo, abas de poeira) NUNCA esticam com H.
   const fullYBoundaries: number[] = [minY0];
   for (const y of hYClusters) {
     if (y > minY0 + 4.0 && y < maxY0 - 4.0) {
@@ -279,19 +296,19 @@ export function computeParametricDieline(
   const yIntervals: YIntervalMapping[] = [];
   let currNewY = minY0;
 
-  const spansY = [];
+  const spansY: number[] = [];
   for (let j = 0; j < fullYBoundaries.length - 1; j++) {
     spansY.push(fullYBoundaries[j + 1] - fullYBoundaries[j]);
   }
 
-  if (structure === 'TUBE') {
-    // Em tubos: Fundo + Corpo central (H) + Tampa/Abas
-    let bestHIdx = -1;
-    let minHDiff = Infinity;
-    for (let j = 0; j < spansY.length; j++) {
-      const diff = Math.abs(spansY[j] - baseH);
-      if (diff < minHDiff) {
-        minHDiff = diff;
+  if (structure === 'TUBE' || spansY.length >= 3) {
+    // Tubo clássico: Fundo [0..bestHIdx-1] + Corpo H [bestHIdx] + Tampa/Abas [bestHIdx+1..N]
+    // Identifica o painel central do corpo H (maior vão interno ou mais próximo do nominal H)
+    let bestHIdx = 1;
+    let maxInteriorSpan = -1;
+    for (let j = 1; j < spansY.length - 1; j++) {
+      if (spansY[j] > maxInteriorSpan) {
+        maxInteriorSpan = spansY[j];
         bestHIdx = j;
       }
     }
@@ -302,16 +319,25 @@ export function computeParametricDieline(
       let type: 'H' | 'B' | 'flap' | 'other' = 'other';
       let label = `${Math.round(origSpan)}`;
 
-      if (j === bestHIdx && spansY.length >= 3) {
+      if (j === bestHIdx) {
+        // Corpo principal tubular: expande/contrai fielmente com a altura H
         type = 'H';
         targetSpan = (origSpan / baseH) * targetH;
         label = `H = ${Math.round(targetSpan)}`;
       } else {
-        // Abas de tampa ou fundo dependem prioritariamente da largura B
+        // Abas externas (tampa, tuck tab, abas de poeira, travas de fundo):
+        // NUNCA esticam com H! Permanecem ancoradas ao vinco da parede.
         type = 'flap';
-        const flapScale = targetB / baseB;
-        targetSpan = origSpan * flapScale;
-        label = `Aba: ${Math.round(targetSpan)}`;
+        if (origSpan <= 25.0) {
+          // Abas de encaixe (tuck tabs ~15-20mm) ou recuos: manter tamanho padronizado
+          targetSpan = origSpan;
+          label = `Trava: ${Math.round(targetSpan)}`;
+        } else {
+          // Painel de tampa ou abas maiores: ajustam com B, porém estritamente limitadas
+          const scaleB = Math.max(0.75, Math.min(1.35, targetB / baseB));
+          targetSpan = Math.min(origSpan * scaleB, targetB + 22.0);
+          label = `Aba: ${Math.round(targetSpan)}`;
+        }
       }
 
       yIntervals.push({
@@ -353,18 +379,40 @@ export function computeParametricDieline(
       currNewY += targetSpan;
     }
   } else {
-    // Genérico Y
-    const scaleY = targetH / baseH;
+    // Genérico Y: Identifica o maior vão (corpo H) e NÃO estica abas/margens de extremidade
+    let maxIdx = 0;
+    let maxVal = -1;
+    for (let j = 0; j < spansY.length; j++) {
+      if (spansY[j] > maxVal) {
+        maxVal = spansY[j];
+        maxIdx = j;
+      }
+    }
+
     for (let j = 0; j < spansY.length; j++) {
       const origSpan = spansY[j];
-      const targetSpan = origSpan * scaleY;
+      let targetSpan = origSpan;
+      let type: 'H' | 'other' = 'other';
+      let label = `${Math.round(origSpan)}`;
+
+      if (j === maxIdx && spansY.length > 1) {
+        type = 'H';
+        targetSpan = (origSpan / baseH) * targetH;
+        label = `H = ${Math.round(targetSpan)}`;
+      } else {
+        // Abas ou margens: escala suave ligada a B ou mantida nominal (NUNCA com H)
+        const scaleB = Math.max(0.8, Math.min(1.25, targetB / baseB));
+        targetSpan = origSpan * scaleB;
+        label = `${Math.round(targetSpan)}`;
+      }
+
       yIntervals.push({
         y0Orig: fullYBoundaries[j],
         y1Orig: fullYBoundaries[j + 1],
         y0New: currNewY,
         y1New: currNewY + targetSpan,
-        type: 'other',
-        label: `${Math.round(targetSpan)}`,
+        type,
+        label,
       });
       currNewY += targetSpan;
     }
@@ -454,13 +502,34 @@ export function computeParametricDieline(
   const segments: Segment2D[] = origSegs.map((s, idx) => {
     const v0 = registerVertex(s.x0, s.y0);
     const v1 = registerVertex(s.x1, s.y1);
+
+    let x0 = v0.mapX;
+    let y0 = v0.mapY;
+    let x1 = v1.mapX;
+    let y1 = v1.mapY;
+
+    // Preservação de dobras a 45° (travas de fundo automático / snap-lock):
+    // Se o vinco original tinha |dx| == |dy| (ângulo exato de 45° com tolerância 1.5mm),
+    // mantemos a proporcionalidade 1:1 para evitar travamento mecânico na coladeira dobradeira.
+    const origDx = Math.abs(s.x1 - s.x0);
+    const origDy = Math.abs(s.y1 - s.y0);
+    if (s.type === 'crease' && origDx >= 8.0 && Math.abs(origDx - origDy) <= 1.5) {
+      const newDx = Math.abs(x1 - x0);
+      const newDy = Math.abs(y1 - y0);
+      const isoDelta = Math.min(newDx, newDy);
+      const signX = (x1 >= x0) ? 1 : -1;
+      const signY = (y1 >= y0) ? 1 : -1;
+      x1 = Math.round((x0 + signX * isoDelta) * 1000) / 1000;
+      y1 = Math.round((y0 + signY * isoDelta) * 1000) / 1000;
+    }
+
     return {
       id: `${prefix}-seg-${idx}`,
       type: s.type === 'crease' ? 'crease' : (s.type === 'perfo' || s.type === 'perforation' ? 'perfo' : 'cut'),
-      x0: v0.mapX,
-      y0: v0.mapY,
-      x1: v1.mapX,
-      y1: v1.mapY,
+      x0,
+      y0,
+      x1,
+      y1,
     };
   });
 
